@@ -38,11 +38,9 @@ export interface DrawMode {
 
 const CONSTRAINTS: { label: string; rule: string | null }[] = [
   { label: "Une seule couleur 🎨", rule: "one_color" },
-  { label: "En moins de 10 traits ✏️", rule: "max_strokes" },
   { label: "Que des lignes et des ronds ⭕", rule: "only_shapes" },
-  { label: "De la main non-dominante ✋", rule: null },
-  { label: "Les yeux (presque) fermés 🙈", rule: null },
-  { label: "Le plus vite possible ⚡", rule: null },
+  { label: "Effet miroir 🪞", rule: "mirror" },
+  { label: "Ça tremble ! 🫨", rule: "shake" },
 ];
 
 function clampRounds(n: number): number {

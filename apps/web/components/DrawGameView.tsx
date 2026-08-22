@@ -333,6 +333,7 @@ export function DrawCanvas({
   const [cursorPos, setCursorPos] = useState<Pt | null>(null);
   const [traits, setTraits] = useState(0);
   const [colorLocked, setColorLocked] = useState(false);
+  const [shaking, setShaking] = useState(false);
   const toolRef = useRef(tool); toolRef.current = tool;
   const colorRef = useRef(color); colorRef.current = color;
   const widthRef = useRef(width); widthRef.current = width;
@@ -348,6 +349,8 @@ export function DrawCanvas({
   const shapesOnly = constraintRule === "only_shapes";
   const maxStrokes = constraintRule === "max_strokes";
   const oneColor = constraintRule === "one_color";
+  const mirror = constraintRule === "mirror";
+  const shake = constraintRule === "shake";
   const capped = maxStrokes && traits >= MAX_TRAITS;
   const paletteLocked = oneColor && colorLocked;
   const toolAllowed = (id: Tool) => !shapesOnly || id === "line" || id === "circle";
@@ -432,6 +435,13 @@ export function DrawCanvas({
     if (!blind && mctx.current) drawStroke(mctx.current, s);
     room.sendStroke(s);
     curTraitRef.current.push({ kind: "stroke", stroke: s });
+    if (mirror) {
+      // Symmetric twin across the vertical centre.
+      const m: DrawStroke = { points: points.map((p) => ({ x: 1 - p.x, y: p.y })), color: s.color, width: s.width };
+      if (!blind && mctx.current) drawStroke(mctx.current, m);
+      room.sendStroke(m);
+      curTraitRef.current.push({ kind: "stroke", stroke: m });
+    }
   }
   function flushBrush() {
     if (segment.current.length < 2) return;
@@ -460,6 +470,7 @@ export function DrawCanvas({
   }
 
   function finalizeStroke(e: React.PointerEvent) {
+    if (shake) setShaking(false);
     if (drawing.current) {
       const t = toolRef.current;
       if (t === "brush" || t === "eraser") flushBrush();
@@ -504,12 +515,18 @@ export function DrawCanvas({
             if (!blind && mctx.current) floodFill(mctx.current, n.x, n.y, colorRef.current);
             room.sendFill(n.x, n.y, colorRef.current);
             historyRef.current.push([{ kind: "fill", x: n.x, y: n.y, color: colorRef.current }]);
+            if (mirror) {
+              const mx = 1 - n.x;
+              if (!blind && mctx.current) floodFill(mctx.current, mx, n.y, colorRef.current);
+              room.sendFill(mx, n.y, colorRef.current);
+            }
             syncUndo();
             afterTrait();
             return;
           }
           (e.target as Element).setPointerCapture?.(e.pointerId);
           drawing.current = true;
+          if (shake) setShaking(true);
           curTraitRef.current = [];
           startPt.current = norm(e);
           if (t === "brush" || t === "eraser") segment.current = [startPt.current];
@@ -538,12 +555,14 @@ export function DrawCanvas({
 
   return (
     <div>
-      {drawable && (shapesOnly || maxStrokes || oneColor) && (
+      {drawable && (shapesOnly || maxStrokes || oneColor || mirror || shake) && (
         <div className="mb-2.5 flex flex-wrap items-center gap-2 rounded-lg border border-magenta/30 bg-magenta/[0.06] px-3 py-1.5 text-xs text-magenta">
           <span className="font-semibold">Contrainte active :</span>
           {oneColor && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Une seule couleur{colorLocked ? " · verrouillée" : ""}</span>}
           {maxStrokes && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Traits {traits}/{MAX_TRAITS}</span>}
           {shapesOnly && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Lignes &amp; ronds uniquement</span>}
+          {mirror && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Effet miroir 🪞</span>}
+          {shake && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Ça tremble ! 🫨</span>}
         </div>
       )}
 
@@ -587,7 +606,7 @@ export function DrawCanvas({
 
         {/* §7 — the canvas is the main element and takes the remaining width */}
         <div className="order-1 min-w-0 flex-1 sm:order-2">
-          <div className="relative w-full select-none overflow-hidden rounded-2xl border border-ink-border" style={{ aspectRatio: "3 / 2" }}>
+          <div className={`relative w-full select-none overflow-hidden rounded-2xl border border-ink-border${shake && shaking ? " animate-canvasshake" : ""}`} style={{ aspectRatio: "3 / 2" }}>
             <canvas ref={mainRef} {...handlers} className="absolute inset-0 h-full w-full touch-none bg-white" style={{ cursor: drawable ? "none" : "default" }} />
             <canvas ref={overRef} className="pointer-events-none absolute inset-0 h-full w-full" />
             {drawable && cursorPos && <CustomCursor tool={tool} pos={cursorPos} size={width * scaleRef.current} color={color} />}
