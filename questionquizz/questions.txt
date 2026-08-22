@@ -17,7 +17,2006 @@
 #
 # Exemples (remplace-les par les tiens) :
 
-Quelle est la capitale de l'Italie ? = Rome
-Combien de pattes a une araignée ? = 8 | huit
-Dans quel pays se trouve la tour Eiffel ? = France | la france
-Quel est l'astre au centre du système solaire ? = Soleil | le soleil
+Quel est le seul mammifère capable de voler activement ?
+Quelle planète est surnommée la planète rouge ?
+Quel métal possède le symbole chimique Au ?
+Combien de côtés possède un dodécagone ?
+Quel océan borde la côte ouest de l'Afrique ?
+Quel animal est capable de régénérer certains de ses membres ?
+Quelle ville est surnommée la Ville Lumière ?
+Quel organe humain produit principalement l'insuline ?
+Quel pays a offert la Statue de la Liberté aux États-Unis ?
+Quel est le plus grand désert chaud du monde ?
+Quel gaz les plantes absorbent-elles principalement lors de la photosynthèse ?
+Quel instrument mesure les tremblements de terre ?
+Quel mammifère possède une poche ventrale pour transporter son petit ?
+Quelle civilisation a construit Machu Picchu ?
+Quel est le plus grand organe du corps humain ?
+Quelle mer sépare principalement l'Europe de l'Afrique ?
+Quel animal possède trois cœurs ?
+Quel scientifique est associé à la théorie de la relativité ?
+Quelle langue possède le plus de locuteurs natifs dans le monde ?
+Quel pays est traversé par le fleuve Amazone ?
+Quelle planète possède les anneaux les plus reconnaissables du système solaire ?
+Quel matériau naturel est produit par les vers à soie ?
+Quel est le nom de la galaxie dans laquelle se trouve notre système solaire ?
+Quel pays est souvent représenté par une feuille d'érable ?
+Quel animal peut rester plusieurs jours sans boire grâce à ses adaptations au désert ?
+Quel phénomène lumineux peut apparaître dans le ciel après la pluie ?
+Quelle ville antique a été ensevelie par l'éruption du Vésuve en 79 ?
+Quel scientifique a formulé les lois du mouvement et de la gravitation ?
+Quel est le plus petit os du corps humain ?
+Quelle partie d'une plante absorbe principalement l'eau du sol ?
+Quel pays possède la forme géographique souvent comparée à une botte ?
+Quel animal utilise l'écholocation pour se déplacer dans l'obscurité ?
+Quel continent abrite le plus grand nombre de pays ?
+Quelle substance donne sa couleur rouge au sang ?
+Quel est le satellite naturel de la Terre ?
+Quel animal terrestre est réputé pour sa vitesse de pointe exceptionnelle ?
+Quel pays est célèbre pour ses temples d'Angkor ?
+Quel appareil permet d'observer les objets très éloignés dans l'espace ?
+Quelle partie du cerveau est principalement associée à l'équilibre et à la coordination ?
+Quel est le plus grand océan de la planète ?
+Quel animal marin est célèbre pour ses capacités d'imitation et ses huit bras ?
+Quel pays possède le plus grand territoire au monde ?
+Quel phénomène se produit lorsque la Lune passe entre la Terre et le Soleil ?
+Quelle vitamine est produite par la peau sous l'effet des rayons du soleil ?
+Quel est le nom scientifique de l'être humain moderne ?
+Quelle ville est traversée par la Seine ?
+Quel animal est célèbre pour construire des barrages ?
+Quelle couche de l'atmosphère nous protège principalement des rayons ultraviolets ?
+Quel pays est associé à la naissance des Jeux olympiques antiques ?
+Quelle est la capitale de la Nouvelle-Zélande ?
+Quel organe filtre le sang et produit l'urine ?
+Quel est le nom du processus par lequel une chenille devient papillon ?
+Quelle planète est la plus proche du Soleil ?
+Quel pays est surnommé le pays du Soleil-Levant ?
+Quel animal possède une trompe et de grandes oreilles ?
+Quel est le plus grand mammifère connu ?
+Quel instrument possède généralement 88 touches ?
+Quel peintre a réalisé La Joconde ?
+Quelle ville abrite le Colisée ?
+Quel métal est principalement utilisé dans les fils électriques domestiques ?
+Quel animal est connu pour changer rapidement de couleur selon son environnement ?
+Quelle est la capitale de l'Australie ?
+Quel scientifique a proposé la théorie de l'évolution par sélection naturelle ?
+Quelle mer est située entre l'Europe et l'Asie ?
+Quel pays est traversé par le fleuve Nil ?
+Quel est le nom de l'étoile située au centre de notre système planétaire ?
+Quel animal est le symbole traditionnel de la sagesse ?
+Quelle unité est utilisée pour mesurer la température dans la vie quotidienne en France ?
+Quel pays abrite la plus grande partie de la forêt amazonienne ?
+Quel organe permet principalement les échanges d'oxygène et de dioxyde de carbone ?
+Quelle planète est connue pour ses températures extrêmement élevées à sa surface malgré sa distance du Soleil ?
+Quel est le nom de la force qui attire les objets vers la Terre ?
+Quel animal possède des rayures noires et blanches ?
+Quel pays possède la ville de Kyoto ?
+Quel fleuve traverse Londres ?
+Quel est le nom du premier homme à avoir marché sur la Lune ?
+Quel monument parisien a été construit pour l'Exposition universelle de 1889 ?
+Quelle substance compose principalement les coquilles des œufs ?
+Quel animal marin est le plus grand prédateur de l'océan ?
+Quel pays est associé aux pyramides de Gizeh ?
+Quel est le nom de la plus haute montagne du monde ?
+Quelle partie de l'œil contrôle la quantité de lumière qui y pénètre ?
+Quel est le nom de l'ensemble des os du corps humain ?
+Quel animal peut dormir debout ?
+Quel pays est célèbre pour ses fjords ?
+Quel est le nom du pigment vert présent dans les feuilles ?
+Quelle planète est la plus éloignée du Soleil parmi les huit planètes ?
+Quel célèbre paquebot a coulé lors de son voyage inaugural en 1912 ?
+Quel inventeur est généralement associé à l'ampoule électrique pratique ?
+Quelle ville est célèbre pour ses gondoles et ses canaux ?
+Quel animal est connu pour sa capacité à se déplacer en sautant grâce à ses puissantes pattes arrière ?
+Quelle est la capitale du Portugal ?
+Quel pays est traversé par le Danube et possède Budapest comme capitale ?
+Quel est le nom du phénomène qui transforme un liquide en gaz ?
+Quelle partie de la fleur produit le pollen ?
+Quel animal est capable de produire de l'encre pour se défendre ?
+Quel est le nom du continent situé autour du pôle Sud ?
+Quelle invention permet de transmettre la voix à distance ?
+Quel pays est célèbre pour le Taj Mahal ?
+Quel est le nom de la plus grande île du monde ?
+Quelle est la capitale de la Grèce ?
+Quel animal est surnommé le roi de la jungle dans la culture populaire ?
+Quel scientifique a découvert la pénicilline ?
+Quel est le nom du mouvement apparent du Soleil provoqué par la rotation de la Terre ?
+Quelle est la capitale du Canada ?
+Quel pays est connu pour ses pyramides à degrés de Chichén Itzá ?
+Quel animal marin possède un corps aplati et des tentacules urticants ?
+Quelle partie du corps humain contient le fémur ?
+Quel est le nom du plus grand satellite naturel de Saturne ?
+Quelle ville est connue pour son opéra en forme de voiles ?
+Quel pays est célèbre pour le flamenco ?
+Quel est le nom du phénomène par lequel la Terre passe entre le Soleil et la Lune ?
+Quel animal est réputé pour sa mémoire ?
+Quel est le nom de la science qui étudie les étoiles et les galaxies ?
+Quelle est la capitale de l'Argentine ?
+Quel pays a pour capitale Reykjavik ?
+Quel animal possède un long cou et des taches irrégulières ?
+Quel est le nom du plus grand volcan du système solaire ?
+Quelle ville est surnommée la Big Apple ?
+Quel est le nom de l'os qui relie l'épaule au coude ?
+Quelle civilisation est à l'origine des premières grandes pyramides d'Égypte ?
+Quel pays possède la ville de Marrakech ?
+Quel est le nom du phénomène où un objet céleste entre dans l'atmosphère et devient lumineux ?
+Quel animal est capable de marcher sur l'eau grâce à la tension superficielle ?
+Quel est le nom du plus grand désert froid du monde ?
+Quelle capitale européenne est traversée par le Danube et célèbre pour ses bains thermaux ?
+Quel pays est associé au mont Fuji ?
+Quel est le nom de la science qui étudie les êtres vivants ?
+Quel animal possède une carapace et peut vivre très longtemps ?
+Quelle ville italienne est célèbre pour sa tour penchée ?
+Quel est le nom de l'énergie produite par le mouvement de l'eau ?
+Quel pays a pour capitale Buenos Aires ?
+Quel animal est capable de tourner sa tête sur une grande amplitude et est souvent associé à la nuit ?
+Quel est le nom de l'océan situé entre l'Afrique, l'Asie et l'Australie ?
+Quel est le nom du phénomène responsable des marées principalement avec l'influence de la Lune ?
+Quelle est la capitale de l'Irlande ?
+Quel pays est célèbre pour la cité antique de Petra ?
+Quel animal est capable de courir quelques instants après sa naissance ?
+Quelle est la capitale de la Norvège ?
+Quel scientifique a proposé les lois de l'hérédité à partir d'expériences sur des pois ?
+Quel est le nom du pigment responsable de la couleur orange des carottes ?
+Quelle ville abrite le célèbre Big Ben ?
+Quel pays possède la région de Transylvanie ?
+Quel est le nom de l'appareil utilisé pour mesurer la pression atmosphérique ?
+Quel animal possède un bec particulier et pond des œufs tout en étant un mammifère ?
+Quel est le nom de la galaxie voisine souvent visible comme une tache dans le ciel austral ?
+Quel pays est célèbre pour le mont Kilimandjaro ?
+Quel est le nom de la couche liquide située sous la croûte terrestre ?
+Quelle ville japonaise a été touchée par une bombe atomique en 1945 ?
+Quel est le nom de la capitale de la Corée du Sud ?
+Quel animal marin peut changer de texture et de couleur pour se camoufler ?
+Quelle est la plus grande planète du système solaire ?
+Quel pays est associé aux pyramides de Teotihuacan ?
+Quel est le nom de la roche en fusion présente sous la surface terrestre ?
+Quel est le nom de la mer située au nord de la France ?
+Quel animal est connu pour sa longue migration annuelle entre l'Arctique et l'Antarctique ?
+Quelle ville américaine est célèbre pour le Golden Gate Bridge ?
+Quel est le nom de la science qui étudie les tremblements de terre ?
+Quel pays est célèbre pour le mont Everest situé à sa frontière avec le Tibet ?
+Quel animal possède des défenses en ivoire ?
+Quel est le nom du processus de transformation de l'eau liquide en glace ?
+Quelle capitale est surnommée la ville aux cent clochers et est traversée par la Vltava ?
+Quel pays est associé au tango et aux steaks de bœuf ?
+Quel est le nom du plus grand récif corallien du monde ?
+Quel animal possède une langue particulièrement longue et collante ?
+Quelle ville française est célèbre pour son festival international du cinéma ?
+Quel pays possède le désert d'Atacama ?
+Quel est le nom de la molécule qui transporte principalement l'oxygène dans le sang ?
+Quel animal est capable de produire de l'électricité pour se défendre ou chasser ?
+Quel pays est traversé par le fleuve Colorado ?
+Quelle ville est célèbre pour ses taxis jaunes et ses gratte-ciel ?
+Quel est le nom du continent où se trouve l'Égypte ?
+Quel animal est connu pour ses constructions complexes sous l'eau et sur les rivières ?
+Quel est le nom de la plus grande lune de Jupiter ?
+Quelle est la capitale de la Turquie ?
+Quel pays possède la ville de Dubrovnik ?
+Quel est le nom du phénomène lumineux observé près des pôles terrestres ?
+Quel animal marin possède un bec rappelant celui d'un oiseau et huit bras ?
+Quel est le nom du célèbre volcan italien dominant Naples ?
+Quelle ville américaine est célèbre pour Hollywood ?
+Quel pays est connu pour ses statues monumentales de l'île de Pâques ?
+Quel est le nom de la mer située entre l'Arabie et l'Afrique ?
+Quel animal est capable de survivre dans des conditions extrêmement froides grâce à une épaisse couche de graisse ?
+Quelle est la capitale de l'Islande ?
+Quel est le nom du plus grand lac d'eau douce en superficie ?
+Quelle ville est célèbre pour ses canaux et ses maisons étroites aux Pays-Bas ?
+Quel pays possède la ville de Séville ?
+Quel est le nom de la partie de la Terre composée principalement de roches solides sous la croûte ?
+Quel animal est connu pour ses longues défenses et sa trompe ?
+Quel est le nom de la constellation facilement reconnaissable grâce à trois étoiles alignées ?
+Quelle capitale européenne est traversée par la Spree ?
+Quel pays est associé à la civilisation maya ?
+Quel est le nom de l'os situé à l'avant de la jambe entre le genou et la cheville ?
+Quel animal possède des ventouses sur ses bras ?
+Quel est le nom du plus grand désert du monde si l'on considère aussi les déserts polaires ?
+Quel pays possède le volcan Fuji ?
+Quel est le nom du satellite naturel de la Terre ?
+Quelle ville est connue pour son Acropole antique ?
+Quel animal est connu pour ses puissants sauts et sa poche ventrale ?
+Quel est le nom de la mer située entre l'Italie et les Balkans ?
+Quel pays est associé aux tulipes, aux moulins et aux canaux ?
+Quel est le nom du célèbre tableau représentant une femme au sourire mystérieux ?
+Quel artiste a peint La Nuit étoilée ?
+Quel sculpteur a réalisé le David exposé à Florence ?
+Quel peintre espagnol a réalisé Guernica ?
+Quel mouvement artistique est particulièrement associé à Monet et Renoir ?
+Quel artiste est célèbre pour avoir popularisé les boîtes de soupe Campbell dans l'art ?
+Quel peintre néerlandais est connu pour s'être coupé une partie de l'oreille ?
+Quel artiste est associé aux célèbres montres molles ?
+Quel peintre mexicain est connu pour ses nombreux autoportraits et ses sourcils très marqués ?
+Quel artiste français est associé au tableau Impression, soleil levant ?
+Quel compositeur a écrit la Neuvième Symphonie malgré sa surdité ?
+Quel compositeur est associé aux Quatre Saisons ?
+Quel compositeur a écrit La Flûte enchantée ?
+Quel compositeur est connu pour la Marche turque ?
+Quel instrument possède des cordes frappées par des marteaux ?
+Quel instrument de cuivre est reconnaissable à sa forme circulaire et à son long tuyau ?
+Quel instrument à vent possède généralement une anche simple ?
+Quel instrument possède traditionnellement quatre cordes et se joue avec un archet ?
+Quel instrument est souvent utilisé dans les fanfares et possède trois pistons ?
+Quel instrument de percussion possède des lames accordées que l'on frappe avec des baguettes ?
+Quel instrument à vent est particulièrement associé au jazz et à la Nouvelle-Orléans ?
+Quel groupe britannique a sorti l'album Abbey Road ?
+Quel chanteur a interprété Suspicious Minds ?
+Quel groupe est derrière le titre Smells Like Teen Spirit ?
+Quel artiste a sorti l'album Back to Black ?
+Quel groupe a créé le célèbre morceau Hotel California ?
+Quel chanteur est surnommé le King of Pop ?
+Quel chanteur français est associé à la chanson Je te promets ?
+Quel artiste est connu pour l'album Random Access Memories avec Daft Punk ?
+Quel groupe britannique est associé à Wonderwall ?
+Quel artiste a sorti l'album 21 ?
+Quel groupe a interprété Another One Bites the Dust ?
+Quel chanteur a popularisé Like a Rolling Stone ?
+Quel groupe est associé à Stairway to Heaven ?
+Quel artiste est connu pour la chanson Hips Don't Lie ?
+Quel chanteur a sorti l'album After Hours ?
+Quel groupe a interprété Viva la Vida ?
+Quel artiste est associé à la chanson Rolling in the Deep ?
+Quel groupe est connu pour le morceau Seven Nation Army ?
+Quel artiste a sorti l'album Future Nostalgia ?
+Quel groupe français est connu pour Get Lucky aux côtés de Pharrell Williams ?
+Quel chanteur est associé à Imagine ?
+Quel sport utilise un volant plutôt qu'une balle ?
+Quel sport attribue un touchdown à une équipe ?
+Dans quel sport parle-t-on de birdie et d'eagle ?
+Quel sport se pratique traditionnellement sur un court avec un filet et une raquette ?
+Quel sport utilise un tatami et un kimono ?
+Quel sport se pratique avec une épée, un sabre ou un fleuret ?
+Quel sport automobile organise le Grand Prix de Monaco ?
+Quel tournoi de tennis se joue traditionnellement sur gazon à Londres ?
+Quel tournoi de tennis français se dispute sur terre battue ?
+Quel cycliste remporte traditionnellement le maillot jaune du Tour de France ?
+Quel sport pratique Michael Jordan ?
+Quel sport pratique Rafael Nadal ?
+Quel sport pratique Lewis Hamilton ?
+Quel sport pratique Teddy Riner ?
+Quel sport pratique Tony Hawk ?
+Quel sprinteur jamaïcain a longtemps détenu les records mondiaux du 100 et du 200 mètres ?
+Quel boxeur a été surnommé The Greatest ?
+Quel joueur de football argentin est associé à la victoire de son pays lors de la Coupe du monde 1986 ?
+Quel footballeur portugais est connu pour ses nombreux Ballons d'Or et ses années au Real Madrid ?
+Quel footballeur brésilien est surnommé Pelé ?
+Quel pays a remporté la première Coupe du monde de football en 1930 ?
+Dans quelle ville se sont déroulés les premiers Jeux olympiques modernes ?
+Combien de joueurs d'une même équipe sont présents simultanément sur un terrain de football ?
+Quelle couleur porte traditionnellement le leader du Tour de France ?
+Quel trophée récompense le vainqueur de la Coupe du monde de football ?
+Dans quel sport peut-on réaliser un home run ?
+Dans quel sport utilise-t-on un panier et un ballon orange ?
+Quel sport est associé au tournoi de Wimbledon ?
+Quel sport est associé au Tournoi des Six Nations ?
+Quel sport pratique Simone Biles ?
+Quel sport pratique Novak Djokovic ?
+Quel sport pratique Antoine Dupont ?
+Quel sport pratique Max Verstappen ?
+Quel sport pratique Stephen Curry ?
+Quel film de science-fiction suit un personnage qui découvre que son monde est une simulation ?
+Quel film raconte le naufrage d'un célèbre paquebot après sa collision avec un iceberg ?
+Quel film suit un archéologue à la recherche d'artefacts historiques et affrontant souvent des nazis ?
+Quel film raconte l'histoire d'un jeune garçon qui découvre une école de sorcellerie ?
+Quel film met en scène un parc où des scientifiques recréent des dinosaures à partir d'ADN ancien ?
+Quel film suit un extraterrestre cherchant à contacter les siens avant de quitter la Terre ?
+Quel film d'animation raconte le voyage d'une jeune fille dans un monde rempli d'esprits ?
+Quel film d'animation suit un rat qui rêve de cuisiner à Paris ?
+Quel film d'animation raconte l'histoire d'un vieux veuf voyageant avec une maison portée par des ballons ?
+Quel film d'animation suit une famille de super-héros forcée de reprendre du service ?
+Quel film d'animation raconte le voyage d'un lionceau destiné à devenir roi ?
+Quel film d'animation suit deux sœurs vivant dans un royaume enneigé ?
+Quel film d'animation raconte l'histoire d'un jeune garçon mexicain qui visite le monde des morts ?
+Quel film d'animation suit un robot solitaire chargé de nettoyer une Terre abandonnée ?
+Quel film raconte l'histoire d'un boxeur de Philadelphie qui obtient une chance inattendue de combattre pour le titre ?
+Quel film met en scène un homme qui voyage dans le temps grâce à une voiture modifiée ?
+Quel film met en scène un pirate excentrique qui cherche à récupérer son navire ?
+Quel film raconte la survie d'un groupe après un crash aérien sur une île mystérieuse ?
+Quel film suit un jeune homme qui découvre qu'il peut entrer dans les rêves des autres ?
+Quel film met en scène un milliardaire utilisant une armure technologique pour combattre le crime ?
+Quel film met en scène un héros qui utilise une toile d'araignée pour se déplacer entre les immeubles ?
+Quel film met en scène un scientifique capable de devenir une créature verte extrêmement puissante ?
+Quel film raconte l'histoire d'un groupe de héros réunis pour affronter une invasion extraterrestre à New York ?
+Quel film met en scène un prince africain qui retourne dans son royaume après la mort de son père ?
+Quel film raconte l'histoire d'un jeune sorcier confronté à un ancien mage noir ?
+Quel film met en scène un anneau dont le porteur doit empêcher qu'il tombe entre les mains d'un seigneur maléfique ?
+Quel film raconte l'histoire d'un adolescent entraîné par un maître Jedi ?
+Quel film met en scène un androïde devenu le symbole d'une résistance humaine contre les machines ?
+Quel film raconte l'histoire d'un homme vivant dans un monde artificiel sans en avoir conscience ?
+Quel film met en scène un clown qui terrorise les enfants d'une petite ville du Maine ?
+Quel film raconte l'histoire d'un requin qui terrorise une station balnéaire ?
+Quel film met en scène un scientifique transformant accidentellement sa propre expérience en catastrophe ?
+Quel film raconte l'histoire d'un homme vivant dans une émission de télévision sans le savoir ?
+Quel film met en scène un jeune sorcier nommé Harry découvrant ses origines ?
+Quel film d'animation suit un jeune dragon et son ami humain dans un monde où les dragons sont chassés ?
+Quel film d'animation suit un panda qui devient maître des arts martiaux malgré son manque d'expérience ?
+Quel film d'animation suit une jeune fille qui découvre un univers parallèle derrière une petite porte ?
+Quel film d'animation suit un robot qui tombe amoureux d'un autre robot envoyé sur Terre ?
+Quel film d'animation raconte l'histoire d'un jeune homme transformé en dragon ?
+Quel film d'animation suit un groupe de jouets qui prennent vie lorsque les humains ne les regardent pas ?
+Quel film raconte l'histoire d'un homme qui doit empêcher une intelligence artificielle de détruire l'humanité ?
+Quel film met en scène un groupe de scientifiques confrontés à des phénomènes paranormaux dans une maison ?
+Quel film raconte l'histoire d'un jeune garçon qui découvre qu'il possède des pouvoirs surnaturels après un événement tragique ?
+Quel film met en scène un détective privé enquêtant dans une ville futuriste peuplée d'humains artificiels ?
+Quel film raconte l'histoire d'un homme qui se réveille chaque jour dans une journée qui recommence ?
+Quel film met en scène un groupe de survivants confrontés à une invasion de zombies ?
+Quel film raconte l'histoire d'un jeune homme entraîné pour devenir un espion ?
+Quel film met en scène un agent secret britannique connu pour son permis de tuer ?
+Quel film raconte l'histoire d'un groupe de voleurs préparant un braquage impossible ?
+Quel film met en scène un homme qui tente de voler des rêves grâce à une technologie expérimentale ?
+Quel film raconte l'histoire d'un jeune garçon vivant dans un monde où les émotions contrôlent son comportement ?
+Quel film d'animation suit une famille confrontée à des monstres cachés dans une ville souterraine ?
+Quel film met en scène un scientifique qui crée une créature à partir de plusieurs animaux ?
+Quel film raconte l'histoire d'un homme qui doit retrouver sa fille après une attaque extraterrestre ?
+Quel film met en scène un aventurier qui cherche une cité mythique cachée dans la jungle ?
+Quel film raconte l'histoire d'un homme coincé seul sur Mars après une mission spatiale ?
+Quel film met en scène un jeune sorcier qui doit trouver plusieurs objets permettant de vaincre son ennemi ?
+Quel film raconte l'histoire d'un pilote de chasse recruté pour une mission extrêmement dangereuse ?
+Quel film met en scène un héros capable de contrôler le temps grâce à un artefact mystique ?
+Quel film raconte l'histoire d'une jeune femme vivant dans un royaume où les femmes sont interdites de participer au combat ?
+Quel film d'animation raconte l'histoire d'une jeune fille qui doit restaurer l'équilibre d'une île polynésienne ?
+Quel film met en scène un homme qui se transforme en chauve-souris pour combattre le crime ?
+Quel film raconte l'histoire d'un extraterrestre qui devient ami avec un jeune garçon dans une banlieue américaine ?
+Quel film met en scène un groupe de super-héros affrontant un puissant ennemi cherchant à réunir plusieurs artefacts ?
+Quel film raconte l'histoire d'un homme qui cherche à venger sa famille dans un monde futuriste dominé par les machines ?
+Quel film d'animation suit un jeune garçon qui découvre qu'il est lié à une ancienne légende japonaise ?
+Quelle série suit un professeur de chimie qui se tourne progressivement vers le crime organisé ?
+Quelle série suit un groupe de braqueurs dirigé par un homme surnommé le Professeur ?
+Quelle série suit une famille qui tente de survivre dans un monde envahi par les morts-vivants ?
+Quelle série raconte l'histoire d'une adolescente aux pouvoirs psychiques vivant dans une petite ville de l'Indiana ?
+Quelle série suit plusieurs familles nobles luttant pour contrôler un trône dans un monde médiéval fantastique ?
+Quelle série suit un ancien tueur à gages qui tente de mener une vie normale dans une petite ville ?
+Quelle série suit un médecin brillant mais particulièrement difficile à vivre ?
+Quelle série suit un employé d'une entreprise de papier dirigée par un patron excentrique ?
+Quelle série suit un homme qui mène une double vie en tant qu'analyste médico-légal et meurtrier ?
+Quelle série suit un groupe d'amis vivant à New York et partageant leur quotidien ?
+Quelle série suit un scientifique excentrique voyageant entre les dimensions avec son petit-fils ?
+Quelle série raconte l'histoire d'un professeur qui dirige un groupe de jeunes dans des jeux mortels ?
+Quelle série suit une jeune femme issue de la famille Addams dans une académie mystérieuse ?
+Quelle série raconte l'histoire d'un homme devenu avocat après avoir travaillé aux côtés de son frère ?
+Quelle série suit une famille criminelle de Birmingham après la Première Guerre mondiale ?
+Quelle série suit un groupe de survivants piégés sur une île après un crash aérien ?
+Quelle série met en scène un détective consultant vivant à Londres avec un médecin militaire ?
+Quelle série suit une famille dysfonctionnelle dont plusieurs membres possèdent des pouvoirs ?
+Quelle série raconte l'histoire d'une famille riche qui perd soudainement sa fortune ?
+Quelle série suit des adolescents combattant des créatures dans une ville américaine des années 1980 ?
+Quelle série met en scène un groupe de jeunes vivant dans un quartier riche de Californie et confrontés à des secrets ?
+Quelle série suit un professeur de philosophie et ses élèves dans une étrange expérience après leur mort ?
+Quelle série raconte l'histoire de survivants confrontés à une mystérieuse brume contenant des créatures ?
+Quelle série suit un groupe d'amis confrontés à des événements surnaturels dans une petite ville ?
+Quelle série met en scène un détective obsessionnel qui résout des affaires grâce à ses capacités d'observation ?
+Quelle série suit un groupe de prisonniers préparant une évasion spectaculaire ?
+Quelle série raconte l'histoire d'un jeune garçon recruté par une organisation secrète de super-héros ?
+Quelle série met en scène un empire criminel dirigé depuis une ville contrôlée par plusieurs familles ?
+Quelle série suit une famille qui dirige une entreprise mondiale tout en se disputant son héritage ?
+Quelle série raconte l'histoire d'un groupe de survivants d'une apocalypse nucléaire vivant sous terre ?
+Quelle série met en scène un scientifique qui voyage dans le temps avec une machine cachée dans une cabine ?
+Quelle série suit des humains vivant dans une ville futuriste où les robots semblent avoir une conscience ?
+Quelle série raconte l'histoire d'une jeune femme qui découvre une mystérieuse école de magie ?
+Quelle série suit des agents enquêtant sur des phénomènes surnaturels à travers les États-Unis ?
+Quelle série met en scène un groupe de lycéens impliqués dans des mystères après la disparition d'un camarade ?
+Quelle série suit une jeune fille qui découvre un monde parallèle rempli de créatures fantastiques ?
+Quelle série raconte l'histoire d'un groupe de survivants vivant dans un immense bunker après une catastrophe ?
+Quelle série met en scène un tueur en série poursuivi par une enquêtrice tout en travaillant comme consultant ?
+Quelle série suit une famille de vampires installée dans une ville américaine ?
+Quelle série raconte l'histoire d'un groupe d'étudiants confrontés à des phénomènes surnaturels dans leur université ?
+Quelle série met en scène un homme qui peut voir quelques secondes dans le futur ?
+Quelle série suit un groupe de personnages enfermés dans une étrange maison dont ils ne peuvent sortir ?
+Quel personnage de One Piece rêve de devenir le meilleur épéiste du monde ?
+Quel personnage de One Piece est surnommé le cuisinier de l'équipage du Chapeau de paille ?
+Quel personnage de One Piece possède un nez particulièrement reconnaissable et raconte souvent des histoires exagérées ?
+Quel personnage de One Piece rejoint l'équipage après avoir été découvert comme archéologue ?
+Quel personnage de One Piece est un médecin ayant l'apparence d'un petit renne ?
+Quel personnage de One Piece est capable de se transformer grâce à un fruit du démon permettant de modifier son corps ?
+Quel personnage de Naruto rêve de devenir Hokage malgré son enfance difficile ?
+Quel personnage de Naruto appartient au clan Uchiha et devient le rival de son ancien coéquipier ?
+Quel personnage de Naruto est connu pour copier les techniques de ses adversaires ?
+Quel personnage de Naruto est la première coéquipière de Naruto dans l'équipe 7 ?
+Quel personnage de Naruto devient le maître de l'équipe 7 ?
+Quel personnage de Naruto possède plusieurs queues et est scellé dans le héros ?
+Quel personnage de Dragon Ball devient le rival principal de Goku après avoir été autrefois son ennemi ?
+Quel personnage de Dragon Ball est le frère aîné de Goku ?
+Quel personnage de Dragon Ball devient célèbre pour avoir atteint une transformation aux cheveux dorés ?
+Quel personnage de Dragon Ball est le fils de Vegeta et Bulma ?
+Quel personnage de Dragon Ball est le premier enfant de Goku et Chi-Chi ?
+Quel personnage de Dragon Ball est connu pour utiliser principalement des techniques liées aux boules d'énergie ?
+Quel personnage de Demon Slayer utilise une respiration liée à la foudre ?
+Quel personnage de Demon Slayer accompagne son frère dans sa quête malgré sa transformation en démon ?
+Quel personnage de Demon Slayer utilise principalement une respiration liée à l'eau au début de l'histoire ?
+Quel personnage de Demon Slayer est le pilier de la flamme ?
+Quel personnage de Demon Slayer est connu pour ses trois épées et son immense appétit ?
+Quel personnage de Jujutsu Kaisen est réputé pour ses six yeux et son immense puissance ?
+Quel personnage de Jujutsu Kaisen partage son corps avec une entité particulièrement dangereuse ?
+Quel personnage de Jujutsu Kaisen utilise une technique basée sur les dix ombres ?
+Quel personnage de My Hero Academia possède une capacité permettant de transmettre une puissance accumulée ?
+Quel personnage de My Hero Academia est connu pour ses explosions provoquées par sa transpiration ?
+Quel personnage de My Hero Academia est un professeur capable d'annuler temporairement les pouvoirs ?
+Quel personnage de Death Note utilise un cahier permettant de provoquer la mort d'une personne dont il connaît le nom et le visage ?
+Quel personnage de Death Note enquête sur une série de morts mystérieuses sous le pseudonyme de L ?
+Quel personnage de Death Note accompagne régulièrement Light tout en étant un Shinigami ?
+Quel personnage de Hunter x Hunter est le meilleur ami de Gon et vient d'une famille d'assassins ?
+Quel personnage de Hunter x Hunter cherche à retrouver son père absent ?
+Quel personnage de Hunter x Hunter est célèbre pour ses chaînes et sa volonté de vengeance ?
+Quel personnage de Fullmetal Alchemist est le frère cadet d'Edward et possède une armure vide ?
+Quel personnage de Fullmetal Alchemist est connu pour utiliser principalement l'alchimie sans cercle ?
+Quel personnage de Attack on Titan possède la capacité de se transformer en Titan tout en étant membre du bataillon d'exploration ?
+Quel personnage de Attack on Titan est particulièrement connu pour sa puissance au combat malgré sa petite taille ?
+Quel personnage de Attack on Titan est la sœur adoptive d'Eren ?
+Quel personnage de One Punch Man peut vaincre ses adversaires avec un seul coup ?
+Quel personnage de One Punch Man est un cyborg cherchant à devenir plus puissant ?
+Quel personnage de Pokémon accompagne Sacha pendant une grande partie de ses aventures ?
+Quel Pokémon est connu pour évoluer lorsqu'il reçoit une pierre Eau ?
+Quel Pokémon possède une apparence de souris électrique et des joues rouges ?
+Quel personnage de JoJo's Bizarre Adventure est connu pour son Stand Star Platinum ?
+Quel personnage de Code Geass utilise un pouvoir qui lui permet de donner des ordres absolus ?
+Quel personnage de Chainsaw Man possède une tête pouvant se transformer en tronçonneuse ?
+Quel personnage de Spy x Family est secrètement une tueuse professionnelle ?
+Quel personnage de Spy x Family peut lire les pensées des autres ?
+Quel personnage de Solo Leveling commence comme un chasseur extrêmement faible avant de devenir surpuissant ?
+Quel personnage de Haikyuu!! rêve de devenir un joueur de volleyball exceptionnel malgré sa petite taille ?
+Quel personnage de Blue Lock est obsédé par l'idée de devenir le meilleur buteur du monde ?
+Quel personnage de Frieren est une elfe ayant vécu beaucoup plus longtemps que les humains qui l'entourent ?
+Quel personnage de Cowboy Bebop chasse des criminels dans l'espace tout en traînant avec un chien particulièrement intelligent ?
+Quel personnage de Berserk manie une épée gigantesque et cherche à survivre dans un monde extrêmement violent ?
+Quel personnage de Vinland Saga devient progressivement obsédé par la vengeance de son père ?
+Quel personnage de Pokémon est le premier Pokémon du Pokédex national ?
+Quel personnage de Mario est connu pour porter une casquette rouge et sauver régulièrement une princesse ?
+Quel personnage de Zelda porte traditionnellement une tunique verte et manie une épée légendaire ?
+Quel personnage de Mario est le frère du héros principal et porte généralement une tenue verte ?
+Quel personnage de Nintendo est un gorille portant une cravate rouge ?
+Quel personnage de Kirby est capable d'aspirer ses ennemis pour copier leurs pouvoirs ?
+Quel personnage de Mortal Kombat utilise principalement des techniques liées au feu et possède un rival contrôlant la glace ?
+Quel personnage de Street Fighter est connu pour son bandeau rouge et ses techniques de combat à distance ?
+Quel personnage de God of War cherche à rompre avec son passé tout en affrontant des dieux ?
+Quel personnage de The Witcher chasse des monstres contre rémunération ?
+Quel personnage de Red Dead Redemption 2 appartient au gang de Dutch van der Linde ?
+Quel personnage de GTA V est un ancien braqueur vivant dans une villa de Los Santos ?
+Quel personnage de Minecraft est représenté par un personnage humanoïde sans visage détaillé dans le jeu original ?
+Quel personnage de Portal se réveille dans un laboratoire contrôlé par une intelligence artificielle ?
+Quel personnage de Star Wars est le maître Jedi qui forme Luke sur Dagobah ?
+Quel personnage de Star Wars est le père de Luke et Leia ?
+Quel personnage de Star Wars est un Wookiee et le fidèle compagnon de Han Solo ?
+Quel personnage de Star Wars est un droïde doré obsédé par les protocoles ?
+Quel personnage de Star Wars est un petit droïde bleu et blanc particulièrement célèbre ?
+Quel personnage de Harry Potter travaille comme garde-chasse de Poudlard et possède une affection particulière pour les créatures dangereuses ?
+Quel personnage de Harry Potter est le meilleur ami de Harry et vient d'une famille de sorciers roux ?
+Quel personnage de Harry Potter est particulièrement doué en magie et aide souvent Harry à résoudre les problèmes ?
+Quel personnage de Harry Potter dirige Poudlard pendant une grande partie de la saga ?
+Quel personnage de Harry Potter est le professeur de potions au comportement particulièrement froid envers Harry ?
+Quel personnage de Harry Potter possède une cicatrice en forme d'éclair ?
+Quel personnage du Seigneur des Anneaux porte l'Anneau pendant la majeure partie du voyage ?
+Quel personnage du Seigneur des Anneaux est un magicien qui revient sous une nouvelle forme après avoir affronté un Balrog ?
+Quel personnage du Seigneur des Anneaux est un elfe particulièrement doué à l'arc ?
+Quel personnage du Seigneur des Anneaux est un nain membre de la Communauté ?
+Quel personnage du Seigneur des Anneaux est un hobbit particulièrement attiré par l'Anneau ?
+Quel personnage de Marvel porte un marteau qu'il ne peut normalement manier que s'il en est digne ?
+Quel personnage de Marvel utilise un bouclier rond comme arme principale ?
+Quel personnage de Marvel est milliardaire et développe une armure technologique ?
+Quel personnage de Marvel devient extrêmement puissant lorsqu'il laisse place à une personnalité verte et colérique ?
+Quel personnage de Marvel est un ancien chirurgien devenu maître des arts mystiques ?
+Quel personnage de Marvel est le frère adoptif de Thor et devient souvent son adversaire ?
+Quel personnage de Marvel est le roi d'un royaume africain technologiquement avancé ?
+Quel personnage de DC protège Gotham en utilisant principalement la peur et la technologie ?
+Quel personnage de DC est le majordome et confident de Bruce Wayne ?
+Quel personnage de DC utilise un lasso magique et vient d'une île peuplée d'Amazones ?
+Quel personnage de DC peut voler et possède une vision capable de projeter des rayons ?
+Quel personnage de DC est célèbre pour ses énigmes et son obsession des puzzles ?
+Quel personnage de DC est un clown criminel devenu l'ennemi emblématique de Batman ?
+Quel personnage de Toy Story est un cow-boy qui porte un chapeau ?
+Quel personnage de Toy Story est un ranger de l'espace convaincu d'être réellement un héros intergalactique ?
+Quel personnage de Toy Story est un cochon tirelire rose ?
+Quel personnage de Toy Story est une cow-girl qui rejoint la collection d'Andy ?
+Quel personnage de Toy Story est un dinosaure vert particulièrement peureux ?
+Quel personnage de Shrek est un âne extrêmement bavard ?
+Quel personnage de Shrek est une princesse qui cache une transformation ?
+Quel personnage de Shrek est un chat expert au combat qui porte un grand chapeau ?
+Quel personnage du Roi Lion devient roi après avoir été chassé de son royaume ?
+Quel personnage du Roi Lion manipule son neveu pour prendre le pouvoir ?
+Quel personnage du Roi Lion accompagne Simba et répète souvent une philosophie de vie légère ?
+Quel personnage du Roi Lion est un phacochère vivant avec Timon ?
+Quel personnage de La Reine des Neiges possède des pouvoirs liés à la glace ?
+Quel personnage de La Reine des Neiges est un bonhomme de neige rêvant de découvrir l'été ?
+Quel personnage de La Reine des Neiges accompagne Anna avec un renne ?
+Quel personnage d'Aladdin possède une lampe magique et peut exaucer des vœux ?
+Quel personnage d'Aladdin est un perroquet appartenant à Jafar ?
+Quel personnage d'Aladdin cherche à prendre le pouvoir sur Agrabah ?
+Quel personnage de La Petite Sirène accompagne Ariel sous l'eau et possède une pince ?
+Quel personnage de La Petite Sirène est le meilleur ami poisson d'Ariel ?
+Quel personnage de Mulan accompagne l'héroïne sous la forme d'un petit dragon ?
+Quel personnage de Ratatouille est un rat capable de cuisiner mieux que beaucoup d'humains ?
+Quel personnage de Coco accompagne Miguel dans le monde des morts ?
+Quel personnage de Monstres & Cie est une petite fille surnommée temporairement par un simple chiffre ?
+Quel personnage de Monstres & Cie est un monstre bleu couvert de taches ?
+Quel personnage de Là-Haut accompagne le héros malgré lui lors de son voyage ?
+Quel personnage de Cars est une voiture de course rouge qui rêve de gagner la Piston Cup ?
+Quel personnage de Cars est un vieux camion de dépannage particulièrement fidèle ?
+Quel personnage de Vaiana est un demi-dieu extrêmement vaniteux mais puissant ?
+Quel personnage de Vaiana est un cochon qui accompagne la jeune héroïne ?
+Quel personnage de Zootopie est un renard qui devient le partenaire d'une jeune policière ?
+Quel personnage de Vice-Versa représente principalement la joie dans l'esprit de Riley ?
+Quel personnage de Vice-Versa représente principalement la tristesse dans l'esprit de Riley ?
+Quel personnage de Big Hero 6 est un robot médical gonflable ?
+Quel personnage de Kung Fu Panda devient maître des arts martiaux malgré ses débuts maladroits ?
+Quel personnage de Dragons est le meilleur ami d'un dragon noir qu'il appelle Krokmou ?
+Quel personnage de Mon voisin Totoro est la créature géante vivant dans la forêt ?
+Quel personnage du Voyage de Chihiro se transforme progressivement en allié de l'héroïne ?
+Quel personnage de Princesse Mononoké est une jeune femme élevée par des loups ?
+Quel personnage de Your Name échange mystérieusement sa vie quotidienne avec celle d'une autre personne ?
+Quel personnage de A Silent Voice tente de réparer ses erreurs envers une ancienne camarade sourde ?
+Quel personnage de L'Étrange Noël de monsieur Jack dirige la fête d'Halloween ?
+Quel personnage de The Simpsons est le père d'une famille vivant à Springfield ?
+Quel personnage de Friends est particulièrement obsédé par les dinosaures ?
+Quel personnage de The Office est connu pour son comportement maladroit en tant que patron ?
+Quel personnage de Stranger Things possède un numéro tatoué et des pouvoirs psychiques ?
+Quel personnage de The Walking Dead devient progressivement le leader d'un groupe de survivants ?
+Quel personnage de Game of Thrones devient reine après avoir grandi loin du pouvoir ?
+Quel personnage de Peaky Blinders dirige la famille Shelby ?
+Quel personnage de La Casa de Papel planifie le braquage depuis l'extérieur ?
+Quel personnage de Squid Game porte principalement le numéro 456 ?
+Quel personnage de Breaking Bad travaille comme professeur avant de se lancer dans la fabrication de drogue ?
+Quel personnage de Better Call Saul utilise principalement une identité différente de son vrai nom ?
+Quel personnage de Dexter travaille dans la police tout en cachant sa propre activité criminelle ?
+Quel personnage de Sherlock Holmes est le compagnon et biographe du détective ?
+Quel personnage de Wednesday appartient à la famille Addams et fréquente une académie étrange ?
+Quel personnage de Rick and Morty est le scientifique alcoolique qui invente régulièrement des technologies impossibles ?
+Quel personnage de The Boys possède une force et une image publique de héros mais cache une personnalité extrêmement dangereuse ?
+Quel personnage de The Mandalorian accompagne constamment le chasseur de primes sous une forme particulièrement mignonne ?
+Quel personnage de Squid Game dirige secrètement les jeux derrière un masque ?
+Quel personnage de Lost devient un médecin important parmi les survivants ?
+Quel personnage de Prison Break est prêt à tout pour faire sortir son frère de prison ?
+Quel personnage de House est célèbre pour diagnostiquer des maladies complexes grâce à des raisonnements peu conventionnels ?
+Quel personnage de The Last of Us accompagne une survivante à travers une Amérique ravagée ?
+Quel personnage de The Last of Us est chargé d'accompagner une adolescente qui pourrait changer l'avenir de l'humanité ?
+Quel personnage de Stranger Things est le meilleur ami de Will, Mike et Dustin et adore les jeux de rôle ?
+Quel personnage de Game of Thrones manie une épée gigantesque et devient célèbre pour sa loyauté envers sa famille ?
+Quel personnage de Game of Thrones possède trois dragons ?
+Quel personnage de Breaking Bad devient le partenaire de Walter dans la fabrication de méthamphétamine ?
+Quel personnage de The Office travaille dans la comptabilité et est particulièrement passionné par les arts martiaux ?
+Quel personnage de Friends est célèbre pour son humour sarcastique et sa peur des engagements ?
+Quel personnage de Friends travaille comme paléontologue ?
+Quel personnage de Friends est particulièrement obsédé par la propreté et l'organisation ?
+Quel personnage de Peaky Blinders est la tante de Tommy Shelby et joue un rôle majeur dans les affaires familiales ?
+Quel personnage de La Casa de Papel porte un nom de ville et fait partie des braqueurs ?
+Quel personnage de The Walking Dead utilise principalement une arbalète pour combattre les morts-vivants ?
+Quel personnage de Game of Thrones appartient à la famille Stark et possède une relation particulière avec les loups ?
+Quel personnage de Harry Potter est le parrain du héros ?
+Quel personnage du Seigneur des Anneaux porte le surnom de Strider avant de révéler son identité royale ?
+Quel personnage de Star Wars possède une main robotique après un affrontement avec son père ?
+Quel personnage de Star Wars devient un général malgré son manque d'expérience au début de la saga ?
+Quel personnage de Marvel est connu pour son bouclier et son identité liée à Steve Rogers ?
+Quel personnage de Marvel est un raton laveur parlant membre des Gardiens de la Galaxie ?
+Quel personnage de Marvel est un arbre capable de prononcer une phrase très simple ?
+Quel personnage de DC est un adolescent qui peut devenir un héros adulte grâce à un mot magique ?
+Quel personnage de DC possède des ailes et une armure inspirée de l'Égypte antique dans certaines versions ?
+Quel personnage de Pokémon est le champion d'arène spécialisé dans les Pokémon de type Eau et ami de Sacha dans plusieurs adaptations ?
+Quel personnage de Pokémon est une jeune coordinatrice et amie de Sacha dans Hoenn ?
+Quel personnage de Pokémon est le rival de Sacha qui devient champion de la Ligue dans certaines versions ?
+Quel personnage de Mario est une princesse qui porte souvent une robe rose ?
+Quel personnage de Zelda est le principal antagoniste récurrent de nombreux jeux de la série ?
+Quel personnage de Sonic est un hérisson noir créé comme une arme ultime ?
+Quel personnage de Sonic est un renard à deux queues capable de voler ?
+Quel personnage de Mortal Kombat est un ninja bleu associé à la maîtrise de la glace ?
+Quel personnage de Street Fighter utilise souvent des techniques de karaté et un célèbre Hadoken ?
+Quel personnage de The Witcher possède des cheveux blancs et deux épées ?
+Quel personnage de God of War accompagne Kratos en tant que fils ?
+Quel personnage de Red Dead Redemption 2 est le chef du gang auquel appartient Arthur Morgan ?
+Quel personnage de GTA V est un jeune braqueur ambitieux vivant dans un quartier pauvre de Los Santos ?
+Quel personnage de Assassin's Creed II appartient à la famille Auditore ?
+Quel personnage de Metal Gear Solid est connu sous le nom de Solid Snake ?
+Quel personnage de Halo porte une armure verte et combat les forces extraterrestres ?
+Quel personnage de Tomb Raider est une archéologue britannique connue pour ses expéditions dangereuses ?
+Quel personnage de Portal guide la protagoniste à travers un laboratoire rempli d'énigmes ?
+Quel personnage de Overwatch utilise des pistolets et peut remonter brièvement dans le temps ?
+Quel personnage de League of Legends est une petite créature yordle portant un énorme marteau ?
+Quel personnage de Fortnite est souvent représenté avec un casque et un costume futuriste ?
+Quel personnage de Minecraft est principalement reconnaissable à sa tête cubique et ses vêtements bleus ?
+Quel personnage de Hollow Knight est un petit chevalier silencieux explorant un royaume souterrain ?
+Quel personnage de Undertale peut être paresseux et faire des jeux de mots sur les squelettes ?
+Quel personnage de Cuphead possède une tête en forme de tasse ?
+Quel personnage de Five Nights at Freddy's est un animatronique violet souvent associé au rôle de gardien ?
+Quel personnage de Dofus est connu pour son apparence de guerrier aux cheveux rouges dans certaines représentations ?
+Quel personnage de Dragon Quest est souvent représenté comme un petit héros avec une épée et une cape ?
+Quel personnage de Final Fantasy VII possède une énorme épée et des cheveux blonds en bataille ?
+Quel personnage de Final Fantasy VII est associé à une longue chevelure argentée et devient l'un des antagonistes les plus célèbres du jeu ?
+Quel personnage de Resident Evil est une espionne mystérieuse souvent associée à Leon ?
+Quel personnage de Resident Evil travaille comme policier débutant dans le premier jeu ?
+Quel personnage de Silent Hill est attiré dans une ville mystérieuse après avoir reçu une lettre ?
+Quel personnage de The Last of Us est la fille de Joel ?
+Quel personnage de God of War est la mère d'Atreus ?
+Quel personnage de Elden Ring est un mystérieux guide apparaissant au début de l'aventure ?
+Quel personnage de Dark Souls est associé à une célèbre phrase concernant les morts-vivants ?
+Quel personnage de Sekiro est un shinobi chargé de protéger son jeune maître ?
+Quel personnage de Persona 5 porte un masque et dirige les Voleurs Fantômes ?
+Quel personnage de Among Us est connu pour cacher son identité parmi l'équipage ?
+Quel personnage de Brawl Stars est un combattant portant souvent un chapeau et utilisant une batte dans certaines représentations ?
+Quel personnage de Clash Royale est un roi moustachu dirigeant son arène ?
+Quel personnage de Roblox est devenu une icône grâce à son apparence simple et cubique ?
+Quel personnage de Rayman possède des membres qui flottent autour de son corps ?
+Quel personnage de Crash Bandicoot est un marsupial orange constamment confronté au docteur Neo Cortex ?
+Quel personnage de Spyro est un petit dragon violet capable de cracher du feu ?
+Quel personnage de Pac-Man est une boule jaune poursuivie par des fantômes dans un labyrinthe ?
+Quel personnage de Mega Man utilise un canon intégré à son bras ?
+Quel personnage de Metroid est une chasseuse de primes portant une combinaison orange ?
+Quel personnage de Street Fighter est une combattante française utilisant principalement des coups de pied acrobatiques ?
+Quel personnage de Tekken est connu pour sa coiffure en forme de pics et ses pouvoirs électriques ?
+Quel personnage de Final Fantasy possède une robe bleue et une longue tresse dans certaines représentations classiques ?
+Quel personnage de Kingdom Hearts manie une arme ressemblant à une clé géante ?
+Quel personnage de Persona 5 est une jeune fille membre des Voleurs Fantômes et utilisant une arme à feu ?
+Quel personnage de Resident Evil utilise souvent un lance-roquettes dans les moments les plus difficiles de la série ?
+Quel personnage de Metal Gear Solid est un soldat légendaire surnommé Big Boss ?
+Quel personnage de Assassin's Creed est connu pour son capuchon blanc et ses lames secrètes ?
+Quel personnage de Warcraft est un orc devenu chef de guerre dans plusieurs histoires ?
+Quel personnage de World of Warcraft est un roi humain associé à Hurlevent ?
+Quel personnage de League of Legends est un yordle portant un chapeau et utilisant une sarbacane ?
+Quel personnage de League of Legends est un mage capable de se transformer en dragon dans certaines versions ?
+Quel personnage de Valorant est un agent français utilisant des technologies avancées ?
+Quel personnage de Overwatch est un robot moine capable de méditer et de lancer des orbes ?
+Quel personnage de Overwatch est une tireuse d'élite française utilisant un fusil à longue portée ?
+Quel personnage de Fortnite est connu sous le nom de Jonesy ?
+Quel personnage de Among Us est souvent représenté avec un petit animal de compagnie sur la tête ?
+Quel personnage de Minecraft peut apparaître après qu'un joueur utilise un œuf de dragon dans certaines créations communautaires ?
+Quel personnage de Zelda possède une épée capable de repousser les ténèbres ?
+Quel personnage de Mario est un dinosaure vert qui peut avaler certains ennemis ?
+Quel personnage de Pokémon est le professeur qui donne généralement au héros son premier Pokémon dans la région de Kanto ?
+Quel personnage de Pokémon est un champion d'arène spécialisé dans les Pokémon de type Roche à Jadielle ?
+Quel personnage de Pokémon est le champion d'arène de type Électrik à Carmin sur Mer ?
+Quel personnage de Naruto porte un masque et dissimule une grande partie de son visage ?
+Quel personnage de Naruto devient le cinquième Hokage ?
+Quel personnage de Naruto appartient au clan Hyuga et possède le Byakugan ?
+Quel personnage de One Piece est un ancien membre de la marine devenu amiral ?
+Quel personnage de One Piece est un ancien roi des pirates ?
+Quel personnage de One Piece est connu pour son pouvoir lié à la gravité et son rôle d'amiral ?
+Quel personnage de Demon Slayer utilise des techniques liées à l'amour ?
+Quel personnage de Demon Slayer possède plusieurs épouses et utilise des techniques liées au son ?
+Quel personnage de Demon Slayer est connu pour sa personnalité extrêmement timide malgré son potentiel ?
+Quel personnage de Jujutsu Kaisen utilise une technique basée sur la manipulation du sang ?
+Quel personnage de Jujutsu Kaisen est le directeur de l'école de Tokyo dans certaines parties de l'histoire ?
+Quel personnage de My Hero Academia est le héros numéro un après le départ progressif d'une ancienne légende ?
+Quel personnage de My Hero Academia possède une apparence de grenouille et une langue particulièrement longue ?
+Quel personnage de Attack on Titan est commandant du Bataillon d'exploration et célèbre pour ses stratégies risquées ?
+Quel personnage de Attack on Titan est le père d'Eren ?
+Quel personnage de Fullmetal Alchemist dirige l'armée tout en cachant de grandes ambitions ?
+Quel personnage de Fullmetal Alchemist possède des flammes comme spécialité d'alchimiste ?
+Quel personnage de Hunter x Hunter est le président de l'association des Hunters pendant une grande partie de l'histoire ?
+Quel personnage de Hunter x Hunter possède une force physique exceptionnelle et une apparence très imposante ?
+Quel personnage de Chainsaw Man est une chasseuse de démons qui devient particulièrement importante pour Denji ?
+Quel personnage de Chainsaw Man est le chef de la Sécurité publique qui manipule Denji ?
+Quel personnage de Solo Leveling est la sœur de Sung Jin-Woo ?
+Quel personnage de Blue Lock est connu pour sa personnalité imprévisible et ses dribbles ?
+Quel personnage de Haikyuu!! est le capitaine de Karasuno et possède une grande expérience malgré son manque de talent naturel exceptionnel ?
+Quel personnage de JoJo utilise un Stand qui arrête le temps ?
+Quel personnage de Code Geass porte une identité de prince déchu et cherche à renverser l'ordre mondial ?
+Quel personnage de Death Note est la célèbre mannequin et admiratrice de Kira ?
+Quel personnage de Bleach possède une grande puissance spirituelle et devient remplaçant Shinigami ?
+Quel personnage de Bleach est une Shinigami aux cheveux orange qui rencontre le héros au début de l'histoire ?
+Quel personnage de Bleach est le capitaine de la sixième division et possède des techniques liées aux pétales de fleurs ?
+Quel personnage de One Piece est le frère de Luffy portant un chapeau noir ?
+Quel personnage de One Piece est le frère de Luffy associé au fruit du feu ?
+Quel personnage de Dragon Ball est le maître de Goku pendant son enfance et porte une carapace ?
+Quel personnage de Dragon Ball est un assassin réputé capable d'arrêter le temps pendant quelques instants ?
+Quel personnage de Dragon Ball devient le mentor de Gohan et possède une forme jaune extrêmement puissante ?
+Quel personnage de Naruto est le frère d'Itachi Uchiha ?
+Quel personnage de Naruto devient l'un des principaux ennemis de l'Akatsuki après avoir quitté son village ?
+Quel personnage de Naruto est le chef de l'Akatsuki pendant une grande partie de l'histoire ?
+Quel personnage de Naruto est connu sous le surnom de Dieu Shinobi ?
+Quel personnage de One Piece est une femme membre de l'équipage de Luffy capable de manipuler le climat ?
+Quel personnage de One Piece est le musicien squelette de l'équipage ?
+Quel personnage de One Piece est un cyborg charpentier qui construit le Thousand Sunny ?
+Quel personnage de One Piece est une renne médecin ayant mangé un fruit du démon ?
+Quel personnage de One Piece est une archéologue capable de faire apparaître des membres supplémentaires ?
+Quel personnage de Dragon Ball est connu pour sa technique de téléportation ?
+Quel personnage de Dragon Ball fusionne avec Vegeta pour former un combattant extrêmement puissant ?
+Quel personnage de Naruto utilise principalement des techniques médicales et devient Hokage ?
+Quel personnage de Naruto est connu pour utiliser des insectes vivant à l'intérieur de son corps ?
+Quel personnage de Naruto est connu pour son style de combat basé sur les huit portes ?
+Quel personnage de Naruto porte toujours une combinaison verte et des sourcils très épais ?
+Quel personnage de Demon Slayer est le pilier de l'insecte ?
+Quel personnage de Demon Slayer est le pilier de la brume ?
+Quel personnage de Demon Slayer est le pilier de l'eau ?
+Quel personnage de Demon Slayer est le pilier de l'amour ?
+Quel personnage de Demon Slayer est le pilier de la pierre ?
+Quel personnage de Jujutsu Kaisen est connu pour son humour particulier et sa technique liée aux probabilités ?
+Quel personnage de Jujutsu Kaisen possède une énergie occulte extrêmement faible mais une force physique exceptionnelle ?
+Quel personnage de My Hero Academia est une héroïne professionnelle capable de créer des objets à partir de son corps ?
+Quel personnage de My Hero Academia possède des ailes et utilise des plumes comme armes ?
+Quel personnage de My Hero Academia est le père d'un héros dont les pouvoirs sont liés au feu et à la glace ?
+Quel personnage de Attack on Titan est connue pour son obsession envers la nourriture et particulièrement les pommes de terre ?
+Quel personnage de Attack on Titan possède un Titan blindé ?
+Quel personnage de Attack on Titan possède un Titan féminin ?
+Quel personnage de Fullmetal Alchemist est le frère d'Edward et peut utiliser l'alchimie malgré son armure vide ?
+Quel personnage de Fullmetal Alchemist est surnommé le Fullmetal Alchemist ?
+Quel personnage de Hunter x Hunter est le père que Gon cherche pendant une grande partie de l'histoire ?
+Quel personnage de Hunter x Hunter utilise des chaînes pour combattre ses ennemis ?
+Quel personnage de Hunter x Hunter est un clown particulièrement imprévisible ?
+Quel personnage de Pokémon est un ancien champion d'arène qui devient ensuite un chercheur important ?
+Quel personnage de Pokémon est la Team Rocket connue pour tenter constamment de capturer Pikachu ?
+Quel personnage de Pokémon utilise principalement des Pokémon de type Eau et possède un tempérament calme dans l'anime ?
+Quel personnage de Mario est le principal ennemi de Bowser dans plusieurs jeux ?
+Quel personnage de Zelda possède le pouvoir de la Triforce de la Sagesse dans plusieurs versions de l'histoire ?
+Quel personnage de Sonic est un hérisson noir associé à un passé mystérieux ?
+Quel personnage de Sonic est un échidné rouge gardien d'une pierre légendaire ?
+Quel personnage de Sonic est un renard à deux queues et le meilleur ami du héros ?
+Quel personnage de Pokémon possède une apparence de tortue bleue et évolue en Carabaffe ?
+Quel personnage de Pokémon ressemble à une souris électrique et peut évoluer en Raichu ?
+Quel personnage de Pokémon est une créature rose capable de copier les mouvements adverses dans certaines adaptations ?
+Quel personnage de Mortal Kombat utilise un chapeau métallique comme arme ?
+Quel personnage de Tekken appartient à une famille célèbre pour ses combats et ses conflits internes ?
+Quel personnage de Final Fantasy VII possède une grande épée et travaille avec Avalanche ?
+Quel personnage de Resident Evil est une ancienne policière membre de l'équipe STARS ?
+Quel personnage de Resident Evil devient le partenaire de Leon dans certaines aventures ?
+Quel personnage de Silent Hill traverse une ville brumeuse à la recherche de sa fille ?
+Quel personnage de The Last of Us est une adolescente immunisée contre une infection mystérieuse ?
+Quel personnage de God of War est le fils de Kratos et connaît progressivement ses véritables origines ?
+Quel personnage de Red Dead Redemption 2 est un ancien hors-la-loi qui tente de sauver son honneur ?
+Quel personnage de GTA V est un homme imprévisible vivant dans une caravane ?
+Quel personnage de Assassin's Creed II appartient à une famille florentine décimée au début de l'histoire ?
+Quel personnage de Halo est surnommé Master Chief ?
+Quel personnage de Tomb Raider est une archéologue explorant régulièrement des tombeaux dangereux ?
+Quel personnage de Overwatch utilise des rollers futuristes et peut accélérer ses déplacements ?
+Quel personnage de League of Legends est connu pour lancer des cartes comme armes ?
+Quel personnage de Valorant manipule le feu et vient du Royaume-Uni ?
+Quel personnage de Fortnite est associé à une tenue de banane très reconnaissable ?
+Quel personnage de Five Nights at Freddy's est un animatronique ours portant généralement un haut-de-forme ?
+Quel personnage de Dofus est un dieu ou une classe associé aux portails et à la magie dimensionnelle ?
+Quel personnage de Dofus est célèbre pour ses épées et son style de combat direct ?
+Quel personnage de Dofus est associé aux invocations et aux créatures ?
+Quel personnage de Final Fantasy possède un immense chocobo comme monture dans certaines aventures ?
+Quel personnage de Kingdom Hearts possède une Keyblade et voyage entre plusieurs mondes Disney ?
+Quel personnage de Persona 5 dirige les Voleurs Fantômes sous le nom de Joker ?
+Quel personnage de Resident Evil est un scientifique devenu une créature monstrueuse après avoir expérimenté sur lui-même ?
+Quel personnage de Metal Gear Solid est connu pour son camouflage et ses missions d'infiltration ?
+Quel personnage de Warcraft est un ancien prince humain devenu un chevalier de la mort ?
+Quel personnage de League of Legends utilise une énorme épée et cherche à devenir toujours plus puissant ?
+Quel personnage de League of Legends est un petit yordle utilisant une énorme massue ?
+Quel personnage de Overwatch est un soldat équipé d'un fusil automatique et d'un lance-roquettes ?
+Quel personnage de Mario est un dinosaure vert qui accompagne souvent le héros ?
+Quel personnage de Zelda est une princesse blonde associée à la Triforce de la Sagesse ?
+Quel personnage de Kirby est une boule rose capable d'absorber ses adversaires ?
+Quel personnage de Metroid est une chasseuse de primes portant une combinaison orange ?
+Quel personnage de Mega Man est connu pour son canon intégré au bras ?
+Quel personnage de Crash Bandicoot est un marsupial orange vivant sur une île fictive ?
+Quel personnage de Spyro est un petit dragon violet capable de voler et de cracher du feu ?
+Quel personnage de Pac-Man est poursuivi par quatre fantômes colorés ?
+Quel personnage de Street Fighter est le rival américain de Ryu et possède des cheveux blonds en épis ?
+Quel personnage de Tekken est célèbre pour son style de combat et son lien avec la famille Mishima ?
+Quel personnage de Dark Souls est associé à la célèbre phrase sur le fait de ne pas abandonner ?
+Quel personnage de Sekiro protège un jeune héritier doté d'un sang particulier ?
+Quel personnage de Persona 5 utilise une faux et possède une personnalité particulièrement mystérieuse ?
+Quel personnage de Among Us peut éliminer les membres de l'équipage sans être immédiatement identifié ?
+Quel personnage de Clash Royale est le roi qui donne son nom à l'arène ?
+Quel personnage de Roblox est devenu une représentation emblématique de l'avatar classique ?
+Quel personnage de Undertale est un squelette particulièrement paresseux ?
+Quel personnage de Cuphead possède un frère dont le nom rappelle une autre boisson ?
+Quel personnage de Five Nights at Freddy's est un lapin violet animatronique ?
+Quel personnage de League of Legends est un yordle avec des lunettes et une sarbacane ?
+Quel personnage de Valorant est un agent français utilisant des technologies de précision ?
+Quel personnage de Overwatch est un robot qui utilise des orbes et médite ?
+Quel personnage de Fortnite est souvent identifié par son apparence de banane jaune ?
+Quel personnage de Zelda est l'antagoniste récurrent qui cherche à obtenir la Triforce ?
+Quel personnage de Mario est un gorille devenu une mascotte majeure de Nintendo ?
+Quel personnage de Pokémon est un Pokémon feu ressemblant à un petit lézard orange ?
+Quel personnage de Pokémon évolue à partir de Carapuce après plusieurs étapes ?
+Quel personnage de Naruto est connu pour ses cheveux argentés et son masque couvrant une partie du visage ?
+Quel personnage de Naruto devient le chef du village après Tsunade ?
+Quel personnage de Naruto est le fils du quatrième Hokage ?
+Quel personnage de One Piece possède un pouvoir lié aux ténèbres et devient l'un des grands ennemis de Luffy ?
+Quel personnage de One Piece est l'ancien capitaine de l'équipage de Roger ?
+Quel personnage de One Piece est une impératrice pirate amoureuse de Luffy ?
+Quel personnage de Dragon Ball est le père de Goku ?
+Quel personnage de Dragon Ball est le fils de Goku devenu célèbre après avoir vaincu Cell ?
+Quel personnage de Dragon Ball est un humain chauve ayant commencé comme élève de Tortue Géniale ?
+Quel personnage de Demon Slayer utilise une respiration liée à l'amour ?
+Quel personnage de Demon Slayer possède une technique basée sur le son et combat avec deux énormes lames ?
+Quel personnage de Demon Slayer est un démon qui conserve des souvenirs de sa vie humaine et protège sa sœur ?
+Quel personnage de Jujutsu Kaisen est le principal antagoniste lié à Yuji ?
+Quel personnage de Jujutsu Kaisen utilise une technique permettant de manipuler les ombres ?
+Quel personnage de My Hero Academia possède un alter qui lui permet de contrôler la gravité ?
+Quel personnage de My Hero Academia est un professeur utilisant des bandelettes comme arme ?
+Quel personnage de Attack on Titan est le meilleur ami d'Eren et possède une grande intelligence stratégique ?
+Quel personnage de Attack on Titan est le commandant du Bataillon d'exploration avant Hange ?
+Quel personnage de Fullmetal Alchemist est un militaire spécialisé dans les flammes ?
+Quel personnage de Fullmetal Alchemist devient le chef suprême du pays ?
+Quel personnage de Hunter x Hunter est une jeune fille membre de la famille Zoldyck et possède une relation particulière avec Killua ?
+Quel personnage de Hunter x Hunter est un médecin devenu Hunter pour aider les autres ?
+Quel personnage de Bleach est le capitaine de la première division et possède une puissance liée au feu ?
+Quel personnage de Bleach utilise principalement des techniques liées à la glace ?
+Quel personnage de Bleach possède un zanpakutō qui peut manipuler les pétales ?
+Quel personnage de Pokémon fait partie de la Team Rocket avec Jessie et James ?
+Quel personnage de Pokémon accompagne Jessie et James sans être humain ?
+Quel personnage de Pokémon est un ancien champion de la Ligue et devient professeur dans certaines adaptations ?
+Quel personnage de Mario est une princesse souvent associée à la couleur rose ?
+Quel personnage de Zelda est le héros récurrent portant souvent une tunique verte ?
+Quel personnage de Sonic est une chauve-souris voleuse de bijoux ?
+Quel personnage de Sonic est un robot construit pour rivaliser avec Sonic ?
+Quel personnage de Mortal Kombat utilise des techniques de glace et possède un rival associé au feu ?
+Quel personnage de Final Fantasy VII est une fleuriste vivant à Midgar ?
+Quel personnage de Final Fantasy VII est le meilleur ami d'enfance de Cloud ?
+Quel personnage de Resident Evil est un agent du gouvernement chargé de retrouver la fille du président ?
+Quel personnage de Resident Evil dirige une organisation secrète et manipule souvent les événements dans l'ombre ?
+Quel personnage de The Last of Us est le frère de Joel ?
+Quel personnage de God of War est un ancien dieu grec devenu un personnage central des aventures nordiques ?
+Quel personnage de Red Dead Redemption 2 est un jeune hors-la-loi qui admire Arthur Morgan ?
+Quel personnage de GTA V est un ancien braqueur qui vit dans les hauteurs de Los Santos ?
+Quel personnage de Assassin's Creed est un assassin italien devenu maître de la Confrérie ?
+Quel personnage de Halo est un soldat humain connu principalement sous son numéro de Spartan ?
+Quel personnage de Tomb Raider est connue pour son arc et ses compétences de survie ?
+Quel personnage de Metal Gear Solid utilise une technologie de camouflage optique ?
+Quel personnage de Warcraft possède une immense hache et devient chef des orcs dans plusieurs histoires ?
+Quel personnage de League of Legends est un tireur yordle portant souvent un énorme canon ?
+Quel personnage de Valorant utilise des portails pour se déplacer rapidement ?
+Quel personnage de Overwatch est une pilote britannique capable de remonter quelques secondes dans le temps ?
+Quel personnage de Fortnite est connu sous le nom de Peely ?
+Quel personnage de Minecraft est un monstre vert qui explose lorsqu'il approche du joueur ?
+Quel personnage de Minecraft est un humanoïde noir qui se téléporte et devient agressif lorsqu'on le regarde dans les yeux ?
+Quel personnage de Five Nights at Freddy's est un renard animatronique associé à Pirate Cove ?
+Quel personnage de Dofus est associé aux soins et aux pouvoirs de guérison ?
+Quel personnage de Dofus utilise principalement des cartes pour combattre ?
+Quel personnage de Kingdom Hearts est le meilleur ami de Sora et porte souvent une tenue rouge ?
+Quel personnage de Persona 5 est un chat qui accompagne les Voleurs Fantômes ?
+Quel personnage de Resident Evil est une espionne souvent associée à des missions impliquant des virus biologiques ?
+Quel personnage de Metal Gear Solid est surnommé le Renard de l'Ouest dans certaines histoires ?
+Quel personnage de League of Legends est un assassin masqué utilisant des shurikens ?
+Quel personnage de Overwatch est une tireuse d'élite française utilisant un fusil à longue portée ?
+Quel personnage de Valorant utilise des technologies basées sur les nanofibres et vient de France ?
+Quel personnage de Zelda est associé à la Master Sword ?
+Quel personnage de Mario est le principal ennemi qui kidnappe régulièrement la princesse ?
+Quel personnage de Pokémon est un Pokémon de type Feu et Vol ressemblant à un dragon orange ?
+Quel personnage de Naruto possède le Byakugan et vient du clan Hyuga ?
+Quel personnage de One Piece est connu pour son pouvoir de manipulation des fils ?
+Quel personnage de Dragon Ball est le frère de Vegeta ?
+Quel personnage de Demon Slayer est le pilier de la brume ?
+Quel personnage de Jujutsu Kaisen est une élève capable de manipuler des poupées et des clous ?
+Quel personnage de My Hero Academia possède une apparence de grenouille ?
+Quel personnage de Attack on Titan est responsable d'une grande partie de l'entraînement des nouvelles recrues ?
+Quel personnage de Fullmetal Alchemist porte le surnom de Flame Alchemist ?
+Quel personnage de Hunter x Hunter est un membre de la famille Zoldyck particulièrement proche de Gon ?
+Quel personnage de Bleach est le protagoniste qui devient remplaçant Shinigami ?
+Quel personnage de Pokémon est un Pokémon électrique célèbre pour ses joues rouges ?
+Quel personnage de Mario est un dinosaure vert ?
+Quel personnage de Sonic est un hérisson noir aux pouvoirs mystérieux ?
+Quel personnage de Zelda cherche souvent à protéger le royaume d'Hyrule ?
+Quel personnage de Final Fantasy VII est associé à une immense épée et au groupe Avalanche ?
+Quel personnage de Resident Evil est une espionne vêtue régulièrement de rouge ?
+Quel personnage de The Last of Us est une adolescente qui accompagne Joel ?
+Quel personnage de God of War est le fils de Kratos ?
+Quel personnage de GTA V est connu pour son comportement imprévisible et violent ?
+Quel personnage de Halo porte une armure verte et combat principalement les Covenants ?
+Quel personnage de Tomb Raider explore des tombeaux anciens à la recherche d'artefacts ?
+Quel personnage de Portal est guidé par une intelligence artificielle dans un laboratoire rempli d'énigmes ?
+Quel personnage de Overwatch est capable de revenir quelques secondes en arrière ?
+Quel personnage de Minecraft explose lorsqu'il se rapproche du joueur ?
+Quel personnage de Five Nights at Freddy's est un ours animatronique portant un nœud papillon ?
+Quel personnage de Dofus est associé aux portails et à la manipulation des dimensions ?
+Quel personnage de Kingdom Hearts utilise une Keyblade ?
+Quel personnage de Persona 5 porte le nom de code Joker ?
+Quel personnage de League of Legends utilise des cartes comme projectiles ?
+Quel personnage de Valorant est un agent français spécialisé dans les technologies ?
+Quelle invention a permis de transmettre des messages à distance avant l'arrivée du téléphone ?
+Quel événement marque traditionnellement le début de la Révolution française ?
+Quel peuple a construit la cité de Machu Picchu ?
+Pourquoi les Romains construisaient-ils des aqueducs ?
+Quel matériau était principalement utilisé pour fabriquer les premières pièces de monnaie ?
+Quel ancien peuple utilisait les hiéroglyphes ?
+Pourquoi les pharaons faisaient-ils construire des pyramides ?
+Quel événement a provoqué le déclenchement de la Première Guerre mondiale ?
+Quel traité a officiellement mis fin à la Première Guerre mondiale ?
+Pourquoi le mur de Berlin avait-il été construit ?
+Quel événement a provoqué la chute du mur de Berlin ?
+Quelle civilisation a inventé les premiers jeux olympiques ?
+Pourquoi les Vikings utilisaient-ils des drakkars ?
+Quelle route commerciale reliait autrefois la Chine à l'Europe ?
+Quel empire avait Constantinople pour capitale ?
+Pourquoi les châteaux médiévaux possédaient-ils souvent des douves ?
+Quelle invention de Gutenberg a révolutionné la diffusion des livres ?
+Pourquoi les chevaliers portaient-ils une armure ?
+Quel peuple a laissé les célèbres statues de l'île de Pâques ?
+Quel explorateur est arrivé aux Caraïbes en 1492 ?
+Quel pays a offert la Statue de la Liberté aux États-Unis ?
+Pourquoi les momies étaient-elles préparées dans l'Égypte antique ?
+Quelle ville antique a été ensevelie par l'éruption du Vésuve ?
+Quel peuple a construit le Colisée ?
+Pourquoi les gladiateurs combattaient-ils dans les arènes ?
+Quelle civilisation est à l'origine du calendrier maya ?
+Quel grand empire était dirigé par Jules César puis par Auguste ?
+Quelle invention a rendu les voyages maritimes beaucoup plus précis ?
+Pourquoi les pharaons étaient-ils enterrés avec des objets précieux ?
+Quelle bataille marque la défaite finale de Napoléon ?
+Quel événement historique est associé à la prise de la Bastille ?
+Quel pays était dirigé par les tsars avant la révolution de 1917 ?
+Pourquoi les anciens Égyptiens représentaient-ils souvent des animaux dans leur art ?
+Quelle ville fut séparée pendant plusieurs décennies par un célèbre mur ?
+Quel moyen de transport a joué un rôle majeur dans la conquête de l'Ouest américain ?
+Quelle ancienne civilisation est associée à Athènes et Sparte ?
+Pourquoi les Romains construisaient-ils de longues routes pavées ?
+Quelle catastrophe a détruit une grande partie de Pompéi ?
+Quel royaume médiéval est associé à la légende du roi Arthur ?
+Pourquoi les anciens marins utilisaient-ils les étoiles pour naviguer ?
+Quelle invention a permis aux humains de voler sur de longues distances ?
+Quelle maladie a provoqué la grande épidémie appelée peste noire ?
+Quel empire contrôlait une grande partie de l'Amérique du Sud avant l'arrivée des Espagnols ?
+Pourquoi les explorateurs européens cherchaient-ils une route maritime vers l'Asie ?
+Quelle révolution industrielle a profondément transformé les moyens de production ?
+Quel événement est considéré comme la fin de l'Antiquité ?
+Quelle civilisation a développé l'écriture cunéiforme ?
+Pourquoi les pharaons étaient-ils considérés comme des intermédiaires entre les dieux et les hommes ?
+Quelle ville était autrefois appelée Constantinople ?
+Quel événement a conduit à la création de l'Organisation des Nations unies ?
+Pourquoi les soldats de l'Antiquité utilisaient-ils des formations militaires serrées ?
+Quel ancien peuple est célèbre pour son art de la guerre navale en Méditerranée ?
+Quel empire a construit un vaste réseau de routes à travers l'Amérique du Sud ?
+Quelle invention a permis d'améliorer considérablement la précision des cartes ?
+Pourquoi les bâtiments médiévaux possédaient-ils parfois de très petites fenêtres ?
+Quel conflit a opposé les États du Nord et du Sud des États-Unis ?
+Quel événement marque généralement la fin de la Seconde Guerre mondiale ?
+Quelle ancienne ville est considérée comme l'un des berceaux de la démocratie ?
+Quel peuple a développé l'un des premiers grands systèmes d'écriture ?
+Pourquoi les forteresses étaient-elles souvent construites sur des hauteurs ?
+Quelle civilisation est associée aux pyramides de Teotihuacan ?
+Quel pays a connu la révolution des Œillets en 1974 ?
+Pourquoi les soldats romains portaient-ils des boucliers très larges ?
+Quelle invention a permis de conserver les aliments pendant beaucoup plus longtemps ?
+Quel événement a entraîné la division de l'Allemagne après la Seconde Guerre mondiale ?
+Quelle ancienne civilisation utilisait un système de numération basé sur le nombre 60 ?
+Pourquoi les navires anciens transportaient-ils souvent des amphores ?
+Quel peuple est à l'origine de la démocratie athénienne ?
+Quelle bataille navale est célèbre pour avoir opposé les Grecs aux Perses ?
+Quel pays était autrefois appelé la Perse ?
+Pourquoi les premiers humains peignaient-ils sur les parois des grottes ?
+Quelle découverte archéologique a permis de mieux comprendre l'écriture égyptienne ?
+Quel ancien peuple construisait des routes flottantes sur certains lacs ?
+Quelle guerre est souvent appelée la Grande Guerre ?
+Pourquoi les villes médiévales étaient-elles souvent entourées de remparts ?
+Quelle civilisation a développé les célèbres jardins suspendus associés à Babylone ?
+Quel événement historique est associé au débarquement de Normandie ?
+Quelle invention a profondément changé les communications au XIXe siècle ?
+Quel pays a été divisé en deux après la Seconde Guerre mondiale puis réunifié ?
+Pourquoi les Romains utilisaient-ils des pièces de monnaie ?
+Quelle civilisation est associée au temple du Parthénon ?
+Quel événement marque la fin du règne de Louis XVI ?
+Quelle ancienne civilisation est connue pour ses guerriers spartiates ?
+Pourquoi les explorateurs transportaient-ils des cartes et des instruments de navigation ?
+Quelle guerre a opposé principalement les maisons de York et de Lancastre ?
+Quel événement a marqué la fin de l'Empire romain d'Occident ?
+Quelle ancienne civilisation utilisait des sacrifices humains dans certaines cérémonies ?
+Pourquoi les civilisations anciennes construisaient-elles des observatoires astronomiques ?
+Quelle invention a permis la diffusion rapide des journaux ?
+Quel événement a marqué le début de la Renaissance en Europe ?
+Pourquoi les routes de la soie étaient-elles importantes ?
+Quelle ancienne civilisation a développé un système élaboré de momification ?
+Quel pays a été le centre de l'Empire aztèque ?
+Pourquoi les conquistadors espagnols étaient-ils intéressés par les richesses du Nouveau Monde ?
+Quelle invention a permis d'enregistrer et de reproduire des sons ?
+Quel événement est associé à la signature de l'armistice du 11 novembre ?
+Pourquoi les cathédrales médiévales étaient-elles construites si hautes ?
+Quelle ancienne civilisation a construit les lignes de Nazca ?
+Quel empire a dominé une grande partie de la Méditerranée autour du Ier siècle ?
+Pourquoi les premiers navigateurs utilisaient-ils une boussole ?
+Quelle catastrophe naturelle a détruit Pompéi et Herculanum ?
+Quel événement a marqué le début de la conquête spatiale ?
+Quel pays a envoyé le premier humain dans l'espace ?
+Quel objet a été le premier satellite artificiel placé en orbite ?
+Pourquoi les astronautes portent-ils des combinaisons spatiales ?
+Quelle planète possède la température moyenne de surface la plus élevée ?
+Pourquoi Vénus est-elle plus chaude que Mercure malgré sa distance au Soleil ?
+Quelle planète possède la plus grande montagne connue du système solaire ?
+Comment appelle-t-on une roche venue de l'espace qui atteint le sol terrestre ?
+Quelle différence existe entre une étoile et une planète ?
+Pourquoi voit-on toujours la même face de la Lune depuis la Terre ?
+Quel phénomène provoque les marées ?
+Pourquoi les éclipses solaires ne se produisent-elles pas chaque mois ?
+Comment se forme une étoile filante visible depuis la Terre ?
+Quelle planète possède les vents les plus rapides du système solaire ?
+Pourquoi le ciel apparaît-il bleu pendant la journée ?
+Pourquoi le Soleil semble-t-il se déplacer dans le ciel ?
+Quelle couche de l'atmosphère protège principalement la Terre des rayons ultraviolets ?
+Comment appelle-t-on une explosion extrêmement puissante d'une étoile ?
+Pourquoi l'espace est-il presque entièrement silencieux ?
+Quelle planète tourne dans le sens opposé à celui de la plupart des autres planètes ?
+Comment se forme un arc-en-ciel ?
+Pourquoi la Lune change-t-elle d'apparence au cours du mois ?
+Quelle est la différence entre une comète et un astéroïde ?
+Pourquoi les astronautes semblent-ils flotter dans la Station spatiale internationale ?
+Comment appelle-t-on le moment où une planète passe devant son étoile depuis notre point de vue ?
+Pourquoi les étoiles semblent-elles scintiller depuis la Terre ?
+Quel objet céleste possède une queue lorsqu'il s'approche du Soleil ?
+Comment appelle-t-on une planète située en dehors du système solaire ?
+Pourquoi Pluton n'est-elle plus classée parmi les planètes principales ?
+Quelle planète possède une immense tache rouge visible depuis la Terre ?
+Pourquoi Saturne possède-t-elle des anneaux ?
+Quelle est la principale source d'énergie du Soleil ?
+Comment se forme un trou noir ?
+Pourquoi les astronautes vieillissent-ils légèrement différemment dans l'espace ?
+Quel phénomène permet d'observer des aurores polaires ?
+Quelle planète possède le plus grand nombre connu de lunes ?
+Pourquoi les fusées sont-elles équipées de plusieurs étages ?
+Comment un satellite artificiel reste-t-il en orbite autour de la Terre ?
+Pourquoi la Terre connaît-elle des saisons ?
+Quel phénomène explique la succession du jour et de la nuit ?
+Pourquoi les planètes restent-elles en orbite autour du Soleil ?
+Quelle est la principale différence entre une galaxie et un système solaire ?
+Comment appelle-t-on la zone d'une étoile où les conditions pourraient permettre l'existence d'eau liquide ?
+Pourquoi les missions spatiales utilisent-elles des combinaisons pressurisées ?
+Quel est le rôle d'un télescope spatial ?
+Pourquoi les étoiles ont-elles des couleurs différentes ?
+Comment appelle-t-on le phénomène qui transforme une étoile massive en objet extrêmement dense après son effondrement ?
+Pourquoi les météorites peuvent-elles atteindre la surface terrestre ?
+Quel est le plus grand volcan connu du système solaire ?
+Comment appelle-t-on le phénomène de lumière observé autour des pôles terrestres ?
+Pourquoi les astronautes doivent-ils faire du sport dans l'espace ?
+Quel est le rôle de la gravité dans la formation des planètes ?
+Comment appelle-t-on le regroupement apparent d'étoiles formant une figure dans le ciel ?
+Quelle est la différence entre une galaxie spirale et une galaxie elliptique ?
+Pourquoi certaines planètes possèdent-elles une atmosphère très épaisse ?
+Quel phénomène produit les cratères visibles sur la Lune ?
+Pourquoi les humains ne peuvent-ils pas respirer directement dans l'espace ?
+Comment fonctionne approximativement un panneau solaire ?
+Quel est le nom de la région située entre Mars et Jupiter contenant de nombreux petits corps rocheux ?
+Pourquoi les étoiles finissent-elles par manquer de carburant ?
+Quel phénomène permet aux scientifiques de détecter certaines exoplanètes ?
+Pourquoi les saisons sont-elles inversées entre les deux hémisphères ?
+Quelle planète possède les températures les plus basses du système solaire ?
+Comment appelle-t-on un groupe de galaxies liées par la gravité ?
+Quel phénomène peut provoquer une pluie de météores ?
+Quelle est la principale différence entre une étoile et un satellite naturel ?
+Pourquoi les combinaisons spatiales sont-elles blanches dans de nombreuses missions ?
+Quel phénomène se produit lorsqu'un objet massif déforme la trajectoire de la lumière ?
+Pourquoi les océans ne gèlent-ils pas entièrement malgré les températures polaires ?
+Comment les plantes produisent-elles leur matière organique ?
+Quel gaz les plantes rejettent-elles principalement pendant la photosynthèse ?
+Pourquoi les feuilles sont-elles généralement vertes ?
+Quel organe permet au corps humain de filtrer le sang ?
+Comment le sang transporte-t-il l'oxygène ?
+Pourquoi avons-nous besoin de globules rouges ?
+Quel est le rôle des globules blancs ?
+Comment les muscles produisent-ils principalement leur énergie ?
+Pourquoi le corps transpire-t-il lorsqu'il fait chaud ?
+Quel organe contrôle principalement le système nerveux ?
+Comment les os se réparent-ils après une fracture ?
+Pourquoi avons-nous des empreintes digitales différentes ?
+Comment fonctionne approximativement le réflexe de clignement des yeux ?
+Quel organe produit l'insuline ?
+Pourquoi le cœur bat-il plus rapidement pendant un effort physique ?
+Quel est le rôle principal des reins ?
+Comment les poumons permettent-ils les échanges gazeux ?
+Pourquoi avons-nous besoin de sommeil ?
+Quel phénomène permet à une plaie de former une croûte ?
+Pourquoi la peau bronze-t-elle au soleil ?
+Quel est le rôle des cheveux et des poils sur le corps ?
+Comment les oreilles permettent-elles de maintenir l'équilibre ?
+Pourquoi avons-nous besoin de calcium ?
+Quel est le rôle de la moelle osseuse ?
+Comment les neurones communiquent-ils entre eux ?
+Pourquoi avons-nous des frissons lorsque nous avons froid ?
+Quel est le rôle principal du foie ?
+Comment le corps maintient-il sa température interne ?
+Pourquoi la respiration s'accélère-t-elle pendant le sport ?
+Quel est le rôle de la salive dans la digestion ?
+Comment les aliments sont-ils transformés en nutriments ?
+Pourquoi l'estomac produit-il de l'acide ?
+Quel organe absorbe la majorité des nutriments ?
+Pourquoi les pupilles changent-elles de taille selon la luminosité ?
+Comment fonctionne approximativement le système immunitaire ?
+Pourquoi avons-nous de la fièvre lorsque nous sommes malades ?
+Quel rôle joue l'ADN dans les cellules ?
+Comment les jumeaux identiques peuvent-ils se ressembler autant ?
+Pourquoi les cheveux poussent-ils ?
+Comment les plantes transportent-elles l'eau depuis leurs racines ?
+Pourquoi certaines plantes possèdent-elles des épines ?
+Comment les abeilles communiquent-elles l'emplacement des fleurs ?
+Pourquoi les oiseaux ont-ils des os légers ?
+Comment les poissons respirent-ils sous l'eau ?
+Pourquoi les baleines doivent-elles remonter à la surface ?
+Comment les chauves-souris se repèrent-elles dans l'obscurité ?
+Pourquoi certains animaux hibernent-ils ?
+Comment les caméléons utilisent-ils leur changement de couleur ?
+Pourquoi les girafes possèdent-elles un cou aussi long ?
+Comment les araignées fabriquent-elles leur toile ?
+Pourquoi les serpents muent-ils ?
+Comment les poulpes se déplacent-ils ?
+Pourquoi les manchots ne volent-ils pas malgré leurs ailes ?
+Comment les dauphins communiquent-ils entre eux ?
+Pourquoi certains animaux ont-ils des rayures ?
+Comment les cactus survivent-ils dans les déserts ?
+Pourquoi certaines fleurs attirent-elles les insectes ?
+Comment les arbres se reproduisent-ils ?
+Pourquoi les feuilles tombent-elles de certains arbres en automne ?
+Comment les champignons se reproduisent-ils ?
+Pourquoi les oiseaux migrent-ils ?
+Comment les fourmis organisent-elles leur colonie ?
+Pourquoi les abeilles sont-elles importantes pour les écosystèmes ?
+Comment les araignées détectent-elles les vibrations de leur toile ?
+Pourquoi les poissons possèdent-ils des écailles ?
+Comment les requins détectent-ils certains signaux électriques ?
+Pourquoi les éléphants ont-ils de grandes oreilles ?
+Comment les kangourous transportent-ils leurs petits ?
+Pourquoi les ours polaires ont-ils une épaisse couche de graisse ?
+Comment les plantes carnivores capturent-elles leurs proies ?
+Pourquoi certaines grenouilles vivent-elles une partie de leur vie dans l'eau ?
+Comment les papillons passent-ils de la chenille à l'adulte ?
+Pourquoi les abeilles produisent-elles du miel ?
+Comment les castors modifient-ils leur environnement ?
+Pourquoi les oiseaux chantent-ils ?
+Comment les vers de terre participent-ils à la fertilité des sols ?
+Pourquoi les feuilles possèdent-elles de petites ouvertures appelées stomates ?
+Quel est le rôle des racines chez une plante ?
+Comment les graines peuvent-elles voyager sur de longues distances ?
+Pourquoi certaines graines possèdent-elles des ailes ou des crochets ?
+Comment les coraux forment-ils des récifs ?
+Pourquoi les océans sont-ils salés ?
+Comment se forment les vagues ?
+Pourquoi l'eau de mer est-elle plus dense que l'eau douce ?
+Comment se forme un tsunami ?
+Pourquoi les volcans entrent-ils en éruption ?
+Comment se forme un tremblement de terre ?
+Pourquoi certaines régions connaissent-elles davantage de séismes ?
+Comment se forme un glacier ?
+Pourquoi la neige est-elle blanche ?
+Comment se forme une tornade ?
+Pourquoi les déserts reçoivent-ils si peu de précipitations ?
+Comment se forme une grotte ?
+Pourquoi certaines montagnes possèdent-elles de la neige toute l'année ?
+Comment se forment les nuages ?
+Pourquoi la pluie tombe-t-elle ?
+Comment fonctionne le cycle de l'eau ?
+Pourquoi l'eau de pluie peut-elle être légèrement acide ?
+Comment se forme un arc-en-ciel double ?
+Pourquoi la foudre est-elle suivie du tonnerre ?
+Pourquoi voit-on l'éclair avant d'entendre le tonnerre ?
+Comment se forme la rosée ?
+Pourquoi les plantes peuvent-elles pousser dans certains déserts ?
+Comment se forment les dunes de sable ?
+Pourquoi certaines plages possèdent-elles du sable noir ?
+Comment les rivières creusent-elles les vallées ?
+Pourquoi les glaciers peuvent-ils déplacer d'énormes blocs de roche ?
+Comment se forme une île volcanique ?
+Pourquoi certaines régions possèdent-elles des sources thermales ?
+Comment se forme une stalactite ?
+Quelle différence existe entre une stalactite et une stalagmite ?
+Pourquoi les geysers projettent-ils de l'eau chaude ?
+Comment se forme un canyon ?
+Pourquoi certaines falaises s'effondrent-elles ?
+Comment les océans influencent-ils le climat ?
+Pourquoi les régions côtières ont-elles souvent des températures plus modérées ?
+Comment fonctionne un courant marin ?
+Pourquoi les pôles sont-ils plus froids que l'équateur ?
+Comment se forme le vent ?
+Pourquoi les arbres peuvent-ils réduire l'érosion des sols ?
+Comment les racines contribuent-elles à stabiliser les terrains ?
+Pourquoi les sols volcaniques peuvent-ils être très fertiles ?
+Comment se forme une oasis dans un désert ?
+Pourquoi certaines montagnes sont-elles volcaniques ?
+Comment les plaques tectoniques se déplacent-elles ?
+Pourquoi le Japon connaît-il régulièrement des tremblements de terre ?
+Comment se forme une péninsule ?
+Quelle différence existe entre une île et un archipel ?
+Pourquoi certaines mers sont-elles presque fermées ?
+Comment se forme une cascade ?
+Pourquoi certaines rivières changent-elles de couleur ?
+Comment se forme un delta à l'embouchure d'un fleuve ?
+Pourquoi les forêts tropicales sont-elles importantes pour la biodiversité ?
+Comment les mangroves protègent-elles les côtes ?
+Pourquoi les récifs coralliens sont-ils fragiles ?
+Quel phénomène naturel peut transformer une forêt en désert ?
+Pourquoi les océans absorbent-ils une partie du dioxyde de carbone ?
+Comment fonctionne un barrage hydroélectrique ?
+Pourquoi les panneaux solaires produisent-ils moins d'énergie lorsqu'ils sont couverts ?
+Comment une éolienne transforme-t-elle le vent en électricité ?
+Comment fonctionne une centrale hydroélectrique ?
+Comment fonctionne une centrale nucléaire de manière générale ?
+Pourquoi les centrales électriques utilisent-elles des turbines ?
+Comment fonctionne un moteur à combustion ?
+Pourquoi une voiture possède-t-elle une boîte de vitesses ?
+Comment fonctionnent les freins d'une voiture ?
+Pourquoi les pneus possèdent-ils des rainures ?
+Comment fonctionne un airbag ?
+Pourquoi les avions possèdent-ils des ailes ?
+Comment un avion parvient-il à décoller ?
+Pourquoi les avions volent-ils généralement à haute altitude ?
+Comment fonctionne un hélicoptère ?
+Pourquoi les bateaux flottent-ils ?
+Comment fonctionne un sous-marin ?
+Pourquoi un navire possède-t-il une quille ?
+Comment fonctionne une locomotive électrique ?
+Pourquoi les trains peuvent-ils transporter autant de marchandises ?
+Comment fonctionne un ascenseur ?
+Pourquoi les gratte-ciel possèdent-ils des fondations très profondes ?
+Comment fonctionne un réfrigérateur ?
+Pourquoi un réfrigérateur chauffe-t-il légèrement à l'arrière ?
+Comment fonctionne un four à micro-ondes ?
+Pourquoi le verre est-il transparent ?
+Comment fonctionne une fibre optique ?
+Pourquoi une ampoule LED consomme-t-elle peu d'électricité ?
+Comment fonctionne un écran tactile ?
+Comment un téléphone portable peut-il communiquer sans fil ?
+Pourquoi une batterie finit-elle par se décharger ?
+Comment fonctionne le GPS ?
+Pourquoi un ordinateur chauffe-t-il lorsqu'il travaille beaucoup ?
+Comment fonctionne une imprimante 3D ?
+Comment un appareil photo numérique capture-t-il une image ?
+Pourquoi un miroir renvoie-t-il notre image ?
+Comment fonctionne un code-barres ?
+Comment fonctionne un QR code ?
+Pourquoi les avions laissent-ils parfois une traînée blanche dans le ciel ?
+Comment fonctionne un parachute ?
+Pourquoi une montgolfière peut-elle s'élever dans les airs ?
+Comment fonctionne une boussole ?
+Pourquoi une aiguille de boussole indique-t-elle approximativement le nord ?
+Comment fonctionne une serrure à clé ?
+Pourquoi une fermeture éclair possède-t-elle deux côtés dentés ?
+Comment fonctionne un thermomètre ?
+Pourquoi un ballon gonflé monte-t-il lorsqu'il est rempli d'hélium ?
+Comment fonctionne une horloge mécanique ?
+Pourquoi une roue facilite-t-elle le déplacement d'un objet lourd ?
+Comment fonctionne un levier ?
+Pourquoi une grue peut-elle soulever plusieurs tonnes ?
+Comment fonctionne une pompe à eau ?
+Pourquoi une bouteille en plastique se déforme-t-elle lorsqu'on la comprime ?
+Comment fonctionne un aimant ?
+Pourquoi deux pôles identiques d'un aimant se repoussent-ils ?
+Comment fonctionne une pile électrique ?
+Pourquoi le cuivre est-il souvent utilisé dans les câbles électriques ?
+Comment fonctionne un interrupteur ?
+Pourquoi les fusibles sont-ils utilisés dans les installations électriques ?
+Comment fonctionne un haut-parleur ?
+Comment un microphone transforme-t-il un son en signal électrique ?
+Pourquoi un objet paraît-il plus petit lorsqu'il est éloigné ?
+Comment fonctionne une loupe ?
+Pourquoi un arc-en-ciel apparaît-il après certaines pluies ?
+Comment fonctionne un télescope ?
+Pourquoi une ombre change-t-elle de longueur au cours de la journée ?
+Quel principe permet à un avion de rester en l'air ?
+Comment fonctionne un moteur électrique ?
+Pourquoi les pneus chauffent-ils pendant un long trajet ?
+Comment fonctionne une clé USB ?
+Pourquoi un disque dur peut-il stocker des fichiers ?
+Comment fonctionne approximativement la reconnaissance faciale d'un téléphone ?
+Pourquoi une connexion Wi-Fi peut-elle devenir moins bonne à travers plusieurs murs ?
+Comment fonctionne un réseau de téléphonie mobile ?
+Pourquoi les antennes sont-elles importantes pour les communications sans fil ?
+Quel phénomène permet à un miroir de réfléchir la lumière ?
+Pourquoi le métal paraît-il souvent plus froid que le bois dans une même pièce ?
+Comment fonctionne un thermos ?
+Pourquoi un vêtement noir chauffe-t-il davantage au soleil qu'un vêtement blanc ?
+Comment une fermeture éclair peut-elle rester fermée malgré les mouvements ?
+Pourquoi un ballon de football se déforme-t-il lorsqu'il reçoit un choc ?
+Comment fonctionne une raquette de tennis ?
+Pourquoi les chaussures de sport possèdent-elles des semelles différentes selon leur usage ?
+Comment un parachutiste ralentit-il sa chute ?
+Pourquoi un vélo reste-t-il plus stable lorsqu'il roule ?
+Comment fonctionne une boussole électronique ?
+Pourquoi un avion doit-il accélérer avant de décoller ?
+Comment un train peut-il freiner une masse aussi importante ?
+Pourquoi les rails de chemin de fer possèdent-ils de petits espaces ou systèmes permettant leur dilatation ?
+Comment fonctionne une batterie rechargeable ?
+Pourquoi une voiture électrique est-elle généralement plus silencieuse qu'une voiture thermique ?
+Comment fonctionne une voiture hybride ?
+Pourquoi les pneus de voiture sont-ils fabriqués avec du caoutchouc ?
+Comment fonctionne une caméra de surveillance ?
+Pourquoi les satellites sont-ils utiles pour prévoir la météo ?
+Comment un radar détecte-t-il un objet éloigné ?
+Comment fonctionne un sonar ?
+Pourquoi les sous-marins utilisent-ils des sonars ?
+Comment un scanner médical peut-il produire des images de l'intérieur du corps ?
+Comment fonctionne une IRM de manière générale ?
+Pourquoi les avions utilisent-ils un cockpit pressurisé ?
+Comment fonctionne un moteur à réaction ?
+Pourquoi une fusée produit-elle une énorme quantité de gaz ?
+Comment un satellite peut-il prendre des photos de la Terre ?
+Quel principe permet à un drone de rester en vol stationnaire ?
+Pourquoi les hélices d'un drone tournent-elles dans plusieurs directions ?
+Comment fonctionne un casque antibruit ?
+Pourquoi les vitres d'une voiture sont-elles souvent légèrement teintées ?
+Comment fonctionne une porte automatique ?
+Pourquoi les feux de circulation utilisent-ils généralement trois couleurs ?
+Comment fonctionne un détecteur de fumée ?
+Pourquoi les extincteurs contiennent-ils différents agents selon le type de feu ?
+Comment fonctionne un ascenseur hydraulique ?
+Pourquoi les ponts possèdent-ils des joints de dilatation ?
+Comment fonctionne une horloge solaire ?
+Pourquoi une bouteille thermos conserve-t-elle mieux la température d'une boisson ?
+Comment fonctionne une machine à laver ?
+Pourquoi un lave-linge tourne-t-il très rapidement à la fin du cycle ?
+Comment fonctionne un lave-vaisselle ?
+Pourquoi un aspirateur crée-t-il un flux d'air ?
+Comment fonctionne une climatisation ?
+Pourquoi la climatisation produit-elle de l'eau ?
+Comment fonctionne une cheminée ?
+Pourquoi la fumée monte-t-elle généralement ?
+Quel est le rôle du sel dans la conservation de certains aliments ?
+Pourquoi le pain lève-t-il pendant la cuisson ?
+Comment le fromage acquiert-il ses différentes textures ?
+Pourquoi les oignons font-ils pleurer lorsqu'on les coupe ?
+Comment le chocolat fond-il ?
+Pourquoi le pop-corn éclate-t-il lorsqu'il chauffe ?
+Comment le café est-il décaféiné ?
+Pourquoi les aliments deviennent-ils dorés lorsqu'ils cuisent ?
+Comment fonctionne une cocotte-minute ?
+Pourquoi le sucre caramélise-t-il ?
+Comment le pain devient-il croustillant ?
+Pourquoi la glace flotte-t-elle sur l'eau ?
+Comment fonctionne la fermentation de la pâte à pain ?
+Pourquoi le lait peut-il tourner ?
+Comment le yaourt est-il fabriqué ?
+Pourquoi le miel peut-il rester longtemps sans se détériorer ?
+Comment le sel influence-t-il le goût des aliments ?
+Pourquoi les épices peuvent-elles donner une sensation de chaleur ?
+Comment les bulles se forment-elles dans une boisson gazeuse ?
+Pourquoi une boisson gazeuse perd-elle ses bulles après ouverture ?
+Comment fonctionne un réfrigérateur pour refroidir les aliments ?
+Pourquoi les aliments congelés se conservent-ils plus longtemps ?
+Comment le caramel est-il obtenu ?
+Pourquoi une pomme coupée peut-elle brunir ?
+Comment empêcher certains fruits coupés de brunir rapidement ?
+Pourquoi le pain devient-il rassis ?
+Comment les pâtes sèches deviennent-elles molles à la cuisson ?
+Pourquoi le riz gonfle-t-il lorsqu'il cuit ?
+Comment les céréales sont-elles transformées en farine ?
+Pourquoi le maïs peut-il devenir du popcorn ?
+Comment les olives sont-elles transformées en huile ?
+Pourquoi l'huile et l'eau ne se mélangent-elles pas facilement ?
+Comment fonctionne une émulsion comme la mayonnaise ?
+Pourquoi une mayonnaise peut-elle devenir liquide ?
+Comment le vinaigre est-il produit ?
+Pourquoi le citron paraît-il acide ?
+Comment le chocolat blanc diffère-t-il du chocolat noir ?
+Pourquoi le café peut-il avoir un goût amer ?
+Comment le thé obtient-il sa couleur après infusion ?
+Pourquoi les bananes deviennent-elles plus sucrées en mûrissant ?
+Comment les fruits produisent-ils leurs arômes ?
+Pourquoi certaines personnes trouvent-elles la coriandre particulièrement désagréable ?
+Comment le pain est-il fabriqué à partir du blé ?
+Pourquoi la farine gonfle-t-elle lorsqu'elle rencontre de la levure ?
+Comment les pâtes fraîches diffèrent-elles des pâtes sèches ?
+Pourquoi le miel cristallise-t-il parfois ?
+Comment le beurre est-il fabriqué à partir de crème ?
+Pourquoi le fromage peut-il avoir une odeur très forte ?
+Comment les aliments sont-ils conservés par salaison ?
+Pourquoi le poisson peut-il être fumé pour être conservé ?
+Comment fonctionne la pasteurisation ?
+Pourquoi le lait est-il pasteurisé ?
+Comment le chocolat est-il fabriqué à partir des fèves de cacao ?
+Pourquoi certaines pommes de terre deviennent-elles croustillantes au four ?
+Comment les frites deviennent-elles dorées ?
+Pourquoi les œufs changent-ils de texture lorsqu'ils sont cuits ?
+Comment fonctionne une fermentation alcoolique ?
+Pourquoi le pain peut-il être plus ou moins dense selon sa préparation ?
+Comment le vinaigre transforme-t-il certains aliments lorsqu'il est utilisé en marinade ?
+Pourquoi les plats épicés donnent-ils une sensation de brûlure ?
+Comment le sel fait-il ressortir certaines saveurs ?
+Pourquoi le sucre fond-il lorsqu'il est chauffé ?
+Comment le café instantané est-il fabriqué ?
+Pourquoi le lait mousse-t-il lorsqu'on le fouette ?
+Comment fonctionne une machine à expresso ?
+Pourquoi les glaçons collent-ils parfois aux doigts ?
+Comment le sorbet diffère-t-il de la crème glacée ?
+Pourquoi une glace peut-elle devenir granuleuse après plusieurs décongélations ?
+Comment les confitures se conservent-elles longtemps ?
+Pourquoi le miel attire-t-il peu les microbes ?
+Comment fonctionne une boîte de conserve ?
+Pourquoi les conserves peuvent-elles se garder plusieurs années ?
+Comment les aliments déshydratés se conservent-ils ?
+Pourquoi les champignons rétrécissent-ils lorsqu'ils sont cuits ?
+Comment les noix peuvent-elles rancir ?
+Pourquoi certaines huiles sont-elles plus sensibles à la chaleur ?
+Comment fonctionne une friteuse à air chaud ?
+Pourquoi le sel fait-il fondre la glace sur les routes ?
+Comment une cuisine peut-elle produire autant de vapeur ?
+Pourquoi une casserole déborde-t-elle parfois lorsqu'on fait cuire des pâtes ?
+Comment le goût et l'odorat travaillent-ils ensemble ?
+Pourquoi un plat semble-t-il moins savoureux lorsqu'on a le nez bouché ?
+Comment la langue détecte-t-elle les différentes saveurs ?
+Pourquoi certaines personnes supportent-elles mieux le piment que d'autres ?
+Comment fonctionne le classement des équipes dans un championnat sportif ?
+Pourquoi les joueurs de tennis changent-ils parfois de côté du terrain ?
+Combien de temps dure une période au hockey sur glace ?
+Pourquoi les coureurs de marathon boivent-ils régulièrement pendant une course ?
+Comment fonctionne le hors-jeu au football ?
+Pourquoi les nageurs utilisent-ils parfois des lunettes très serrées ?
+Comment les cyclistes changent-ils de vitesse pendant une montée ?
+Pourquoi les boxeurs portent-ils des gants ?
+Comment fonctionne un penalty au football ?
+Pourquoi les joueurs de basketball dribblent-ils le ballon ?
+Comment gagne-t-on un set au tennis ?
+Pourquoi les terrains de tennis peuvent-ils être en terre battue, gazon ou surface dure ?
+Comment fonctionne une course de relais ?
+Pourquoi les athlètes s'échauffent-ils avant une compétition ?
+Comment fonctionne le chronométrage électronique en sport ?
+Pourquoi les nageurs plongent-ils avant de commencer certaines courses ?
+Comment un arbitre décide-t-il d'accorder un carton rouge ?
+Pourquoi les pilotes de Formule 1 changent-ils de pneus pendant une course ?
+Comment fonctionne le système de points en Formule 1 ?
+Pourquoi les cyclistes roulent-ils en peloton ?
+Comment fonctionne un sprint en cyclisme ?
+Pourquoi les gardiens de football portent-ils des gants ?
+Comment fonctionne un tie-break au tennis ?
+Pourquoi les joueurs de golf utilisent-ils plusieurs clubs ?
+Comment compte-t-on les points au golf ?
+Pourquoi les skieurs utilisent-ils des bâtons ?
+Comment fonctionne une course de biathlon ?
+Pourquoi les judokas portent-ils un kimono épais ?
+Comment gagne-t-on un combat de boxe aux points ?
+Pourquoi les escrimeurs portent-ils une tenue protectrice ?
+Comment fonctionne un plongeon en compétition ?
+Pourquoi les gymnastes utilisent-ils de la magnésie ?
+Comment les joueurs de volleyball empêchent-ils le ballon de toucher le sol ?
+Pourquoi les basketteurs font-ils des lancers francs ?
+Comment fonctionne une mêlée au rugby ?
+Pourquoi les joueurs de rugby portent-ils parfois des protections souples ?
+Comment fonctionne une touche au rugby ?
+Pourquoi les joueurs de baseball portent-ils des gants particuliers ?
+Comment fonctionne un home run ?
+Pourquoi les pilotes de MotoGP utilisent-ils des combinaisons renforcées ?
+Comment fonctionne un départ lancé en cyclisme sur piste ?
+Pourquoi les coureurs de sprint utilisent-ils des starting-blocks ?
+Comment fonctionne une photo-finish ?
+Pourquoi les terrains de football sont-ils légèrement bombés ou drainés ?
+Comment fonctionne un système de VAR ?
+Pourquoi les arbitres utilisent-ils un sifflet ?
+Comment les records sportifs sont-ils officiellement homologués ?
+Pourquoi les sportifs prennent-ils des jours de récupération ?
+Comment fonctionne un relais olympique ?
+Pourquoi les Jeux olympiques utilisent-ils des anneaux ?
+Comment est choisi le pays organisateur des Jeux olympiques ?
+Pourquoi certaines disciplines sportives utilisent-elles des catégories de poids ?
+Comment fonctionne un championnat à élimination directe ?
+Pourquoi les équipes sportives portent-elles des maillots différents à domicile et à l'extérieur ?
+Comment fonctionne une prolongation dans certains sports ?
+Pourquoi les supporters utilisent-ils parfois des tifos dans les stades ?
+Comment les joueurs de tennis font-ils tourner la balle ?
+Pourquoi les golfeurs utilisent-ils des balles à alvéoles ?
+Comment un ballon de football peut-il prendre un effet ?
+Pourquoi les nageurs portent-ils des bonnets ?
+Comment les grimpeurs utilisent-ils la magnésie ?
+Pourquoi les surfeurs recherchent-ils certaines vagues ?
+Comment fonctionne une remontée mécanique dans une station de ski ?
+Pourquoi les patineurs utilisent-ils des lames très fines ?
+Comment fonctionne un tir à trois points au basketball ?
+Pourquoi les basketteurs mesurent-ils parfois leur détente verticale ?
+Comment les entraîneurs utilisent-ils les statistiques pendant un match ?
+Pourquoi les joueurs de football portent-ils des crampons ?
+Comment fonctionne une course contre-la-montre ?
+Pourquoi les coureurs de fond utilisent-ils différentes stratégies d'allure ?
+Comment un arbitre vidéo peut-il modifier une décision ?
+Pourquoi les sports utilisent-ils des catégories d'âge ?
+Comment fonctionne une qualification pour une finale ?
+Pourquoi certains records sportifs sont-ils difficiles à battre pendant des décennies ?
+Comment les entraîneurs choisissent-ils les remplaçants ?
+Pourquoi les sportifs de haut niveau surveillent-ils leur alimentation ?
+Comment fonctionne une médaille olympique ?
+Pourquoi les compétitions internationales utilisent-elles parfois des hymnes nationaux ?
+Comment un classement mondial est-il établi dans certains sports ?
+Pourquoi certains sports utilisent-ils une balle alors que d'autres utilisent un ballon ?
+Comment fonctionne un tableau de tournoi ?
+Pourquoi les joueurs de tennis utilisent-ils différentes tensions de cordage ?
+Comment les équipes de sports collectifs communiquent-elles pendant un match ?
+Pourquoi les arbitres arrêtent-ils parfois le chronomètre ?
+Comment fonctionne une disqualification sportive ?
+Pourquoi certaines compétitions se déroulent-elles sur plusieurs manches ?
+Comment les records du monde sont-ils mesurés avec précision ?
+Quel instrument permet de mesurer la pression atmosphérique ?
+Quel instrument permet de mesurer les séismes ?
+Quel instrument permet de mesurer la vitesse du vent ?
+Quel instrument permet de mesurer l'humidité de l'air ?
+Quel instrument permet de mesurer la température ?
+Quel instrument permet d'observer des objets très éloignés dans le ciel ?
+Quel instrument permet d'observer de minuscules organismes ?
+Quel outil permet à un marin de déterminer sa position grâce aux étoiles ?
+Quel appareil permet de mesurer les battements du cœur ?
+Quel appareil permet de mesurer la tension artérielle ?
+Quel appareil permet de mesurer la distance parcourue par un véhicule ?
+Quel appareil permet de détecter la présence de fumée ?
+Quel outil permet de mesurer précisément une petite longueur ?
+Quel outil est utilisé pour mesurer des angles ?
+Quel outil permet de vérifier si une surface est parfaitement horizontale ?
+Quel outil permet de vérifier un angle droit ?
+Quel appareil permet de mesurer le poids d'un objet ?
+Quel outil permet de couper du bois avec une lame dentée ?
+Quel outil permet de serrer ou desserrer une vis ?
+Quel outil est utilisé pour enfoncer des clous ?
+Quel outil permet de mesurer une tension électrique ?
+Quel appareil permet de transformer un signal sonore en enregistrement ?
+Quel appareil permet d'agrandir une image très petite ?
+Quel appareil permet de projeter une image sur un écran ?
+Quel objet permet de protéger les yeux contre une lumière trop forte ?
+Quel objet permet de protéger les oreilles contre un bruit intense ?
+Quel objet permet de mesurer le temps avec du sable ?
+Quel objet permet de déterminer approximativement une direction ?
+Quel objet permet de conserver une boisson chaude pendant plusieurs heures ?
+Quel objet permet d'éclairer une pièce sans utiliser une flamme ?
+Quel objet permet de couper une feuille sans utiliser de lame droite ?
+Quel objet permet de fermer une porte avec un mécanisme à combinaison ?
+Quel objet permet de transporter plusieurs livres sur son dos ?
+Quel objet permet de transporter des vêtements pendant un voyage ?
+Quel objet permet de protéger quelqu'un de la pluie ?
+Quel objet permet de faire voler un cerf-volant ?
+Quel objet permet de transporter un bébé contre soi ?
+Quel objet permet de garder les mains au chaud ?
+Quel objet permet de protéger la tête d'un cycliste ?
+Quel objet permet de maintenir un pantalon ?
+Quel objet permet de retenir des cheveux ?
+Quel objet permet d'attacher deux morceaux de tissu ?
+Quel objet permet de voir dans l'obscurité lorsqu'il est alimenté par des piles ?
+Quel objet permet de mesurer la température d'un plat ?
+Quel objet permet d'écrire sur un tableau blanc ?
+Quel objet permet d'effacer du crayon sur du papier ?
+Quel objet permet de fixer des feuilles ensemble sans colle ?
+Quel objet permet de perforer plusieurs feuilles de papier ?
+Quel objet permet de transporter de l'eau lors d'une randonnée ?
+Quel objet permet de se repérer sur un territoire inconnu ?
+Quel objet permet d'observer quelque chose de très loin sans se déplacer ?
+Quel objet permet d'entendre un son provenant d'un appareil sans déranger les autres ?
+Quel objet permet de stocker des données informatiques dans une petite taille ?
+Quel objet permet de recharger plusieurs appareils électroniques ?
+Quel objet permet de protéger un téléphone contre les chocs ?
+Quel objet permet de prendre des photos sous l'eau ?
+Quel objet permet de maintenir un livre ouvert ?
+Quel objet permet de marquer une page dans un livre ?
+Quel objet permet de fermer un sac avec une fermeture éclair ?
+Quel objet permet de transporter des courses sans utiliser de voiture ?
+Quel objet permet de protéger les mains lors du jardinage ?
+Quel objet permet de creuser un petit trou dans la terre ?
+Quel objet permet d'arroser les plantes ?
+Quel objet permet de ramasser des feuilles mortes ?
+Quel objet permet de couper les branches d'un arbre ?
+Quel objet permet de transporter de la terre dans un jardin ?
+Quel objet permet de mesurer la quantité d'eau dans un récipient ?
+Quel objet permet de mélanger des ingrédients en cuisine ?
+Quel objet permet de filtrer une préparation liquide ?
+Quel objet permet de râper un aliment ?
+Quel objet permet d'ouvrir une bouteille ?
+Quel objet permet de couper une pizza ?
+Quel objet permet de retourner un aliment dans une poêle ?
+Quel objet permet de conserver des aliments au congélateur ?
+Quel objet permet de conserver des aliments hermétiquement ?
+Quel objet permet de transporter un repas chaud ?
+Quel objet permet de boire une boisson sans utiliser directement un verre ?
+Quel objet permet de faire griller du pain ?
+Quel objet permet de cuire rapidement certains aliments avec de l'huile ?
+Quel objet permet de faire bouillir de l'eau rapidement ?
+Quel objet permet de garder une casserole chaude après la cuisson ?
+Quel objet permet de nettoyer une table ?
+Quel objet permet de nettoyer les vitres ?
+Quel objet permet de nettoyer le sol avec de l'eau ?
+Quel objet permet de retirer la poussière des meubles ?
+Quel objet permet de suspendre des vêtements dans une armoire ?
+Quel objet permet de ranger les chaussures ?
+Quel objet permet de mesurer le temps pendant une course ?
+Quel objet permet de réveiller quelqu'un à une heure précise ?
+Quel objet permet de lire dans l'obscurité sans éclairer toute une pièce ?
+Quel objet permet de protéger un livre pendant son transport ?
+Quel objet permet de transporter un ordinateur portable ?
+Quel objet permet de sécuriser un vélo contre le vol ?
+Quel objet permet de gonfler un pneu de vélo ?
+Quel objet permet de réparer temporairement une crevaison ?
+Quel objet permet de signaler un danger sur la route ?
+Quel objet permet de traverser une route en sécurité ?
+Quel objet permet de ralentir un véhicule avant un obstacle ?
+Quel objet permet de guider les voitures à une intersection ?
+Quel objet permet de transporter plusieurs passagers sur une même ligne urbaine ?
+Quel objet permet de déplacer des marchandises dans un entrepôt ?
+Quel objet permet de soulever une voiture dans un garage ?
+Quel objet permet de remorquer un véhicule en panne ?
+Quel objet permet de produire de la lumière sans électricité ?
+Quel objet permet de faire du feu rapidement lors d'un camping ?
+Quel objet permet de dormir confortablement sous une tente ?
+Quel objet permet de protéger une tente de l'humidité du sol ?
+Quel objet permet de transporter du matériel lors d'une randonnée ?
+Quel objet permet de purifier de l'eau lors d'un voyage ?
+Quel objet permet de signaler sa position en cas d'urgence ?
+Quel objet permet d'orienter une antenne vers un satellite ?
+Quel objet permet de mesurer l'altitude ?
+Quel objet permet de prendre une photo à distance ?
+Quel objet permet d'enregistrer une conversation ?
+Quel objet permet de stabiliser une caméra ?
+Quel objet permet de protéger une caméra contre les chocs ?
+Quel objet permet d'agrandir une photographie imprimée ?
+Quel objet permet de conserver des négatifs photographiques ?
+Quel objet permet de projeter une vidéo sur un mur ?
+Quel objet permet de contrôler un téléviseur à distance ?
+Quel objet permet de connecter plusieurs appareils à Internet sans câble ?
+Quel objet permet d'étendre la portée d'un réseau Wi-Fi ?
+Quel objet permet de stocker de l'énergie électrique pour une utilisation ultérieure ?
+Quel objet permet de convertir l'énergie solaire en électricité ?
+Quel objet permet de convertir le vent en énergie électrique ?
+Quel objet permet de mesurer la consommation électrique d'un appareil ?
+Quel objet permet de protéger une installation électrique contre une surcharge ?
+Quel objet permet de produire un courant électrique grâce à un mouvement ?
+Quel objet permet de transformer une tension électrique ?
+Quel objet permet de transporter l'électricité sur de longues distances ?
+Quel objet permet de détecter une présence dans une pièce ?
+Quel objet permet d'allumer automatiquement une lumière lorsqu'une personne entre ?
+Quel objet permet de protéger une maison contre une intrusion ?
+Quel objet permet de stocker de l'eau de pluie ?
+Quel objet permet de filtrer l'eau potable ?
+Quel objet permet de chauffer de l'eau grâce au Soleil ?
+Quel objet permet de chauffer une maison en brûlant du bois ?
+Quel objet permet de chauffer une maison grâce à un circuit d'eau chaude ?
+Quel objet permet de réduire la chaleur entrant par une fenêtre ?
+Quel objet permet de réduire les pertes de chaleur d'une maison ?
+Quel est le plus grand océan de la Terre ?
+Dans quel pays se trouve le Machu Picchu ?
+Quel animal est capable de changer de couleur pour se camoufler ?
+Quelle planète possède les anneaux les plus visibles du système solaire ?
+Quelle est la capitale de l’Australie ?
+Quel organe permet principalement de respirer ?
+Combien de côtés possède un hexagone ?
+Quel métal est principalement utilisé pour fabriquer les fils électriques ?
+Quel est le plus grand désert chaud du monde ?
+Quelle langue est principalement parlée au Brésil ?
+Quel pays est surnommé le pays du Soleil-Levant ?
+Quel est le nom du phénomène qui provoque les marées ?
+Quel instrument permet de mesurer la température ?
+Quelle est la plus haute montagne du monde ?
+Quel mammifère marin est connu pour posséder une longue défense ?
+Quel est le symbole chimique de l’or ?
+Combien de joueurs composent une équipe de football sur le terrain ?
+Quel pays a offert la Statue de la Liberté aux États-Unis ?
+Quel est le plus petit continent ?
+Quelle science étudie les êtres vivants ?
+Quel gaz les plantes absorbent-elles principalement pour réaliser la photosynthèse ?
+Quelle est la capitale de l’Égypte ?
+Quel animal est surnommé le roi de la jungle ?
+Combien de minutes compte une heure ?
+Quel est le plus grand organe du corps humain ?
+Quelle planète est la plus proche du Soleil ?
+Quel pays possède la forme d’une botte sur une carte ?
+Quel est le nom du célèbre canal reliant la Méditerranée à la mer Rouge ?
+Quelle est la monnaie officielle du Japon ?
+Quel animal peut dormir debout ?
+Quelle est la capitale du Canada ?
+Quel est le nom du célèbre volcan situé près de Naples ?
+Quel sport utilise une raquette et un volant ?
+Quel est le nombre de couleurs traditionnellement associé à l’arc-en-ciel ?
+Quel est le plus grand animal vivant actuellement ?
+Quel pays est à l’origine des Jeux olympiques antiques ?
+Quelle partie d’une plante absorbe principalement l’eau du sol ?
+Quel est le nom de la galaxie dans laquelle se trouve la Terre ?
+Combien de pattes possède une araignée ?
+Quel est le fleuve qui traverse Paris ?
+Quelle est la capitale de l’Espagne ?
+Quel animal produit le miel ?
+Quel est le principal constituant de l’air que nous respirons ?
+Quelle planète est surnommée la planète rouge ?
+Quel pays possède le plus grand nombre d’îles au monde ?
+Quel est le nom de la peur des espaces confinés ?
+Quelle mer sépare principalement l’Europe et l’Afrique ?
+Quel appareil utilise-t-on pour observer les étoiles ?
+Quel est le nom du célèbre paquebot ayant coulé en 1912 ?
+Combien de dents possède généralement un adulte ?
+Quelle est la capitale de la Grèce ?
+Quel animal est célèbre pour sa lenteur et porte souvent sa maison sur son dos ?
+Quel est le nom du processus par lequel l’eau liquide devient vapeur ?
+Quelle est la plus grande planète du système solaire ?
+Quel pays a pour capitale Reykjavik ?
+Quel est le nom de l’os situé dans la cuisse ?
+Quelle est la capitale de la Norvège ?
+Quel animal est capable de régénérer certains de ses membres ?
+Quel est le nom de la couche gazeuse qui entoure la Terre ?
+Combien de degrés mesure un angle droit ?
+Quel pays est traversé par le fleuve Amazone ?
+Quel est le nom de la mer située entre l’Afrique et la péninsule Arabique ?
+Quel sens utilise principalement la langue ?
+Quelle est la capitale de l’Argentine ?
+Quel animal est connu pour construire des barrages ?
+Quelle est la principale source naturelle de lumière pour la Terre ?
+Quel est le nom du satellite naturel de Mars le plus proche de la planète ?
+Quelle est la capitale de la Corée du Sud ?
+Quel est le nom de la discipline qui étudie les tremblements de terre ?
+Quel fruit est traditionnellement utilisé pour fabriquer le guacamole ?
+Quelle est la capitale de la Turquie ?
+Quel animal possède une trompe ?
+Quel est le nom de la frontière imaginaire séparant approximativement la Terre en deux hémisphères ?
+Combien de jours compte une année bissextile ?
+Quel pays est célèbre pour ses pyramides de Gizeh ?
+Quel est le nom de la science qui étudie les astres ?
+Quelle est la capitale du Portugal ?
+Quel animal est connu pour avoir trois cœurs ?
+Quel est le nom du pigment responsable de la couleur verte des feuilles ?
+Quelle est la capitale de la Thaïlande ?
+Quel océan borde la côte ouest de l’Amérique du Sud ?
+Quel est le nom de la plus grande île du monde ?
+Quel animal possède des rayures noires et blanches ?
+Quelle est la capitale de la Nouvelle-Zélande ?
+Quel est le nom de l’énergie produite grâce au mouvement du vent ?
+Combien de faces possède un cube ?
+Quelle est la capitale de l’Irlande ?
+Quel animal est célèbre pour sa capacité à se gonfler lorsqu’il est menacé ?
+Quel est le nom du célèbre monument situé à Agra en Inde ?
+Quelle est la capitale du Mexique ?
+Quel organe pompe le sang dans tout le corps ?
+Quel est le nom de la force qui attire les objets vers le sol ?
+Quelle est la capitale de la Suisse ?
+Quel animal est capable de produire de l’électricité ?
+Quel est le nom de la science consacrée à l’étude des océans ?
+Quelle est la capitale de la Finlande ?
+Quel légume est utilisé comme ingrédient principal du houmous ?
+Quel est le nom du continent situé autour du pôle Sud ?
+Combien de secondes compte une minute ?
+Quelle est la capitale de la Belgique ?
+Quel animal est connu pour sa bosse et sa capacité à survivre dans le désert ?
+Quel est le nom du plus grand volcan du système solaire ?
+Quelle est la capitale de la Croatie ?
+Quel objet permet à Harry Potter de communiquer avec Sirius Black ?
+Dans quel lieu se déroule le premier combat entre Harry Potter et Voldemort dans le cimetière ?
+Quel pouvoir possède Elsa dans La Reine des Neiges ?
+Quel objet permet à Thor de canaliser son pouvoir ?
+Dans quel endroit Luke Skywalker affronte-t-il Dark Vador dans L’Empire contre-attaque ?
+Quel objet magique permet à Aladdin de faire apparaître le Génie ?
+Quel pouvoir possède Elastigirl dans Les Indestructibles ?
+Dans quel lieu se trouve la chambre des secrets dans Harry Potter ?
+Quel objet permet à Doctor Strange d’utiliser la Pierre du Temps ?
+Dans quel endroit Simba retrouve-t-il son père avant la mort de Mufasa ?
+Quel pouvoir possède Shoto Todoroki dans My Hero Academia ?
+Quel objet permet à Mary Poppins de transporter toutes ses affaires ?
+Dans quel lieu se déroule le combat final de Spider-Man: No Way Home ?
+Quel objet utilise Link pour se battre dans The Legend of Zelda ?
+Quel pouvoir possède Eleven dans Stranger Things ?
+Dans quel endroit se trouve la Batcave ?
+Quel objet magique permet à Cendrillon de retrouver le prince ?
+Quel pouvoir possède Po dans Kung Fu Panda ?
+Dans quel lieu se déroule la bataille finale du Seigneur des Anneaux : Le Retour du roi ?
+Quel objet permet à Harry Potter de devenir invisible ?
+Quel pouvoir possède Aang dans Avatar : Le Dernier Maître de l’Air ?
+Dans quel endroit se trouve la ville de Gotham ?
+Quel objet utilise Indiana Jones pour se défendre contre ses ennemis ?
+Quel pouvoir possède Magneto dans les films X-Men ?
+Dans quel lieu se déroule la scène de la danse dans La Belle et la Bête ?
+Quel objet permet à Peter Pan de voler ?
+Quel pouvoir possède Mob dans Mob Psycho 100 ?
+Dans quel endroit les Avengers affrontent-ils Thanos dans Avengers: Endgame ?
+Quel objet utilise Katniss Everdeen comme arme principale ?
+Quel pouvoir possède Saitama dans One Punch Man ?
+Dans quel lieu se déroule la première rencontre entre Harry Potter et Voldemort ?
+Quel objet magique permet à Hermione de remonter le temps ?
+Quel pouvoir possède Frozone dans Les Indestructibles ?
+Dans quel endroit se trouve le château de Poudlard ?
+Quel objet utilise Edward Elric pour pratiquer l’alchimie ?
+Quel pouvoir possède Luffy dans One Piece ?
+Dans quel lieu se déroule le combat entre Neo et l’Agent Smith dans Matrix ?
+Quel objet magique permet à Bilbo puis Frodon de devenir invisible ?
+Quel pouvoir possède Raven dans Teen Titans ?
+Dans quel endroit se trouve le royaume d’Arendelle ?
+Quel objet permet à Woody de communiquer avec les autres jouets dans Toy Story ?
+Quel pouvoir possède Tanjiro dans Demon Slayer lorsqu’il utilise la respiration de l’eau ?
+Dans quel lieu se déroule la course de modules dans Star Wars : La Menace fantôme ?
+Quel objet utilise Hermione pour stocker ses affaires dans Harry Potter ?
+Quel pouvoir possède Jean Grey dans X-Men ?
+Dans quel endroit se déroule la bataille finale de Black Panther ?
+Quel objet permet à Pinocchio de devenir un véritable garçon ?
+Quel pouvoir possède Shazam lorsqu’il prononce son nom ?
+Dans quel lieu se déroule la scène du bal dans Cendrillon ?
+Quel objet utilise Indiana Jones pour franchir certains obstacles ?
+Quel pouvoir possède Zuko dans Avatar : Le Dernier Maître de l’Air ?
+Dans quel endroit se trouve le quartier général des Men in Black ?
+Quel objet magique permet à Dorothy de rentrer chez elle dans Le Magicien d’Oz ?
+Quel pouvoir possède Gojo Satoru dans Jujutsu Kaisen ?
+Dans quel lieu se déroule le combat final de Naruto contre Sasuke ?
+Quel objet utilise Buzz l’Éclair pour voler dans Toy Story ?
+Quel pouvoir possède Jack-Jack dans Les Indestructibles ?
+Dans quel endroit se trouve le laboratoire de Walter White dans Breaking Bad ?
+Quel objet permet à Link de lancer des bombes dans plusieurs jeux Zelda ?
+Quel pouvoir possède Killua dans Hunter × Hunter ?
+Dans quel lieu se déroule la scène où Mufasa est tué dans Le Roi Lion ?
+Quel objet magique utilise Dumbledore pour éclairer ou éteindre les lumières ?
+Quel pouvoir possède Nico Robin dans One Piece ?
+Dans quel endroit se déroule la bataille de Poudlard ?
+Quel objet utilise Albus Dumbledore pour récupérer des souvenirs dans Harry Potter ?
+Quel pouvoir possède Nezuko dans Demon Slayer lorsqu’elle utilise son sang démoniaque ?
+Dans quel lieu se trouve le restaurant de Chez Rémy dans Ratatouille ?
+Quel objet permet à WALL-E de conserver une plante ?
+Quel pouvoir possède Superman grâce à la lumière du Soleil ?
+Dans quel endroit se déroule le duel final entre Obi-Wan Kenobi et Anakin Skywalker ?
+Quel objet utilise Batman pour se déplacer entre les bâtiments ?
+Quel pouvoir possède Kirby lorsqu’il avale ses ennemis ?
+Dans quel lieu se déroule la rencontre entre les personnages principaux dans Monstres & Cie ?
+Quel objet permet à Miguel de communiquer avec le monde des morts dans Coco ?
+Quel pouvoir possède Gaara dans Naruto ?
+Dans quel endroit se trouve le château de Hyrule ?
+Quel objet utilise Harry Potter pour lancer des sorts ?
+Quel pouvoir possède Elsa lorsqu’elle crée son palais de glace ?
+Dans quel lieu se déroule la scène de la fête dans Gatsby le Magnifique ?
+Quel objet permet à Sonic de gagner de la puissance dans ses aventures ?
+Quel pouvoir possède Raven dans Teen Titans lorsqu’elle utilise son énergie mystique ?
+Dans quel endroit se déroule le combat final de Dragon Ball Z contre Majin Boo ?
+Quel objet utilise Peter Parker pour lancer ses toiles dans certaines versions de Spider-Man ?
+Quel pouvoir possède Piccolo dans Dragon Ball ?
+Dans quel lieu se trouve la maison des Simpson ?
+Quel objet permet à Dorothy de voyager dans Le Magicien d’Oz ?
+Quel pouvoir possède Asta dans Black Clover ?
+Dans quel endroit se déroule la scène d’ouverture du Roi Lion avec la présentation de Simba ?
+Quel objet permet à Tony Stark de voler ?
+Quel pouvoir possède Shigaraki dans My Hero Academia ?
+Dans quel lieu se déroule le combat entre Harry Potter et le Basilic ?
+Quel objet utilise le Joker pour ses tours et pièges dans certaines versions de Batman ?
+Quel pouvoir possède Korra dans La Légende de Korra ?
+Dans quel endroit se déroule la scène du Titanic où Jack et Rose se rencontrent pour la première fois ?
+Quel objet magique permet à Merlin de pratiquer certains de ses sorts dans les différentes adaptations ?
+Quel pouvoir possède Wanda Maximoff dans l’univers Marvel ?
+Dans quel lieu se déroule le combat final de Spider-Man: Into the Spider-Verse ?
+Quel objet utilise Ash dans Pokémon pour capturer des Pokémon ?
+Quel pouvoir possède Kirby lorsqu’il absorbe les capacités de certains ennemis ?
+Dans quel endroit se trouve la chocolaterie de Willy Wonka ?
+Quel objet permet à Peter Pan et aux enfants Darling de voler ?
+Quel pouvoir possède Natsu dans Fairy Tail ?
+Dans quel lieu se déroule la scène de la bibliothèque dans La Belle et la Bête ?
+Quel objet utilise Doctor Who pour ouvrir certaines portes et résoudre des problèmes ?
+Quel pouvoir possède Shoto Todoroki lorsqu’il utilise son côté gauche ?
+Dans quel endroit se déroule la bataille finale de Harry Potter et les Reliques de la Mort ?
+Quel objet permet à Indiana Jones de résoudre certaines énigmes archéologiques ?
+Quel pouvoir possède Luffy lorsqu’il utilise le Gear 5 ?
+Dans quel lieu se déroule la scène finale de La La Land ?
+Quel objet utilise Mario pour obtenir temporairement des capacités spéciales ?
+Quel pouvoir possède Elsa dans La Reine des Neiges 2 qu’elle développe davantage ?
+Dans quel endroit se déroule la scène du train dans Le Voyage de Chihiro ?
+Quel objet permet à Hermione de modifier certains événements grâce au retour dans le temps ?
+Quel pouvoir possède Saitama lorsqu’il frappe ses adversaires ?
+Dans quel lieu se déroule le combat final de Demon Slayer contre Muzan ?
+Quel objet permet à Simba de communiquer symboliquement avec son père dans Le Roi Lion ?
+Quel pouvoir possède Magneto lorsqu’il manipule les métaux ?
+Dans quel endroit se trouve la salle du trône dans Star Wars ?
+Quel objet utilise Frodo pour transporter l’Anneau ?
+Quel pouvoir possède Aang lorsqu’il entre dans l’état Avatar ?
+Dans quel lieu se déroule la scène de transformation de la Bête dans La Belle et la Bête ?
+Quel est le nom du réalisateur du film Inception ?
+Dans quel pays se déroule principalement l’intrigue de Parasite ?
+Quel est le véritable nom de Batman ?
+Quel acteur interprète Jack dans Titanic ?
+Quel est le nom de la sœur de Thor dans l’univers Marvel ?
+Dans quel manga apparaît le personnage de Light Yagami ?
+Quel est le nom du bateau de Luffy dans One Piece avant le Thousand Sunny ?
+Quel est le rêve de Luffy dans One Piece ?
+Quel est le nom du frère de Mario dans l’univers Nintendo ?
+Quel est le nom de la mère de Simba dans Le Roi Lion ?
+Quel acteur joue le rôle de Neo dans Matrix ?
+Quel est le nom de l’école fréquentée par les personnages de My Hero Academia ?
+Quel est le nom du père de Naruto ?
+Dans quel film apparaît le personnage de Tyler Durden ?
+Quel est le nom du royaume dirigé par Elsa dans La Reine des Neiges ?
+Quel est le véritable nom de Spider-Man ?
+Quel est le nom de la planète d’origine de Superman ?
+Quel est le nom du maître de Goku pendant son enfance ?
+Quel est le nom de l’organisation à laquelle appartient Sherlock Holmes ?
+Quel acteur incarne Iron Man dans le MCU ?
+Quel est le nom du rival principal de Goku au début de Dragon Ball Z ?
+Quel est le nom du village de Naruto ?
+Quel film raconte l’histoire d’un parc rempli de dinosaures recréés génétiquement ?
+Quel est le nom de la princesse de Mario ?
+Quel est le nom du professeur de Harry Potter qui enseigne les potions au début de la saga ?
+Dans quel manga trouve-t-on les Titans ?
+Quel est le nom du capitaine du Black Pearl dans Pirates des Caraïbes ?
+Quel est le nom de l’épée de Link dans The Legend of Zelda ?
+Quel est le nom du frère d’Edward Elric dans Fullmetal Alchemist ?
+Quel acteur joue John Wick ?
+Quel est le nom de la ville dans laquelle se déroule Stranger Things ?
+Quel est le nom de la famille de Wednesday dans la série Mercredi ?
+Quel est le nom du dragon de Hiccup dans Dragons ?
+Quel est le nom du studio ayant produit Toy Story ?
+Quel est le nom du mentor de Peter Parker dans Spider-Man: Homecoming ?
+Quel est le nom du méchant principal du premier film Avengers ?
+Quel est le nom de la sœur de Mario ?
+Dans quel anime apparaît le personnage de Lelouch ?
+Quel est le nom du bateau de Gol D. Roger ?
+Quel est le nom du détective principal dans Death Note ?
+Quel est le nom de l’actrice qui joue Hermione Granger ?
+Quel est le nom du royaume de Simba dans Le Roi Lion ?
+Quel est le nom du personnage principal de Your Name ?
+Quel est le nom du professeur qui dirige Poudlard au début de la saga Harry Potter ?
+Quel est le nom du frère de Thor dans Marvel ?
+Quel est le nom du héros principal de Demon Slayer ?
+Quel est le nom du père de Simba ?
+Quel est le nom du créateur de Dragon Ball ?
+Quel est le nom de la ville dans laquelle se déroule The Dark Knight ?
+Quel est le nom du personnage principal de One Punch Man ?
+Quel est le nom du clan de Sasuke dans Naruto ?
+Quel acteur interprète Wolverine dans la majorité des films X-Men ?
+Quel est le nom du méchant principal de La Reine des Neiges ?
+Quel est le nom de la voiture de Doc dans Retour vers le futur ?
+Quel est le nom du personnage principal de Jujutsu Kaisen ?
+Quel est le nom de l’organisation criminelle dirigée par Voldemort ?
+Quel est le nom du père de Harry Potter ?
+Quel est le nom du royaume de Mario dans Super Mario ?
+Quel est le nom du personnage principal de Hunter × Hunter ?
+Quel est le nom du célèbre compositeur de la bande originale d’Interstellar ?
+Quel est le nom de la ville fictive où vit Superman ?
+Quel est le nom du mentor de Naruto ?
+Quel est le nom du personnage principal de Death Note ?
+Quel est le nom de l’acteur qui joue Jack Sparrow ?
+Quel est le nom de la sœur de Katniss Everdeen dans Hunger Games ?
+Quel est le nom du village de départ dans Pokémon Rouge et Bleu ?
+Quel est le nom du Pokémon numéro 25 dans le Pokédex national ?
+Quel est le nom du frère de Mario ?
+Quel est le nom du personnage principal de Vinland Saga ?
+Quel est le nom du roi dans Le Seigneur des Anneaux qui dirige le Gondor pendant la bataille finale ?
+Quel est le nom de l’épée de Zoro dans One Piece qu’il reçoit après la mort de Kuina ?
+Quel est le nom du professeur de magie qui devient directeur de Poudlard après Dumbledore ?
+Quel est le nom de la planète sur laquelle se déroule principalement Avatar ?
+Quel est le nom du personnage principal de Code Geass ?
+Quel est le nom de l’équipe de football dans Captain Tsubasa ?
+Quel est le nom du frère de Vegeta ?
+Quel est le nom du méchant principal de Spider-Man 2 de Sam Raimi ?
+Quel est le nom de la sorcière dans Le Voyage de Chihiro qui dirige les bains ?
+Quel est le nom du personnage principal de Cowboy Bebop ?
+Quel est le nom du père de Vegeta ?
+Quel est le nom de l’acteur qui interprète le Joker dans The Dark Knight ?
+Quel est le nom du groupe auquel appartiennent les héros principaux de Stranger Things ?
+Quel est le nom de la créature que chasse Geralt dans The Witcher ?
+Quel est le nom du personnage principal de Chainsaw Man ?
+Quel est le nom du studio derrière Le Voyage de Chihiro ?
+Quel est le nom de l’île sur laquelle se trouve le village de Luffy au début de One Piece ?
+Quel est le nom de l’ennemi principal de Naruto pendant la quatrième grande guerre ninja ?
+Quel est le nom du personnage principal de JoJo’s Bizarre Adventure dans la première partie ?
+Quel est le nom du royaume où se déroule principalement Elden Ring ?
+Quel est le nom de l’acteur qui joue le professeur dans La Casa de Papel ?
+Quel est le nom du personnage principal de Berserk ?
+Quel est le nom du frère de Thor qui devient roi d’Asgard dans certaines versions de l’histoire ?
+Quel est le nom du groupe de pirates de Barbe Blanche ?
+Quel est le nom du personnage principal de Bleach ?
+Quel est le nom du premier Pokémon de Sacha dans l’anime ?
+Quel est le nom de l’ordinateur intelligent dans 2001 : L’Odyssée de l’espace ?
+Quel est le nom du personnage principal de Death Note qui utilise le cahier ?
+Quel est le nom du royaume où vit Ariel dans La Petite Sirène ?
+Quel est le nom du personnage principal de Tokyo Ghoul ?
+Quel est le nom de la prison dans laquelle Michael Scofield tente de faire évader son frère dans Prison Break ?
+Quel est le nom du scientifique qui crée les dinosaures dans Jurassic Park ?
+Quel est le nom du personnage principal de Steins;Gate ?
+Quel est le nom du maître de Goku qui lui apprend notamment le Kamehameha ?
+Quel est le nom du royaume de Wakanda dans l’univers Marvel ?
+Quel est le nom de l’acteur qui joue Geralt dans la série The Witcher ?
+Quel est le nom du principal antagoniste de Dragon Ball Super lors du Tournoi du Pouvoir ?
+Quel est le nom du personnage principal de Mob Psycho 100 ?
+Quel est le nom du sorcier qui porte le titre de Gandalf le Gris ?
+Quel est le nom de la ville où se déroule principalement La Casa de Papel ?
+Quel est le nom du personnage principal de Solo Leveling ?
+Quel est le nom du premier adversaire important affronté par Luffy dans One Piece ?
+Quel est le nom du personnage principal de Naruto Shippuden ?
+Quel est le nom du célèbre archéologue interprété par Harrison Ford dans Indiana Jones ?
+Quel est le nom du personnage principal de Fairy Tail ?
+Quel est le nom du méchant qui dirige l’Empire dans Star Wars ?
+Quel est le nom du personnage principal de My Hero Academia ?
+Quel est le nom du détective qui poursuit Light dans Death Note ?
+Quel est le nom de la ville où vit Peter Parker dans la majorité des films Spider-Man ?
+Quel est le nom du personnage principal de Attack on Titan ?
+Quel est le nom du titan auquel Eren peut se transformer ?
+Quel est le nom de l’acteur qui joue le rôle de Neo dans Matrix ?
+Quel est le nom du personnage principal de Black Clover ?
+Quel est le nom du pirate surnommé « Chapeau de paille » ?
+Quel est le nom de la famille de Loki dans la mythologie nordique ?
+Quel est le nom du personnage principal de One Piece ?
+Quel est le nom de l’ennemi juré de Batman ?
+Quel est le nom de l’épouse de Tony Stark dans certaines versions des comics ?
+Quel est le nom du personnage principal de Spy × Family ?
+Quel est le nom de l’animal de compagnie de Tintin ?
+Quel est le nom du reporter qui accompagne Tintin dans certaines aventures ?
+Quel est le nom de la ville où se déroule principalement The Simpsons ?
+Quel est le nom du personnage principal de Samurai Champloo ?
+Quel est le nom du maître de Gon dans Hunter × Hunter qui utilise une canne à pêche ?
+Quel est le nom du personnage principal de Dragon Ball ?
+Quel est le nom du premier adversaire de Goku dans le 21e Tenkaichi Budokai ?
+Quel est le nom du scientifique qui transforme Peter Parker après une morsure dans certaines versions de Spider-Man ?
+Quel est le nom du méchant principal de Le Roi Lion ?
+Quel est le nom du personnage principal de L’Attaque des Titans qui commande le Bataillon d’exploration ?
+Quel est le nom de la ville dans laquelle se déroule principalement Batman ?
+Quel est le nom du personnage principal de Fairy Tail qui utilise la magie du feu ?
+Quel est le nom du créateur de One Piece ?
+Quel est le nom du personnage principal de Yu-Gi-Oh! ?
+Quel est le nom de la carte la plus célèbre utilisée par Yugi ?
+Quel est le nom du personnage principal de Pokémon dans les jeux de première génération ?
+Quel est le nom du professeur qui donne son premier Pokémon au joueur dans Pokémon Rouge et Bleu ?
+Quel est le nom du rival du héros dans Pokémon Rouge et Bleu ?
+Quel est le nom du personnage principal de Death Note avant qu’il ne devienne Kira ?
+Quel est le nom de l’artefact recherché par les personnages dans Le Seigneur des Anneaux ?
+Quel est le nom du sorcier qui affronte Gandalf sur le pont de Khazad-dûm ?
+Quel est le nom de la cité où vivent les Hobbits au début du Seigneur des Anneaux ?
+Quel est le nom du personnage principal de The Last of Us ?
+Quel est le nom de la jeune fille accompagnant Joel dans The Last of Us ?
+Quel est le nom du personnage principal de Red Dead Redemption 2 ?
+Quel est le nom du gang auquel appartient Arthur Morgan ?
+Quel est le nom du personnage principal de God of War ?
+Quel est le nom du fils de Kratos dans God of War ?
+Quel est le nom du personnage principal de Hollow Knight ?
+Quel est le nom du royaume dans lequel se déroule Kingdom Hearts ?
+Quel est le nom de l’organisation portant des manteaux noirs dans Kingdom Hearts ?
+Quel est le nom du personnage principal de Persona 5 ?
+Quel est le nom de l’école fréquentée par le protagoniste de Persona 5 ?
+Quel est le nom du personnage principal de Final Fantasy VII ?
+Quel est le nom de l’épée emblématique de Cloud dans Final Fantasy VII ?
