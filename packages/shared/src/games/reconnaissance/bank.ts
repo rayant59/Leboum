@@ -15,6 +15,14 @@ export interface RecoItem {
   answer: string;
   accepted?: string[];
   category: string; // stored, not necessarily shown
+  // Optional metadata (safe to add).
+  difficulty?: "easy" | "medium" | "hard";
+  franchise?: string; // œuvre/univers — used by the anti-repetition picker
+  subcat?: string;
+  // Local image override: if set, RecoView uses this path (e.g. "/reco/dory.png")
+  // INSTEAD of fetching from Wikipedia. This is how pop-culture images work
+  // (Wikipedia has no free image for copyrighted characters/scenes).
+  img?: string;
 }
 
 /** Normalize: lowercase, strip accents/punctuation, collapse spaces. */
@@ -255,10 +263,24 @@ export function pickItems(count: number, rng: () => number = Math.random, catego
     // They stay available if the host explicitly picks that category.
     pool = pool.filter((q) => q.category !== "Personnalités");
   }
-  const a = [...pool];
-  for (let i = a.length - 1; i > 0; i--) {
+  // Shuffle…
+  const shuffled = [...pool];
+  for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  return a.slice(0, Math.max(1, Math.min(count, a.length)));
+  // …then interleave so the same category/franchise never chains back-to-back.
+  const want = Math.max(1, Math.min(count, shuffled.length));
+  const remaining = [...shuffled];
+  const out: RecoItem[] = [];
+  while (out.length < want && remaining.length) {
+    const prev = out[out.length - 1];
+    let idx = prev
+      ? remaining.findIndex((q) => q.category !== prev.category && (!q.franchise || q.franchise !== prev.franchise))
+      : 0;
+    if (idx === -1) idx = 0;
+    out.push(remaining[idx]);
+    remaining.splice(idx, 1);
+  }
+  return out;
 }

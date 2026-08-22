@@ -85,7 +85,7 @@ function nextItem(state: RecoState, ctx: GameContext): RecoState {
   return { ...state, phase: "question", index: ni, startedAt: ctx.now, deadline: ctx.now + state.config.secondsPerQuestion * 1000, answers: {}, gained: rec0(state.players), correct: {} };
 }
 
-const publicItem = (it: RecoItem | null): PublicRecoItem | null => it ? { id: it.id, wiki: it.wiki, wikiEn: it.wikiEn, question: it.question, category: it.category } : null;
+const publicItem = (it: RecoItem | null): PublicRecoItem | null => it ? { id: it.id, wiki: it.wiki, wikiEn: it.wikiEn, question: it.question, category: it.category, img: it.img } : null;
 
 function bestBy(state: RecoState, metric: (id: PlayerId) => number): string | null {
   let best: { id: PlayerId; v: number } | null = null;

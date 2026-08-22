@@ -60,8 +60,13 @@ function useWikiImage(wiki: string, wikiEn?: string) {
   return { ...state, retry };
 }
 
-function RecoImage({ wiki, wikiEn }: { wiki: string; wikiEn?: string }) {
-  const { loading, img, error, retry } = useWikiImage(wiki, wikiEn);
+function RecoImage({ wiki, wikiEn, localImg }: { wiki: string; wikiEn?: string; localImg?: string }) {
+  const wikiState = useWikiImage(wiki, wikiEn);
+  // A local image (dropped in public/reco/…) wins and never needs Wikipedia.
+  const loading = localImg ? false : wikiState.loading;
+  const error = localImg ? false : wikiState.error;
+  const retry = wikiState.retry;
+  const url = localImg || wikiState.img?.url;
   return (
     <div
       className="mx-auto mb-4 w-full max-w-3xl overflow-hidden rounded-2xl border border-ink-border bg-ink-deep"
@@ -76,13 +81,13 @@ function RecoImage({ wiki, wikiEn }: { wiki: string; wikiEn?: string }) {
             <button onClick={retry} className="mt-2 rounded-lg border border-ink-border px-3 py-1 text-xs text-text-muted hover:border-gold hover:text-gold">Réessayer</button>
           </div>
         )}
-        {img && (
-          <img src={img.url} alt="À reconnaître" className="pointer-events-none h-full w-full select-none object-contain" draggable={false} onDragStart={(e) => e.preventDefault()} />
+        {url && (
+          <img src={url} alt="À reconnaître" className="pointer-events-none h-full w-full select-none object-contain" draggable={false} onDragStart={(e) => e.preventDefault()} />
         )}
       </div>
-      {img && (
+      {url && (
         <span className="block bg-ink-surface px-3 py-1 text-right text-[10px] text-text-faint">
-          Image : Wikimedia Commons
+          {localImg ? "Image : locale" : "Image : Wikimedia Commons"}
         </span>
       )}
     </div>
@@ -157,7 +162,7 @@ export function RecoView({ room }: { room: UseRoom }) {
         {(game.phase === "question" || game.phase === "reveal") && item && (
           <div className="animate-pop">
             {/* IMAGE réelle — élément principal */}
-            <RecoImage wiki={item.wiki} wikiEn={item.wikiEn} />
+            <RecoImage wiki={item.wiki} wikiEn={item.wikiEn} localImg={item.img} />
 
             <h2 className="mx-auto mb-4 max-w-xl text-center font-display text-2xl font-extrabold leading-tight sm:text-3xl">{item.question}</h2>
 

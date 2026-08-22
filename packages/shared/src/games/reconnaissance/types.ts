@@ -29,7 +29,7 @@ export interface RecoState {
 
 export type RecoClientAction = { kind: "answer"; value: string };
 
-export interface PublicRecoItem { id: string; wiki: string; wikiEn?: string; question: string; category: string }
+export interface PublicRecoItem { id: string; wiki: string; wikiEn?: string; question: string; category: string; img?: string }
 
 export interface RecoRankRow {
   id: PlayerId; name: string; color: string; avatar?: string | null;

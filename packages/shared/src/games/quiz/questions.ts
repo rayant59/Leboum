@@ -3,8 +3,19 @@
 // Drawn PURELY at random across categories — no difficulty rating (like draw).
 
 export type QuizType = "mcq" | "truefalse" | "free";
+export type QuizDifficulty = "easy" | "medium" | "hard";
 
-interface Base { id: string; type: QuizType; cat: string; prompt: string }
+interface Base {
+  id: string;
+  type: QuizType;
+  cat: string;
+  prompt: string;
+  // Optional metadata (safe to add — engine only projects id/type/cat/prompt/choices).
+  difficulty?: QuizDifficulty;
+  franchise?: string; // œuvre/univers, used by the anti-repetition picker
+  subcat?: string;
+  tags?: string[];
+}
 export interface MCQQuestion extends Base { type: "mcq"; choices: string[]; answer: number }
 export interface TFQuestion extends Base { type: "truefalse"; answer: boolean }
 export interface FreeQuestion extends Base { type: "free"; answer: string; aliases?: string[] }
@@ -211,6 +222,95 @@ export const QUIZ_BANK: Question[] = [
   { id: "zla2", type: "mcq", cat: "Langues", prompt: "Quelle langue a le plus de locuteurs natifs ?", choices: ["Anglais", "Espagnol", "Mandarin", "Hindi"], answer: 2 },
   { id: "zla3", type: "truefalse", cat: "Langues", prompt: "Le mot « robot » vient du tchèque.", answer: true },
 
+  // ═══ REFONTE : pop-culture + culture générale (difficulté + franchise) ═══
+  { id: "pf1", type: "free", cat: "Films", prompt: "Dans quel film un jeune sorcier entre à l'école de Poudlard ?", answer: "Harry Potter", aliases: ["harry potter a l'ecole des sorciers", "harry potter"], difficulty: "easy", franchise: "Harry Potter", subcat: "lieu" },
+  { id: "pf2", type: "mcq", cat: "Films", prompt: "Comment s'appelle le majordome de Batman ?", choices: ["Alfred", "Robin", "Lucius", "Gordon"], answer: 0, difficulty: "medium", franchise: "Batman", subcat: "secondaire" },
+  { id: "pf3", type: "free", cat: "Films", prompt: "Quel est le nom du vaisseau de Han Solo dans Star Wars ?", answer: "Faucon Millénium", aliases: ["faucon millenium", "millennium falcon", "le faucon millenium"], difficulty: "medium", franchise: "Star Wars", subcat: "objet" },
+  { id: "pf4", type: "mcq", cat: "Films", prompt: "Dans « Le Seigneur des Anneaux », qui accompagne Frodon jusqu'au bout ?", choices: ["Sam", "Legolas", "Boromir", "Gimli"], answer: 0, difficulty: "medium", franchise: "Le Seigneur des Anneaux", subcat: "secondaire" },
+  { id: "pf5", type: "free", cat: "Films", prompt: "Comment s'appelle le requin… euh, quel objet symbolise « Le Titanic » qui coule ?", answer: "iceberg", aliases: ["un iceberg", "l'iceberg"], difficulty: "easy", franchise: "Titanic", subcat: "objet" },
+  { id: "pf6", type: "mcq", cat: "Films", prompt: "Quel acteur incarne Iron Man dans le MCU ?", choices: ["Chris Evans", "Robert Downey Jr.", "Mark Ruffalo", "Chris Hemsworth"], answer: 1, difficulty: "easy", franchise: "Marvel", subcat: "acteur" },
+  { id: "pf7", type: "free", cat: "Films", prompt: "Dans « Retour vers le futur », quelle voiture sert de machine à voyager dans le temps ?", answer: "DeLorean", aliases: ["la delorean", "delorean"], difficulty: "medium", franchise: "Retour vers le futur", subcat: "objet" },
+  { id: "pf8", type: "mcq", cat: "Films", prompt: "Qui est le grand méchant de la saga Star Wars (masque noir) ?", choices: ["Dark Vador", "Yoda", "Chewbacca", "C-3PO"], answer: 0, difficulty: "easy", franchise: "Star Wars", subcat: "antagoniste" },
+  { id: "pf9", type: "free", cat: "Films", prompt: "Dans quelle ville vit Spider-Man ?", answer: "New York", aliases: ["new york city", "nyc"], difficulty: "easy", franchise: "Marvel", subcat: "lieu" },
+  { id: "pf10", type: "mcq", cat: "Films", prompt: "Quel film met en scène un anneau à détruire dans un volcan ?", choices: ["Le Hobbit", "Le Seigneur des Anneaux", "Narnia", "Willow"], answer: 1, difficulty: "easy", franchise: "Le Seigneur des Anneaux", subcat: "titre" },
+  { id: "pf11", type: "free", cat: "Films", prompt: "Quel personnage dit « Je suis ton père » ?", answer: "Dark Vador", aliases: ["dark vador", "darth vader", "vador"], difficulty: "medium", franchise: "Star Wars", subcat: "citation" },
+  { id: "pf12", type: "mcq", cat: "Films", prompt: "Dans « Jurassic Park », que clone-t-on ?", choices: ["Des dinosaures", "Des mammouths", "Des dragons", "Des aliens"], answer: 0, difficulty: "easy", franchise: "Jurassic Park", subcat: "concept" },
+  { id: "pf13", type: "mcq", cat: "Films", prompt: "Quel réalisateur a créé « Pulp Fiction » ?", choices: ["Scorsese", "Tarantino", "Spielberg", "Nolan"], answer: 1, difficulty: "hard", franchise: "Pulp Fiction", subcat: "realisateur" },
+  { id: "pf14", type: "free", cat: "Films", prompt: "Comment s'appelle le clown terrifiant de « Ça » ?", answer: "Grippe-Sou", aliases: ["grippe sou", "pennywise", "ca"], difficulty: "hard", franchise: "Ça", subcat: "antagoniste" },
+  { id: "ps1", type: "mcq", cat: "Séries", prompt: "Dans « Stranger Things », d'où vient le monde parallèle ?", choices: ["Le Monde à l'envers", "Le Vide", "La Zone", "L'Autre Côté"], answer: 0, difficulty: "medium", franchise: "Stranger Things", subcat: "lieu" },
+  { id: "ps2", type: "free", cat: "Séries", prompt: "Dans « Game of Thrones », quelle famille vit à Winterfell ?", answer: "Stark", aliases: ["les stark", "maison stark"], difficulty: "medium", franchise: "Game of Thrones", subcat: "secondaire" },
+  { id: "ps3", type: "mcq", cat: "Séries", prompt: "Quel est le vrai métier de Walter White dans « Breaking Bad » ?", choices: ["Médecin", "Prof de chimie", "Avocat", "Policier"], answer: 1, difficulty: "medium", franchise: "Breaking Bad", subcat: "personnage" },
+  { id: "ps4", type: "free", cat: "Séries", prompt: "Dans « The Mandalorian », comment surnomme-t-on l'enfant (Grogu) ?", answer: "Bébé Yoda", aliases: ["baby yoda", "bebe yoda", "grogu"], difficulty: "easy", franchise: "Star Wars", subcat: "secondaire" },
+  { id: "ps5", type: "mcq", cat: "Séries", prompt: "Dans « Friends », quel est le métier de Ross ?", choices: ["Paléontologue", "Cuisinier", "Acteur", "Musicien"], answer: 0, difficulty: "medium", franchise: "Friends", subcat: "personnage" },
+  { id: "ps6", type: "free", cat: "Séries", prompt: "Dans « La Casa de Papel », quel surnom porte le cerveau du braquage ?", answer: "Le Professeur", aliases: ["professeur", "el profesor", "le professeur"], difficulty: "medium", franchise: "La Casa de Papel", subcat: "personnage" },
+  { id: "ps7", type: "truefalse", cat: "Séries", prompt: "Dans « The Witcher », Geralt est un chasseur de monstres.", answer: true, difficulty: "easy", franchise: "The Witcher" },
+  { id: "pa1", type: "free", cat: "Anime", prompt: "Dans quel anime apparaît Itachi Uchiha ?", answer: "Naruto", aliases: ["naruto shippuden", "naruto"], difficulty: "medium", franchise: "Naruto", subcat: "secondaire" },
+  { id: "pa2", type: "free", cat: "Anime", prompt: "Dans quel anime trouve-t-on le fruit du démon et le chapeau de paille ?", answer: "One Piece", aliases: ["one piece"], difficulty: "easy", franchise: "One Piece", subcat: "objet" },
+  { id: "pa3", type: "mcq", cat: "Anime", prompt: "Quel est le carnet mortel de « Death Note » ?", choices: ["Le Death Note", "Le Soul Book", "Le Kill List", "Le Fate Note"], answer: 0, difficulty: "easy", franchise: "Death Note", subcat: "objet" },
+  { id: "pa4", type: "free", cat: "Anime", prompt: "Comment s'appelle le rival de Naruto (Uchiha) ?", answer: "Sasuke", aliases: ["sasuke uchiha", "sasuke"], difficulty: "easy", franchise: "Naruto", subcat: "rival" },
+  { id: "pa5", type: "mcq", cat: "Anime", prompt: "Dans « Dragon Ball », quelle transformation rend les cheveux dorés ?", choices: ["Super Saiyan", "Kaioken", "Ultra Instinct", "Kamehameha"], answer: 0, difficulty: "medium", franchise: "Dragon Ball", subcat: "concept" },
+  { id: "pa6", type: "free", cat: "Anime", prompt: "Dans « Attack on Titan », comment appelle-t-on les géants ?", answer: "Titans", aliases: ["les titans", "titan"], difficulty: "easy", franchise: "Attack on Titan", subcat: "creature" },
+  { id: "pa7", type: "free", cat: "Anime", prompt: "Dans « Demon Slayer », que chasse Tanjiro ?", answer: "des démons", aliases: ["demons", "les demons", "des demons"], difficulty: "medium", franchise: "Demon Slayer", subcat: "concept" },
+  { id: "pa8", type: "mcq", cat: "Anime", prompt: "Dans « My Hero Academia », comment appelle-t-on les super-pouvoirs ?", choices: ["Alters", "Nen", "Chakra", "Haki"], answer: 0, difficulty: "hard", franchise: "My Hero Academia", subcat: "concept" },
+  { id: "pa9", type: "free", cat: "Anime", prompt: "Dans « Naruto », comment s'appelle le mentor de l'équipe 7 ?", answer: "Kakashi", aliases: ["kakashi hatake", "kakashi"], difficulty: "medium", franchise: "Naruto", subcat: "mentor" },
+  { id: "pa10", type: "mcq", cat: "Anime", prompt: "Dans « One Piece », quel est le rêve de Luffy ?", choices: ["Devenir Roi des Pirates", "Trouver l'amour", "Devenir Hokage", "Sauver le monde"], answer: 0, difficulty: "easy", franchise: "One Piece", subcat: "personnage" },
+  { id: "pa11", type: "free", cat: "Anime", prompt: "Dans « Jujutsu Kaisen », quelle énergie utilisent les sorciers ?", answer: "énergie occulte", aliases: ["energie occulte", "energie maudite", "cursed energy"], difficulty: "hard", franchise: "Jujutsu Kaisen", subcat: "concept" },
+  { id: "pa12", type: "truefalse", cat: "Anime", prompt: "Dans « Hunter x Hunter », l'énergie utilisée s'appelle le Nen.", answer: true, difficulty: "hard", franchise: "Hunter x Hunter" },
+  { id: "pa13", type: "free", cat: "Anime", prompt: "Dans « Fullmetal Alchemist », quels frères pratiquent l'alchimie ?", answer: "Elric", aliases: ["les freres elric", "frères elric", "elric"], difficulty: "hard", franchise: "Fullmetal Alchemist", subcat: "personnage" },
+  { id: "pa14", type: "mcq", cat: "Anime", prompt: "Dans Pokémon, quel est le premier Pokémon de Sacha ?", choices: ["Pikachu", "Salamèche", "Bulbizarre", "Carapuce"], answer: 0, difficulty: "easy", franchise: "Pokémon", subcat: "personnage" },
+  { id: "pan1", type: "free", cat: "Animation", prompt: "Comment s'appelle l'âne dans « Shrek » ?", answer: "L'Âne", aliases: ["ane", "l'ane", "donkey"], difficulty: "medium", franchise: "Shrek", subcat: "secondaire" },
+  { id: "pan2", type: "mcq", cat: "Animation", prompt: "Dans « Le Roi Lion », qui est le père de Simba ?", choices: ["Mufasa", "Scar", "Rafiki", "Zazu"], answer: 0, difficulty: "easy", franchise: "Le Roi Lion", subcat: "personnage" },
+  { id: "pan3", type: "free", cat: "Animation", prompt: "Dans « Toy Story », comment s'appelle le cow-boy ?", answer: "Woody", aliases: ["woody"], difficulty: "easy", franchise: "Toy Story", subcat: "personnage" },
+  { id: "pan4", type: "mcq", cat: "Animation", prompt: "Dans « Nemo », quelle est l'espèce de Nemo ?", choices: ["Poisson-clown", "Requin", "Dauphin", "Thon"], answer: 0, difficulty: "easy", franchise: "Le Monde de Nemo", subcat: "personnage" },
+  { id: "pan5", type: "free", cat: "Animation", prompt: "Dans « Le Monde de Nemo », comment s'appelle le poisson bleu amnésique ?", answer: "Dory", aliases: ["dory"], difficulty: "easy", franchise: "Le Monde de Nemo", subcat: "secondaire" },
+  { id: "pan6", type: "mcq", cat: "Animation", prompt: "Quel studio a créé « Toy Story » ?", choices: ["Pixar", "DreamWorks", "Ghibli", "Illumination"], answer: 0, difficulty: "medium", franchise: "Toy Story", subcat: "studio" },
+  { id: "pan7", type: "free", cat: "Animation", prompt: "Dans « La Reine des Neiges », quelle sœur a des pouvoirs de glace ?", answer: "Elsa", aliases: ["elsa"], difficulty: "easy", franchise: "La Reine des Neiges", subcat: "personnage" },
+  { id: "pan8", type: "mcq", cat: "Animation", prompt: "Dans « Aladdin », que peut réaliser le Génie ?", choices: ["Trois vœux", "Voler", "Rendre invisible", "Voir le futur"], answer: 0, difficulty: "easy", franchise: "Aladdin", subcat: "concept" },
+  { id: "pan9", type: "free", cat: "Animation", prompt: "Dans « Ratatouille », quel animal veut devenir cuisinier ?", answer: "un rat", aliases: ["rat", "le rat", "remy"], difficulty: "easy", franchise: "Ratatouille", subcat: "personnage" },
+  { id: "pan10", type: "mcq", cat: "Animation", prompt: "Dans « Monstres & Cie », qu'est-ce qui alimente la ville ?", choices: ["Les cris/rires des enfants", "Le charbon", "Le soleil", "La peur des monstres"], answer: 0, difficulty: "medium", franchise: "Monstres & Cie", subcat: "concept" },
+  { id: "pan11", type: "free", cat: "Animation", prompt: "Quel studio japonais a réalisé « Le Voyage de Chihiro » ?", answer: "Ghibli", aliases: ["studio ghibli", "ghibli"], difficulty: "hard", franchise: "Ghibli", subcat: "studio" },
+  { id: "pan12", type: "mcq", cat: "Animation", prompt: "Dans « Vaiana », qui est le demi-dieu tatoué ?", choices: ["Maui", "Moana", "Tamatoa", "Heihei"], answer: 0, difficulty: "medium", franchise: "Vaiana", subcat: "secondaire" },
+  { id: "pv1", type: "free", cat: "Jeux vidéo", prompt: "Dans quel jeu construit-on avec des blocs cubiques ?", answer: "Minecraft", aliases: ["minecraft"], difficulty: "easy", franchise: "Minecraft", subcat: "titre" },
+  { id: "pv2", type: "mcq", cat: "Jeux vidéo", prompt: "Comment s'appelle la princesse que Mario sauve ?", choices: ["Peach", "Daisy", "Zelda", "Rosalina"], answer: 0, difficulty: "easy", franchise: "Mario", subcat: "personnage" },
+  { id: "pv3", type: "free", cat: "Jeux vidéo", prompt: "Dans « The Legend of Zelda », comment s'appelle le héros ?", answer: "Link", aliases: ["link"], difficulty: "medium", franchise: "Zelda", subcat: "personnage" },
+  { id: "pv4", type: "mcq", cat: "Jeux vidéo", prompt: "Dans Pokémon, de quel type est Pikachu ?", choices: ["Électrik", "Feu", "Eau", "Plante"], answer: 0, difficulty: "easy", franchise: "Pokémon", subcat: "personnage" },
+  { id: "pv5", type: "free", cat: "Jeux vidéo", prompt: "Dans « Minecraft », quelle créature verte explose ?", answer: "Creeper", aliases: ["le creeper", "creeper"], difficulty: "medium", franchise: "Minecraft", subcat: "creature" },
+  { id: "pv6", type: "mcq", cat: "Jeux vidéo", prompt: "Quelle entreprise a créé « Mario » ?", choices: ["Nintendo", "Sony", "Sega", "Microsoft"], answer: 0, difficulty: "medium", franchise: "Mario", subcat: "studio" },
+  { id: "pv7", type: "free", cat: "Jeux vidéo", prompt: "Dans « Assassin's Creed », quelle organisation combat les Templiers ?", answer: "les Assassins", aliases: ["assassins", "la confrerie", "les assassins"], difficulty: "hard", franchise: "Assassin's Creed", subcat: "organisation" },
+  { id: "pv8", type: "mcq", cat: "Jeux vidéo", prompt: "Dans « The Last of Us », quel champignon infecte les humains ?", choices: ["Cordyceps", "Amanite", "Psilocybe", "Truffe"], answer: 0, difficulty: "hard", franchise: "The Last of Us", subcat: "concept" },
+  { id: "pv9", type: "truefalse", cat: "Jeux vidéo", prompt: "« Fortnite » est un jeu de type Battle Royale.", answer: true, difficulty: "easy", franchise: "Fortnite" },
+  { id: "pv10", type: "free", cat: "Jeux vidéo", prompt: "Dans « Sonic », de quelle couleur est le hérisson ?", answer: "bleu", aliases: ["bleu"], difficulty: "easy", franchise: "Sonic", subcat: "personnage" },
+  { id: "pg1", type: "free", cat: "Géographie", prompt: "Quel est le plus petit pays du monde ?", answer: "Vatican", aliases: ["le vatican", "vatican"], difficulty: "hard", subcat: "pays" },
+  { id: "pg2", type: "mcq", cat: "Géographie", prompt: "Quel océan est le plus grand ?", choices: ["Atlantique", "Pacifique", "Indien", "Arctique"], answer: 1, difficulty: "medium", subcat: "ocean" },
+  { id: "pg3", type: "free", cat: "Géographie", prompt: "Quelle est la capitale du Japon ?", answer: "Tokyo", aliases: ["tokyo"], difficulty: "easy", subcat: "capitale" },
+  { id: "pg4", type: "mcq", cat: "Géographie", prompt: "Dans quel pays se trouve le Machu Picchu ?", choices: ["Pérou", "Mexique", "Chili", "Bolivie"], answer: 0, difficulty: "medium", subcat: "lieu" },
+  { id: "pg5", type: "free", cat: "Géographie", prompt: "Quel est le plus long fleuve d'Afrique ?", answer: "Nil", aliases: ["le nil", "nil"], difficulty: "medium", subcat: "nature" },
+  { id: "pg6", type: "mcq", cat: "Géographie", prompt: "Combien y a-t-il d'océans sur Terre ?", choices: ["3", "4", "5", "6"], answer: 2, difficulty: "medium", subcat: "ocean" },
+  { id: "pg7", type: "free", cat: "Géographie", prompt: "Quelle chaîne de montagnes sépare l'Europe de l'Asie ?", answer: "Oural", aliases: ["l'oural", "monts oural", "oural"], difficulty: "hard", subcat: "nature" },
+  { id: "ph1", type: "mcq", cat: "Histoire", prompt: "Qui a peint la Joconde ?", choices: ["Michel-Ange", "Léonard de Vinci", "Raphaël", "Botticelli"], answer: 1, difficulty: "medium", subcat: "art" },
+  { id: "ph2", type: "free", cat: "Histoire", prompt: "En quelle année l'Homme a-t-il marché sur la Lune ?", answer: "1969", aliases: ["1969"], difficulty: "medium", subcat: "date" },
+  { id: "ph3", type: "mcq", cat: "Histoire", prompt: "Quelle civilisation a inventé les hiéroglyphes ?", choices: ["Romaine", "Égyptienne", "Grecque", "Maya"], answer: 1, difficulty: "easy", subcat: "civilisation" },
+  { id: "ph4", type: "free", cat: "Histoire", prompt: "Quel mur est tombé en 1989 ?", answer: "mur de Berlin", aliases: ["le mur de berlin", "mur de berlin", "berlin"], difficulty: "medium", subcat: "evenement" },
+  { id: "ph5", type: "mcq", cat: "Histoire", prompt: "Qui était le roi de France surnommé le Roi-Soleil ?", choices: ["Louis XIV", "Louis XVI", "François Ier", "Henri IV"], answer: 0, difficulty: "hard", subcat: "personnage" },
+  { id: "psc1", type: "free", cat: "Sciences", prompt: "Quelle planète est la plus grande du système solaire ?", answer: "Jupiter", aliases: ["jupiter"], difficulty: "easy", subcat: "espace" },
+  { id: "psc2", type: "mcq", cat: "Sciences", prompt: "Quel est le métal liquide à température ambiante ?", choices: ["Mercure", "Fer", "Or", "Plomb"], answer: 0, difficulty: "medium", subcat: "chimie" },
+  { id: "psc3", type: "free", cat: "Sciences", prompt: "Combien d'os y a-t-il (environ) dans le corps humain adulte ?", answer: "206", aliases: ["206"], difficulty: "hard", subcat: "corps" },
+  { id: "psc4", type: "mcq", cat: "Sciences", prompt: "Quel gaz respirons-nous principalement pour vivre ?", choices: ["Azote", "Oxygène", "Hydrogène", "Hélium"], answer: 1, difficulty: "easy", subcat: "nature" },
+  { id: "psc5", type: "truefalse", cat: "Sciences", prompt: "Le son se propage dans le vide de l'espace.", answer: false, difficulty: "medium" },
+  { id: "psc6", type: "free", cat: "Sciences", prompt: "Quel scientifique a énoncé E=mc² ?", answer: "Einstein", aliases: ["albert einstein", "einstein"], difficulty: "medium", subcat: "personnage" },
+  { id: "psp1", type: "mcq", cat: "Sport", prompt: "Combien de joueurs dans une équipe de basket sur le terrain ?", choices: ["5", "6", "7", "11"], answer: 0, difficulty: "medium", subcat: "regle" },
+  { id: "psp2", type: "free", cat: "Sport", prompt: "Quel pays a gagné la Coupe du monde de football 2018 ?", answer: "France", aliases: ["la france", "france"], difficulty: "medium", subcat: "competition" },
+  { id: "psp3", type: "mcq", cat: "Sport", prompt: "Dans quel sport utilise-t-on un « ace » ?", choices: ["Tennis", "Football", "Rugby", "Boxe"], answer: 0, difficulty: "medium", subcat: "regle" },
+  { id: "psp4", type: "free", cat: "Sport", prompt: "Combien de temps dure un match de football (sans arrêts) ?", answer: "90 minutes", aliases: ["90 min", "90 minutes", "90"], difficulty: "easy", subcat: "regle" },
+  { id: "pm1", type: "mcq", cat: "Musique", prompt: "Quel groupe a sorti l'album « Abbey Road » ?", choices: ["The Beatles", "Rolling Stones", "Queen", "U2"], answer: 0, difficulty: "medium", subcat: "groupe" },
+  { id: "pm2", type: "free", cat: "Musique", prompt: "Quel est l'instrument à touches noires et blanches ?", answer: "piano", aliases: ["le piano", "piano"], difficulty: "easy", subcat: "instrument" },
+  { id: "pt1", type: "mcq", cat: "Technologie", prompt: "Quelle entreprise a créé l'iPhone ?", choices: ["Apple", "Samsung", "Google", "Nokia"], answer: 0, difficulty: "easy", subcat: "entreprise" },
+  { id: "pt2", type: "free", cat: "Technologie", prompt: "Que signifie « www » ?", answer: "World Wide Web", aliases: ["world wide web", "www"], difficulty: "medium", subcat: "informatique" },
+  { id: "pmk1", type: "mcq", cat: "Marques", prompt: "Quelle marque a pour logo une pomme croquée ?", choices: ["Apple", "Android", "Microsoft", "Blackberry"], answer: 0, difficulty: "easy", subcat: "logo" },
+  { id: "pmk2", type: "mcq", cat: "Marques", prompt: "Quel constructeur automobile a un logo à quatre anneaux ?", choices: ["Audi", "BMW", "Mercedes", "Toyota"], answer: 0, difficulty: "medium", subcat: "logo" },
+  { id: "pn1", type: "free", cat: "Nourriture", prompt: "De quel pays vient le sushi ?", answer: "Japon", aliases: ["le japon", "japon"], difficulty: "easy", subcat: "origine" },
+  { id: "pn2", type: "mcq", cat: "Nourriture", prompt: "Quel ingrédient principal dans le guacamole ?", choices: ["Avocat", "Tomate", "Poivron", "Courgette"], answer: 0, difficulty: "easy", subcat: "ingredient" },
+
 ];
 
 /** Pick `count` distinct questions at random, categories mixed. */
@@ -221,10 +321,26 @@ export function pickQuestions(count: number, rng: () => number = Math.random, ty
     const f = pool.filter((q) => set.has(q.type));
     if (f.length >= Math.min(count, 4)) pool = f;
   }
-  const a = [...pool];
-  for (let i = a.length - 1; i > 0; i--) {
+  // Shuffle first…
+  const shuffled = [...pool];
+  for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  return a.slice(0, Math.max(1, Math.min(count, a.length)));
+  // …then greedily interleave so we never chain the same category or franchise
+  // back-to-back (falls back gracefully when the pool is very homogeneous).
+  const want = Math.max(1, Math.min(count, shuffled.length));
+  const remaining = [...shuffled];
+  const out: Question[] = [];
+  while (out.length < want && remaining.length) {
+    const prev = out[out.length - 1];
+    let idx = prev
+      ? remaining.findIndex((q) => q.cat !== prev.cat && (!q.franchise || q.franchise !== prev.franchise))
+      : 0;
+    if (idx === -1) idx = remaining.findIndex((q) => q.cat !== prev!.cat);
+    if (idx === -1) idx = 0;
+    out.push(remaining[idx]);
+    remaining.splice(idx, 1);
+  }
+  return out;
 }
