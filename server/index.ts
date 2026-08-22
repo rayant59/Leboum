@@ -62,6 +62,8 @@ import {
   type SubtitlesState,
   type VotingCaption,
   setCustomWords,
+  addCustomQuestions,
+  parseCustomQuestions,
 } from "@subtitles-party/shared";
 
 const PORT = Number(process.env.PORT ?? 1999);
@@ -83,6 +85,28 @@ const PORT = Number(process.env.PORT ?? 1999);
         setCustomWords(words);
         const kept = words.map((w) => w.trim()).filter((w) => w && !w.startsWith("#")).length;
         if (kept > 0) console.log(`[motdessin] ${kept} mots personnalisés chargés depuis ${p}`);
+        return;
+      }
+    } catch {
+      /* ignore and try next */
+    }
+  }
+})();
+
+// Load custom quiz questions from questionquizz/questions.txt (added to the
+// built-in bank, never replacing). Format: "Question ? = réponse | alias1 | alias2".
+(() => {
+  const candidates = [
+    resolve(process.cwd(), "questionquizz", "questions.txt"),
+    resolve(process.cwd(), "..", "questionquizz", "questions.txt"),
+    resolve(__dirname, "..", "questionquizz", "questions.txt"),
+  ];
+  for (const p of candidates) {
+    try {
+      if (existsSync(p)) {
+        const parsed = parseCustomQuestions(readFileSync(p, "utf8"));
+        addCustomQuestions(parsed);
+        if (parsed.length > 0) console.log(`[questionquizz] ${parsed.length} questions personnalisées chargées depuis ${p}`);
         return;
       }
     } catch {

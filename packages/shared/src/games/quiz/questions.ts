@@ -39,6 +39,50 @@ export function freeAnswerMatches(given: string, q: FreeQuestion): boolean {
   return targets.includes(g);
 }
 
+// Custom questions provided by the host via questionquizz/questions.txt (loaded
+// by the server at startup). They are ADDED to the built-in bank (never replace).
+let CUSTOM_QUESTIONS: Question[] = [];
+export function addCustomQuestions(qs: Question[]): void {
+  const seen = new Set(QUIZ_BANK.map((q) => q.id));
+  const add: Question[] = [];
+  for (const q of qs) {
+    if (!q || seen.has(q.id)) continue;
+    seen.add(q.id);
+    add.push(q);
+  }
+  CUSTOM_QUESTIONS = add;
+}
+export function customQuestionCount(): number {
+  return CUSTOM_QUESTIONS.length;
+}
+
+/**
+ * Parse a plain-text custom-question file into free-answer questions.
+ * One question per line, format:
+ *     Question ? = réponse | alias1 | alias2
+ * Lines that are empty, start with '#', or have no '=' are ignored.
+ */
+export function parseCustomQuestions(text: string): Question[] {
+  const out: Question[] = [];
+  const lines = (text || "").split(/\r?\n/);
+  let n = 0;
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line || line.startsWith("#")) continue;
+    const eq = line.indexOf("=");
+    if (eq === -1) continue; // no answer → skip
+    const prompt = line.slice(0, eq).trim();
+    const rest = line.slice(eq + 1).trim();
+    if (!prompt || !rest) continue;
+    const parts = rest.split("|").map((p) => p.trim()).filter(Boolean);
+    const answer = parts[0];
+    const aliases = parts.slice(1);
+    n += 1;
+    out.push({ id: `cq${n}`, type: "free", cat: "Perso", prompt, answer, aliases, difficulty: "medium" });
+  }
+  return out;
+}
+
 // prettier-ignore
 export const QUIZ_BANK: Question[] = [
   // Jeux vidéo
@@ -315,7 +359,7 @@ export const QUIZ_BANK: Question[] = [
 
 /** Pick `count` distinct questions at random, categories mixed. */
 export function pickQuestions(count: number, rng: () => number = Math.random, types?: QuizType[]): Question[] {
-  let pool = QUIZ_BANK;
+  let pool = CUSTOM_QUESTIONS.length ? [...QUIZ_BANK, ...CUSTOM_QUESTIONS] : QUIZ_BANK;
   if (types && types.length) {
     const set = new Set(types);
     const f = pool.filter((q) => set.has(q.type));

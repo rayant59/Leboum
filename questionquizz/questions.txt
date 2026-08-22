@@ -1,0 +1,23 @@
+# Questions de quiz personnalisées pour Boum
+# ------------------------------------------
+# - UNE question PAR LIGNE, au format :
+#
+#       Question ? = réponse | alias1 | alias2
+#
+#   (le "= réponse" est obligatoire ; les alias après des "|" sont facultatifs)
+#
+# - Les alias = autres réponses acceptées (utile pour les variantes/orthographes).
+#   La casse, les accents et les espaces sont déjà tolérés automatiquement.
+# - Lignes vides et lignes commençant par # ignorées.
+# - Ces questions S'AJOUTENT à la banque intégrée (rien n'est retiré).
+# - Après modification : relance le serveur (dev:server) ou redéploie-le.
+#
+# 👉 Si tu ne veux écrire QUE les questions (sans réponse), écris-les quand même
+#    puis envoie-moi le fichier : je remplirai les bonnes réponses + alias pour toi.
+#
+# Exemples (remplace-les par les tiens) :
+
+Quelle est la capitale de l'Italie ? = Rome
+Combien de pattes a une araignée ? = 8 | huit
+Dans quel pays se trouve la tour Eiffel ? = France | la france
+Quel est l'astre au centre du système solaire ? = Soleil | le soleil

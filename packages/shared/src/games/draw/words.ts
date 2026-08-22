@@ -19,7 +19,9 @@ export function setCustomWords(words: string[]): void {
         .filter((w) => w.length > 0 && !w.startsWith("#")),
     ),
   ];
-  CUSTOM_WORDS = cleaned.length ? cleaned.map((word) => ({ word, theme: "Perso" })) : null;
+  // Each custom word gets its own theme label so the "one word per theme"
+  // picker treats them fairly (they mix in instead of collapsing to one).
+  CUSTOM_WORDS = cleaned.length ? cleaned.map((word, i) => ({ word, theme: `Perso ${i + 1}` })) : null;
 }
 export function hasCustomWords(): boolean {
   return !!(CUSTOM_WORDS && CUSTOM_WORDS.length);
@@ -255,19 +257,16 @@ export function pickWordEntries(
     return arr;
   };
 
-  // Custom words (from motdessin/mots.txt, loaded by the server) take over
-  // entirely when present — the drawer picks among the host's own words.
-  if (CUSTOM_WORDS && CUSTOM_WORDS.length) {
-    const a = shuffle([...CUSTOM_WORDS]);
-    const want = Math.max(1, Math.min(count, a.length));
-    return a.slice(0, want);
-  }
-
   let pool = UNIQUE_BANK;
   if (themes && themes.length) {
     const set = new Set(themes);
     const f = pool.filter((e) => set.has(e.theme));
     if (f.length >= count) pool = f;
+  }
+  // Custom words (from motdessin/mots.txt) are ADDED to the pool — the built-in
+  // words are kept. They stay available whatever the theme selection.
+  if (CUSTOM_WORDS && CUSTOM_WORDS.length) {
+    pool = [...pool, ...CUSTOM_WORDS];
   }
   count = Math.max(1, count);
 
