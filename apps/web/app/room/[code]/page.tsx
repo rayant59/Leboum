@@ -105,6 +105,14 @@ export default function LobbyPage() {
     prevStatus.current = room.status;
   }, [room.status, name, room]);
 
+  // Host broadcasts the currently-selected game so guests see what's coming.
+  // Kept above any early return so hook order stays stable every render.
+  useEffect(() => {
+    const st = room.state;
+    const meNow = st && room.you ? st.players[room.you] : undefined;
+    if (meNow?.isHost) room.selectGame(selectedGame);
+  }, [room, room.state, room.you, selectedGame]);
+
   // --- name gate (direct link without a stored pseudo) ----------------------
   if (!name) {
     return (
@@ -149,10 +157,6 @@ export default function LobbyPage() {
   const me = state && room.you ? state.players[room.you] : undefined;
   const isHost = me?.isHost ?? false;
 
-  // Host broadcasts the currently-selected game so guests can see what's coming.
-  useEffect(() => {
-    if (isHost) room.selectGame(selectedGame);
-  }, [isHost, selectedGame, room.selectGame]);
   const players = state ? state.playerOrder.map((id) => state.players[id]).filter(Boolean) : [];
   const readyCount = players.filter((p) => p.isConnected && p.isReady).length;
   const maxPlayers = state?.config.maxPlayers ?? 8;
