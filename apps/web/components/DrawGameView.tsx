@@ -179,6 +179,46 @@ function useCountdown(deadline: number | null, serverNow: () => number) {
 
 type Pt = { x: number; y: number };
 
+const SHIFT_COLORS = ["#111827", "#e11d48", "#2563eb", "#16a34a", "#f59e0b", "#7c3aed", "#0891b2"];
+
+// Pure transform applied to a stroke's points for certain constraints.
+// Kept module-level and deterministic-friendly (rng injectable) so it's testable.
+export function transformStrokePoints(
+  points: { x: number; y: number }[],
+  rule: string | null | undefined,
+  rng: () => number = Math.random,
+): { x: number; y: number }[] {
+  if (!rule || points.length === 0) return points;
+  const clamp = (v: number) => Math.max(0, Math.min(1, v));
+  if (rule === "jitter") {
+    return points.map((p) => ({ x: clamp(p.x + (rng() - 0.5) * 0.02), y: clamp(p.y + (rng() - 0.5) * 0.02) }));
+  }
+  if (rule === "betray") {
+    // Rotate the whole segment around its first point by a small random angle.
+    const a = (rng() - 0.5) * 0.5; // ±~14°
+    const cos = Math.cos(a), sin = Math.sin(a);
+    const o = points[0];
+    return points.map((p) => {
+      const dx = p.x - o.x, dy = p.y - o.y;
+      return { x: clamp(o.x + dx * cos - dy * sin), y: clamp(o.y + dx * sin + dy * cos) };
+    });
+  }
+  if (rule === "elastic") {
+    // The further a point is from the start, the more it bows sideways.
+    const o = points[0];
+    const last = points[points.length - 1];
+    const dx = last.x - o.x, dy = last.y - o.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len, ny = dx / len; // perpendicular unit
+    return points.map((p, i) => {
+      const t = points.length > 1 ? i / (points.length - 1) : 0;
+      const bow = Math.sin(t * Math.PI) * len * 0.4; // max bow at the middle
+      return { x: clamp(p.x + nx * bow), y: clamp(p.y + ny * bow) };
+    });
+  }
+  return points;
+}
+
 function drawStroke(ctx: CanvasRenderingContext2D, s: DrawStroke) {
   if (!s.points.length) return;
   ctx.strokeStyle = s.color;
@@ -351,6 +391,31 @@ export function DrawCanvas({
   const oneColor = constraintRule === "one_color";
   const mirror = constraintRule === "mirror";
   const shake = constraintRule === "shake";
+  const inverted = constraintRule === "inverted";
+  const transformRule = constraintRule === "jitter" || constraintRule === "betray" || constraintRule === "elastic" ? constraintRule : null;
+  const sizeShift = constraintRule === "size_shift";
+  const colorShift = constraintRule === "color_shift";
+  const fog = constraintRule === "fog";
+  const shrink = constraintRule === "shrink";
+  const ghostCursor = constraintRule === "ghost_cursor";
+
+  // Turn clock driving the timed drawer-only effects (reset each turn).
+  const turnStartRef = useRef(Date.now());
+  const [, setFxTick] = useState(0);
+  const hasTimedFx = sizeShift || colorShift || fog || shrink || ghostCursor;
+  useEffect(() => {
+    turnStartRef.current = Date.now();
+    setFxTick(0);
+    if (!hasTimedFx) return;
+    const iv = setInterval(() => setFxTick((t) => t + 1), 200);
+    return () => clearInterval(iv);
+  }, [turnKey, hasTimedFx]);
+  const fxElapsed = hasTimedFx ? Date.now() - turnStartRef.current : 0;
+  const sizeFactor = sizeShift ? [0.4, 1, 2.2][Math.floor(fxElapsed / 5000) % 3] : 1;
+  const shiftColor = colorShift ? SHIFT_COLORS[Math.floor(fxElapsed / 5000) % SHIFT_COLORS.length] : null;
+  const fogOpacity = fog ? Math.min(0.6, (fxElapsed / 70000) * 0.6) : 0;
+  const shrinkScale = shrink ? Math.max(0.5, 1 - (fxElapsed / 80000) * 0.5) : 1;
+  const cursorVisible = !ghostCursor || Math.floor(fxElapsed / 3000) % 2 === 0;
   const capped = maxStrokes && traits >= MAX_TRAITS;
   const paletteLocked = oneColor && colorLocked;
   const toolAllowed = (id: Tool) => !shapesOnly || id === "line" || id === "circle";
@@ -421,23 +486,30 @@ export function DrawCanvas({
   }
   function norm(e: React.PointerEvent) {
     const r = measure();
-    return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
+    let x = (e.clientX - r.left) / r.width;
+    const y = (e.clientY - r.top) / r.height;
+    if (inverted) x = 1 - x;
+    return { x, y };
   }
   function cssPos(e: React.PointerEvent) {
     const r = measure();
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   }
-  const effColor = () => (toolRef.current === "eraser" ? "#ffffff" : colorRef.current);
-  const effWidth = () => (toolRef.current === "eraser" ? Math.max(widthRef.current, 18) : widthRef.current);
+  const effColor = () => (toolRef.current === "eraser" ? "#ffffff" : (shiftColor ?? colorRef.current));
+  const effWidth = () => {
+    const base = toolRef.current === "eraser" ? Math.max(widthRef.current, 18) : widthRef.current;
+    return sizeShift ? Math.max(2, Math.round(base * sizeFactor)) : base;
+  };
 
   function commit(points: Pt[]) {
-    const s: DrawStroke = { points, color: effColor(), width: effWidth() };
+    const pts = transformRule ? transformStrokePoints(points, transformRule) : points;
+    const s: DrawStroke = { points: pts, color: effColor(), width: effWidth() };
     if (!blind && mctx.current) drawStroke(mctx.current, s);
     room.sendStroke(s);
     curTraitRef.current.push({ kind: "stroke", stroke: s });
     if (mirror) {
       // Symmetric twin across the vertical centre.
-      const m: DrawStroke = { points: points.map((p) => ({ x: 1 - p.x, y: p.y })), color: s.color, width: s.width };
+      const m: DrawStroke = { points: pts.map((p) => ({ x: 1 - p.x, y: p.y })), color: s.color, width: s.width };
       if (!blind && mctx.current) drawStroke(mctx.current, m);
       room.sendStroke(m);
       curTraitRef.current.push({ kind: "stroke", stroke: m });
@@ -555,7 +627,7 @@ export function DrawCanvas({
 
   return (
     <div>
-      {drawable && (shapesOnly || maxStrokes || oneColor || mirror || shake) && (
+      {drawable && constraintRule && (
         <div className="mb-2.5 flex flex-wrap items-center gap-2 rounded-lg border border-magenta/30 bg-magenta/[0.06] px-3 py-1.5 text-xs text-magenta">
           <span className="font-semibold">Contrainte active :</span>
           {oneColor && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Une seule couleur{colorLocked ? " · verrouillée" : ""}</span>}
@@ -563,6 +635,15 @@ export function DrawCanvas({
           {shapesOnly && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Lignes &amp; ronds uniquement</span>}
           {mirror && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Effet miroir 🪞</span>}
           {shake && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Ça tremble ! 🫨</span>}
+          {inverted && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Curseur inversé 🔄</span>}
+          {transformRule === "jitter" && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Le trait tremble 〰️</span>}
+          {transformRule === "betray" && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Pinceau traître 😈</span>}
+          {transformRule === "elastic" && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Pinceau élastique 🪢</span>}
+          {sizeShift && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Taille qui change 📏</span>}
+          {colorShift && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Couleur qui change 🌈</span>}
+          {fog && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Brouillard 🌫️</span>}
+          {shrink && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Toile qui rétrécit 🔻</span>}
+          {ghostCursor && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Curseur fantôme 👻</span>}
         </div>
       )}
 
@@ -606,10 +687,11 @@ export function DrawCanvas({
 
         {/* §7 — the canvas is the main element and takes the remaining width */}
         <div className="order-1 min-w-0 flex-1 sm:order-2">
-          <div className={`relative w-full select-none overflow-hidden rounded-2xl border border-ink-border${shake && shaking ? " animate-canvasshake" : ""}`} style={{ aspectRatio: "3 / 2" }}>
+          <div className={`relative w-full select-none overflow-hidden rounded-2xl border border-ink-border${shake && shaking ? " animate-canvasshake" : ""}`} style={{ aspectRatio: "3 / 2", transform: shrink ? `scale(${shrinkScale})` : undefined, transformOrigin: "center", transition: "transform .2s linear" }}>
             <canvas ref={mainRef} {...handlers} className="absolute inset-0 h-full w-full touch-none bg-white" style={{ cursor: drawable ? "none" : "default" }} />
             <canvas ref={overRef} className="pointer-events-none absolute inset-0 h-full w-full" />
-            {drawable && cursorPos && <CustomCursor tool={tool} pos={cursorPos} size={width * scaleRef.current} color={color} />}
+            {fog && <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(circle at 50% 45%, rgba(226,232,240,0.15), rgba(203,213,225,0.9))", opacity: fogOpacity, transition: "opacity .3s linear" }} />}
+            {drawable && cursorVisible && cursorPos && <CustomCursor tool={tool} pos={cursorPos} size={width * scaleRef.current} color={color} />}
           </div>
 
           {drawable && (

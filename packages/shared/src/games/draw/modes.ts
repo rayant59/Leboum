@@ -41,6 +41,15 @@ const CONSTRAINTS: { label: string; rule: string | null }[] = [
   { label: "Que des lignes et des ronds ⭕", rule: "only_shapes" },
   { label: "Effet miroir 🪞", rule: "mirror" },
   { label: "Ça tremble ! 🫨", rule: "shake" },
+  { label: "Curseur inversé 🔄", rule: "inverted" },
+  { label: "Le trait tremble 〰️", rule: "jitter" },
+  { label: "Pinceau traître 😈", rule: "betray" },
+  { label: "Pinceau élastique 🪢", rule: "elastic" },
+  { label: "Taille qui change 📏", rule: "size_shift" },
+  { label: "Couleur qui change 🌈", rule: "color_shift" },
+  { label: "Brouillard 🌫️", rule: "fog" },
+  { label: "Toile qui rétrécit 🔻", rule: "shrink" },
+  { label: "Curseur fantôme 👻", rule: "ghost_cursor" },
 ];
 
 function clampRounds(n: number): number {
