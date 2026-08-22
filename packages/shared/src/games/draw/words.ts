@@ -8,6 +8,26 @@ export interface WordEntry {
   theme: string;
 }
 
+// Optional custom words provided by the host via motdessin/mots.txt (loaded by
+// the server at startup). When set & non-empty, they replace the built-in bank.
+let CUSTOM_WORDS: WordEntry[] | null = null;
+export function setCustomWords(words: string[]): void {
+  const cleaned = [
+    ...new Set(
+      words
+        .map((w) => w.trim())
+        .filter((w) => w.length > 0 && !w.startsWith("#")),
+    ),
+  ];
+  CUSTOM_WORDS = cleaned.length ? cleaned.map((word) => ({ word, theme: "Perso" })) : null;
+}
+export function hasCustomWords(): boolean {
+  return !!(CUSTOM_WORDS && CUSTOM_WORDS.length);
+}
+export function customWordCount(): number {
+  return CUSTOM_WORDS?.length ?? 0;
+}
+
 // prettier-ignore
 export const WORD_BANK: WordEntry[] = [
   // Animaux
@@ -227,14 +247,6 @@ export function pickWordEntries(
   rng: () => number = Math.random,
   themes?: string[],
 ): WordEntry[] {
-  let pool = UNIQUE_BANK;
-  if (themes && themes.length) {
-    const set = new Set(themes);
-    const f = pool.filter((e) => set.has(e.theme));
-    if (f.length >= count) pool = f;
-  }
-  count = Math.max(1, count);
-
   const shuffle = <T>(arr: T[]): T[] => {
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(rng() * (i + 1));
@@ -242,6 +254,22 @@ export function pickWordEntries(
     }
     return arr;
   };
+
+  // Custom words (from motdessin/mots.txt, loaded by the server) take over
+  // entirely when present — the drawer picks among the host's own words.
+  if (CUSTOM_WORDS && CUSTOM_WORDS.length) {
+    const a = shuffle([...CUSTOM_WORDS]);
+    const want = Math.max(1, Math.min(count, a.length));
+    return a.slice(0, want);
+  }
+
+  let pool = UNIQUE_BANK;
+  if (themes && themes.length) {
+    const set = new Set(themes);
+    const f = pool.filter((e) => set.has(e.theme));
+    if (f.length >= count) pool = f;
+  }
+  count = Math.max(1, count);
 
   // Group by theme so the proposed words are unrelated to one another:
   // we take at most one word per distinct theme first.

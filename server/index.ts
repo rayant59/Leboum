@@ -13,6 +13,8 @@
 
 import { WebSocketServer, WebSocket } from "ws";
 import type { IncomingMessage } from "node:http";
+import { readFileSync, existsSync } from "node:fs";
+import { resolve } from "node:path";
 import {
   // room
   createInitialState,
@@ -59,9 +61,35 @@ import {
   type SubtitlesErrorCode,
   type SubtitlesState,
   type VotingCaption,
+  setCustomWords,
 } from "@subtitles-party/shared";
 
 const PORT = Number(process.env.PORT ?? 1999);
+
+// Load custom drawing words from motdessin/mots.txt (one word per line; lines
+// starting with # are ignored). If present & non-empty, they replace the
+// built-in word bank for Draw & Guess. Looked up from a few likely locations
+// so it works whether the server runs from the repo root or elsewhere.
+(() => {
+  const candidates = [
+    resolve(process.cwd(), "motdessin", "mots.txt"),
+    resolve(process.cwd(), "..", "motdessin", "mots.txt"),
+    resolve(__dirname, "..", "motdessin", "mots.txt"),
+  ];
+  for (const p of candidates) {
+    try {
+      if (existsSync(p)) {
+        const words = readFileSync(p, "utf8").split(/\r?\n/);
+        setCustomWords(words);
+        const kept = words.map((w) => w.trim()).filter((w) => w && !w.startsWith("#")).length;
+        if (kept > 0) console.log(`[motdessin] ${kept} mots personnalisés chargés depuis ${p}`);
+        return;
+      }
+    } catch {
+      /* ignore and try next */
+    }
+  }
+})();
 const GRACE_MS = 45_000;
 
 /** The only emojis clients may broadcast as live reactions. */

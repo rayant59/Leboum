@@ -50,6 +50,7 @@ const CONSTRAINTS: { label: string; rule: string | null }[] = [
   { label: "Brouillard 🌫️", rule: "fog" },
   { label: "Toile qui rétrécit 🔻", rule: "shrink" },
   { label: "Curseur fantôme 👻", rule: "ghost_cursor" },
+  { label: "Toile baladeuse 🏃", rule: "roam" },
 ];
 
 function clampRounds(n: number): number {

@@ -398,24 +398,31 @@ export function DrawCanvas({
   const fog = constraintRule === "fog";
   const shrink = constraintRule === "shrink";
   const ghostCursor = constraintRule === "ghost_cursor";
+  const roam = constraintRule === "roam";
 
   // Turn clock driving the timed drawer-only effects (reset each turn).
   const turnStartRef = useRef(Date.now());
   const [, setFxTick] = useState(0);
-  const hasTimedFx = sizeShift || colorShift || fog || shrink || ghostCursor;
+  const hasTimedFx = sizeShift || colorShift || fog || shrink || ghostCursor || roam;
   useEffect(() => {
     turnStartRef.current = Date.now();
     setFxTick(0);
     if (!hasTimedFx) return;
-    const iv = setInterval(() => setFxTick((t) => t + 1), 200);
+    const iv = setInterval(() => setFxTick((t) => t + 1), roam ? 90 : 200);
     return () => clearInterval(iv);
-  }, [turnKey, hasTimedFx]);
+  }, [turnKey, hasTimedFx, roam]);
   const fxElapsed = hasTimedFx ? Date.now() - turnStartRef.current : 0;
-  const sizeFactor = sizeShift ? [0.4, 1, 2.2][Math.floor(fxElapsed / 5000) % 3] : 1;
+  // Taille : change vite (toutes les ~1.6 s) et de façon extrême (tout petit ↔ énorme).
+  const sizeFactor = sizeShift ? [0.25, 3, 0.5, 2.2, 0.3][Math.floor(fxElapsed / 1600) % 5] : 1;
   const shiftColor = colorShift ? SHIFT_COLORS[Math.floor(fxElapsed / 5000) % SHIFT_COLORS.length] : null;
   const fogOpacity = fog ? Math.min(0.6, (fxElapsed / 70000) * 0.6) : 0;
-  const shrinkScale = shrink ? Math.max(0.5, 1 - (fxElapsed / 80000) * 0.5) : 1;
-  const cursorVisible = !ghostCursor || Math.floor(fxElapsed / 3000) % 2 === 0;
+  // Rétrécit plus vite : atteint ~40 % en ~35 s.
+  const shrinkScale = shrink ? Math.max(0.4, 1 - (fxElapsed / 35000) * 0.6) : 1;
+  // Curseur fantôme : totalement invisible en permanence.
+  const cursorVisible = !ghostCursor;
+  // Toile baladeuse : se déplace vite un peu partout.
+  const roamX = roam ? Math.round(Math.sin(fxElapsed / 190) * 26 + Math.sin(fxElapsed / 70) * 10) : 0;
+  const roamY = roam ? Math.round(Math.cos(fxElapsed / 150) * 22 + Math.cos(fxElapsed / 90) * 9) : 0;
   const capped = maxStrokes && traits >= MAX_TRAITS;
   const paletteLocked = oneColor && colorLocked;
   const toolAllowed = (id: Tool) => !shapesOnly || id === "line" || id === "circle";
@@ -644,6 +651,7 @@ export function DrawCanvas({
           {fog && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Brouillard 🌫️</span>}
           {shrink && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Toile qui rétrécit 🔻</span>}
           {ghostCursor && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Curseur fantôme 👻</span>}
+          {roam && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Toile baladeuse 🏃</span>}
         </div>
       )}
 
@@ -687,7 +695,7 @@ export function DrawCanvas({
 
         {/* §7 — the canvas is the main element and takes the remaining width */}
         <div className="order-1 min-w-0 flex-1 sm:order-2">
-          <div className={`relative w-full select-none overflow-hidden rounded-2xl border border-ink-border${shake && shaking ? " animate-canvasshake" : ""}`} style={{ aspectRatio: "3 / 2", transform: shrink ? `scale(${shrinkScale})` : undefined, transformOrigin: "center", transition: "transform .2s linear" }}>
+          <div className={`relative w-full select-none overflow-hidden rounded-2xl border border-ink-border${shake && shaking ? " animate-canvasshake" : ""}`} style={{ aspectRatio: "3 / 2", transform: (roam || shrink) ? `translate(${roamX}px, ${roamY}px) scale(${shrinkScale})` : undefined, transformOrigin: "center", transition: roam ? "transform .09s linear" : "transform .2s linear" }}>
             <canvas ref={mainRef} {...handlers} className="absolute inset-0 h-full w-full touch-none bg-white" style={{ cursor: drawable ? "none" : "default" }} />
             <canvas ref={overRef} className="pointer-events-none absolute inset-0 h-full w-full" />
             {fog && <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(circle at 50% 45%, rgba(226,232,240,0.15), rgba(203,213,225,0.9))", opacity: fogOpacity, transition: "opacity .3s linear" }} />}
