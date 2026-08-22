@@ -36,3 +36,4 @@ export * from "./games/reconnaissance/bank";
 export * from "./games/reconnaissance/types";
 export * from "./games/reconnaissance/engine";
 export * from "./games/reconnaissance/module";
+export * from "./games/pixel/module";

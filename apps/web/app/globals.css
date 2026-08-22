@@ -215,7 +215,7 @@
 /* Vitrine des jeux (accueil) : 2 → 3 → 5 colonnes strictement égales */
 .showcase-grid { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (min-width: 640px) { .showcase-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (min-width: 1024px) { .showcase-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .showcase-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 
 /* Barre repliable "Thèmes" bien visible + CTA qui attire l'œil */
 .cfg-collapse { width: 100%; display: flex; align-items: center; gap: 12px; padding: 15px 16px; border-radius: 16px; border: 1px solid #3a2f66; background-image: linear-gradient(165deg, rgba(37,28,69,.72), rgba(24,19,47,.72)); cursor: pointer; transition: border-color .2s, transform .12s, box-shadow .2s; text-align: left; }

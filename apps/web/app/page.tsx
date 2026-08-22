@@ -27,6 +27,7 @@ const GAMES = [
   { img: "/games/doublage.png", accent: "mint", name: "Doublage", desc: "Doublez une vidéo à votre sauce et improvisez les voix.", players: "2–10", variants: [] as string[] },
   { img: "/games/quiz.png", accent: "violet", name: "Quiz", desc: "Répondez à des questions et montrez votre culture !", players: "1–12", variants: [] as string[] },
   { img: "/games/reco.png", accent: "cyan", name: "Reconnaissance", desc: "Devinez le personnage, le lieu, l'œuvre… sur une vraie image.", players: "1–12", variants: [] as string[] },
+  { img: "/games/pixel.png", accent: "mint", name: "Pixel incoming", desc: "Une image se dévoile pixel par pixel : devine le plus vite possible !", players: "1–12", variants: [] as string[] },
 ] as const;
 
 const DOT_COLORS = ["rgba(255,194,75,0.7)", "rgba(255,77,141,0.6)", "rgba(70,224,176,0.6)", "rgba(243,238,255,0.5)"];

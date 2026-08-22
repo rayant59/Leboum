@@ -59,6 +59,7 @@ const GAME_META: Record<string, { label: string; img: string; tint: string }> = 
   doublage: { label: "Doublage", img: "/games/doublage.png", tint: "#46E0B0" },
   quiz: { label: "Quiz", img: "/games/quiz.png", tint: "#8B7DF6" },
   reco: { label: "Reconnaissance", img: "/games/reco.png", tint: "#4CC9F0" },
+  pixel: { label: "Pixel incoming", img: "/games/pixel.png", tint: "#46E0B0" },
 };
 
 export default function LobbyPage() {
@@ -70,7 +71,7 @@ export default function LobbyPage() {
   const [copied, setCopied] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [themesOpen, setThemesOpen] = useState(false);
-  const [selectedGame, setSelectedGame] = useState<"subtitles" | "draw" | "fakeartist" | "relay" | "doublage" | "quiz" | "reco">("subtitles");
+  const [selectedGame, setSelectedGame] = useState<"subtitles" | "draw" | "fakeartist" | "relay" | "doublage" | "quiz" | "reco" | "pixel">("subtitles");
   const [drawMode, setDrawMode] = useState("classic");
   const [drawRounds, setDrawRounds] = useState(3);
   const [drawThemes, setDrawThemes] = useState<string[]>([]);
@@ -205,6 +206,7 @@ export default function LobbyPage() {
     if (room.gameId === "doublage") return <DoublageView room={room} />;
     if (room.gameId === "quiz") return <QuizView room={room} />;
     if (room.gameId === "reco") return <RecoView room={room} />;
+    if (room.gameId === "pixel") return <RecoView room={room} pixel />;
     return room.gameId === "draw" ? <DrawGameView room={room} /> : <GameView room={room} />;
   }
 
@@ -369,6 +371,7 @@ export default function LobbyPage() {
                 { id: "doublage", img: "/games/doublage.png", label: "Doublage", players: "2–10", desc: "Doublez une vidéo à votre sauce et improvisez les voix.", tint: "#46E0B0", tintBg: "rgba(70,224,176,0.12)", tintBorder: "rgba(70,224,176,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M6 11a6 6 0 0 0 12 0" /><path d="M12 17v3.2" /><path d="M9 20.2h6" /></svg> },
                 { id: "quiz", img: "/games/quiz.png", label: "Quiz", players: "2–8", desc: "Répondez à des questions et montrez votre culture !", tint: "#8B7DF6", tintBg: "rgba(139,125,246,0.14)", tintBorder: "rgba(139,125,246,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4" /><circle cx="12" cy="17.5" r="0.6" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="9" /></svg> },
                 { id: "reco", img: "/games/reco.png", label: "Reconnaissance", players: "2–8", desc: "Devinez le personnage, le film, le lieu et bien plus.", tint: "#4CC9F0", tintBg: "rgba(76,201,240,0.14)", tintBorder: "rgba(76,201,240,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="14" rx="2.5" /><circle cx="9" cy="10" r="2" /><path d="M4 17l4.5-4 3 2.5L15 12l5 4.5" /></svg> },
+                { id: "pixel", img: "/games/pixel.png", label: "Pixel incoming", players: "1–12", desc: "Une image se dévoile pixel par pixel — devine le plus vite possible !", tint: "#46E0B0", tintBg: "rgba(70,224,176,0.12)", tintBorder: "rgba(70,224,176,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="6" height="6"/><rect x="15" y="3" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/><rect x="3" y="15" width="6" height="6"/><rect x="15" y="15" width="6" height="6"/></svg> },
               ] as const
             ).map((c) => {
               const sel = selectedGame === c.id;
@@ -477,7 +480,7 @@ export default function LobbyPage() {
             </div>
           </div>
           </div>
-        ) : selectedGame === "reco" ? (
+        ) : (selectedGame === "reco" || selectedGame === "pixel") ? (
           <div className="cfg-grp">
             <div className="cfg-head">
               <span className="cfg-ic" style={{ background: "rgba(76,201,240,0.14)", color: "#4CC9F0", borderColor: "rgba(76,201,240,0.4)" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="14" rx="2.5" /><circle cx="9" cy="10" r="2" /><path d="M4 17l4.5-4 3 2.5L15 12l5 4.5" /></svg></span>
@@ -712,11 +715,13 @@ export default function LobbyPage() {
                       ? room.startGame("quiz", { totalQuestions: quizCount, secondsPerQuestion: quizSecs, types: quizType })
                       : selectedGame === "reco"
                         ? room.startGame("reco", { totalQuestions: recoCount, secondsPerQuestion: recoSecs, category: recoCat })
-                        : drawMode === "fakeartist"
-                          ? room.startGame("fakeartist", { totalRounds: drawRounds })
-                          : drawMode === "relay"
-                            ? room.startGame("relay", { totalRounds: drawRounds })
-                            : room.startGame("draw", { totalRounds: drawRounds, mode: drawMode, themes: drawThemes })
+                        : selectedGame === "pixel"
+                          ? room.startGame("pixel", { totalQuestions: recoCount, secondsPerQuestion: recoSecs, category: recoCat })
+                          : drawMode === "fakeartist"
+                            ? room.startGame("fakeartist", { totalRounds: drawRounds })
+                            : drawMode === "relay"
+                              ? room.startGame("relay", { totalRounds: drawRounds })
+                              : room.startGame("draw", { totalRounds: drawRounds, mode: drawMode, themes: drawThemes })
               }
               className="arc arc-p arc-block"
             >

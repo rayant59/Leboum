@@ -37,6 +37,7 @@ import {
   doublageModule,
   quizModule,
   recoModule,
+  pixelModule,
   swapActiveDrawer,
   type RelayState,
 
@@ -151,6 +152,7 @@ const GAME_REGISTRY: Record<string, AnyGameModule> = {
   doublage: doublageModule,
   quiz: quizModule,
   reco: recoModule,
+  pixel: pixelModule,
 };
 const gameCtx = (): GameContext => ({ now: Date.now(), rng: Math.random });
 

@@ -94,7 +94,88 @@ function RecoImage({ wiki, wikiEn, localImg }: { wiki: string; wikiEn?: string; 
   );
 }
 
-export function RecoView({ room }: { room: UseRoom }) {
+/** Progressive "pixel by pixel" reveal of the reco image, synced on the timer. */
+function PixelImage({
+  wiki, wikiEn, localImg, deadline, totalMs, serverNow, revealed,
+}: {
+  wiki: string; wikiEn?: string; localImg?: string;
+  deadline: number | null; totalMs: number; serverNow: () => number; revealed: boolean;
+}) {
+  const wikiState = useWikiImage(wiki, wikiEn);
+  const url = localImg || wikiState.img?.url;
+  const loading = localImg ? false : wikiState.loading;
+  const error = localImg ? false : wikiState.error;
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    if (!url) return;
+    setReady(false);
+    const im = new Image();
+    im.onload = () => { imgRef.current = im; setReady(true); };
+    im.onerror = () => { imgRef.current = null; setReady(false); };
+    im.src = url; // no crossOrigin: drawImage works even cross-origin (no pixel readback)
+    return () => { im.onload = null; im.onerror = null; };
+  }, [url]);
+
+  useEffect(() => {
+    if (!ready) return;
+    let raf = 0;
+    const draw = () => {
+      const cv = canvasRef.current, im = imgRef.current;
+      if (cv && im && im.width > 0) {
+        const ctx = cv.getContext("2d");
+        if (ctx) {
+          const cw = 640;
+          const ch = Math.max(1, Math.round((cw * im.height) / im.width));
+          if (cv.width !== cw || cv.height !== ch) { cv.width = cw; cv.height = ch; }
+          let progress = 1;
+          if (!revealed && deadline != null && totalMs > 0) {
+            const remaining = Math.max(0, deadline - serverNow());
+            progress = Math.min(1, Math.max(0, 1 - remaining / totalMs));
+          }
+          // Blocks across: from very few (heavy pixels) to full resolution.
+          const minBlocks = 6;
+          const maxBlocks = cw;
+          const blocks = revealed ? maxBlocks : Math.round(minBlocks + (maxBlocks - minBlocks) * Math.pow(progress, 1.8));
+          const sw = Math.max(2, Math.min(cw, blocks));
+          const sh = Math.max(2, Math.round((sw * im.height) / im.width));
+          ctx.imageSmoothingEnabled = false;
+          ctx.clearRect(0, 0, cw, ch);
+          ctx.drawImage(im, 0, 0, sw, sh);           // shrink the whole image
+          ctx.drawImage(cv, 0, 0, sw, sh, 0, 0, cw, ch); // blow it back up → pixelated
+        }
+      }
+      raf = requestAnimationFrame(draw);
+    };
+    raf = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(raf);
+  }, [ready, revealed, deadline, totalMs, serverNow]);
+
+  return (
+    <div
+      className="mx-auto mb-4 w-full max-w-3xl overflow-hidden rounded-2xl border border-ink-border bg-ink-deep"
+      onContextMenu={(e) => e.preventDefault()}
+      style={{ userSelect: "none" }}
+    >
+      <div className="relative flex min-h-[300px] items-center justify-center sm:min-h-[440px]">
+        {loading && <span className="animate-pulse text-sm text-text-faint">Chargement de l'image…</span>}
+        {error && <p className="px-4 text-sm text-text-muted">Image indisponible.</p>}
+        {url && !error && (
+          <canvas ref={canvasRef} className="pointer-events-none block h-full w-full select-none" style={{ imageRendering: "pixelated" }} />
+        )}
+      </div>
+      {url && !error && (
+        <span className="block bg-ink-surface px-3 py-1 text-right text-[10px] text-text-faint">
+          {localImg ? "Image : locale" : "Image : Wikimedia Commons"}
+        </span>
+      )}
+    </div>
+  );
+}
+
+export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boolean }) {
   useGameSounds(room);
   const game = room.game as RecoPublic;
   const you = room.you;
@@ -140,7 +221,7 @@ export function RecoView({ room }: { room: UseRoom }) {
       <main className="relative z-[1] mx-auto max-w-3xl px-5 py-6" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
         <div className="mb-4 flex items-center justify-between">
           <span className="font-mono text-xs uppercase tracking-widest text-text-faint">
-            {game.phase === "final" ? "Résultats" : `Image ${game.index + 1} / ${game.total}`}
+            {game.phase === "final" ? "Résultats" : `${pixel ? "Pixel" : "Image"} ${game.index + 1} / ${game.total}`}
           </span>
           <div className="flex items-center gap-2">
             {game.phase !== "final" && secs != null && (
@@ -161,8 +242,20 @@ export function RecoView({ room }: { room: UseRoom }) {
 
         {(game.phase === "question" || game.phase === "reveal") && item && (
           <div className="animate-pop">
-            {/* IMAGE réelle — élément principal */}
-            <RecoImage wiki={item.wiki} wikiEn={item.wikiEn} localImg={item.img} />
+            {/* IMAGE réelle — élément principal (pixelisée si mode Pixel incoming) */}
+            {pixel ? (
+              <PixelImage
+                wiki={item.wiki}
+                wikiEn={item.wikiEn}
+                localImg={item.img}
+                deadline={game.deadline}
+                totalMs={game.secondsPerQuestion * 1000}
+                serverNow={room.serverNow}
+                revealed={game.phase !== "question"}
+              />
+            ) : (
+              <RecoImage wiki={item.wiki} wikiEn={item.wikiEn} localImg={item.img} />
+            )}
 
             <h2 className="mx-auto mb-4 max-w-xl text-center font-display text-2xl font-extrabold leading-tight sm:text-3xl">{item.question}</h2>
 
