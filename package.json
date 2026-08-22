@@ -12,7 +12,8 @@
     "test": "npm run test --workspace @subtitles-party/shared && npm run test:server",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "dev:server": "tsx watch server/index.ts",
-    "test:server": "tsx server/e2e.test.ts"
+    "test:server": "tsx server/e2e.test.ts",
+    "start": "tsx server/index.ts"
   },
   "devDependencies": {
     "ws": "^8.18.0",
