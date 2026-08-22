@@ -1,30 +1,19 @@
 {
-  "name": "subtitles-party",
+  "name": "@subtitles-party/shared",
   "version": "0.1.0",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
-    "dev": "npm run dev:server & npm run dev:web",
-    "dev:web": "npm run dev --workspace @subtitles-party/web",
-    "test": "npm run test --workspace @subtitles-party/shared && npm run test:server",
-    "typecheck": "npm run typecheck --workspaces --if-present",
-    "dev:server": "tsx watch server/index.ts",
-    "test:server": "tsx server/e2e.test.ts",
-    "start": "tsx server/index.ts"
+    "test": "tsx src/room/engine.test.ts && tsx src/game/subtitles.test.ts && tsx src/game/settings.test.ts && tsx src/game/twists.test.ts && tsx src/games/draw/engine.test.ts",
+    "typecheck": "tsc --noEmit"
   },
-  "devDependencies": {
-    "@types/ws": "^8.5.10",
-    "@types/node": "^20.14.0",
-    "typescript": "^5.5.3"
-  },
-  "engines": {
-    "node": ">=20"
-  },
-  "dependencies": {
-    "ws": "^8.18.0",
-    "tsx": "^4.16.2"
-  }
+  "description": "",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

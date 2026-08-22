@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import {
   DEFAULT_GAME_SETTINGS,
   SUBTITLES_GAME_ID,
@@ -98,7 +98,8 @@ export interface UseRoom {
   sendFill: (x: number, y: number, color: string) => void;
   clearCanvas: () => void;
   chat: ChatEntry[];
-  strokeEvents: StrokeEvent[];
+  strokeQueueRef: MutableRefObject<StrokeEvent[]>;
+  strokeResetRef: MutableRefObject<number>;
   /** Best estimate of the server's clock — use for timers and video sync. */
   serverNow: () => number;
 }
@@ -115,7 +116,8 @@ export function useRoom(code: string): UseRoom {
   const [reactions, setReactions] = useState<FloatingReaction[]>([]);
   const [speakingIds, setSpeakingIds] = useState<Set<string>>(new Set());
   const [chat, setChat] = useState<ChatEntry[]>([]);
-  const [strokeEvents, setStrokeEvents] = useState<StrokeEvent[]>([]);
+  const strokeQueueRef = useRef<StrokeEvent[]>([]);
+  const strokeResetRef = useRef(0);
   const eventId = useRef(0);
   const reactionId = useRef(0);
   const transportRef = useRef<RoomTransport | null>(null);
@@ -136,18 +138,21 @@ export function useRoom(code: string): UseRoom {
         setYou(msg.you);
         if (msg.state.phase !== "in_game") {
           setChat([]);
-          setStrokeEvents([]);
+          strokeQueueRef.current = [];
+          strokeResetRef.current++;
         }
       } else if (msg.type === "error") {
         setError({ code: msg.code, message: msg.message });
       } else if (msg.type === "chat") {
         setChat((prev) => [...prev.slice(-80), { id: eventId.current++, from: msg.from, name: msg.name, text: msg.text, kind: msg.kind }]);
       } else if (msg.type === "stroke") {
-        setStrokeEvents((prev) => [...prev.slice(-6000), { id: eventId.current++, type: "stroke", stroke: msg.stroke, from: msg.from }]);
+        strokeQueueRef.current.push({ id: eventId.current++, type: "stroke", stroke: msg.stroke, from: msg.from });
+        if (strokeQueueRef.current.length > 9000) strokeQueueRef.current.splice(0, strokeQueueRef.current.length - 9000);
       } else if (msg.type === "fill") {
-        setStrokeEvents((prev) => [...prev.slice(-6000), { id: eventId.current++, type: "fill", x: msg.x, y: msg.y, color: msg.color, from: msg.from }]);
+        strokeQueueRef.current.push({ id: eventId.current++, type: "fill", x: msg.x, y: msg.y, color: msg.color, from: msg.from });
+        if (strokeQueueRef.current.length > 9000) strokeQueueRef.current.splice(0, strokeQueueRef.current.length - 9000);
       } else if (msg.type === "draw_clear") {
-        setStrokeEvents((prev) => [...prev.slice(-4000), { id: eventId.current++, type: "clear", from: msg.from }]);
+        strokeQueueRef.current.push({ id: eventId.current++, type: "clear", from: msg.from });
       } else if (msg.type === "reaction") {
         const id = reactionId.current++;
         const x = 8 + Math.random() * 84;
@@ -263,6 +268,6 @@ export function useRoom(code: string): UseRoom {
     state, gameId, game, settings, you, status, error, clearError,
     join, setReady, setName, setAvatar, setSettings, startGame, leave,
     submitLines, vote, skipPhase, debugFill, returnLobby, playAgain, react, reactions, speakingIds, sendSpeaking, quizAnswer,
-    chooseWord, guess, sendTalk, castVote, doublageAction, revealTheme, endDrawing, sendStroke, sendFill, clearCanvas, chat, strokeEvents, serverNow,
+    chooseWord, guess, sendTalk, castVote, doublageAction, revealTheme, endDrawing, sendStroke, sendFill, clearCanvas, chat, strokeQueueRef, strokeResetRef, serverNow,
   };
 }

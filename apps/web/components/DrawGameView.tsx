@@ -323,7 +323,6 @@ export function DrawCanvas({
   const overRef = useRef<HTMLCanvasElement | null>(null);
   const mctx = useRef<CanvasRenderingContext2D | null>(null);
   const octx = useRef<CanvasRenderingContext2D | null>(null);
-  const cur = useRef(0);
   const drawing = useRef(false);
   const startPt = useRef<Pt | null>(null);
   const segment = useRef<Pt[]>([]);
@@ -375,27 +374,42 @@ export function DrawCanvas({
   }, [shapesOnly, turnKey]);
 
   const filterRef = useRef<string | null | undefined>(undefined);
+  const lastIdRef = useRef(-1);
+  const lastResetRef = useRef(0);
   useEffect(() => {
-    const ctx = mctx.current;
-    if (!ctx) return;
-    // Switching to another player's canvas → rebuild from scratch for them.
-    if (filterRef.current !== authorFilter) {
-      ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, CW, CH);
-      cur.current = 0;
-      filterRef.current = authorFilter;
-    }
-    for (let i = cur.current; i < room.strokeEvents.length; i++) {
-      const e = room.strokeEvents[i];
-      // In impostor mode, only apply this author's events ("*" = clear-all/round reset).
-      if (authorFilter != null && e.type !== "clear" && e.from !== authorFilter) continue;
-      if (e.type === "clear") {
-        if (authorFilter == null || e.from === "*" || e.from === authorFilter) { ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, CW, CH); }
-      } else if (blind) continue;
-      else if (e.type === "stroke") drawStroke(ctx, e.stroke);
-      else if (e.type === "fill") floodFill(ctx, e.x, e.y, e.color);
-    }
-    cur.current = room.strokeEvents.length;
-  }, [room.strokeEvents, blind, authorFilter]);
+    let raf = 0;
+    const step = () => {
+      const ctx = mctx.current;
+      if (ctx) {
+        // Left/rejoined a game → wipe and replay from scratch.
+        if (room.strokeResetRef.current !== lastResetRef.current) {
+          lastResetRef.current = room.strokeResetRef.current;
+          lastIdRef.current = -1;
+          ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, CW, CH);
+        }
+        // Switching to another player's canvas (impostor) → rebuild for them.
+        if (filterRef.current !== authorFilter) {
+          ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, CW, CH);
+          lastIdRef.current = -1;
+          filterRef.current = authorFilter;
+        }
+        const evs = room.strokeQueueRef.current;
+        for (const e of evs) {
+          if (e.id <= lastIdRef.current) continue;
+          lastIdRef.current = e.id;
+          if (authorFilter != null && e.type !== "clear" && e.from !== authorFilter) continue;
+          if (e.type === "clear") {
+            if (authorFilter == null || e.from === "*" || e.from === authorFilter) { ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, CW, CH); }
+          } else if (blind) continue;
+          else if (e.type === "stroke") drawStroke(ctx, e.stroke);
+          else if (e.type === "fill") floodFill(ctx, e.x, e.y, e.color);
+        }
+      }
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [room, blind, authorFilter]);
 
   function measure() {
     const r = mainRef.current!.getBoundingClientRect();
@@ -708,6 +722,56 @@ export function ChatPanel({ room }: { room: UseRoom }) {
   );
 }
 
+function BlindReveal({ room }: { room: UseRoom }) {
+  const ref = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    const c = ref.current;
+    if (!c) return;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, CW, CH);
+    const evs = room.strokeQueueRef.current;
+    // Replay only the current turn: everything after the last full clear.
+    let start = 0;
+    for (let i = evs.length - 1; i >= 0; i--) {
+      if (evs[i].type === "clear" && (evs[i] as { from?: string }).from === "*") { start = i + 1; break; }
+    }
+    for (let i = start; i < evs.length; i++) {
+      const e = evs[i];
+      if (e.type === "stroke") drawStroke(ctx, e.stroke);
+      else if (e.type === "fill") floodFill(ctx, e.x, e.y, e.color);
+    }
+  }, [room]);
+  const download = () => {
+    const c = ref.current;
+    if (!c) return;
+    c.toBlob((b) => {
+      if (!b) return;
+      const url = URL.createObjectURL(b);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "mon-dessin-aveugle.png";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }, "image/png");
+  };
+  return (
+    <div className="mx-auto mt-6 max-w-md">
+      <p className="eyebrow mb-2 text-cyan-300">Ton chef-d&apos;œuvre à l&apos;aveugle 👀</p>
+      <div className="overflow-hidden rounded-xl border border-ink-border bg-white">
+        <canvas ref={ref} width={CW} height={CH} className="block w-full" style={{ aspectRatio: `${CW} / ${CH}` }} />
+      </div>
+      <button onClick={download} className="arc arc-sec arc-block mt-3">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
+        Télécharger mon dessin
+      </button>
+    </div>
+  );
+}
+
 export function DrawGameView({ room }: { room: UseRoom }) {
   const game = room.game as DrawPublic;
   const you = room.you;
@@ -867,6 +931,7 @@ export function DrawGameView({ room }: { room: UseRoom }) {
               );
             })}
           </div>
+          {game.mode === "blind" && game.youAreDrawer && <BlindReveal room={room} />}
         </div>
       )}
 

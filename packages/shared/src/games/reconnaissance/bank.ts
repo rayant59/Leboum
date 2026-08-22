@@ -210,6 +210,37 @@ export const RECO_BANK: RecoItem[] = [
   { id: "burj", wiki: "Burj Khalifa", wikiEn: "Burj Khalifa", question: "Quel est ce gratte-ciel ?", answer: "Burj Khalifa", category: "Monuments" },
   { id: "notredame", wiki: "Notre-Dame de Paris", wikiEn: "Notre-Dame de Paris", question: "Quel est ce monument ?", answer: "Notre-Dame de Paris", accepted: ["notre dame"], category: "Monuments" },
   { id: "arctriomphe", wiki: "Arc de triomphe de l'Étoile", wikiEn: "Arc de Triomphe", question: "Quel est ce monument ?", answer: "Arc de triomphe", category: "Monuments" },
+  // EXTENSIONS — sujets à images libres fiables (moins d'animaux)
+  { id: "statue-liberte", wiki: "Statue de la Liberté", wikiEn: "Statue of Liberty", question: "Quel monument ?", answer: "Statue de la Liberté", accepted: ["statue de la liberte"], category: "Monuments" },
+  { id: "big-ben", wiki: "Big Ben", wikiEn: "Big Ben", question: "Quel monument ?", answer: "Big Ben", category: "Monuments" },
+  { id: "taj-mahal", wiki: "Taj Mahal", wikiEn: "Taj Mahal", question: "Quel monument ?", answer: "Taj Mahal", category: "Monuments" },
+  { id: "sydney-opera", wiki: "Opéra de Sydney", wikiEn: "Sydney Opera House", question: "Quel bâtiment ?", answer: "Opéra de Sydney", accepted: ["opera de sydney"], category: "Monuments" },
+  { id: "mont-saint-michel", wiki: "Mont-Saint-Michel", wikiEn: "Mont-Saint-Michel", question: "Quel lieu ?", answer: "Mont-Saint-Michel", accepted: ["mont saint michel"], category: "Monuments" },
+  { id: "golden-gate", wiki: "Golden Gate Bridge", wikiEn: "Golden Gate Bridge", question: "Quel pont ?", answer: "Golden Gate", accepted: ["golden gate bridge", "le golden gate"], category: "Monuments" },
+  { id: "christ-redempteur", wiki: "Christ Rédempteur", wikiEn: "Christ the Redeemer", question: "Quelle statue ?", answer: "Christ Rédempteur", accepted: ["christ redempteur", "le christ redempteur"], category: "Monuments" },
+  { id: "machu-picchu", wiki: "Machu Picchu", wikiEn: "Machu Picchu", question: "Quel site ?", answer: "Machu Picchu", category: "Lieux" },
+  { id: "chateau-chambord", wiki: "Château de Chambord", wikiEn: "Château de Chambord", question: "Quel château ?", answer: "Chambord", accepted: ["chateau de chambord", "le chateau de chambord"], category: "Monuments" },
+  { id: "sagrada-familia", wiki: "Sagrada Família", wikiEn: "Sagrada Família", question: "Quel monument ?", answer: "Sagrada Família", accepted: ["sagrada familia", "la sagrada familia"], category: "Monuments" },
+  { id: "moai", wiki: "Moai", wikiEn: "Moai", question: "Que sont ces statues (île de Pâques) ?", answer: "Moaï", accepted: ["moai", "statues de l'ile de paques"], category: "Lieux" },
+  { id: "soleil", wiki: "Soleil", wikiEn: "Sun", question: "Quel astre ?", answer: "Soleil", accepted: ["le soleil"], category: "Astronomie" },
+  { id: "aurore-boreale", wiki: "Aurore polaire", wikiEn: "Aurora", question: "Quel phénomène ?", answer: "Aurore boréale", accepted: ["aurore boreale", "aurore polaire"], category: "Nature" },
+  { id: "grand-canyon", wiki: "Grand Canyon", wikiEn: "Grand Canyon", question: "Quel lieu ?", answer: "Grand Canyon", accepted: ["le grand canyon"], category: "Nature" },
+  { id: "chutes-niagara", wiki: "Chutes du Niagara", wikiEn: "Niagara Falls", question: "Quel lieu ?", answer: "Chutes du Niagara", accepted: ["niagara", "les chutes du niagara"], category: "Nature" },
+  { id: "tournesol-f", wiki: "Tournesol", wikiEn: "Sunflower", question: "Quelle fleur ?", answer: "Tournesol", accepted: ["le tournesol"], category: "Nature" },
+  { id: "croissant", wiki: "Croissant", wikiEn: "Croissant", question: "Quelle viennoiserie ?", answer: "Croissant", accepted: ["un croissant"], category: "Nourriture" },
+  { id: "hamburger", wiki: "Hamburger", wikiEn: "Hamburger", question: "Quel plat ?", answer: "Hamburger", accepted: ["burger", "un hamburger"], category: "Nourriture" },
+  { id: "baguette", wiki: "Baguette (pain)", wikiEn: "Baguette", question: "Quel aliment ?", answer: "Baguette", accepted: ["une baguette", "baguette de pain"], category: "Nourriture" },
+  { id: "macaron", wiki: "Macaron", wikiEn: "Macaron", question: "Quelle pâtisserie ?", answer: "Macaron", accepted: ["des macarons", "un macaron"], category: "Nourriture" },
+  { id: "montgolfiere-o", wiki: "Montgolfière", wikiEn: "Hot air balloon", question: "Quel engin volant ?", answer: "Montgolfière", accepted: ["une montgolfiere", "montgolfiere"], category: "Véhicules" },
+  { id: "guitare-i", wiki: "Guitare", wikiEn: "Guitar", question: "Quel instrument ?", answer: "Guitare", accepted: ["une guitare"], category: "Instruments" },
+  { id: "piano-i", wiki: "Piano", wikiEn: "Piano", question: "Quel instrument ?", answer: "Piano", accepted: ["un piano"], category: "Instruments" },
+  { id: "saxophone-i", wiki: "Saxophone", wikiEn: "Saxophone", question: "Quel instrument ?", answer: "Saxophone", accepted: ["un saxophone", "saxo"], category: "Instruments" },
+  { id: "accordeon-i", wiki: "Accordéon", wikiEn: "Accordion", question: "Quel instrument ?", answer: "Accordéon", accepted: ["accordeon", "un accordeon"], category: "Instruments" },
+  { id: "nuit-etoilee", wiki: "La Nuit étoilée", wikiEn: "The Starry Night", question: "Quelle œuvre ?", answer: "La Nuit étoilée", accepted: ["nuit etoilee", "la nuit etoilee", "starry night"], category: "Art" },
+  { id: "le-cri", wiki: "Le Cri", wikiEn: "The Scream", question: "Quelle œuvre ?", answer: "Le Cri", accepted: ["le cri", "the scream"], category: "Art" },
+  { id: "la-liberte", wiki: "La Liberté guidant le peuple", wikiEn: "Liberty Leading the People", question: "Quelle œuvre ?", answer: "La Liberté guidant le peuple", accepted: ["la liberte guidant le peuple"], category: "Art" },
+  { id: "tgv", wiki: "TGV", wikiEn: "TGV", question: "Quel train ?", answer: "TGV", accepted: ["le tgv"], category: "Véhicules" },
+  { id: "gondole", wiki: "Gondole (barque)", wikiEn: "Gondola", question: "Quelle embarcation (Venise) ?", answer: "Gondole", accepted: ["une gondole", "gondole de venise"], category: "Véhicules" },
 ];
 
 /** Pick `count` distinct items at random, categories mixed. */
@@ -218,6 +249,11 @@ export function pickItems(count: number, rng: () => number = Math.random, catego
   if (category && category !== "all") {
     const f = pool.filter((q) => q.category === category);
     if (f.length >= Math.min(count, 3)) pool = f;
+  } else {
+    // Default (all): drop "Personnalités" — real-people photos are often
+    // copyrighted, so Wikipedia returns no free image and the round dead-ends.
+    // They stay available if the host explicitly picks that category.
+    pool = pool.filter((q) => q.category !== "Personnalités");
   }
   const a = [...pool];
   for (let i = a.length - 1; i > 0; i--) {

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { BoumTrailer } from "@/components/BoumTrailer";
 import { generateRoomCode, isValidRoomCode, sanitizeName } from "@subtitles-party/shared";
 import { getPlayerName, setPlayerName } from "@/lib/identity";
 
@@ -44,6 +45,7 @@ type Confetto = { id: string; left: string; color: string; size: string; h: stri
 export default function HomePage() {
   const router = useRouter();
   const [name, setName] = useState("");
+  const [trailerOpen, setTrailerOpen] = useState(false);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [ti, setTi] = useState(0);
@@ -194,6 +196,15 @@ export default function HomePage() {
             </button>
           </div>
           {error && <p role="alert" style={{ margin: "12px 0 0", fontSize: 14, color: "#FF5C5C", animation: "fadeUp 0.3s ease both" }}>{error}</p>}
+          <button
+            onClick={() => setTrailerOpen(true)}
+            style={{ margin: "14px auto 0", display: "flex", alignItems: "center", gap: 8, border: "1px solid #332A5A", background: "transparent", borderRadius: 999, padding: "9px 18px", fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 700, fontSize: 14, color: "#C9C2E6", cursor: "pointer", transition: "border-color .15s, color .15s" }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(255,194,75,0.55)"; e.currentTarget.style.color = "#FFC24B"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#332A5A"; e.currentTarget.style.color = "#C9C2E6"; }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+            Bande-annonce
+          </button>
           <p style={{ margin: "16px 0 0", textAlign: "center", fontSize: 12, color: "#6E6796" }}>Le choix du jeu se fait dans la salle, une fois vos amis arrivés.</p>
         </div>
 
@@ -227,6 +238,7 @@ export default function HomePage() {
 
         <p style={{ margin: "40px 0 0", textAlign: "center", fontSize: 12, color: "#6E6796", opacity: 0, animation: "fadeUp 0.6s ease 0.8s both" }}>2 à 10 joueurs · aucun compte requis · joue depuis ton téléphone</p>
       </main>
+      {trailerOpen && <BoumTrailer onClose={() => setTrailerOpen(false)} onCreate={() => { setTrailerOpen(false); create(); }} />}
     </div>
   );
 }
