@@ -21,16 +21,21 @@ export const FA_ROUNDS_MAX = 8;
 
 export function resolveFakeArtistConfig(settings: FakeArtistSettings): FakeArtistConfig {
   const totalRounds = Math.min(FA_ROUNDS_MAX, Math.max(FA_ROUNDS_MIN, Math.round(settings.totalRounds || 3)));
-  return { totalRounds, drawMs: 60_000, voteMs: 30_000, revealMs: 9_000 };
+  return { totalRounds, drawMs: 90_000, voteMs: 30_000, revealMs: 9_000 };
 }
 
 const ok = (state: FakeArtistState): GameReduceResult<FakeArtistState> => ({ state });
 
 function startRound(
-  base: Omit<FakeArtistState, "phase" | "word" | "theme" | "impostorId" | "votes" | "deadline" | "result">,
+  base: Omit<FakeArtistState, "phase" | "word" | "theme" | "impostorId" | "decoy" | "votes" | "deadline" | "result">,
   ctx: GameContext,
 ): FakeArtistState {
   const [entry] = pickWordEntries(1, ctx.rng);
+  // Decoy word given to the impostor: same theme, different word ("en rapport"
+  // but not the real one) so they can bluff more convincingly.
+  const sameTheme = pickWordEntries(8, ctx.rng, [entry.theme]).filter((e) => e.word !== entry.word);
+  const anyOther = sameTheme.length ? sameTheme : pickWordEntries(8, ctx.rng).filter((e) => e.word !== entry.word);
+  const decoy = anyOther[0]?.word ?? entry.word;
   const impostor = base.players[Math.floor(ctx.rng() * base.players.length)]?.id ?? null;
   return {
     ...base,
@@ -38,6 +43,7 @@ function startRound(
     word: entry.word,
     theme: entry.theme,
     impostorId: impostor,
+    decoy,
     votes: {},
     deadline: ctx.now + base.config.drawMs,
     result: null,
@@ -162,6 +168,7 @@ export function projectFakeArtist(state: FakeArtistState, viewerId: PlayerId): F
     theme: state.theme,
     word: revealed ? state.word : youAreImpostor ? null : state.word,
     youAreImpostor,
+    decoyHint: !revealed && youAreImpostor ? state.decoy : null,
     impostorId: revealed ? state.impostorId : null,
     yourVote: state.votes[viewerId] ?? null,
     voteCount: Object.keys(state.votes).length,

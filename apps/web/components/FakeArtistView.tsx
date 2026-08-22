@@ -65,7 +65,11 @@ export function FakeArtistView({ room }: { room: UseRoom }) {
           <div className="mb-3 text-center">
             {game.phase === "drawing" ? (
               game.youAreImpostor ? (
-                <p className="font-display text-xl font-bold text-magenta">Tu es le FAUX-ARTISTE 🤫 — bluffe, tu ne connais pas le mot !</p>
+                <div>
+                  <p className="font-display text-xl font-bold text-magenta">Tu es le FAUX-ARTISTE 🤫</p>
+                  {game.decoyHint && <p className="mt-1 text-sm">Ton indice (mot proche, mais PAS le vrai) : <span className="font-semibold text-gold">{game.decoyHint}</span></p>}
+                  <p className="mt-0.5 text-xs text-text-faint">Dessine autour de cet indice pour te fondre dans la masse !</p>
+                </div>
               ) : (
                 <p className="font-display text-xl font-bold">Dessine : <span className="text-gold">{game.word}</span></p>
               )

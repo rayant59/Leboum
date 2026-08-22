@@ -28,6 +28,7 @@ export type ClientMessage =
   | { type: "set_name"; name: string }
   | { type: "set_avatar"; avatar: string | null }
   | { type: "set_settings"; settings: GameSettings } // host only
+  | { type: "set_pending_game"; gameId: string } // host only: preview selection to guests
   | { type: "start_game"; gameId: string; settings?: unknown }
   | { type: "game"; action: GameClientAction | DrawClientAction | FakeArtistClientAction | DoublageClientAction | QuizClientAction }
   | { type: "skip" } // host advances the current game phase early
@@ -51,6 +52,8 @@ export type ServerMessage =
       game: AnyPublicGame | null;
       /** Lobby game settings chosen by the host (applied at start). */
       settings: GameSettings;
+      /** Game the host is about to launch (shown to guests in the lobby). */
+      pendingGame: string | null;
       /** The server's clock at send time, so clients can correct for skew and
        *  synchronise video playback to the authoritative timeline. */
       serverTime: number;

@@ -31,6 +31,7 @@ export interface FakeArtistState {
   word: string; // the secret word (every real player sees it; impostor doesn't)
   theme: string;
   impostorId: PlayerId | null;
+  decoy: string; // related-but-wrong word shown to the impostor
   votes: Record<PlayerId, PlayerId>; // voter -> suspected impostor
   scores: Record<PlayerId, number>;
   deadline: number | null;
@@ -50,6 +51,7 @@ export interface FakeArtistPublic {
   theme: string;
   word: string | null; // hidden from the impostor; shown to everyone at reveal
   youAreImpostor: boolean;
+  decoyHint: string | null; // impostor only, during drawing
   impostorId: PlayerId | null; // only at reveal
   yourVote: PlayerId | null;
   voteCount: number; // how many players have voted (progress)

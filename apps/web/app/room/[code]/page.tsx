@@ -53,6 +53,14 @@ function PresetStepper({
   );
 }
 
+const GAME_META: Record<string, { label: string; img: string; tint: string }> = {
+  subtitles: { label: "Sous-titres", img: "/games/subtitles.png", tint: "#FFC24B" },
+  draw: { label: "Dessin & Devinette", img: "/games/draw.png", tint: "#FF4D8D" },
+  doublage: { label: "Doublage", img: "/games/doublage.png", tint: "#46E0B0" },
+  quiz: { label: "Quiz", img: "/games/quiz.png", tint: "#8B7DF6" },
+  reco: { label: "Reconnaissance", img: "/games/reco.png", tint: "#4CC9F0" },
+};
+
 export default function LobbyPage() {
   const params = useParams<{ code: string }>();
   const code = (params.code ?? "").toUpperCase();
@@ -140,6 +148,11 @@ export default function LobbyPage() {
   const state = room.state;
   const me = state && room.you ? state.players[room.you] : undefined;
   const isHost = me?.isHost ?? false;
+
+  // Host broadcasts the currently-selected game so guests can see what's coming.
+  useEffect(() => {
+    if (isHost) room.selectGame(selectedGame);
+  }, [isHost, selectedGame, room.selectGame]);
   const players = state ? state.playerOrder.map((id) => state.players[id]).filter(Boolean) : [];
   const readyCount = players.filter((p) => p.isConnected && p.isReady).length;
   const maxPlayers = state?.config.maxPlayers ?? 8;
@@ -321,6 +334,24 @@ export default function LobbyPage() {
           </div>
         )}
       </section>
+
+      {/* guests: read-only preview of the game the host will launch */}
+      {!isHost && (
+        <section className="mb-8">
+          <p className="eyebrow mb-2 px-1">Jeu choisi par l'hôte</p>
+          {room.pendingGame && GAME_META[room.pendingGame] ? (
+            <div className="flex items-center gap-3 rounded-2xl border p-3" style={{ borderColor: `${GAME_META[room.pendingGame].tint}55`, background: `${GAME_META[room.pendingGame].tint}0f` }}>
+              <img src={GAME_META[room.pendingGame].img} alt="" className="h-14 w-14 shrink-0 rounded-xl object-cover" draggable={false} />
+              <div className="min-w-0">
+                <p className="font-display text-lg font-bold">{GAME_META[room.pendingGame].label}</p>
+                <p className="text-xs text-text-faint">L'hôte lancera cette partie. Prépare-toi et mets-toi « prêt » !</p>
+              </div>
+            </div>
+          ) : (
+            <p className="rounded-2xl border border-ink-border p-3 text-sm text-text-faint">L'hôte n'a pas encore choisi de jeu…</p>
+          )}
+        </section>
+      )}
 
       {/* game picker (host) */}
       {isHost && (

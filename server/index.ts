@@ -136,6 +136,7 @@ interface Room {
   pendingSettings: unknown; // settings for a generic game, from start_game
   relayTimers: NodeJS.Timeout[]; // active-drawer rotation timers (relay)
   settings: GameSettings; // host-chosen lobby settings, applied at start
+  pendingGame: string | null; // selection previewed to guests
   sockets: Map<string, WebSocket>;
   pruneTimers: Map<string, NodeJS.Timeout>;
   gameTimer: NodeJS.Timeout | null;
@@ -168,6 +169,7 @@ function getRoom(code: string): Room {
       pendingSettings: null,
       relayTimers: [],
       settings: DEFAULT_GAME_SETTINGS,
+      pendingGame: null,
       sockets: new Map(),
       pruneTimers: new Map(),
       gameTimer: null,
@@ -372,6 +374,7 @@ function stateMessageFor(room: Room, pid: string): ServerMessage {
     gameId,
     game,
     settings: room.settings,
+    pendingGame: room.pendingGame,
     serverTime: Date.now(),
     you: pid,
   };
@@ -591,6 +594,11 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
         // Host only, and only before the game starts.
         if (playerId !== room.state.hostId || room.state.phase !== "lobby") return;
         room.settings = sanitizeSettings(msg.settings);
+        return broadcast(room);
+      }
+      case "set_pending_game": {
+        if (playerId !== room.state.hostId || room.state.phase !== "lobby") return;
+        room.pendingGame = typeof msg.gameId === "string" ? msg.gameId : null;
         return broadcast(room);
       }
       case "start_game":

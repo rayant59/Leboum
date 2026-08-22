@@ -64,6 +64,7 @@ export interface UseRoom {
   gameId: string | null;
   game: AnyPublicGame | null;
   settings: GameSettings;
+  pendingGame: string | null;
   you: string;
   status: ConnectionStatus;
   error: RoomError | null;
@@ -73,6 +74,7 @@ export interface UseRoom {
   setName: (name: string) => void;
   setAvatar: (avatar: string | null) => void;
   setSettings: (settings: GameSettings) => void;
+  selectGame: (gameId: string) => void;
   startGame: (gameId?: string, settings?: unknown) => void;
   leave: () => void;
   submitLines: (lines: string[]) => void;
@@ -110,6 +112,7 @@ export function useRoom(code: string): UseRoom {
   const [gameId, setGameId] = useState<string | null>(null);
   const [game, setGame] = useState<AnyPublicGame | null>(null);
   const [settings, setSettingsState] = useState<GameSettings>(DEFAULT_GAME_SETTINGS);
+  const [pendingGame, setPendingGame] = useState<string | null>(null);
   const [you, setYou] = useState("");
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
   const [error, setError] = useState<RoomError | null>(null);
@@ -135,6 +138,7 @@ export function useRoom(code: string): UseRoom {
         setGameId(msg.gameId);
         setGame(msg.game);
         setSettingsState(msg.settings);
+        setPendingGame((msg as { pendingGame?: string | null }).pendingGame ?? null);
         setYou(msg.you);
         if (msg.state.phase !== "in_game") {
           setChat([]);
@@ -206,6 +210,10 @@ export function useRoom(code: string): UseRoom {
     (s: GameSettings) => send.current?.send({ type: "set_settings", settings: s }),
     [send],
   );
+  const selectGame = useCallback(
+    (gameId: string) => send.current?.send({ type: "set_pending_game", gameId }),
+    [send],
+  );
   const startGame = useCallback(
     (gid: string = SUBTITLES_GAME_ID, settings?: unknown) =>
       send.current?.send({ type: "start_game", gameId: gid, settings }),
@@ -266,7 +274,7 @@ export function useRoom(code: string): UseRoom {
 
   return {
     state, gameId, game, settings, you, status, error, clearError,
-    join, setReady, setName, setAvatar, setSettings, startGame, leave,
+    join, setReady, setName, setAvatar, setSettings, selectGame, startGame, leave, pendingGame,
     submitLines, vote, skipPhase, debugFill, returnLobby, playAgain, react, reactions, speakingIds, sendSpeaking, quizAnswer,
     chooseWord, guess, sendTalk, castVote, doublageAction, revealTheme, endDrawing, sendStroke, sendFill, clearCanvas, chat, strokeQueueRef, strokeResetRef, serverNow,
   };
