@@ -1,7 +1,7 @@
 import type { GamePlayer } from "../../game/types";
 import type { GameAction, GameContext } from "../../platform/types";
 import { createReco, projectReco, reduceReco } from "./engine";
-import { recoAccepts, editDistance, recoNormalize } from "./bank";
+import { recoAccepts, editDistance, recoNormalize, pickItems, parseCustomRecoItems, RECO_BANK } from "./bank";
 import type { RecoClientAction } from "./types";
 
 let passed = 0, failed = 0;
@@ -69,6 +69,28 @@ test("déroulé complet → final + stats", () => {
   const pub = projectReco(s, "a");
   eq(pub.ranking[0].id, "a", "Alice gagne (que des bonnes réponses)");
   assert(pub.stats !== null, "stats de fin présentes");
+});
+
+
+test("pop sauce : catégories variées et jamais deux fois de suite", () => {
+  let seed = 777;
+  const rng = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  const picked = pickItems(12, rng);
+  let same = 0;
+  for (let i = 1; i < picked.length; i++) if (picked[i].category === picked[i - 1].category) same++;
+  eq(same, 0, "deux sujets de suite dans la même catégorie");
+  eq(new Set(RECO_BANK.map((i) => i.id)).size, RECO_BANK.length, "ids dupliqués dans la banque");
+});
+
+test("images perso : manifeste parsé et sujets jouables", () => {
+  const items = parseCustomRecoItems(
+    "# commentaire\nlogo.png | Quelle marque ? = Nike | nike\nphoto.jpg = Luffy\nligne sans egal",
+  );
+  eq(items.length, 2, "2 lignes valides attendues");
+  eq(items[0].question, "Quelle marque ?", "question personnalisée");
+  eq(items[0].img, "/reco/logo.png", "chemin de l'image");
+  eq(items[1].question, "Qu'est-ce que c'est ?", "question par défaut");
+  eq(recoAccepts("nike", items[0]), true, "réponse acceptée");
 });
 
 console.log(`\n${passed} réussis, ${failed} échoués\n`);

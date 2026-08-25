@@ -2,7 +2,7 @@
 import type { GamePlayer } from "../../game/types";
 import type { GameAction, GameContext } from "../../platform/types";
 import { createQuiz, projectQuiz, reduceQuiz } from "./engine";
-import { normalizeAnswer, freeAnswerMatches } from "./questions";
+import { normalizeAnswer, freeAnswerMatches, pickQuestions, QUIZ_BANK } from "./questions";
 import type { QuizClientAction } from "./types";
 
 let passed = 0, failed = 0;
@@ -88,6 +88,25 @@ test("déroulé complet → phase final + stats", () => {
   eq(pub.ranking.length, 2, "classement complet");
   assert(pub.ranking[0].score >= pub.ranking[1].score, "classement trié");
   assert(pub.stats !== null, "stats de fin présentes");
+});
+
+
+test("pop sauce : aucune catégorie ni formulation répétée d'affilée", () => {
+  let seed = 1234;
+  const rng = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  const picked = pickQuestions(16, rng);
+  let sameCat = 0;
+  for (let i = 1; i < picked.length; i++) if (picked[i].cat === picked[i - 1].cat) sameCat++;
+  eq(sameCat, 0, "deux questions de suite dans la même catégorie");
+  const cats = new Set(picked.map((q) => q.cat));
+  assert(cats.size >= 6, `variété insuffisante : ${cats.size} catégories`);
+});
+
+test("toutes les questions ont une difficulté et un id unique", () => {
+  const ids = QUIZ_BANK.map((q) => q.id);
+  eq(new Set(ids).size, ids.length, "ids dupliqués");
+  const sans = QUIZ_BANK.filter((q) => !q.difficulty);
+  eq(sans.length, 0, "questions sans difficulté");
 });
 
 console.log(`\n${passed} réussis, ${failed} échoués\n`);

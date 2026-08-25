@@ -1,0 +1,11 @@
+# Tes images perso pour Reconnaissance / Pixel incoming
+# Format :  fichier.png = Réponse | alias1 | alias2
+#           fichier.png | Ta question ? = Réponse | alias1
+#
+# Dépose l'image dans CE dossier (public/reco/) puis ajoute sa ligne ici.
+# Voir README.txt pour tous les détails.
+#
+# Exemples (décommente/remplace par les tiens) :
+# luffy.png = Luffy | monkey d luffy
+# logo-nike.jpg | Quelle marque ? = Nike
+# scene-titanic.png | De quel film vient cette scène ? = Titanic

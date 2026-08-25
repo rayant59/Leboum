@@ -1,26 +1,39 @@
-IMAGES LOCALES POUR LE MODE "RECONNAISSANCE"
-============================================
+📸 TES PROPRES IMAGES POUR "RECONNAISSANCE" ET "PIXEL INCOMING"
+==============================================================
 
-Wikipedia ne fournit PAS d'images pour la pop-culture (persos d'anime,
-scènes de films, persos Disney/Pixar, lieux fictifs...) car elles sont
-sous copyright. Pour créer des questions Reconnaissance pop-culture,
-dépose tes propres images ICI (dossier public/reco/) et référence-les
-dans la banque via le champ "img".
+C'EST ICI que tu déposes tes photos. Deux étapes, c'est tout :
 
-EXEMPLE (packages/shared/src/games/reconnaissance/bank.ts) :
+  1) Copie tes images DANS CE DOSSIER (public/reco/)
+        exemples : luffy.png, logo-nike.jpg, scene-titanic.png
 
-  {
-    id: "dory",
-    wiki: "",                 // laissé vide : on utilise l'image locale
-    question: "Quel est ce personnage ?",
-    answer: "Dory",
-    accepted: ["dory"],
-    category: "Animation",
-    franchise: "Le Monde de Nemo",
-    difficulty: "easy",
-    img: "/reco/dory.png"     // <-- ton fichier déposé dans public/reco/
-  },
+  2) Décris-les dans le fichier "images.txt" (même dossier), une par ligne :
 
-- Le chemin commence toujours par /reco/ (jamais public/).
-- Formats conseillés : .png ou .jpg, ~800x800 ou plus.
-- Après avoir ajouté des fichiers, relance "dev:web".
+        luffy.png = Luffy | monkey d luffy
+        logo-nike.jpg | Quelle marque ? = Nike
+        scene-titanic.png | De quel film vient cette scène ? = Titanic
+
+FORMAT
+------
+        fichier.png = Réponse | alias1 | alias2
+        fichier.png | Ta question ? = Réponse | alias1
+
+  - La question est FACULTATIVE. Sans elle → "Qu'est-ce que c'est ?"
+  - Les alias = autres réponses acceptées.
+  - La casse, les accents et les fautes légères sont déjà tolérés.
+  - Lignes vides et lignes commençant par # : ignorées.
+
+BON À SAVOIR
+------------
+  - Ces sujets S'AJOUTENT à la banque existante (rien n'est retiré).
+  - Ils tombent aussi bien en Reconnaissance qu'en Pixel incoming.
+  - Contrairement à Wikipédia, TOUT est possible ici : anime, films,
+    logos, memes, voitures, joueurs, scènes… C'est le seul moyen d'avoir
+    de la pop-culture en image.
+  - Le serveur te prévient au démarrage si un fichier est introuvable.
+  - Après ajout : relance le serveur (dev:server) ou redéploie-le.
+
+CONSEIL "BONNE IMAGE DE JEU"
+----------------------------
+  Évite l'affiche avec le titre, le logo sur fond blanc ou le portrait
+  posé : ça donne la réponse. Préfère une scène, une action, un détail
+  reconnaissable — c'est bien plus fun à deviner.

@@ -7,6 +7,12 @@
 // To add entries: pick a Wikipedia article whose lead image clearly depicts the
 // answer, and set { wiki, question, answer, accepted, category }.
 
+/**
+ * Un sujet visuel. RECONNAISSANCE et PIXEL sont des FORMATS : n'importe quelle
+ * catégorie (anime, foot, meme, voiture, monument…) peut y tomber.
+ * L'image vient soit de Wikipédia (`wiki`), soit — et c'est préférable pour la
+ * pop-culture — d'un fichier local déposé dans public/reco/ (`img`).
+ */
 export interface RecoItem {
   id: string;
   wiki: string; // fr.wikipedia article title whose lead image depicts the answer
@@ -14,15 +20,18 @@ export interface RecoItem {
   question: string;
   answer: string;
   accepted?: string[];
-  category: string; // stored, not necessarily shown
+  category: string; // le SUJET (Anime, Sport, Marques…), pas le format
   // Optional metadata (safe to add).
-  difficulty?: "easy" | "medium" | "hard";
+  difficulty?: "easy" | "medium" | "hard" | "expert" | "wtf";
   franchise?: string; // œuvre/univers — used by the anti-repetition picker
   subcat?: string;
-  // Local image override: if set, RecoView uses this path (e.g. "/reco/dory.png")
-  // INSTEAD of fetching from Wikipedia. This is how pop-culture images work
-  // (Wikipedia has no free image for copyrighted characters/scenes).
+  /** Local image override: "/reco/mon-image.png" (fichier dans public/reco/). */
   img?: string;
+  // Provenance de l'image (affichée/conservée pour créditer la source).
+  sourceUrl?: string;
+  sourceName?: string;
+  author?: string;
+  license?: string;
 }
 
 /** Normalize: lowercase, strip accents/punctuation, collapse spaces. */
@@ -249,35 +258,155 @@ export const RECO_BANK: RecoItem[] = [
   { id: "la-liberte", wiki: "La Liberté guidant le peuple", wikiEn: "Liberty Leading the People", question: "Quelle œuvre ?", answer: "La Liberté guidant le peuple", accepted: ["la liberte guidant le peuple"], category: "Art" },
   { id: "tgv", wiki: "TGV", wikiEn: "TGV", question: "Quel train ?", answer: "TGV", accepted: ["le tgv"], category: "Véhicules" },
   { id: "gondole", wiki: "Gondole (barque)", wikiEn: "Gondola", question: "Quelle embarcation (Venise) ?", answer: "Gondole", accepted: ["une gondole", "gondole de venise"], category: "Véhicules" },
+  // ═══ POP SAUCE : rééquilibrage (drapeaux, sport, véhicules, objets, food, nature…) ═══
+  { id: "zg1", wiki: "Drapeau du Japon", question: "Quel pays possède ce drapeau ?", answer: "Japon", accepted: ["le japon", "japon"], category: "Drapeaux", difficulty: "easy", subcat: "drapeau" },
+  { id: "zg2", wiki: "Drapeau du Brésil", question: "Quel pays possède ce drapeau ?", answer: "Brésil", accepted: ["bresil", "le bresil"], category: "Drapeaux", difficulty: "easy", subcat: "drapeau" },
+  { id: "zg3", wiki: "Drapeau de la Corée du Sud", question: "Quel pays possède ce drapeau ?", answer: "Corée du Sud", accepted: ["coree du sud", "la coree du sud"], category: "Drapeaux", difficulty: "medium", subcat: "drapeau" },
+  { id: "zg4", wiki: "Drapeau du Canada", question: "Quel pays possède ce drapeau ?", answer: "Canada", accepted: ["le canada", "canada"], category: "Drapeaux", difficulty: "easy", subcat: "drapeau" },
+  { id: "zg5", wiki: "Drapeau de la Suisse", question: "Quel pays possède ce drapeau ?", answer: "Suisse", accepted: ["la suisse", "suisse"], category: "Drapeaux", difficulty: "medium", subcat: "drapeau" },
+  { id: "zg6", wiki: "Drapeau de la Jamaïque", question: "Quel pays possède ce drapeau ?", answer: "Jamaïque", accepted: ["jamaique", "la jamaique"], category: "Drapeaux", difficulty: "hard", subcat: "drapeau" },
+  { id: "zs1", wiki: "Ballon de basket-ball", question: "Quel sport se pratique avec ce ballon ?", answer: "basket-ball", accepted: ["basket", "basketball", "basket ball"], category: "Sport", difficulty: "easy", subcat: "materiel" },
+  { id: "zs2", wiki: "Volant (badminton)", question: "Dans quel sport utilise-t-on cet objet ?", answer: "badminton", accepted: ["le badminton", "badminton"], category: "Sport", difficulty: "medium", subcat: "materiel" },
+  { id: "zs3", wiki: "Stade de France", question: "Quel est ce stade ?", answer: "Stade de France", accepted: ["stade de france", "le stade de france"], category: "Sport", difficulty: "hard", subcat: "lieu" },
+  { id: "zs4", wiki: "Ballon de rugby", question: "Quel sport se joue avec ce ballon ?", answer: "rugby", accepted: ["le rugby", "rugby"], category: "Sport", difficulty: "easy", subcat: "materiel" },
+  { id: "zv1", wiki: "Vespa", question: "Quel type de véhicule est-ce ?", answer: "scooter", accepted: ["un scooter", "scooter", "vespa"], category: "Véhicules", difficulty: "medium", subcat: "vehicule" },
+  { id: "zv2", wiki: "Montgolfière", question: "Quel est cet engin volant ?", answer: "montgolfière", accepted: ["montgolfiere", "une montgolfiere", "ballon"], category: "Véhicules", difficulty: "easy", subcat: "vehicule" },
+  { id: "zv3", wiki: "Tramway", question: "Quel moyen de transport est représenté ?", answer: "tramway", accepted: ["le tramway", "tram", "tramway"], category: "Véhicules", difficulty: "medium", subcat: "transport" },
+  { id: "zv4", wiki: "Concorde", question: "Quel avion supersonique est-ce ?", answer: "Concorde", accepted: ["le concorde", "concorde"], category: "Véhicules", difficulty: "hard", subcat: "avion" },
+  { id: "zo1", wiki: "Rubik's Cube", question: "Quel est cet objet ?", answer: "Rubik's Cube", accepted: ["rubiks cube", "rubik s cube", "rubik cube"], category: "Objets", difficulty: "easy", subcat: "objet" },
+  { id: "zo2", wiki: "Machine à écrire", question: "Quel est cet appareil ancien ?", answer: "machine à écrire", accepted: ["machine a ecrire", "une machine a ecrire"], category: "Objets", difficulty: "medium", subcat: "objet" },
+  { id: "zo3", wiki: "Sextant", question: "À quoi servait cet instrument ?", answer: "à naviguer", accepted: ["naviguer", "navigation", "sextant"], category: "Objets", difficulty: "expert", subcat: "instrument" },
+  { id: "zo4", wiki: "Disquette", question: "Quel support de stockage est-ce ?", answer: "disquette", accepted: ["une disquette", "disquette", "floppy"], category: "Objets", difficulty: "medium", subcat: "objet" },
+  { id: "zo5", wiki: "Boulier", question: "Quel est cet outil de calcul ?", answer: "boulier", accepted: ["un boulier", "boulier", "abaque"], category: "Objets", difficulty: "hard", subcat: "objet" },
+  { id: "zn1", wiki: "Sushi", question: "Quel est ce plat ?", answer: "sushi", accepted: ["des sushis", "sushi", "sushis"], category: "Nourriture", difficulty: "easy", subcat: "plat" },
+  { id: "zn2", wiki: "Paella", question: "De quel pays vient ce plat ?", answer: "Espagne", accepted: ["l'espagne", "espagne"], category: "Nourriture", difficulty: "medium", subcat: "origine" },
+  { id: "zn3", wiki: "Croissant (viennoiserie)", question: "Quelle est cette viennoiserie ?", answer: "croissant", accepted: ["un croissant", "croissant"], category: "Nourriture", difficulty: "easy", subcat: "plat" },
+  { id: "zn4", wiki: "Durian", question: "Quel fruit est réputé pour son odeur très forte ?", answer: "durian", accepted: ["le durian", "durian"], category: "Nourriture", difficulty: "expert", subcat: "fruit" },
+  { id: "zn5", wiki: "Ramen", question: "Quel est ce plat japonais ?", answer: "ramen", accepted: ["des ramen", "ramen", "ramens"], category: "Nourriture", difficulty: "medium", subcat: "plat" },
+  { id: "za1", wiki: "Aurore polaire", question: "Quel phénomène naturel est-ce ?", answer: "aurore boréale", accepted: ["aurore boreale", "aurore polaire", "aurore"], category: "Nature", difficulty: "medium", subcat: "phenomene" },
+  { id: "za2", wiki: "Saturne", question: "Quelle planète est représentée ?", answer: "Saturne", accepted: ["saturne"], category: "Astronomie", difficulty: "easy", subcat: "planete" },
+  { id: "za3", wiki: "Geyser", question: "Quel phénomène géologique est-ce ?", answer: "geyser", accepted: ["un geyser", "geyser"], category: "Nature", difficulty: "medium", subcat: "phenomene" },
+  { id: "za4", wiki: "Aurore", question: "Quel est ce phénomène lumineux ?", answer: "aurore", accepted: ["aurore", "aurore polaire"], category: "Nature", difficulty: "hard", subcat: "phenomene" },
+  { id: "zi1", wiki: "Narval", question: "Quel animal marin possède une longue défense ?", answer: "narval", accepted: ["le narval", "narval"], category: "Animaux", difficulty: "hard", subcat: "animal" },
+  { id: "zi2", wiki: "Ornithorynque", question: "Quel est cet animal ?", answer: "ornithorynque", accepted: ["l'ornithorynque", "ornithorynque"], category: "Animaux", difficulty: "medium", subcat: "animal" },
+  { id: "zi3", wiki: "Fossa", question: "Quel prédateur vit uniquement à Madagascar ?", answer: "fossa", accepted: ["le fossa", "fossa"], category: "Animaux", difficulty: "expert", subcat: "animal" },
+  { id: "zm1", wiki: "Tour Eiffel", question: "Dans quelle ville se trouve ce monument ?", answer: "Paris", accepted: ["paris"], category: "Monuments", difficulty: "easy", subcat: "ville" },
+  { id: "zm2", wiki: "Colisée", question: "Dans quelle ville se trouve ce monument ?", answer: "Rome", accepted: ["rome"], category: "Monuments", difficulty: "easy", subcat: "ville" },
+  { id: "zm3", wiki: "Sagrada Família", question: "Dans quelle ville se trouve cette basilique ?", answer: "Barcelone", accepted: ["barcelone", "barcelona"], category: "Monuments", difficulty: "medium", subcat: "ville" },
+  { id: "zm4", wiki: "Christ Rédempteur", question: "Dans quelle ville se trouve cette statue ?", answer: "Rio de Janeiro", accepted: ["rio", "rio de janeiro"], category: "Monuments", difficulty: "medium", subcat: "ville" },
+  { id: "zmu1", wiki: "Thérémine", question: "Quel instrument se joue sans le toucher ?", answer: "thérémine", accepted: ["theremine", "theremin", "le theremine"], category: "Instruments", difficulty: "expert", subcat: "instrument" },
+  { id: "zmu2", wiki: "Banjo", question: "Quel est cet instrument à cordes ?", answer: "banjo", accepted: ["un banjo", "banjo"], category: "Instruments", difficulty: "medium", subcat: "instrument" },
+  { id: "zmu3", wiki: "Vinyle", question: "Quel support musical est-ce ?", answer: "vinyle", accepted: ["un vinyle", "vinyle", "disque vinyle"], category: "Musique", difficulty: "easy", subcat: "objet" },
+
 ];
 
 /** Pick `count` distinct items at random, categories mixed. */
+// ── Sujets personnalisés (tes propres photos) ───────────────────────────────
+// L'hôte dépose ses images dans apps/web/public/reco/ et décrit chacune dans
+// un .txt du même dossier. Chargé par le serveur au démarrage, ADDITIF.
+let CUSTOM_ITEMS: RecoItem[] = [];
+export function addCustomRecoItems(items: RecoItem[]): void {
+  const seen = new Set(RECO_BANK.map((i) => i.id));
+  const add: RecoItem[] = [];
+  for (const it of items) {
+    if (!it || seen.has(it.id)) continue;
+    seen.add(it.id);
+    add.push(it);
+  }
+  CUSTOM_ITEMS = add;
+}
+export function customRecoCount(): number {
+  return CUSTOM_ITEMS.length;
+}
+
+/**
+ * Parse le manifeste des images perso. Une ligne par image :
+ *     mon-image.png = Réponse | alias1 | alias2
+ *     mon-image.png | Quelle marque ? = Réponse | alias
+ * Lignes vides et lignes commençant par # ignorées.
+ */
+export function parseCustomRecoItems(text: string): RecoItem[] {
+  const out: RecoItem[] = [];
+  let n = 0;
+  for (const raw of (text || "").split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || line.startsWith("#")) continue;
+    const eq = line.indexOf("=");
+    if (eq === -1) continue;
+    const left = line.slice(0, eq).trim();
+    const right = line.slice(eq + 1).trim();
+    if (!left || !right) continue;
+    const bar = left.indexOf("|");
+    const file = (bar === -1 ? left : left.slice(0, bar)).trim();
+    const question = bar === -1 ? "Qu'est-ce que c'est ?" : left.slice(bar + 1).trim();
+    if (!file) continue;
+    const parts = right.split("|").map((p) => p.trim()).filter(Boolean);
+    n += 1;
+    out.push({
+      id: `cimg${n}`,
+      wiki: "",
+      question: question || "Qu'est-ce que c'est ?",
+      answer: parts[0],
+      accepted: parts.slice(1),
+      category: "Perso",
+      img: file.startsWith("/") ? file : `/reco/${file}`,
+      sourceName: "Image locale",
+    });
+  }
+  return out;
+}
+
+function recoAnswerKey(it: RecoItem): string {
+  return recoNormalize(it.answer);
+}
+function recoShape(it: RecoItem): string {
+  return recoNormalize(it.question).split(" ").slice(0, 3).join(" ");
+}
+
 export function pickItems(count: number, rng: () => number = Math.random, category?: string): RecoItem[] {
-  let pool = RECO_BANK;
+  let pool: RecoItem[] = CUSTOM_ITEMS.length ? [...RECO_BANK, ...CUSTOM_ITEMS] : RECO_BANK;
   if (category && category !== "all") {
     const f = pool.filter((q) => q.category === category);
     if (f.length >= Math.min(count, 3)) pool = f;
   } else {
     // Default (all): drop "Personnalités" — real-people photos are often
     // copyrighted, so Wikipedia returns no free image and the round dead-ends.
-    // They stay available if the host explicitly picks that category.
-    pool = pool.filter((q) => q.category !== "Personnalités");
+    // (Les sujets perso avec image locale restent, eux, toujours jouables.)
+    pool = pool.filter((q) => q.category !== "Personnalités" || !!q.img);
   }
-  // Shuffle…
   const shuffled = [...pool];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  // …then interleave so the same category/franchise never chains back-to-back.
+
   const want = Math.max(1, Math.min(count, shuffled.length));
   const remaining = [...shuffled];
   const out: RecoItem[] = [];
+  const span = Math.max(2, Math.min(4, Math.floor(want / 3)));
+
   while (out.length < want && remaining.length) {
+    const recent = out.slice(-span);
     const prev = out[out.length - 1];
-    let idx = prev
-      ? remaining.findIndex((q) => q.category !== prev.category && (!q.franchise || q.franchise !== prev.franchise))
-      : 0;
+    const tiers: ((q: RecoItem) => boolean)[] = [
+      (q) =>
+        !recent.some((r) => r.category === q.category) &&
+        !(q.franchise && recent.some((r) => r.franchise === q.franchise)) &&
+        !recent.some((r) => recoAnswerKey(r) === recoAnswerKey(q)) &&
+        !recent.some((r) => recoShape(r) === recoShape(q)),
+      (q) =>
+        !prev ||
+        (prev.category !== q.category &&
+          !(q.franchise && prev.franchise === q.franchise) &&
+          recoShape(prev) !== recoShape(q)),
+      (q) => !prev || prev.category !== q.category,
+      () => true,
+    ];
+    let idx = -1;
+    for (const ok of tiers) {
+      idx = remaining.findIndex(ok);
+      if (idx !== -1) break;
+    }
     if (idx === -1) idx = 0;
     out.push(remaining[idx]);
     remaining.splice(idx, 1);

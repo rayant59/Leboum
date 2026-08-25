@@ -65,6 +65,8 @@ import {
   setCustomWords,
   addCustomQuestions,
   parseCustomQuestions,
+  addCustomRecoItems,
+  parseCustomRecoItems,
 } from "@subtitles-party/shared";
 
 const PORT = Number(process.env.PORT ?? 1999);
@@ -118,6 +120,39 @@ const PORT = Number(process.env.PORT ?? 1999);
       if (parsed.length < lines) {
         console.log(`[questionquizz] ⚠ ${lines - parsed.length} ligne(s) ignorée(s) : il manque le « = réponse ». Format attendu : Question ? = réponse | alias`);
       }
+      return;
+    } catch {
+      /* ignore and try next */
+    }
+  }
+})();
+
+// Load custom picture subjects: the host drops images in apps/web/public/reco/
+// and describes each one in a .txt of that same folder. ADDITIVE.
+(() => {
+  const dirs = [
+    resolve(process.cwd(), "apps", "web", "public", "reco"),
+    resolve(process.cwd(), "..", "apps", "web", "public", "reco"),
+    resolve(__dirname, "..", "apps", "web", "public", "reco"),
+  ];
+  for (const dir of dirs) {
+    try {
+      if (!existsSync(dir)) continue;
+      // Only the manifest is read (README.txt holds examples, not real entries).
+      const txts = readdirSync(dir).filter(
+        (f) => f.toLowerCase().endsWith(".txt") && f.toLowerCase() !== "readme.txt",
+      );
+      if (!txts.length) continue;
+      const text = txts.map((f) => readFileSync(resolve(dir, f), "utf8")).join("\n");
+      const items = parseCustomRecoItems(text);
+      addCustomRecoItems(items);
+      // Warn about lines pointing at a file that isn't there (typo in the name).
+      const present = new Set(readdirSync(dir).map((f) => f.toLowerCase()));
+      const missing = items
+        .map((i) => (i.img ?? "").split("/").pop() ?? "")
+        .filter((f) => f && !present.has(f.toLowerCase()));
+      if (items.length) console.log(`[reco-images] ${items.length} sujet(s) perso chargé(s) (${txts.join(", ")})`);
+      if (missing.length) console.log(`[reco-images] ⚠ fichier(s) introuvable(s) dans public/reco/ : ${missing.join(", ")}`);
       return;
     } catch {
       /* ignore and try next */
