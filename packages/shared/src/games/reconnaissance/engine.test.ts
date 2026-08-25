@@ -1,7 +1,7 @@
 import type { GamePlayer } from "../../game/types";
 import type { GameAction, GameContext } from "../../platform/types";
 import { createReco, projectReco, reduceReco } from "./engine";
-import { recoAccepts, editDistance, recoNormalize, pickItems, parseCustomRecoItems, RECO_BANK } from "./bank";
+import { recoAccepts, editDistance, recoNormalize, pickItems, parseCustomRecoItems, addCustomRecoItems, RECO_BANK } from "./bank";
 import type { RecoClientAction } from "./types";
 
 let passed = 0, failed = 0;
@@ -91,6 +91,19 @@ test("images perso : manifeste parsé et sujets jouables", () => {
   eq(items[0].img, "/reco/logo.png", "chemin de l'image");
   eq(items[1].question, "Qu'est-ce que c'est ?", "question par défaut");
   eq(recoAccepts("nike", items[0]), true, "réponse acceptée");
+});
+
+
+test("catégorie « Perso » : uniquement les images locales, jamais Wikipédia", () => {
+  addCustomRecoItems(
+    parseCustomRecoItems("a.png | Qui est-ce ? = Alpha\nb.png = Beta\nc.png = Gamma"),
+  );
+  let seed = 4242;
+  const rng = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  const picked = pickItems(3, rng, "Perso");
+  eq(picked.length, 3, "3 sujets attendus");
+  eq(picked.every((i) => !!i.img), true, "une image non locale s'est glissée dans la sélection");
+  eq(picked.every((i) => !i.wiki), true, "un sujet Wikipédia s'est glissé dans la sélection");
 });
 
 console.log(`\n${passed} réussis, ${failed} échoués\n`);

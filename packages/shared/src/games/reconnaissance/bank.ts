@@ -367,7 +367,9 @@ export function pickItems(count: number, rng: () => number = Math.random, catego
   let pool: RecoItem[] = CUSTOM_ITEMS.length ? [...RECO_BANK, ...CUSTOM_ITEMS] : RECO_BANK;
   if (category && category !== "all") {
     const f = pool.filter((q) => q.category === category);
-    if (f.length >= Math.min(count, 3)) pool = f;
+    // An explicit choice is always honoured as soon as it has content — picking
+    // "Mes images" must never silently fall back to the built-in bank.
+    if (f.length > 0) pool = f;
   } else {
     // Default (all): drop "Personnalités" — real-people photos are often
     // copyrighted, so Wikipedia returns no free image and the round dead-ends.

@@ -503,6 +503,7 @@ export default function LobbyPage() {
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {[
                   { id: "all", label: "Toutes" },
+                  { id: "Perso", label: "📸 Mes images" },
                   { id: "Personnalités", label: "Personnalités" },
                   { id: "Animaux", label: "Animaux" },
                   { id: "Monuments", label: "Monuments" },
