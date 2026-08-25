@@ -3,6 +3,18 @@ import type { GamePlayer } from "../../game/types";
 import type { GameAction, GameContext } from "../../platform/types";
 import { createDoublage, projectDoublage, reduceDoublage } from "./engine";
 import type { DoublageClientAction } from "./types";
+import { setCustomDoublageVideos, parseDoublageScenes } from "./videos";
+
+// La bibliothèque intégrée est volontairement vide (les scènes viennent de
+// apps/web/public/doublage/). On en charge donc pour les tests.
+setCustomDoublageVideos(
+  parseDoublageScenes(
+    [
+      "scene1.mp4 | Scene 1 | 12 = Voix 1 | Voix 2",
+      "restaurant.mp4 | Au restaurant | 45 = Le client | Le serveur | Le chef",
+    ].join("\n"),
+  ),
+);
 
 let passed = 0;
 let failed = 0;
@@ -43,8 +55,8 @@ test("création : phase prépa, vidéo par défaut, personnages attribués", () 
 
 test("choisir une vidéo (hôte) réattribue les personnages", () => {
   let s = createDoublage(players, {}, ctx(0));
-  s = reduceDoublage(s, act("a", { kind: "pick_video", videoId: "restaurant" }), ctx(1)).state;
-  eq(s.videoId, "restaurant", "vidéo changée");
+  s = reduceDoublage(s, act("a", { kind: "pick_video", videoId: "cs2" }), ctx(1)).state;
+  eq(s.videoId, "cs2", "vidéo changée");
   eq(s.characters.length, 3, "3 personnages");
 });
 
@@ -84,7 +96,7 @@ test("seek positionne la lecture", () => {
 });
 
 test("fin de scène → phase résultat", () => {
-  let s = createDoublage(players, { videoId: "restaurant" }, ctx(0)); // durée 45s
+  let s = createDoublage(players, { videoId: "cs2" }, ctx(0)); // durée 45s
   s = reduceDoublage(s, act("a", { kind: "start" }), ctx(0)).state;
   // avance au-delà de la durée
   s = reduceDoublage(s, { type: "advance" }, ctx(46_000)).state;

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { DoublagePublic, DoublageVideo } from "@subtitles-party/shared";
-import { DOUBLAGE_VIDEOS } from "@subtitles-party/shared";
+import { parseDoublageScenes } from "@subtitles-party/shared";
 import type { UseRoom } from "@/lib/useRoom";
 import { BoumBackdrop } from "@/components/BoumBackdrop";
 import { Avatar } from "@/components/Avatar";
@@ -231,7 +231,8 @@ export function DoublageView({ room }: { room: UseRoom }) {
     }
   }, [mic.level, mic.muted, mic.status, room]);
   useEffect(() => () => room.sendSpeaking(false), [room]);
-  const video = useMemo<DoublageVideo | undefined>(() => DOUBLAGE_VIDEOS.find((v) => v.id === game?.videoId), [game]);
+  const allScenes = useDoublageScenes();
+  const video = useMemo<DoublageVideo | undefined>(() => allScenes.find((v) => v.id === game?.videoId), [allScenes, game]);
 
   // If the game-server wasn't restarted after adding this module, the room falls
   // back to another game and this view receives the wrong data. Guide the user
@@ -285,6 +286,20 @@ export function DoublageView({ room }: { room: UseRoom }) {
   );
 }
 
+/** Charge les scènes depuis public/doublage/scenes.txt (servi par le site). */
+function useDoublageScenes(): DoublageVideo[] {
+  const [scenes, setScenes] = useState<DoublageVideo[]>([]);
+  useEffect(() => {
+    let alive = true;
+    fetch("/doublage/scenes.txt", { cache: "no-store" })
+      .then((r) => (r.ok ? r.text() : ""))
+      .then((t) => { if (alive) setScenes(parseDoublageScenes(t)); })
+      .catch(() => { if (alive) setScenes([]); });
+    return () => { alive = false; };
+  }, []);
+  return scenes;
+}
+
 function PrepRoom({
   room,
   game,
@@ -303,6 +318,7 @@ function PrepRoom({
   video?: DoublageVideo;
 }) {
   const ready = you ? !!game.ready[you] : false;
+  const scenes = useDoublageScenes();
   return (
     <div className="animate-pop grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
       <div className="space-y-4">
@@ -310,15 +326,22 @@ function PrepRoom({
           <p className="eyebrow mb-2 text-gold">Scène</p>
           {isHost ? (
             <div className="flex flex-wrap gap-2">
-              {DOUBLAGE_VIDEOS.filter((v) => v.id === "scene-test" || v.src.startsWith("http")).map((v) => (
-                <button
-                  key={v.id}
-                  onClick={() => room.doublageAction({ kind: "pick_video", videoId: v.id })}
-                  className={`rounded-xl border px-4 py-2 text-sm transition-colors ${game.videoId === v.id ? "border-gold bg-gold/[0.08] text-gold" : "border-ink-border bg-ink-surface hover:border-gold/50"}`}
-                >
-                  {v.title} <span className="text-text-faint">· {v.characters.length} perso.</span>
-                </button>
-              ))}
+              {scenes.length === 0 ? (
+                <p className="text-sm text-text-muted">
+                  Aucune scène. Dépose tes vidéos dans <span className="font-mono">apps/web/public/doublage/</span> et
+                  décris-les dans <span className="font-mono">scenes.txt</span> (voir le README du dossier).
+                </p>
+              ) : (
+                scenes.map((v) => (
+                  <button
+                    key={v.id}
+                    onClick={() => room.doublageAction({ kind: "pick_video", videoId: v.id })}
+                    className={`rounded-xl border px-4 py-2 text-sm transition-colors ${game.videoId === v.id ? "border-gold bg-gold/[0.08] text-gold" : "border-ink-border bg-ink-surface hover:border-gold/50"}`}
+                  >
+                    {v.title} <span className="text-text-faint">· {v.characters.length} perso.</span>
+                  </button>
+                ))
+              )}
             </div>
           ) : (
             <p className="font-semibold">{game.videoTitle ?? "En attente du choix de l'hôte…"}</p>

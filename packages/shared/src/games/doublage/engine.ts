@@ -7,7 +7,7 @@
 import type { GamePlayer } from "../../game/types";
 import type { PlayerId } from "../../room/types";
 import type { GameAction, GameContext, GameReduceResult } from "../../platform/types";
-import { DOUBLAGE_VIDEOS, getDoublageVideo } from "./videos";
+import { doublageVideos, getDoublageVideo } from "./videos";
 import type { DoublageClientAction, DoublagePublic, DoublageSettings, DoublageState, Playback } from "./types";
 
 const PAUSED: Playback = { playing: false, positionMs: 0, anchor: 0 };
@@ -78,7 +78,7 @@ export function createDoublage(players: GamePlayer[], settings: DoublageSettings
     deadline: null,
     config: { totalRounds: 1, mode: "free" },
   };
-  const initialId = settings.videoId ?? DOUBLAGE_VIDEOS[0]?.id ?? null;
+  const initialId = settings.videoId ?? doublageVideos()[0]?.id ?? null;
   return initialId ? applyVideo(base, initialId) : base;
 }
 

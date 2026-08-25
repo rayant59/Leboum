@@ -4,7 +4,39 @@
 process.env.PORT = "3999";
 
 import { WebSocket } from "ws";
-import { SPEED_PRESETS, DEFAULT_GAME_SETTINGS } from "@subtitles-party/shared";
+import {
+  SPEED_PRESETS,
+  DEFAULT_GAME_SETTINGS,
+  setCustomDoublageVideos,
+  parseDoublageScenes,
+  addCustomQuestions,
+  parseCustomQuestions,
+} from "@subtitles-party/shared";
+
+// Les banques intégrées (quiz, doublage) sont volontairement vides : le contenu
+// vient des dossiers de l'hôte. On charge donc des données de test ici.
+setCustomDoublageVideos(
+  parseDoublageScenes(
+    [
+      "scene1.mp4 | Scene 1 | 12 = Voix 1 | Voix 2",
+      "restaurant.mp4 | Au restaurant | 45 = Le client | Le serveur | Le chef",
+    ].join("\n"),
+  ),
+);
+addCustomQuestions(
+  parseCustomQuestions(
+    [
+      "Capitale de l'Italie ? = Rome",
+      "Combien de pattes a une araignee ? = 8 | huit",
+      "Astre au centre du systeme solaire ? = Soleil",
+      "Quel animal aboie ? = chien",
+      "Capitale du Japon ? = Tokyo",
+      "Plus grand ocean ? = Pacifique",
+      "Combien de continents ? = 7 | sept",
+      "Couleur du ciel ? = bleu",
+    ].join("\n"),
+  ),
+);
 import type { PublicGameState, DrawPublic, ServerMessage } from "@subtitles-party/shared";
 
 let passed = 0;
@@ -465,7 +497,7 @@ async function main() {
   const dp = (c: Client) => c.last()?.game as unknown as DubPub;
   check("l'hôte lance Doublage (phase prépa)", da2.last()?.gameId === "doublage" && dp(da2)?.phase === "prep");
   check("une vidéo + des personnages par défaut", !!dp(da2).videoId && dp(da2).characters.length >= 2);
-  da2.send({ type: "game", action: { kind: "pick_video", videoId: "restaurant" } });
+  da2.send({ type: "game", action: { kind: "pick_video", videoId: "cs2" } });
   await sleep(60);
   check("choix de la scène (3 personnages)", dp(da2).characters.length === 3);
   da2.send({ type: "game", action: { kind: "ready", ready: true } });

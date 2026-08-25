@@ -1,0 +1,7 @@
+# Mes scènes de doublage
+# Format :  fichier.mp4 | Titre | durée_en_secondes = Perso A | Perso B
+# Voir README.txt pour les détails.
+#
+# Exemples (décommente et adapte) :
+# bagarre.mp4 | La bagarre | 25 = Le héros | Le méchant
+# restaurant.mp4 | Au restaurant | 40 = Le client | Le serveur | Le chef

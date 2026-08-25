@@ -1,23 +1,21 @@
-# Questions de quiz personnalisées pour Boum
-# ------------------------------------------
-# - UNE question PAR LIGNE, au format :
+# ══════════════════════════════════════════════════════════════════
+#  MES QUESTIONS DE QUIZ
+# ══════════════════════════════════════════════════════════════════
+#  UNE question PAR LIGNE, au format :
 #
-#       Question ? = réponse | alias1 | alias2
+#        Question ? = réponse | alias1 | alias2
 #
-#   (le "= réponse" est obligatoire ; les alias après des "|" sont facultatifs)
+#  - le « = réponse » est OBLIGATOIRE
+#  - les alias (après des « | ») sont facultatifs : ce sont les autres
+#    réponses acceptées
+#  - la casse, les accents et les fautes légères sont déjà tolérés
+#  - lignes vides et lignes commençant par # : ignorées
 #
-# - Les alias = autres réponses acceptées (utile pour les variantes/orthographes).
-#   La casse, les accents et les espaces sont déjà tolérés automatiquement.
-# - Lignes vides et lignes commençant par # ignorées.
-# - Ces questions S'AJOUTENT à la banque intégrée (rien n'est retiré).
-# - Après modification : relance le serveur (dev:server) ou redéploie-le.
+#  Le serveur affiche au démarrage :
+#        [questionquizz] N questions chargées sur M lignes
+#  et te prévient si une ligne n'a pas de « = réponse ».
 #
-# 👉 Si tu ne veux écrire QUE les questions (sans réponse), écris-les quand même
-#    puis envoie-moi le fichier : je remplirai les bonnes réponses + alias pour toi.
-#
-# Exemples (remplace-les par les tiens) :
+#  👉 Tu peux aussi m'envoyer tes questions SANS les réponses :
+#     je remplis les réponses et les alias pour toi.
+# ══════════════════════════════════════════════════════════════════
 
-Quelle est la capitale de l'Italie ? = Rome
-Combien de pattes a une araignée ? = 8 | huit
-Dans quel pays se trouve la tour Eiffel ? = France | la france
-Quel est l'astre au centre du système solaire ? = Soleil | le soleil

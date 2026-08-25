@@ -21,8 +21,11 @@ const ACCENTS = {
   cyan: { tint: "#4CC9F0", tintBg: "rgba(76,201,240,0.14)", tintBorder: "rgba(76,201,240,0.4)" },
 } as const;
 
+// Mets à true pour réafficher le jeu Sous-titres (code conservé, juste masqué).
+const SHOW_SUBTITLES = false;
+
 const GAMES = [
-  { img: "/games/subtitles.png", accent: "gold", name: "Sous-titres", desc: "Inventez les dialogues d'une scène muette, votez pour le plus drôle.", players: "3–8", variants: [] as string[] },
+
   { img: "/games/draw.png", accent: "magenta", name: "Dessin & Devinette", desc: "Dessine le mot secret, les autres devinent — avec ses variantes.", players: "2–8", variants: ["Classique", "Faux-artiste", "Relais"] },
   { img: "/games/doublage.png", accent: "mint", name: "Doublage", desc: "Doublez une vidéo à votre sauce et improvisez les voix.", players: "2–10", variants: [] as string[] },
   { img: "/games/quiz.png", accent: "violet", name: "Quiz", desc: "Répondez à des questions et montrez votre culture !", players: "1–12", variants: [] as string[] },

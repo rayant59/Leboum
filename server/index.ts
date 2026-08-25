@@ -67,6 +67,8 @@ import {
   parseCustomQuestions,
   addCustomRecoItems,
   parseCustomRecoItems,
+  setCustomDoublageVideos,
+  parseDoublageScenes,
 } from "@subtitles-party/shared";
 
 const PORT = Number(process.env.PORT ?? 1999);
@@ -114,6 +116,7 @@ const PORT = Number(process.env.PORT ?? 1999);
       if (!files.length) continue;
       const text = files.map((f) => readFileSync(resolve(dir, f), "utf8")).join("\n");
       const parsed = parseCustomQuestions(text);
+      if (!parsed.length) continue; // fichier vide → on n'écrase rien
       addCustomQuestions(parsed);
       const lines = text.split(/\r?\n/).map((l) => l.trim()).filter((l) => l && !l.startsWith("#")).length;
       console.log(`[questionquizz] ${parsed.length} questions chargées sur ${lines} lignes (${files.join(", ")})`);
@@ -145,6 +148,7 @@ const PORT = Number(process.env.PORT ?? 1999);
       if (!txts.length) continue;
       const text = txts.map((f) => readFileSync(resolve(dir, f), "utf8")).join("\n");
       const items = parseCustomRecoItems(text);
+      if (!items.length) continue; // manifeste vide → on n'écrase rien
       addCustomRecoItems(items);
       // Warn about lines pointing at a file that isn't there (typo in the name).
       const present = new Set(readdirSync(dir).map((f) => f.toLowerCase()));
@@ -153,6 +157,38 @@ const PORT = Number(process.env.PORT ?? 1999);
         .filter((f) => f && !present.has(f.toLowerCase()));
       if (items.length) console.log(`[reco-images] ${items.length} sujet(s) perso chargé(s) (${txts.join(", ")})`);
       if (missing.length) console.log(`[reco-images] ⚠ fichier(s) introuvable(s) dans public/reco/ : ${missing.join(", ")}`);
+      return;
+    } catch {
+      /* ignore and try next */
+    }
+  }
+})();
+
+// Load dubbing scenes from apps/web/public/doublage/scenes.txt (videos live in
+// that same folder). No built-in test scenes any more.
+(() => {
+  const dirs = [
+    resolve(process.cwd(), "apps", "web", "public", "doublage"),
+    resolve(process.cwd(), "..", "apps", "web", "public", "doublage"),
+    resolve(__dirname, "..", "apps", "web", "public", "doublage"),
+  ];
+  for (const dir of dirs) {
+    try {
+      if (!existsSync(dir)) continue;
+      const txts = readdirSync(dir).filter(
+        (f) => f.toLowerCase().endsWith(".txt") && f.toLowerCase() !== "readme.txt",
+      );
+      if (!txts.length) continue;
+      const text = txts.map((f) => readFileSync(resolve(dir, f), "utf8")).join("\n");
+      const scenes = parseDoublageScenes(text);
+      if (!scenes.length) continue; // manifeste vide → on n'écrase rien
+      setCustomDoublageVideos(scenes);
+      const present = new Set(readdirSync(dir).map((f) => f.toLowerCase()));
+      const missing = scenes
+        .map((v) => (v.src ?? "").split("/").pop() ?? "")
+        .filter((f) => f && !present.has(f.toLowerCase()));
+      if (scenes.length) console.log(`[doublage] ${scenes.length} scène(s) chargée(s) (${txts.join(", ")})`);
+      if (missing.length) console.log(`[doublage] ⚠ vidéo(s) introuvable(s) dans public/doublage/ : ${missing.join(", ")}`);
       return;
     } catch {
       /* ignore and try next */

@@ -2,7 +2,24 @@
 import type { GamePlayer } from "../../game/types";
 import type { GameAction, GameContext } from "../../platform/types";
 import { createQuiz, projectQuiz, reduceQuiz } from "./engine";
-import { normalizeAnswer, freeAnswerMatches, pickQuestions, QUIZ_BANK } from "./questions";
+import { normalizeAnswer, freeAnswerMatches, pickQuestions, QUIZ_BANK, addCustomQuestions, parseCustomQuestions } from "./questions";
+
+// La banque intégrée est volontairement vide (les questions viennent de
+// questionquizz/). On en charge donc pour faire tourner les tests.
+addCustomQuestions(
+  parseCustomQuestions(
+    [
+      "Capitale de l'Italie ? = Rome",
+      "Combien de pattes a une araignee ? = 8 | huit",
+      "Astre au centre du systeme solaire ? = Soleil | le soleil",
+      "Quel animal aboie ? = chien | le chien",
+      "Couleur du ciel ? = bleu",
+      "Capitale du Japon ? = Tokyo",
+      "Combien de continents ? = 7 | sept",
+      "Plus grand ocean ? = Pacifique",
+    ].join("\n"),
+  ),
+);
 import type { QuizClientAction } from "./types";
 
 let passed = 0, failed = 0;
@@ -91,17 +108,24 @@ test("déroulé complet → phase final + stats", () => {
 });
 
 
-test("pop sauce : aucune catégorie ni formulation répétée d'affilée", () => {
+test("pop sauce : le tirage évite les répétitions quand la banque le permet", () => {
+  // On fabrique une banque multi-catégories pour vérifier l'entrelacement.
+  const bank = [
+    { id: "t1", type: "free", cat: "Anime", prompt: "Quel anime ?", answer: "A", difficulty: "easy" },
+    { id: "t2", type: "free", cat: "Anime", prompt: "Quel anime bis ?", answer: "B", difficulty: "easy" },
+    { id: "t3", type: "free", cat: "Sport", prompt: "Quel sport ?", answer: "C", difficulty: "easy" },
+    { id: "t4", type: "free", cat: "Sport", prompt: "Quel sport bis ?", answer: "D", difficulty: "easy" },
+    { id: "t5", type: "free", cat: "Films", prompt: "Quel film ?", answer: "E", difficulty: "easy" },
+    { id: "t6", type: "free", cat: "Films", prompt: "Quel film bis ?", answer: "F", difficulty: "easy" },
+  ] as unknown as Parameters<typeof addCustomQuestions>[0];
+  addCustomQuestions(bank);
   let seed = 1234;
   const rng = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
-  const picked = pickQuestions(16, rng);
+  const picked = pickQuestions(6, rng);
   let sameCat = 0;
   for (let i = 1; i < picked.length; i++) if (picked[i].cat === picked[i - 1].cat) sameCat++;
   eq(sameCat, 0, "deux questions de suite dans la même catégorie");
-  const cats = new Set(picked.map((q) => q.cat));
-  assert(cats.size >= 6, `variété insuffisante : ${cats.size} catégories`);
 });
-
 test("toutes les questions ont une difficulté et un id unique", () => {
   const ids = QUIZ_BANK.map((q) => q.id);
   eq(new Set(ids).size, ids.length, "ids dupliqués");
