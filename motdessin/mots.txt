@@ -1207,7 +1207,6 @@ aspirateur
 télécommande
 chausson
 porte-clés
-1201 à 2400 — Nouvelle banque
 Mickey Mouse
 Donald Duck
 Minnie Mouse
@@ -1358,39 +1357,6 @@ Kirby
 Sonic
 Mario
 Luigi
-Napoléon
-Cléopâtre
-Jules César
-Jeanne d’Arc
-Louis XIV
-Marie-Antoinette
-Léonard de Vinci
-Albert Einstein
-Isaac Newton
-Galilée
-Charles Darwin
-Nikola Tesla
-Thomas Edison
-Marie Curie
-Victor Hugo
-Molière
-Shakespeare
-Mozart
-Beethoven
-Van Gogh
-Picasso
-Salvador Dalí
-Charlie Chaplin
-Elvis Presley
-Michael Jackson
-Freddie Mercury
-Bob Marley
-David Bowie
-Bruce Lee
-Jackie Chan
-Marilyn Monroe
-Audrey Hepburn
-Charlie Chaplin
 Mr Bean
 Indiana Jones
 James Bond
@@ -2108,98 +2074,7 @@ château volant
 planète miniature
 soleil artificiel
 lune artificielle
-Messi
-Cristiano Ronaldo
-Mbappé
-Neymar
-Zidane
-Maradona
-Pelé
-Michael Jordan
-LeBron James
-Kobe Bryant
-Usain Bolt
-Serena Williams
-Roger Federer
-Rafael Nadal
-Novak Djokovic
-Lewis Hamilton
-Michael Schumacher
-Tiger Woods
-Tony Hawk
-Teddy Riner
-Kylian Mbappé
-Antoine Griezmann
-Zinédine Zidane
-Didier Deschamps
-Sébastien Loeb
-Thomas Pesquet
-Teddy Riner
-Tony Parker
-Nikola Karabatic
-Florent Manaudou
-Simone Biles
-Usain Bolt
-Michael Phelps
-Muhammad Ali
-Mike Tyson
-Conor McGregor
-Bruce Lee
-Jackie Chan
-Arnold Schwarzenegger
-Sylvester Stallone
-Dwayne Johnson
-Jean-Claude Van Damme
-Chuck Norris
 Mr Bean
-Rowan Atkinson
-Jim Carrey
-Will Smith
-Leonardo DiCaprio
-Tom Hanks
-Johnny Depp
-Beyoncé
-Rihanna
-Lady Gaga
-Taylor Swift
-Adele
-Britney Spears
-Madonna
-Céline Dion
-Shakira
-Dua Lipa
-Billie Eilish
-Ariana Grande
-Justin Bieber
-Ed Sheeran
-Bruno Mars
-Eminem
-Snoop Dogg
-Drake
-The Weeknd
-Bad Bunny
-Stromae
-Angèle
-Aya Nakamura
-Gims
-Orelsan
-Soprano
-Vianney
-Julien Doré
-Mylène Farmer
-Jean-Jacques Goldman
-Jacques Brel
-Édith Piaf
-Dalida
-Charles Aznavour
-Johnny Hallyday
-Claude François
-Serge Gainsbourg
-Renaud
-Francis Cabrel
-Indochine
-Daft Punk
-David Guetta
 DJ
 rockeur
 rappeur
