@@ -13,7 +13,7 @@
 
 import { WebSocketServer, WebSocket } from "ws";
 import type { IncomingMessage } from "node:http";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import {
   // room
@@ -74,20 +74,23 @@ const PORT = Number(process.env.PORT ?? 1999);
 // built-in word bank for Draw & Guess. Looked up from a few likely locations
 // so it works whether the server runs from the repo root or elsewhere.
 (() => {
-  const candidates = [
-    resolve(process.cwd(), "motdessin", "mots.txt"),
-    resolve(process.cwd(), "..", "motdessin", "mots.txt"),
-    resolve(__dirname, "..", "motdessin", "mots.txt"),
+  const dirs = [
+    resolve(process.cwd(), "motdessin"),
+    resolve(process.cwd(), "..", "motdessin"),
+    resolve(__dirname, "..", "motdessin"),
   ];
-  for (const p of candidates) {
+  for (const dir of dirs) {
     try {
-      if (existsSync(p)) {
-        const words = readFileSync(p, "utf8").split(/\r?\n/);
-        setCustomWords(words);
-        const kept = words.map((w) => w.trim()).filter((w) => w && !w.startsWith("#")).length;
-        if (kept > 0) console.log(`[motdessin] ${kept} mots personnalisés chargés depuis ${p}`);
-        return;
-      }
+      if (!existsSync(dir)) continue;
+      // Read EVERY .txt in the folder, whatever it's named.
+      const files = readdirSync(dir).filter((f) => f.toLowerCase().endsWith(".txt"));
+      if (!files.length) continue;
+      const words: string[] = [];
+      for (const f of files) words.push(...readFileSync(resolve(dir, f), "utf8").split(/\r?\n/));
+      setCustomWords(words);
+      const kept = words.map((w) => w.trim()).filter((w) => w && !w.startsWith("#")).length;
+      if (kept > 0) console.log(`[motdessin] ${kept} mots personnalisés chargés (${files.join(", ")})`);
+      return;
     } catch {
       /* ignore and try next */
     }
@@ -97,19 +100,25 @@ const PORT = Number(process.env.PORT ?? 1999);
 // Load custom quiz questions from questionquizz/questions.txt (added to the
 // built-in bank, never replacing). Format: "Question ? = réponse | alias1 | alias2".
 (() => {
-  const candidates = [
-    resolve(process.cwd(), "questionquizz", "questions.txt"),
-    resolve(process.cwd(), "..", "questionquizz", "questions.txt"),
-    resolve(__dirname, "..", "questionquizz", "questions.txt"),
+  const dirs = [
+    resolve(process.cwd(), "questionquizz"),
+    resolve(process.cwd(), "..", "questionquizz"),
+    resolve(__dirname, "..", "questionquizz"),
   ];
-  for (const p of candidates) {
+  for (const dir of dirs) {
     try {
-      if (existsSync(p)) {
-        const parsed = parseCustomQuestions(readFileSync(p, "utf8"));
-        addCustomQuestions(parsed);
-        if (parsed.length > 0) console.log(`[questionquizz] ${parsed.length} questions personnalisées chargées depuis ${p}`);
-        return;
+      if (!existsSync(dir)) continue;
+      const files = readdirSync(dir).filter((f) => f.toLowerCase().endsWith(".txt"));
+      if (!files.length) continue;
+      const text = files.map((f) => readFileSync(resolve(dir, f), "utf8")).join("\n");
+      const parsed = parseCustomQuestions(text);
+      addCustomQuestions(parsed);
+      const lines = text.split(/\r?\n/).map((l) => l.trim()).filter((l) => l && !l.startsWith("#")).length;
+      console.log(`[questionquizz] ${parsed.length} questions chargées sur ${lines} lignes (${files.join(", ")})`);
+      if (parsed.length < lines) {
+        console.log(`[questionquizz] ⚠ ${lines - parsed.length} ligne(s) ignorée(s) : il manque le « = réponse ». Format attendu : Question ? = réponse | alias`);
       }
+      return;
     } catch {
       /* ignore and try next */
     }
@@ -158,9 +167,13 @@ const gameCtx = (): GameContext => ({ now: Date.now(), rng: Math.random });
 
 const rooms = new Map<string, Room>();
 
-function getRoom(code: string): Room {
+/** Look up a room. Creation only happens when `allowCreate` is true, i.e. when
+ *  the client came from the "Créer un salon" flow on the home page. Typing a
+ *  random code in the URL must NOT conjure a new room out of thin air. */
+function getRoom(code: string, allowCreate = false): Room | null {
   let room = rooms.get(code);
   if (!room) {
+    if (!allowCreate) return null;
     room = {
       state: createInitialState(code, Date.now()),
       game: null,
@@ -407,6 +420,10 @@ function applyRoom(room: Room, action: RoomAction, sender?: WebSocket) {
 
 // --- game engine plumbing ---------------------------------------------------
 
+function gameRoster(room: Room): GamePlayer[] {
+  return connectedPlayers(room.state).map((p) => ({ id: p.id, name: p.name, color: p.color, avatar: p.avatar ?? null }));
+}
+
 function startGame(room: Room) {
   clearSwaps(room);
   const players: GamePlayer[] = connectedPlayers(room.state).map((p) => ({
@@ -537,7 +554,14 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
     return;
   }
 
-  const room = getRoom(code);
+  // Only the "create a room" flow (home page) may bring a room into existence.
+  const allowCreate = params.get("create") === "1";
+  const room = getRoom(code, allowCreate);
+  if (!room) {
+    ws.send(JSON.stringify({ type: "error", code: "room_not_found", message: "Ce salon n'existe pas. Crée un salon depuis l'accueil." }));
+    ws.close(4004, "salon introuvable");
+    return;
+  }
 
   const timer = room.pruneTimers.get(playerId);
   if (timer) {
@@ -578,8 +602,15 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
     }
     const t = Date.now();
     switch (msg.type) {
-      case "join":
-        return applyRoom(room, { type: "join", playerId, name: msg.name, now: t }, ws);
+      case "join": {
+        applyRoom(room, { type: "join", playerId, name: msg.name, now: t }, ws);
+        // A game is already running → fold the newcomer into its roster so they
+        // can play immediately (no more "ghost player" whose guesses don't count).
+        if (room.mod && room.state.phase !== "lobby") {
+          applyMod(room, { type: "presence", connectedIds: connectedPlayers(room.state).map((p) => p.id), players: gameRoster(room) });
+        }
+        return;
+      }
       case "leave":
         return applyRoom(room, { type: "leave", playerId, now: t }, ws);
       case "set_ready":
@@ -747,7 +778,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
     // If the game was only waiting on the player who just left, move on.
     maybeAdvanceForPresence(room);
     if (room.mod) {
-      applyMod(room, { type: "presence", connectedIds: connectedPlayers(room.state).map((p) => p.id) });
+      applyMod(room, { type: "presence", connectedIds: connectedPlayers(room.state).map((p) => p.id), players: gameRoster(room) });
     }
 
     const t = setTimeout(() => {

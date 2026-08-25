@@ -253,18 +253,40 @@ test("plus d'indices auto : le mot reste entièrement masqué, séparateurs visi
 });
 
 
-test("le dessinateur peut terminer sa manche plus tôt (end_drawing)", () => {
+test("end_drawing signale seulement que le dessin est fini (la manche continue)", () => {
   let s = createDrawGame(players, { totalRounds: 2, mode: "classic" }, ctx(1000));
   const drawer = s.drawerId!;
   s = reduceDraw(s, choose(drawer, s.wordChoices[0]), ctx(1000)).state; // drawing
   eq(s.phase, "drawing", "en dessin");
-  // un non-dessinateur ne peut PAS forcer la fin
+  eq(s.finished, false, "pas encore signalé comme terminé");
+  // un non-dessinateur ne peut PAS le signaler
   const notDrawer = guessers(s)[0];
   s = reduceDraw(s, { type: "client", playerId: notDrawer, msg: { kind: "end_drawing" } }, ctx(1500)).state;
-  eq(s.phase, "drawing", "un joueur ne peut pas terminer le dessin");
-  // le dessinateur, oui
+  eq(s.finished, false, "un joueur ne peut pas signaler la fin du dessin");
+  // le dessinateur, oui — mais la manche NE se termine PAS
   s = reduceDraw(s, { type: "client", playerId: drawer, msg: { kind: "end_drawing" } }, ctx(2000)).state;
-  eq(s.phase, "reveal", "le dessinateur termine → révélation");
+  eq(s.finished, true, "le dessinateur a signalé qu'il a terminé");
+  eq(s.phase, "drawing", "la manche continue : les autres peuvent encore deviner");
+});
+
+test("un joueur qui rejoint en cours de manche devient un vrai joueur (pas un fantôme)", () => {
+  let s = createDrawGame(players, { totalRounds: 2, mode: "classic" }, ctx(1000));
+  const drawer = s.drawerId!;
+  s = reduceDraw(s, choose(drawer, s.wordChoices[0]), ctx(1000)).state;
+  const before = s.players.length;
+  const newcomer = { id: "newbie", name: "Newbie", color: "#fff", avatar: null };
+  const roster = [...s.players, newcomer];
+  s = reduceDraw(
+    s,
+    { type: "presence", connectedIds: roster.map((p) => p.id), players: roster },
+    ctx(1200),
+  ).state;
+  eq(s.players.length, before + 1, "le nouveau est ajouté au roster");
+  eq(s.scores["newbie"], 0, "il a un score initialisé");
+  eq(s.phase, "drawing", "la manche continue");
+  // et sa bonne réponse compte vraiment
+  s = reduceDraw(s, { type: "client", playerId: "newbie", msg: { kind: "guess", text: s.word! } }, ctx(1400)).state;
+  eq(s.guessedAt["newbie"] != null, true, "sa bonne réponse est validée");
 });
 console.log(`\n${passed} réussis, ${failed} échoués\n`);
 if (failed > 0) process.exit(1);

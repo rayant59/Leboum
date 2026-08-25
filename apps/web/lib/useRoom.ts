@@ -106,7 +106,7 @@ export interface UseRoom {
   serverNow: () => number;
 }
 
-export function useRoom(code: string): UseRoom {
+export function useRoom(code: string, create = false): UseRoom {
   const playerId = useMemo(() => getPlayerId(), []);
   const [state, setState] = useState<PublicRoomState | null>(null);
   const [gameId, setGameId] = useState<string | null>(null);
@@ -128,7 +128,7 @@ export function useRoom(code: string): UseRoom {
 
   useEffect(() => {
     if (!code || !playerId) return;
-    const transport = createWebSocketTransport({ host: wsHost(), room: code, playerId });
+    const transport = createWebSocketTransport({ host: wsHost(), room: code, playerId, create });
     transportRef.current = transport;
 
     const offMsg = transport.onMessage((msg) => {

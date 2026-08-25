@@ -28,8 +28,10 @@ class Client {
   speaking: (ServerMessage & { type: "speaking" })[] = [];
   chats: (ServerMessage & { type: "chat" })[] = [];
   strokes: (ServerMessage & { type: "stroke" })[] = [];
-  constructor(room: string, id: string) {
-    this.ws = new WebSocket(`ws://localhost:3999/?room=${room}&id=${id}`);
+  constructor(room: string, id: string, create = true) {
+    // `create=1` mirrors the "Créer un salon" flow on the home page; without it
+    // the server refuses unknown codes (no room-squatting via the URL).
+    this.ws = new WebSocket(`ws://localhost:3999/?room=${room}&id=${id}${create ? "&create=1" : ""}`);
     this.ws.on("message", (raw) => {
       const m = JSON.parse(raw.toString()) as ServerMessage;
       if (m.type === "state") this.states.push(m);

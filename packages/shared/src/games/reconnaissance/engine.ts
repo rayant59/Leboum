@@ -16,7 +16,7 @@ function rec0(players: GamePlayer[]) { const r: Record<PlayerId, number> = {}; f
 
 export function createReco(players: GamePlayer[], settings: RecoSettings, ctx: GameContext): RecoState {
   const total = clamp(settings.totalQuestions ?? 10, 3, 20);
-  const secs = clamp(settings.secondsPerQuestion ?? 15, 5, 60);
+  const secs = clamp(settings.secondsPerQuestion ?? 15, 5, 90);
   const items = pickItems(total, ctx.rng, settings.category);
   return {
     phase: "question", players, connectedIds: players.map((p) => p.id),

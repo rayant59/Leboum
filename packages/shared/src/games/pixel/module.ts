@@ -14,7 +14,7 @@ function sanitize(input: unknown): RecoSettings {
   return {
     totalQuestions: typeof v?.totalQuestions === "number" ? v.totalQuestions : 10,
     // A little longer than reco by default so the picture has time to emerge.
-    secondsPerQuestion: typeof v?.secondsPerQuestion === "number" ? v.secondsPerQuestion : 22,
+    secondsPerQuestion: typeof v?.secondsPerQuestion === "number" ? v.secondsPerQuestion : 60,
     category: typeof v?.category === "string" ? v.category : "all",
   };
 }
@@ -22,7 +22,7 @@ function sanitize(input: unknown): RecoSettings {
 export const pixelModule: GameModule<RecoState, RecoPublic, RecoSettings, RecoClientAction> = {
   id: PIXEL_GAME_ID,
   meta: { name: "Pixel incoming", minPlayers: 1, maxPlayers: 12 },
-  defaultSettings: () => ({ totalQuestions: 10, secondsPerQuestion: 22, category: "all" }),
+  defaultSettings: () => ({ totalQuestions: 10, secondsPerQuestion: 60, category: "all" }),
   sanitizeSettings: sanitize,
   createState: createReco,
   reduce: reduceReco,

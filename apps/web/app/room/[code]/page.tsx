@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { canStart, sanitizeName, DRAW_THEMES } from "@subtitles-party/shared";
 import { getPlayerName, setPlayerName } from "@/lib/identity";
 import { useRoom } from "@/lib/useRoom";
@@ -83,7 +83,13 @@ export default function LobbyPage() {
   const [recoCat, setRecoCat] = useState("all");
   useEffect(() => setName(getPlayerName()), []);
 
-  const room = useRoom(code);
+  // `?create=1` (set by the home page) authorises room creation server-side.
+  // Read straight off the URL: avoids useSearchParams' Suspense requirement.
+  const wantsCreate = useMemo(
+    () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("create") === "1",
+    [],
+  );
+  const room = useRoom(code, wantsCreate);
   useGameSounds(room);
   // Show a networking hint if the socket doesn't connect (LAN firewall, etc.).
   const [connSlow, setConnSlow] = useState(false);
@@ -378,7 +384,7 @@ export default function LobbyPage() {
               return (
                 <button
                   key={c.id}
-                  onClick={() => setSelectedGame(c.id)}
+                  onClick={() => { setSelectedGame(c.id); if (c.id === "pixel" && recoSecs < 45) setRecoSecs(60); }}
                   className="group relative flex flex-col overflow-hidden rounded-2xl border p-4 text-left transition-all duration-200 hover:-translate-y-0.5"
                   style={{
                     borderColor: sel ? c.tint : "#332A5A",
@@ -491,7 +497,7 @@ export default function LobbyPage() {
               🖼️ Une image apparaît, écris ce que c'est le plus vite possible ! (pays, animaux, objets… les petites fautes sont tolérées.)
             </p>
             <PresetStepper label="Nombre d'images" sub="Longueur de la partie" value={recoCount} values={[5, 10, 15, 20]} unit="images" onChange={setRecoCount} disabled={!isHost} />
-            <PresetStepper label="Temps par image" sub="Compte à rebours" value={recoSecs} values={[10, 15, 20, 30]} unit="secondes" onChange={setRecoSecs} disabled={!isHost} />
+            <PresetStepper label="Temps par image" sub={selectedGame === "pixel" ? "Vitesse de révélation" : "Compte à rebours"} value={recoSecs} values={selectedGame === "pixel" ? [45, 60, 75, 90] : [10, 15, 20, 30]} unit="secondes" onChange={setRecoSecs} disabled={!isHost} />
             <div>
               <p className="mb-2 text-sm font-medium">Catégorie</p>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">

@@ -59,7 +59,7 @@ export interface GameModule<State, Public, Settings, ClientMsg> {
 export type GameAction<ClientMsg> =
   | { type: "client"; playerId: PlayerId; msg: ClientMsg }
   | { type: "advance" }
-  | { type: "presence"; connectedIds: PlayerId[] };
+  | { type: "presence"; connectedIds: PlayerId[]; players?: GamePlayer[] };
 
 /** A registry entry — a module with erased generics for storage/lookup. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

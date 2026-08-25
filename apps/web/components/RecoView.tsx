@@ -138,7 +138,7 @@ function PixelImage({
           // Blocks across: from very few (heavy pixels) to full resolution.
           const minBlocks = 6;
           const maxBlocks = cw;
-          const blocks = revealed ? maxBlocks : Math.round(minBlocks + (maxBlocks - minBlocks) * Math.pow(progress, 1.8));
+          const blocks = revealed ? maxBlocks : Math.round(minBlocks + (maxBlocks - minBlocks) * Math.pow(progress, 2.3));
           const sw = Math.max(2, Math.min(cw, blocks));
           const sh = Math.max(2, Math.round((sw * im.height) / im.width));
           ctx.imageSmoothingEnabled = false;

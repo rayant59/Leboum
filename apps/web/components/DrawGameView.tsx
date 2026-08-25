@@ -415,7 +415,7 @@ export function DrawCanvas({
   // Taille : change vite (toutes les ~1.6 s) et de façon extrême (tout petit ↔ énorme).
   const sizeFactor = sizeShift ? [0.25, 3, 0.5, 2.2, 0.3][Math.floor(fxElapsed / 1600) % 5] : 1;
   const shiftColor = colorShift ? SHIFT_COLORS[Math.floor(fxElapsed / 5000) % SHIFT_COLORS.length] : null;
-  const fogOpacity = fog ? Math.min(0.6, (fxElapsed / 70000) * 0.6) : 0;
+  const fogOpacity = fog ? Math.min(0.85, 0.12 + (fxElapsed / 22000) * 0.75) : 0;
   // Rétrécit plus vite : atteint ~40 % en ~35 s.
   const shrinkScale = shrink ? Math.max(0.4, 1 - (fxElapsed / 35000) * 0.6) : 1;
   // Curseur fantôme : totalement invisible en permanence.
@@ -698,7 +698,7 @@ export function DrawCanvas({
           <div className={`relative w-full select-none overflow-hidden rounded-2xl border border-ink-border${shake && shaking ? " animate-canvasshake" : ""}`} style={{ aspectRatio: "3 / 2", transform: (roam || shrink) ? `translate(${roamX}px, ${roamY}px) scale(${shrinkScale})` : undefined, transformOrigin: "center", transition: roam ? "transform .09s linear" : "transform .2s linear" }}>
             <canvas ref={mainRef} {...handlers} className="absolute inset-0 h-full w-full touch-none bg-white" style={{ cursor: drawable ? "none" : "default" }} />
             <canvas ref={overRef} className="pointer-events-none absolute inset-0 h-full w-full" />
-            {fog && <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(circle at 50% 45%, rgba(226,232,240,0.15), rgba(203,213,225,0.9))", opacity: fogOpacity, transition: "opacity .3s linear" }} />}
+            {fog && <div className="pointer-events-none absolute inset-0" style={{ background: "linear-gradient(160deg, #eef1f6, #cfd6e3)", opacity: fogOpacity, transition: "opacity .3s linear" }} />}
             {drawable && cursorVisible && cursorPos && <CustomCursor tool={tool} pos={cursorPos} size={width * scaleRef.current} color={color} />}
           </div>
 
@@ -975,14 +975,21 @@ export function DrawGameView({ room }: { room: UseRoom }) {
                   ) : (
                     <p className="text-xs text-text-faint">Thème révélé aux joueurs ✓</p>
                   )}
-                  <button
-                    onClick={() => room.endDrawing()}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-mint/50 bg-mint/[0.08] px-3 py-1.5 text-xs font-bold text-mint transition-colors hover:bg-mint/20"
-                    title="Terminer ta manche maintenant (passe à la révélation)"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>
-                    J'ai terminé
-                  </button>
+                  {game.finished ? (
+                    <p className="inline-flex items-center gap-1.5 rounded-lg border border-mint/50 bg-mint/[0.08] px-3 py-1.5 text-xs font-bold text-mint">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>
+                      Dessin terminé — les joueurs continuent de deviner
+                    </p>
+                  ) : (
+                    <button
+                      onClick={() => room.endDrawing()}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-mint/50 bg-mint/[0.08] px-3 py-1.5 text-xs font-bold text-mint transition-colors hover:bg-mint/20"
+                      title="Signaler que ton dessin est fini (la manche continue)"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>
+                      J'ai terminé
+                    </button>
+                  )}
                 </div>
               </div>
             ) : (
@@ -1007,6 +1014,11 @@ export function DrawGameView({ room }: { room: UseRoom }) {
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
             <div>
               <DrawCanvas room={room} drawable={game.youAreDrawer} blind={game.mode === "blind" && game.youAreDrawer} constraintRule={game.youAreDrawer ? game.constraintRule : null} turnKey={turnKey} />
+              {!game.youAreDrawer && game.finished && !game.youGuessed && (
+                <p className="mt-3 rounded-lg border border-mint/40 bg-mint/[0.07] px-3 py-1.5 text-center text-xs font-medium text-mint">
+                  Le dessinateur a terminé son dessin — à toi de deviner, le temps continue !
+                </p>
+              )}
               {!game.youAreDrawer && !game.youGuessed && <GuessBar room={room} />}
               {game.youGuessed && <p className="mt-3 text-center text-sm text-mint">Bien joué, tu as trouvé ! 🎉</p>}
             </div>

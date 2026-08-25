@@ -21,6 +21,8 @@ export interface WebSocketTransportOptions {
   host: string; // e.g. "localhost:1999"
   room: string;
   playerId: string;
+  /** Only the "create a room" flow sets this; joining a link never creates. */
+  create?: boolean;
 }
 
 /**
@@ -42,9 +44,10 @@ export function createWebSocketTransport(
   const url = () => {
     const proto =
       typeof location !== "undefined" && location.protocol === "https:" ? "wss" : "ws";
-    return `${proto}://${opts.host}/?room=${encodeURIComponent(
+    const base = `${proto}://${opts.host}/?room=${encodeURIComponent(
       opts.room,
     )}&id=${encodeURIComponent(opts.playerId)}`;
+    return opts.create ? `${base}&create=1` : base;
   };
 
   const emitStatus = (s: ConnectionStatus) => statusCbs.forEach((cb) => cb(s));

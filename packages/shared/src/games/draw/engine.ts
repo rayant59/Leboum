@@ -102,6 +102,7 @@ export function createDrawGame(
     choicePool: entries,
     theme: null,
     themeRevealed: false,
+    finished: false,
     constraint: null,
     constraintRule: null,
     guessedAt: {},
@@ -125,7 +126,7 @@ export function reduceDraw(
     case "advance":
       return ok(advance(state, ctx));
     case "presence":
-      return ok(applyPresence(state, action.connectedIds, ctx));
+      return ok(applyPresence(state, action.connectedIds, ctx, action.players));
   }
 }
 
@@ -155,7 +156,7 @@ function reduceClient(
   // The drawer decides their drawing is done → end the round early.
   if (msg.kind === "end_drawing") {
     if (state.phase !== "drawing" || playerId !== state.drawerId) return ok(state);
-    return ok(toReveal(state, ctx));
+    return ok({ ...state, finished: true }); // informational only — round keeps going
   }
 
   // guess
@@ -200,7 +201,23 @@ function advance(state: DrawState, ctx: GameContext): DrawState {
   }
 }
 
-function applyPresence(state: DrawState, connectedIds: PlayerId[], ctx: GameContext): DrawState {
+function applyPresence(state: DrawState, connectedIds: PlayerId[], ctx: GameContext, roster?: GamePlayer[]): DrawState {
+  // Fold any newly-connected players into the roster so mid-game joiners become
+  // real players (their guesses count and show up), never "ghosts".
+  if (roster && roster.length) {
+    const known = new Set(state.players.map((p) => p.id));
+    const toAdd = roster.filter((p) => !known.has(p.id));
+    if (toAdd.length) {
+      const scores = { ...state.scores };
+      for (const p of toAdd) if (scores[p.id] == null) scores[p.id] = 0;
+      state = {
+        ...state,
+        players: [...state.players, ...toAdd],
+        order: [...state.order, ...toAdd.map((p) => p.id)],
+        scores,
+      };
+    }
+  }
   if (state.phase !== "choosing" && state.phase !== "drawing") return state;
   const connected = new Set(connectedIds);
   // The drawer left → end the turn.
@@ -223,6 +240,7 @@ function startDrawing(state: DrawState, entry: WordEntry, ctx: GameContext): Dra
     wordPattern: maskWord(entry.word),
     theme: entry.theme,
     themeRevealed: false,
+    finished: false,
     wordChoices: [],
     choicePool: [],
     constraint: c ? c.label : null,
@@ -253,7 +271,7 @@ function nextTurn(state: DrawState, ctx: GameContext): DrawState {
     round += 1;
   }
   if (round > state.totalRounds) {
-    return { ...state, phase: "scoreboard", drawerId: null, deadline: null, result: null, themeRevealed: false };
+    return { ...state, phase: "scoreboard", drawerId: null, deadline: null, result: null, themeRevealed: false, finished: false };
   }
   const entries = pickWordEntries(state.config.wordChoiceCount, ctx.rng, state.wordThemes);
   return {
@@ -268,6 +286,7 @@ function nextTurn(state: DrawState, ctx: GameContext): DrawState {
     choicePool: entries,
     theme: null,
     themeRevealed: false,
+    finished: false,
     constraint: null,
     constraintRule: null,
     guessedAt: {},
@@ -304,6 +323,7 @@ export function projectDraw(state: DrawState, viewerId: PlayerId): DrawPublic {
     constraintRule: state.constraintRule,
     theme: showTheme ? state.theme : null,
     themeRevealed: state.themeRevealed,
+    finished: state.finished,
     foundOrder,
     word: canSeeWord ? state.word : null,
     wordChoices: state.phase === "choosing" && isDrawer ? state.wordChoices : null,

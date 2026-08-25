@@ -77,14 +77,17 @@ export default function HomePage() {
     ct.current = setTimeout(() => setConfetti([]), 3200);
   }
 
-  function go(roomCode: string) {
+  function go(roomCode: string, creating = false) {
     const clean = sanitizeName(name);
     if (!clean) { setError("Choisis un pseudo pour continuer."); return; }
     setPlayerName(clean);
     burst();
-    setTimeout(() => router.push(`/room/${roomCode}`), 450);
+    // `?create=1` authorises the server to bring this room into existence.
+    // Without it, typing a random code in the URL just says "salon introuvable".
+    const href = creating ? `/room/${roomCode}?create=1` : `/room/${roomCode}`;
+    setTimeout(() => router.push(href), 450);
   }
-  const create = () => go(generateRoomCode());
+  const create = () => go(generateRoomCode(), true);
   function join() {
     const clean = sanitizeName(name);
     if (!clean) { setError("Choisis un pseudo pour continuer."); return; }

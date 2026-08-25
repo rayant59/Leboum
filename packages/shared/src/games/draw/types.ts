@@ -46,6 +46,7 @@ export interface DrawState {
   choicePool: WordEntry[]; // the entries behind the current choices (server-only)
   theme: string | null; // hidden theme of the chosen word
   themeRevealed: boolean; // the drawer revealed the theme to guessers
+  finished: boolean; // the drawer signalled "done" (informational, no auto-advance)
   constraint: string | null; // per-turn drawing constraint (constraints mode)
   constraintRule: string | null; // enforceable rule id (null = voluntary)
   guessedAt: Record<PlayerId, number>; // guesser -> when they found it
@@ -91,6 +92,7 @@ export interface DrawPublic {
   constraintRule: string | null; // enforceable rule id (null = voluntary)
   theme: string | null; // present only once the drawer reveals it (or at reveal)
   themeRevealed: boolean;
+  finished: boolean;
   foundOrder: PlayerId[]; // guessers in the order they found the word
   word: string | null; // present for the drawer, those who guessed, and at reveal
   wordChoices: string[] | null; // present only for the drawer during `choosing`
