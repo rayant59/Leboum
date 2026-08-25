@@ -2,6 +2,27 @@ import type { GamePlayer } from "../../game/types";
 import type { GameAction, GameContext } from "../../platform/types";
 import { createReco, projectReco, reduceReco } from "./engine";
 import { recoAccepts, editDistance, recoNormalize, pickItems, parseCustomRecoItems, addCustomRecoItems, RECO_BANK } from "./bank";
+
+// La banque Wikipédia est volontairement vide : les sujets viennent des images
+// locales. On en charge donc quelques-unes pour faire tourner les tests.
+addCustomRecoItems(
+  parseCustomRecoItems(
+    [
+      "== Anime ==",
+      "naruto.png | Qui est-ce ? = Naruto",
+      "luffy.png | Qui est-ce ? = Luffy",
+      "== Films ==",
+      "titanic.png | Quel film ? = Titanic",
+      "matrix.png | Quel film ? = Matrix",
+      "== Disney ==",
+      "belle.png | Quelle princesse ? = Belle",
+      "simba.png | Qui est-ce ? = Simba",
+      "== Jeux vidéo ==",
+      "mario.png | Quel jeu ? = Mario",
+      "zelda.png | Quel jeu ? = Zelda",
+    ].join("\n"),
+  ),
+);
 import type { RecoClientAction } from "./types";
 
 let passed = 0, failed = 0;
@@ -33,7 +54,7 @@ test("création : image + question exposées, pas la réponse", () => {
   const s = createReco(players, { totalQuestions: 4, secondsPerQuestion: 10 }, ctx(0));
   eq(s.phase, "question", "phase question");
   const pub = projectReco(s, "a");
-  assert(!!pub.item?.wiki && !!pub.item?.question, "sujet + question exposés");
+  assert(!!pub.item?.img && !!pub.item?.question, "image + question exposées");
   assert(!("answer" in (pub.item as object)), "réponse jamais exposée en question");
   eq(pub.correctText, null, "pas de correctText en question");
 });

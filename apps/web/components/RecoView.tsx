@@ -240,6 +240,15 @@ export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boole
           </div>
         </div>
 
+        {(game.phase === "question" || game.phase === "reveal") && !item && game.total === 0 && (
+          <div className="mx-auto max-w-lg rounded-2xl border border-gold/40 bg-gold/[0.06] p-5 text-center">
+            <p className="font-display text-lg font-bold text-gold">Aucune image trouvée</p>
+            <p className="mt-2 text-sm text-text-muted">
+              Dépose tes images dans <span className="font-mono">apps/web/public/reco/</span> et décris-les
+              dans <span className="font-mono">images.txt</span>, puis relance (ou redéploie) le serveur.
+            </p>
+          </div>
+        )}
         {(game.phase === "question" || game.phase === "reveal") && item && (
           <div className="animate-pop">
             {/* IMAGE réelle — élément principal (pixelisée si mode Pixel incoming) */}

@@ -547,7 +547,7 @@ async function main() {
   await sleep(80);
   const rcp = () => ra.last()?.game as import("@subtitles-party/shared").RecoPublic | undefined;
   check("l'hôte lance Reconnaissance", ra.last()?.gameId === "reco");
-  check("sujet + question diffusés", !!rcp()?.item?.wiki && !!rcp()?.item?.question);
+  check("image + question diffusées", !!rcp()?.item?.img && !!rcp()?.item?.question);
   check("la réponse n'est pas exposée en question", (rcp()?.item as any)?.answer === undefined);
   ra.send({ type: "game", action: { kind: "answer", value: "x" } });
   await sleep(50);

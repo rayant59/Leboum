@@ -38,7 +38,6 @@ export interface DrawMode {
 
 const CONSTRAINTS: { label: string; rule: string | null }[] = [
   { label: "Une seule couleur 🎨", rule: "one_color" },
-  { label: "Que des lignes et des ronds ⭕", rule: "only_shapes" },
   { label: "Effet miroir 🪞", rule: "mirror" },
   { label: "Ça tremble ! 🫨", rule: "shake" },
   { label: "Curseur inversé 🔄", rule: "inverted" },

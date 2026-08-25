@@ -1,16 +1,16 @@
-📸 TES PROPRES IMAGES POUR "RECONNAISSANCE" ET "PIXEL INCOMING"
-==============================================================
+📸 TES IMAGES POUR "RECONNAISSANCE" ET "PIXEL INCOMING"
+=======================================================
 
-C'EST ICI que tu déposes tes photos. Deux étapes, c'est tout :
+⚠️ IMPORTANT : les deux jeux utilisent EXCLUSIVEMENT les images de ce
+dossier. Il n'y a plus aucune image venant de Wikipédia/Internet.
+Tout ce que tu ajoutes ici devient jouable.
 
+DEUX ÉTAPES
+-----------
   1) Copie tes images DANS CE DOSSIER (public/reco/)
         exemples : luffy.png, logo-nike.jpg, scene-titanic.png
 
-  2) Décris-les dans le fichier "images.txt" (même dossier), une par ligne :
-
-        luffy.png = Luffy | monkey d luffy
-        logo-nike.jpg | Quelle marque ? = Nike
-        scene-titanic.png | De quel film vient cette scène ? = Titanic
+  2) Décris-les dans "images.txt" (même dossier), une par ligne.
 
 FORMAT
 ------
@@ -22,15 +22,33 @@ FORMAT
   - La casse, les accents et les fautes légères sont déjà tolérés.
   - Lignes vides et lignes commençant par # : ignorées.
 
+CATÉGORIES
+----------
+  Une ligne  == Nom ==  regroupe toutes les images qui suivent :
+
+        == Anime ==
+        naruto.png = Naruto
+        luffy.png = Luffy
+
+        == Films ==
+        titanic.png | Quel film ? = Titanic
+
+  Les catégories servent de filtre dans l'écran de configuration.
+  Sans section, les images vont dans la catégorie "Perso".
+
+CONSEILS POUR LES NOMS DE FICHIERS
+----------------------------------
+  - Évite les accents et les espaces (utilise - ou _).
+  - Formats : .png .jpg .jpeg .webp .gif
+  - Le nom du fichier n'est jamais montré aux joueurs.
+
 BON À SAVOIR
 ------------
-  - Ces sujets S'AJOUTENT à la banque existante (rien n'est retiré).
-  - Ils tombent aussi bien en Reconnaissance qu'en Pixel incoming.
-  - Contrairement à Wikipédia, TOUT est possible ici : anime, films,
-    logos, memes, voitures, joueurs, scènes… C'est le seul moyen d'avoir
-    de la pop-culture en image.
-  - Le serveur te prévient au démarrage si un fichier est introuvable.
+  - Le serveur te prévient au démarrage :
+        [reco-images] N sujet(s) perso chargé(s)
+    et signale tout fichier introuvable (faute de frappe).
   - Après ajout : relance le serveur (dev:server) ou redéploie-le.
+    Un simple déploiement du site NE SUFFIT PAS.
 
 CONSEIL "BONNE IMAGE DE JEU"
 ----------------------------

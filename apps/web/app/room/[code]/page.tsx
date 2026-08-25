@@ -503,22 +503,16 @@ export default function LobbyPage() {
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {[
                   { id: "all", label: "Toutes" },
-                  { id: "Perso", label: "📸 Mes images" },
-                  { id: "Personnalités", label: "Personnalités" },
-                  { id: "Animaux", label: "Animaux" },
-                  { id: "Monuments", label: "Monuments" },
-                  { id: "Lieux", label: "Lieux" },
-                  { id: "Art", label: "Œuvres d'art" },
-                  { id: "Astronomie", label: "Astronomie" },
-                  { id: "Nature", label: "Nature" },
-                  { id: "Instruments", label: "Instruments" },
-                  { id: "Véhicules", label: "Véhicules" },
-                  { id: "Objets", label: "Objets" },
-                  { id: "Nourriture", label: "Nourriture" },
+                  { id: "Disney", label: "Disney" },
+                  { id: "Animation", label: "Animation" },
+                  { id: "Anime", label: "Anime" },
+                  { id: "Films", label: "Films" },
+                  { id: "Jeux vidéo", label: "Jeux vidéo" },
                 ].map((c) => (
                   <button key={c.id} onClick={() => setRecoCat(c.id)} disabled={!isHost} className={`rounded-lg border py-2 text-sm font-medium transition-colors ${recoCat === c.id ? "border-gold bg-gold/[0.08] text-gold" : "border-ink-border bg-ink-surface"}`}>{c.label}</button>
                 ))}
               </div>
+              <p className="mt-2 text-xs text-text-faint">Les images viennent de ton dossier <span className="font-mono">public/reco/</span>. Une catégorie vide bascule sur « Toutes ».</p>
             </div>
           </div>
           </div>
