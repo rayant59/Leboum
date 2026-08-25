@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 
 const SCENES = [
   { key: "intro", dur: 2600, accent: "#FFC24B", eyebrow: "BOUM" },
-  { key: "subs", dur: 2800, accent: "#FFC24B", eyebrow: "SOUS-TITRES" },
   { key: "draw", dur: 2800, accent: "#FF4D8D", eyebrow: "DESSIN & DEVINETTE" },
   { key: "dub", dur: 2400, accent: "#46E0B0", eyebrow: "DOUBLAGE" },
   { key: "quiz", dur: 2800, accent: "#8B7DF6", eyebrow: "QUIZ" },
@@ -81,14 +80,6 @@ export function BoumTrailer({ onClose, onCreate }: { onClose: () => void; onCrea
           </div>
         )}
 
-        {scene.key === "subs" && (
-          <div className="bt-card bt-screen" style={{ ["--a" as string]: scene.accent }}>
-            <div className="bt-play"><svg width="34" height="34" viewBox="0 0 24 24" fill="#0E0B1A"><path d="M8 5v14l11-7z" /></svg></div>
-            <div className="bt-caption"><span className="bt-type">« On fait quoi ce soir&nbsp;? »</span><i className="bt-caret" /></div>
-            <p className="bt-line">Invente les dialogues d&apos;une scène muette</p>
-          </div>
-        )}
-
         {scene.key === "draw" && (
           <div className="bt-card" style={{ ["--a" as string]: scene.accent }}>
             <svg className="bt-house" width="150" height="140" viewBox="0 0 150 140" fill="none" stroke="#FF4D8D" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
@@ -136,7 +127,7 @@ export function BoumTrailer({ onClose, onCreate }: { onClose: () => void; onCrea
         {scene.key === "final" && (
           <div className="bt-final">
             <div className="bt-fan">
-              {["subtitles", "draw", "doublage", "quiz", "reco"].map((g, k) => (
+              {["draw", "doublage", "quiz", "reco", "pixel"].map((g, k) => (
                 <img key={g} src={`/games/${g}.png`} alt="" className="bt-fanimg" draggable={false} style={{ ["--k" as string]: k - 2 }} />
               ))}
             </div>

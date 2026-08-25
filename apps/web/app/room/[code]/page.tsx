@@ -83,12 +83,18 @@ export default function LobbyPage() {
   const [recoCat, setRecoCat] = useState("all");
   useEffect(() => setName(getPlayerName()), []);
 
-  // `?create=1` (set by the home page) authorises room creation server-side.
-  // Read straight off the URL: avoids useSearchParams' Suspense requirement.
-  const wantsCreate = useMemo(
-    () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("create") === "1",
-    [],
-  );
+  // Autorisation de créer le salon, posée par l'accueil dans sessionStorage.
+  // On NE peut PAS se fier à window.location au montage : lors d'une navigation
+  // Next, le composant se rend avant que l'URL soit commitée.
+  const wantsCreate = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      if (sessionStorage.getItem(`boum:create:${code}`) === "1") return true;
+    } catch {
+      /* sessionStorage indisponible */
+    }
+    return new URLSearchParams(window.location.search).get("create") === "1";
+  }, [code]);
   const room = useRoom(code, wantsCreate);
   useGameSounds(room);
   // Show a networking hint if the socket doesn't connect (LAN firewall, etc.).
@@ -369,7 +375,7 @@ export default function LobbyPage() {
       {isHost && (
         <section className="mb-8">
           <p className="eyebrow mb-2 px-1">Jeu</p>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="game-picker-grid">
             {(
               [
                 { id: "draw", img: "/games/draw.png", label: "Dessin & Devinette", players: "2–8", desc: "Dessine le mot secret, les autres devinent — avec ses variantes.", tint: "#FF4D8D", tintBg: "rgba(255,77,141,0.12)", tintBorder: "rgba(255,77,141,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 5.6l3.9 3.9" /><path d="M4 20l1.3-4.4L15.7 5.2a1.9 1.9 0 0 1 2.7 0l.4.4a1.9 1.9 0 0 1 0 2.7L8.4 18.7 4 20Z" /></svg> },

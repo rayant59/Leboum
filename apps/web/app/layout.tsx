@@ -17,7 +17,7 @@ const mono = Space_Mono({
 export const metadata: Metadata = {
   title: "Boum — le party-game entre amis",
   description:
-    "Des jeux de soirée entre amis : sous-titres, dessin, faux-artiste, relais, doublage. Aucun compte, jouable au téléphone.",
+    "Des jeux de soirée entre amis : dessin, faux-artiste, relais, doublage, quiz, images à deviner. Aucun compte, jouable au téléphone.",
 };
 
 export const viewport: Viewport = {

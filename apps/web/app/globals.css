@@ -213,9 +213,12 @@
 .pl-ring { width: 36px; height: 36px; border-radius: 11px; border: 1px dashed #453a70; display: grid; place-items: center; flex: none; }
 
 /* Vitrine des jeux (accueil) : 2 → 3 → 5 colonnes strictement égales */
-.showcase-grid { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-@media (min-width: 640px) { .showcase-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (min-width: 1024px) { .showcase-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+/* Flex plutôt que grid : la rangée reste CENTRÉE quel que soit le nombre de
+   cartes (une grille à N colonnes laisse un trou à droite s'il en manque). */
+.showcase-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.showcase-grid > * { flex: 0 1 calc(50% - 6px); }
+@media (min-width: 640px) { .showcase-grid > * { flex: 0 1 calc(33.333% - 8px); } }
+@media (min-width: 1024px) { .showcase-grid > * { flex: 0 1 205px; } }
 
 /* Barre repliable "Thèmes" bien visible + CTA qui attire l'œil */
 .cfg-collapse { width: 100%; display: flex; align-items: center; gap: 12px; padding: 15px 16px; border-radius: 16px; border: 1px solid #3a2f66; background-image: linear-gradient(165deg, rgba(37,28,69,.72), rgba(24,19,47,.72)); cursor: pointer; transition: border-color .2s, transform .12s, box-shadow .2s; text-align: left; }
@@ -238,3 +241,10 @@
   100% { transform: translate(0, 0) rotate(0deg); }
 }
 .animate-canvasshake { animation: canvasshake 0.28s linear infinite; }
+
+/* Sélecteur de jeu : rangée centrée quel que soit le nombre de cartes
+   (une grille à N colonnes laisserait un trou à droite sur la dernière ligne). */
+.game-picker-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
+.game-picker-grid > * { flex: 0 1 100%; }
+@media (min-width: 640px) { .game-picker-grid > * { flex: 0 1 calc(50% - 8px); } }
+@media (min-width: 1024px) { .game-picker-grid > * { flex: 0 1 calc(33.333% - 11px); } }

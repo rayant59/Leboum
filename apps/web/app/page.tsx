@@ -7,7 +7,7 @@ import { generateRoomCode, isValidRoomCode, sanitizeName } from "@subtitles-part
 import { getPlayerName, setPlayerName } from "@/lib/identity";
 
 const TAGLINES = [
-  "...à toi d'écrire la suite",
+  "...devine l'image pixel par pixel",
   "...devine ce que je dessine",
   "...démasque l'imposteur",
   "...improvise les voix",
@@ -85,8 +85,13 @@ export default function HomePage() {
     if (!clean) { setError("Choisis un pseudo pour continuer."); return; }
     setPlayerName(clean);
     burst();
-    // `?create=1` authorises the server to bring this room into existence.
-    // Without it, typing a random code in the URL just says "salon introuvable".
+    // Autorisation de CRÉER le salon. On la pose dans sessionStorage plutôt que
+    // dans l'URL : lors d'une navigation Next, la page cible se rend AVANT que
+    // window.location soit à jour, donc lire ?create=1 au montage échoue.
+    // (le paramètre d'URL est conservé en secours, ex. lien ouvert directement)
+    if (creating) {
+      try { sessionStorage.setItem(`boum:create:${roomCode}`, "1"); } catch {}
+    }
     const href = creating ? `/room/${roomCode}?create=1` : `/room/${roomCode}`;
     setTimeout(() => router.push(href), 450);
   }
@@ -160,7 +165,7 @@ export default function HomePage() {
             <span style={{ display: "inline-block", marginLeft: 4, verticalAlign: "top", fontSize: 34, animation: "wiggle 2.6s ease-in-out 0.9s infinite", transformOrigin: "60% 80%" }}>🎉</span>
           </h1>
           <p style={{ maxWidth: 448, margin: "16px auto 0", color: "#A79FC7", lineHeight: 1.5, opacity: 0, animation: "fadeUp 0.6s ease 0.32s both" }}>
-            Le party-game entre amis. Une salle, un code à partager, et une soirée de jeux absurdes — dessin, impro, doublage et plus. <span style={{ color: "#6E6796" }}>Aucun compte, jouable au téléphone.</span>
+            Le party-game entre amis. Une salle, un code à partager, et une soirée de jeux absurdes — dessin, doublage, quiz et images à deviner. <span style={{ color: "#6E6796" }}>Aucun compte, jouable au téléphone.</span>
           </p>
         </header>
 
