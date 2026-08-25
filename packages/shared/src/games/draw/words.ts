@@ -248,6 +248,8 @@ export function pickWordEntries(
   count: number,
   rng: () => number = Math.random,
   themes?: string[],
+  /** Mots déjà proposés dans la partie — ils ne peuvent plus ressortir. */
+  exclude?: readonly string[],
 ): WordEntry[] {
   const shuffle = <T>(arr: T[]): T[] => {
     for (let i = arr.length - 1; i > 0; i--) {
@@ -267,6 +269,13 @@ export function pickWordEntries(
   // words are kept. They stay available whatever the theme selection.
   if (CUSTOM_WORDS && CUSTOM_WORDS.length) {
     pool = [...pool, ...CUSTOM_WORDS];
+  }
+  // Drop everything already used this game. If that would leave too little to
+  // choose from, we relax (a very long game shouldn't dead-end).
+  if (exclude && exclude.length) {
+    const used = new Set(exclude);
+    const fresh = pool.filter((e) => !used.has(e.word));
+    if (fresh.length >= count) pool = fresh;
   }
   count = Math.max(1, count);
 

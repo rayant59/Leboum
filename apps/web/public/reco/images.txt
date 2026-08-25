@@ -1,11 +1,28 @@
 # Tes images perso pour Reconnaissance / Pixel incoming
 # Format :  fichier.png = Réponse | alias1 | alias2
 #           fichier.png | Ta question ? = Réponse | alias1
-#
-# Dépose l'image dans CE dossier (public/reco/) puis ajoute sa ligne ici.
-# Voir README.txt pour tous les détails.
-#
-# Exemples (décommente/remplace par les tiens) :
-# luffy.png = Luffy | monkey d luffy
-# logo-nike.jpg | Quelle marque ? = Nike
-# scene-titanic.png | De quel film vient cette scène ? = Titanic
+# Voir README.txt pour les détails.
+
+# ── Disney / Pixar ─────────────────────────────────────────
+Belle.jpg | Quelle princesse Disney est-ce ? = Belle | belle | la belle et la bete
+Gaston.jpg | Comment s'appelle ce méchant de « La Belle et la Bête » ? = Gaston | gaston
+Cruella.jpg | Quelle méchante Disney est-ce ? = Cruella | cruella d enfer | cruella denfer
+Malefique.png | Comment s'appelle cette sorcière de « La Belle au bois dormant » ? = Maléfique | malefique | maleficent
+Minnie_Mouse.jpg | Qui est ce personnage Disney ? = Minnie | minnie mouse | minnie
+Daisy_Duck.png | Comment s'appelle cette cane, petite amie de Donald ? = Daisy | daisy duck | daisy
+Geppetto.jpg | Comment s'appelle le créateur de Pinocchio ? = Geppetto | gepetto | geppetto
+Le_Prince_Florian.jpg | De quel film Disney vient ce prince ? = Blanche-Neige | blanche neige | blanche-neige et les sept nains
+Raya.jpg | Quelle héroïne Disney est-ce ? = Raya | raya | raya et le dernier dragon
+Timon_et_Pumbaa.jpg | Comment s'appelle ce duo du « Roi Lion » ? = Timon et Pumbaa | timon et pumba | timon pumbaa | timon and pumbaa
+Tarzan.jpg | Quel personnage Disney a été élevé par des gorilles ? = Tarzan | tarzan
+Jessie.png | Comment s'appelle cette cowgirl de « Toy Story » ? = Jessie | jessie | jessy
+Mary_Poppins.webp | Quelle nounou magique est-ce ? = Mary Poppins | mary poppins
+Hector_Barbossa.webp | De quelle saga de films vient ce pirate ? = Pirates des Caraïbes | pirates des caraibes | pirates of the caribbean
+Kim_Possible.jpg | Comment s'appelle cette héroïne de dessin animé Disney ? = Kim Possible | kim possible | kim
+
+# ── Autres univers ─────────────────────────────────────────
+Casper.jpg | Comment s'appelle ce gentil fantôme ? = Casper | casper
+Eric_cartman.png | De quelle série animée vient ce personnage ? = South Park | south park
+Jimmy_Neutron.jpg | Comment s'appelle ce petit génie de dessin animé ? = Jimmy Neutron | jimmy neutron | jimmy
+Le_Titan_Cuirasse.webp | De quel anime vient ce titan ? = L'Attaque des Titans | attaque des titans | shingeki no kyojin | aot | snk
+Prince_of_Persia__Dastan_.webp | De quel jeu vidéo vient ce héros ? = Prince of Persia | prince of persia | prince de perse

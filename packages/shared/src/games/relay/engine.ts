@@ -73,9 +73,10 @@ function startTurn(state: RelayState, pairStart: number, ctx: GameContext): Rela
   const n = state.order.length;
   const drawerIds =
     n <= 1 ? state.order.slice() : [state.order[pairStart % n], state.order[(pairStart + 1) % n]];
-  const [entry] = pickWordEntries(1, ctx.rng);
+  const [entry] = pickWordEntries(1, ctx.rng, undefined, state.usedWords ?? []);
   return {
     ...state,
+    usedWords: [...(state.usedWords ?? []), entry.word],
     phase: "drawing",
     pairStart,
     drawerIds,
@@ -106,6 +107,7 @@ export function createRelay(players: GamePlayer[], settings: RelaySettings, ctx:
     word: null,
     theme: null,
     wordPattern: "",
+    usedWords: [],
     guessedAt: {},
     scores,
     deadline: null,

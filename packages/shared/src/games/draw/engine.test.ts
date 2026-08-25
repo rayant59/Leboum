@@ -288,5 +288,31 @@ test("un joueur qui rejoint en cours de manche devient un vrai joueur (pas un fa
   s = reduceDraw(s, { type: "client", playerId: "newbie", msg: { kind: "guess", text: s.word! } }, ctx(1400)).state;
   eq(s.guessedAt["newbie"] != null, true, "sa bonne réponse est validée");
 });
+
+test("aucun mot ne peut réapparaître pendant toute la partie", () => {
+  let s = createDrawGame(players, { totalRounds: 12, mode: "classic" }, ctx(0));
+  const seen = new Set<string>();
+  let repeats = 0;
+  const note = () => {
+    for (const w of s.wordChoices) {
+      if (seen.has(w)) repeats++;
+      seen.add(w);
+    }
+  };
+  note();
+  let t = 1000;
+  let guard = 0;
+  while (s.phase !== "scoreboard" && guard++ < 200) {
+    if (s.phase === "choosing") {
+      s = reduceDraw(s, choose(s.drawerId!, s.wordChoices[0]), ctx((t += 100))).state;
+    } else {
+      s = reduceDraw(s, { type: "advance" }, ctx((t += 100))).state;
+      if (s.phase === "choosing") note();
+    }
+  }
+  eq(repeats, 0, "un mot a été reproposé pendant la partie");
+  assert(seen.size > 20, `trop peu de mots proposés (${seen.size})`);
+});
+
 console.log(`\n${passed} réussis, ${failed} échoués\n`);
 if (failed > 0) process.exit(1);

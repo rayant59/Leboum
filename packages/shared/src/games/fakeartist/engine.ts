@@ -30,7 +30,8 @@ function startRound(
   base: Omit<FakeArtistState, "phase" | "word" | "theme" | "impostorId" | "decoy" | "votes" | "deadline" | "result">,
   ctx: GameContext,
 ): FakeArtistState {
-  const [entry] = pickWordEntries(1, ctx.rng);
+  const used = base.usedWords ?? [];
+  const [entry] = pickWordEntries(1, ctx.rng, undefined, used);
   // Decoy word given to the impostor: same theme, different word ("en rapport"
   // but not the real one) so they can bluff more convincingly.
   const sameTheme = pickWordEntries(8, ctx.rng, [entry.theme]).filter((e) => e.word !== entry.word);
@@ -39,6 +40,7 @@ function startRound(
   const impostor = base.players[Math.floor(ctx.rng() * base.players.length)]?.id ?? null;
   return {
     ...base,
+    usedWords: [...used, entry.word],
     phase: "drawing",
     word: entry.word,
     theme: entry.theme,
@@ -59,7 +61,7 @@ export function createFakeArtist(
   const scores: Record<PlayerId, number> = {};
   for (const p of players) scores[p.id] = 0;
   return startRound(
-    { round: 1, totalRounds: config.totalRounds, players, scores, config },
+    { round: 1, totalRounds: config.totalRounds, players, scores, config, usedWords: [] },
     ctx,
   );
 }
@@ -149,6 +151,7 @@ function nextRound(state: FakeArtistState, ctx: GameContext): FakeArtistState {
       totalRounds: state.totalRounds,
       players: state.players,
       scores: state.scores,
+      usedWords: state.usedWords ?? [],
       config: state.config,
     },
     ctx,

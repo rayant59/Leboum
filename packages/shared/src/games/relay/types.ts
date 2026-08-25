@@ -35,6 +35,8 @@ export interface RelayState {
   word: string | null;
   theme: string | null;
   wordPattern: string;
+  /** Mots déjà utilisés cette partie (jamais rejoués). */
+  usedWords: string[];
   guessedAt: Record<PlayerId, number>;
   scores: Record<PlayerId, number>;
   deadline: number | null; // phase end

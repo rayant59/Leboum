@@ -29,6 +29,8 @@ export interface FakeArtistState {
   totalRounds: number;
   players: GamePlayer[];
   word: string; // the secret word (every real player sees it; impostor doesn't)
+  /** Mots déjà utilisés cette partie (jamais rejoués). */
+  usedWords: string[];
   theme: string;
   impostorId: PlayerId | null;
   decoy: string; // related-but-wrong word shown to the impostor

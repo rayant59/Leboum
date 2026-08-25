@@ -112,6 +112,7 @@ export function createDrawGame(
     config,
     mode: getDrawMode(settings.mode).id,
     wordThemes: settings.themes ?? [],
+    usedWords: entries.map((e) => e.word),
   };
 }
 
@@ -273,7 +274,7 @@ function nextTurn(state: DrawState, ctx: GameContext): DrawState {
   if (round > state.totalRounds) {
     return { ...state, phase: "scoreboard", drawerId: null, deadline: null, result: null, themeRevealed: false, finished: false };
   }
-  const entries = pickWordEntries(state.config.wordChoiceCount, ctx.rng, state.wordThemes);
+  const entries = pickWordEntries(state.config.wordChoiceCount, ctx.rng, state.wordThemes, state.usedWords);
   return {
     ...state,
     phase: "choosing",
@@ -284,6 +285,7 @@ function nextTurn(state: DrawState, ctx: GameContext): DrawState {
     wordPattern: "",
     wordChoices: entries.map((e) => e.word),
     choicePool: entries,
+    usedWords: [...state.usedWords, ...entries.map((e) => e.word)],
     theme: null,
     themeRevealed: false,
     finished: false,

@@ -56,6 +56,8 @@ export interface DrawState {
   config: DrawConfig;
   mode: string;
   wordThemes: string[]; // active theme filter (empty = all)
+  /** Tous les mots déjà PROPOSÉS cette partie : ils ne ressortent jamais. */
+  usedWords: string[];
 }
 
 /** What a client may send. */
