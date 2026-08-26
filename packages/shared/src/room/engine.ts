@@ -176,10 +176,11 @@ export function reduce(state: RoomState, action: RoomAction): ReduceResult {
       const readyConnected = state.playerOrder.filter(
         (id) => state.players[id]?.isConnected && state.players[id]?.isReady,
       );
-      if (readyConnected.length < state.config.minReadyToStart) {
+      const needed = minReadyFor(state, action.gameId);
+      if (readyConnected.length < needed) {
         return reject(state, {
           code: "not_enough_ready",
-          message: `Il faut au moins ${state.config.minReadyToStart} joueurs prêts.`,
+          message: `Il faut au moins ${needed} joueur${needed > 1 ? "s" : ""} prêt${needed > 1 ? "s" : ""}.`,
         });
       }
       return ok({ ...state, phase: "in_game", gameId: action.gameId });
@@ -223,11 +224,20 @@ function transferHostIfNeeded(state: RoomState, affectedId: string): RoomState {
 
 // --- read-model helpers (used by UI; kept here so rules live in one place) ---
 
-export function canStart(state: RoomState): boolean {
+/** Jeux jouables en solo (utile pour tester, et parfaitement jouable seul). */
+const SOLO_FRIENDLY_GAMES = new Set(["quiz", "reco", "pixel"]);
+
+/** Nombre de joueurs prêts requis pour lancer `gameId`. */
+export function minReadyFor(state: RoomState, gameId?: string | null): number {
+  if (gameId && SOLO_FRIENDLY_GAMES.has(gameId)) return 1;
+  return state.config.minReadyToStart;
+}
+
+export function canStart(state: RoomState, gameId?: string | null): boolean {
   const readyConnected = state.playerOrder.filter(
     (id) => state.players[id]?.isConnected && state.players[id]?.isReady,
   ).length;
-  return state.phase === "lobby" && readyConnected >= state.config.minReadyToStart;
+  return state.phase === "lobby" && readyConnected >= minReadyFor(state, gameId);
 }
 
 export function connectedPlayers(state: RoomState): Player[] {

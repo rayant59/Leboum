@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { canStart, sanitizeName, DRAW_THEMES } from "@subtitles-party/shared";
+import { canStart, minReadyFor, sanitizeName, DRAW_THEMES } from "@subtitles-party/shared";
 import { getPlayerName, setPlayerName } from "@/lib/identity";
 import { useRoom } from "@/lib/useRoom";
 import { BoumBackdrop } from "@/components/BoumBackdrop";
@@ -173,7 +173,7 @@ export default function LobbyPage() {
   const players = state ? state.playerOrder.map((id) => state.players[id]).filter(Boolean) : [];
   const readyCount = players.filter((p) => p.isConnected && p.isReady).length;
   const maxPlayers = state?.config.maxPlayers ?? 8;
-  const startable = !!state && canStart(state);
+  const startable = !!state && canStart(state, selectedGame);
 
   async function copyLink() {
     const url = window.location.href;
@@ -381,7 +381,7 @@ export default function LobbyPage() {
                 { id: "draw", img: "/games/draw.png", label: "Dessin & Devinette", players: "2–8", desc: "Dessine le mot secret, les autres devinent — avec ses variantes.", tint: "#FF4D8D", tintBg: "rgba(255,77,141,0.12)", tintBorder: "rgba(255,77,141,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 5.6l3.9 3.9" /><path d="M4 20l1.3-4.4L15.7 5.2a1.9 1.9 0 0 1 2.7 0l.4.4a1.9 1.9 0 0 1 0 2.7L8.4 18.7 4 20Z" /></svg> },
                 { id: "doublage", img: "/games/doublage.png", label: "Doublage", players: "2–10", desc: "Doublez une vidéo à votre sauce et improvisez les voix.", tint: "#46E0B0", tintBg: "rgba(70,224,176,0.12)", tintBorder: "rgba(70,224,176,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M6 11a6 6 0 0 0 12 0" /><path d="M12 17v3.2" /><path d="M9 20.2h6" /></svg> },
                 { id: "quiz", img: "/games/quiz.png", label: "Quiz", players: "2–8", desc: "Répondez à des questions et montrez votre culture !", tint: "#8B7DF6", tintBg: "rgba(139,125,246,0.14)", tintBorder: "rgba(139,125,246,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4" /><circle cx="12" cy="17.5" r="0.6" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="9" /></svg> },
-                { id: "reco", img: "/games/reco.png", label: "Reconnaissance", players: "2–8", desc: "Devinez le personnage, le film, le lieu et bien plus.", tint: "#4CC9F0", tintBg: "rgba(76,201,240,0.14)", tintBorder: "rgba(76,201,240,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="14" rx="2.5" /><circle cx="9" cy="10" r="2" /><path d="M4 17l4.5-4 3 2.5L15 12l5 4.5" /></svg> },
+                { id: "reco", img: "/games/reco.png", label: "Reconnaissance", players: "1–12", desc: "Devinez le personnage, le film, le lieu et bien plus.", tint: "#4CC9F0", tintBg: "rgba(76,201,240,0.14)", tintBorder: "rgba(76,201,240,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="14" rx="2.5" /><circle cx="9" cy="10" r="2" /><path d="M4 17l4.5-4 3 2.5L15 12l5 4.5" /></svg> },
                 { id: "pixel", img: "/games/pixel.png", label: "Pixel incoming", players: "1–12", desc: "Une image se dévoile pixel par pixel — devine le plus vite possible !", tint: "#46E0B0", tintBg: "rgba(70,224,176,0.12)", tintBorder: "rgba(70,224,176,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="6" height="6"/><rect x="15" y="3" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/><rect x="3" y="15" width="6" height="6"/><rect x="15" y="15" width="6" height="6"/></svg> },
               ] as const
             ).map((c) => {
@@ -495,7 +495,7 @@ export default function LobbyPage() {
           <div className="cfg-grp">
             <div className="cfg-head">
               <span className="cfg-ic" style={{ background: "rgba(76,201,240,0.14)", color: "#4CC9F0", borderColor: "rgba(76,201,240,0.4)" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="14" rx="2.5" /><circle cx="9" cy="10" r="2" /><path d="M4 17l4.5-4 3 2.5L15 12l5 4.5" /></svg></span>
-              <div><h2 className="cfg-tt">Réglages de la Reconnaissance</h2><span className="cfg-sub">Vraies images · réponse libre</span></div>
+              <div><h2 className="cfg-tt">{selectedGame === "pixel" ? "Réglages de Pixel incoming" : "Réglages de la Reconnaissance"}</h2><span className="cfg-sub">{selectedGame === "pixel" ? "L'image se dévoile pixel par pixel" : "Tes images · réponse libre"}</span></div>
             </div>
           <div className="panel space-y-3 p-4">
             <p className="text-sm text-text-muted">
@@ -743,7 +743,7 @@ export default function LobbyPage() {
 
       {isHost && !startable && (
         <p className="mt-3 text-center text-xs text-text-faint">
-          Il faut {state?.config.minReadyToStart ?? 2} joueurs prêts pour lancer.
+          {(() => { const n = state ? minReadyFor(state, selectedGame) : 2; return `Il faut ${n} joueur${n > 1 ? "s" : ""} prêt${n > 1 ? "s" : ""} pour lancer.`; })()}
         </p>
       )}
       {profileOpen && me && (

@@ -185,9 +185,10 @@ export default function HomePage() {
           <button
             className="arc arc-p arc-block"
             onClick={create}
-            style={{ marginTop: 16, fontSize: 16 }}
+            style={{ marginTop: 16, fontSize: 16, position: "relative", overflow: "hidden" }}
           >
             Créer une partie
+            <span aria-hidden="true" className="btn-sheen" />
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16, fontSize: 12, color: "#6E6796" }}>
             <span style={{ height: 1, flex: 1, background: "#332A5A" }} />
@@ -203,8 +204,9 @@ export default function HomePage() {
               placeholder="CODE"
               style={{ width: 128, borderRadius: 8, border: "1px solid #332A5A", background: "#0E0B1A", padding: "10px 14px", textAlign: "center", fontFamily: "'Space Mono', monospace", fontSize: 18, letterSpacing: "0.3em", color: "#F3EEFF", outline: "none", transition: "border-color 0.15s" }}
             />
-            <button className="arc arc-mag" onClick={join} style={{ flex: 1, fontSize: 16 }}>
+            <button className="arc arc-mag" onClick={join} style={{ flex: 1, fontSize: 16, position: "relative", overflow: "hidden" }}>
               Rejoindre
+              <span aria-hidden="true" className="btn-sheen" />
             </button>
           </div>
           {error && <p role="alert" style={{ margin: "12px 0 0", fontSize: 14, color: "#FF5C5C", animation: "fadeUp 0.3s ease both" }}>{error}</p>}
@@ -214,7 +216,9 @@ export default function HomePage() {
             onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(255,194,75,0.55)"; e.currentTarget.style.color = "#FFC24B"; }}
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#332A5A"; e.currentTarget.style.color = "#C9C2E6"; }}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+            <span style={{ position: "relative", display: "grid", placeItems: "center", width: 20, height: 20, borderRadius: "50%", border: "1px solid currentColor" }}>
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 1 }}><path d="M8 5v14l11-7z" /></svg>
+            </span>
             Bande-annonce
           </button>
           <p style={{ margin: "16px 0 0", textAlign: "center", fontSize: 12, color: "#6E6796" }}>Le choix du jeu se fait dans la salle, une fois vos amis arrivés.</p>

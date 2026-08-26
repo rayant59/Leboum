@@ -248,3 +248,11 @@
 .game-picker-grid > * { flex: 0 1 100%; }
 @media (min-width: 640px) { .game-picker-grid > * { flex: 0 1 calc(50% - 8px); } }
 @media (min-width: 1024px) { .game-picker-grid > * { flex: 0 1 calc(33.333% - 11px); } }
+
+/* Balayage lumineux sur les boutons principaux (menu). */
+@keyframes sheen { 0% { transform: translateX(-60px); } 100% { transform: translateX(var(--sheen-end, 460px)); } }
+.btn-sheen {
+  position: absolute; top: 0; bottom: 0; left: 0; width: 42px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+  animation: sheen 4.2s ease-in-out 1.6s infinite;
+}
