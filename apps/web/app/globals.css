@@ -215,10 +215,10 @@
 /* Vitrine des jeux (accueil) : 2 → 3 → 5 colonnes strictement égales */
 /* Flex plutôt que grid : la rangée reste CENTRÉE quel que soit le nombre de
    cartes (une grille à N colonnes laisse un trou à droite s'il en manque). */
-.showcase-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
+.showcase-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
 .showcase-grid > * { flex: 0 1 calc(50% - 6px); }
 @media (min-width: 640px) { .showcase-grid > * { flex: 0 1 calc(33.333% - 8px); } }
-@media (min-width: 1024px) { .showcase-grid > * { flex: 0 1 224px; } }
+@media (min-width: 1024px) { .showcase-grid > * { flex: 0 1 231px; } }
 
 /* Barre repliable "Thèmes" bien visible + CTA qui attire l'œil */
 .cfg-collapse { width: 100%; display: flex; align-items: center; gap: 12px; padding: 15px 16px; border-radius: 16px; border: 1px solid #3a2f66; background-image: linear-gradient(165deg, rgba(37,28,69,.72), rgba(24,19,47,.72)); cursor: pointer; transition: border-color .2s, transform .12s, box-shadow .2s; text-align: left; }
