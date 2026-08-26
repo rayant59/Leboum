@@ -151,26 +151,26 @@ export default function HomePage() {
         ))}
       </div>
 
-      <main style={{ position: "relative", zIndex: 1, maxWidth: 768, margin: "0 auto", padding: "40px 20px" }}>
+      <main style={{ position: "relative", zIndex: 1, maxWidth: 1280, margin: "0 auto", padding: "28px 20px 40px" }}>
         {/* hero */}
-        <header style={{ marginBottom: 32, textAlign: "center" }}>
+        <header style={{ marginBottom: 22, textAlign: "center" }}>
           <div style={{ marginBottom: 20, display: "flex", justifyContent: "center", opacity: 0, animation: "fadeUp 0.6s ease 0.05s both" }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 8, borderRadius: 6, background: "rgba(0,0,0,0.85)", padding: "6px 12px", fontFamily: "'Space Mono', monospace", fontSize: 14, letterSpacing: "0.03em", boxShadow: "0 2px 0 rgba(0,0,0,0.4)" }}>
               <span key={ti} style={{ color: "#F3EEFF", display: "inline-block", animation: "tagIn 0.45s ease both" }}>{TAGLINES[ti]}</span>
               <span style={{ display: "inline-block", height: 16, width: 2, background: "#FFC24B", animation: "caretBlink 1.1s step-end infinite" }} />
             </span>
           </div>
-          <h1 style={{ margin: 0, fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 76, fontWeight: 800, lineHeight: 0.9, letterSpacing: "-0.03em", opacity: 0, animation: "titlePop 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.15s both" }}>
+          <h1 style={{ margin: 0, fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 64, fontWeight: 800, lineHeight: 0.9, letterSpacing: "-0.03em", opacity: 0, animation: "titlePop 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.15s both" }}>
             B<span style={{ color: "#FFC24B", animation: "goldGlow 3s ease-in-out infinite" }}>ou</span>m
             <span style={{ display: "inline-block", marginLeft: 4, verticalAlign: "top", fontSize: 34, animation: "wiggle 2.6s ease-in-out 0.9s infinite", transformOrigin: "60% 80%" }}>🎉</span>
           </h1>
-          <p style={{ maxWidth: 448, margin: "16px auto 0", color: "#A79FC7", lineHeight: 1.5, opacity: 0, animation: "fadeUp 0.6s ease 0.32s both" }}>
+          <p style={{ maxWidth: 520, margin: "12px auto 0", color: "#A79FC7", lineHeight: 1.5, fontSize: 15, opacity: 0, animation: "fadeUp 0.6s ease 0.32s both" }}>
             Le party-game entre amis. Une salle, un code à partager, et une soirée de jeux absurdes — dessin, doublage, quiz et images à deviner. <span style={{ color: "#6E6796" }}>Aucun compte, jouable au téléphone.</span>
           </p>
         </header>
 
         {/* create / join */}
-        <div style={{ maxWidth: 512, margin: "0 auto", borderRadius: 16, border: "1px solid #332A5A", background: "rgba(28,22,54,0.7)", padding: 20, backdropFilter: "blur(6px)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 34px -20px rgba(0,0,0,0.85)", opacity: 0, animation: "fadeUp 0.6s ease 0.44s both" }}>
+        <div style={{ maxWidth: 470, margin: "0 auto", borderRadius: 16, border: "1px solid #332A5A", background: "rgba(28,22,54,0.7)", padding: 16, backdropFilter: "blur(6px)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 34px -20px rgba(0,0,0,0.85)", opacity: 0, animation: "fadeUp 0.6s ease 0.44s both" }}>
           <label style={{ display: "block" }}>
             <span style={{ marginBottom: 6, display: "block", fontSize: 14, color: "#A79FC7" }}>Ton pseudo</span>
             <input
@@ -225,20 +225,20 @@ export default function HomePage() {
         </div>
 
         {/* games showcase */}
-        <section style={{ marginTop: 48, width: "min(1100px, calc(100vw - 32px))", marginLeft: "50%", transform: "translateX(-50%)" }}>
-          <p style={{ margin: "0 0 16px", textAlign: "center", fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.22em", color: "#6E6796" }}>Les jeux</p>
+        <section style={{ marginTop: 34 }}>
+          <p style={{ margin: "0 0 16px", textAlign: "center", fontFamily: "'Space Mono', monospace", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.22em", color: "#8C84B4" }}>Choisis ton jeu</p>
           <div className="showcase-grid">
             {GAMES.map((g, i) => {
               const a = ACCENTS[g.accent];
               const delay = (0.55 + i * 0.08).toFixed(2) + "s";
               return (
-                <div key={g.name} className="boum-card" style={{ borderRadius: 16, border: `1px solid ${a.tintBorder}`, background: "rgba(28,22,54,0.6)", padding: 12, transition: "transform 0.2s, border-color 0.2s, box-shadow 0.2s", opacity: 0, animation: `fadeUp 0.55s ease ${delay} both` }}>
+                <div key={g.name} className="boum-card" style={{ borderRadius: 16, border: `1px solid ${a.tintBorder}`, background: "rgba(28,22,54,0.6)", padding: 14, transition: "transform 0.2s, border-color 0.2s, box-shadow 0.2s", opacity: 0, animation: `fadeUp 0.55s ease ${delay} both` }}>
                   <div style={{ position: "relative", marginBottom: 12, borderRadius: 12, overflow: "hidden", boxShadow: `0 8px 26px -14px ${a.tint}` }}>
                     <img src={g.img} alt={g.name} style={{ display: "block", width: "100%", aspectRatio: "1 / 1", objectFit: "cover" }} draggable={false} />
                     <span style={{ position: "absolute", top: 8, right: 8, borderRadius: 999, background: "rgba(14,11,26,0.75)", backdropFilter: "blur(4px)", border: "1px solid rgba(255,255,255,0.12)", padding: "2px 8px", fontSize: 11, color: "#F3EEFF" }}>{g.players} joueurs</span>
                   </div>
-                  <h3 style={{ margin: "0 4px", fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 17, fontWeight: 700, color: "#F3EEFF" }}>{g.name}</h3>
-                  <p style={{ margin: "4px 4px 0", fontSize: 13.5, color: "#A79FC7", lineHeight: 1.45 }}>{g.desc}</p>
+                  <h3 style={{ margin: "0 4px", fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 19, fontWeight: 700, color: "#F3EEFF" }}>{g.name}</h3>
+                  <p style={{ margin: "5px 4px 0", fontSize: 14, color: "#A79FC7", lineHeight: 1.5 }}>{g.desc}</p>
                   {g.variants.length > 0 && (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6, margin: "10px 4px 2px" }}>
                       {g.variants.map((v) => (
