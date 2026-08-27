@@ -18,6 +18,7 @@ import { GameSettingsPanel } from "@/components/GameSettingsPanel";
 import { Avatar } from "@/components/Avatar";
 import { ProfileModal } from "@/components/ProfileModal";
 import { SubtitleStrip } from "@/components/SubtitleStrip";
+import { MODE_ICONS } from "./modeIcons";
 
 function PresetStepper({
   label,
@@ -535,12 +536,12 @@ export default function LobbyPage() {
               </div>
               <div className="cfg-modes">
                 {([
-                  { id: "classic", c: "#FFC24B", nm: "Classique", ds: "Un dessine, les autres devinent. Le plus rapide marque le plus.", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 5.6l3.9 3.9" /><path d="M4 20l1.3-4.4L15.7 5.2a1.9 1.9 0 0 1 2.7 0l.4.4a1.9 1.9 0 0 1 0 2.7L8.4 18.7 4 20Z" /></svg> },
-                  { id: "blind", c: "#4CC9F0", nm: "Aveugle", ds: "Tu dessines sans voir ton trait 😅. Plus de temps pour compenser.", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3l18 18" /><path d="M10.6 10.7a2 2 0 0 0 2.8 2.8" /><path d="M9.4 5.2A9.5 9.5 0 0 1 12 5c5 0 9 5 9 7a12 12 0 0 1-2 2.6" /><path d="M6.2 6.7C3.9 8.1 2 10.7 2 12c0 2 4 7 10 7a9 9 0 0 0 3-.5" /></svg> },
-                  { id: "constraints", c: "#8B7DF6", nm: "Contraintes", ds: "Chaque dessin impose une règle absurde (une couleur, sans lever le crayon...).", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="10" width="16" height="10" rx="2.5" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /><path d="M12 14v2.5" /></svg> },
-                  { id: "coop", c: "#46E0B0", nm: "Coopératif", ds: "En équipe : tous vos points sont mis en commun pour un score collectif.", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M11 13.5 8.5 11a2 2 0 0 0-3 2.6L9 18" /><path d="m13 13.5 2.5-2.5a2 2 0 0 1 3 2.6L15 18" /><path d="M12 5.5 9.5 8 12 10.5 14.5 8Z" /></svg> },
-                  { id: "fakeartist", c: "#FF6B6B", nm: "Faux-artiste", ds: "Un imposteur ignore le mot ; démasquez-le au vote.", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8c3-1.5 15-1.5 18 0" /><path d="M4 8c0 5 2 7 4.5 7 1.8 0 2.6-1.2 3.5-2.5.9 1.3 1.7 2.5 3.5 2.5C18 15 20 13 20 8" /><path d="M12 15v3" /><path d="M9 20h6" /></svg> },
-                  { id: "relay", c: "#4CC9F0", nm: "Relais", ds: "Deux joueurs se relaient au crayon, rotation auto.", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h11a4 4 0 0 1 0 8H7" /><path d="M7 4 4 7l3 3" /><path d="M17 13l3 3-3 3" /></svg> },
+                  { id: "classic", c: "#FFC24B", nm: "Classique", ds: "Un dessine, les autres devinent. Le plus rapide marque le plus.", img: MODE_ICONS.classique },
+                  { id: "blind", c: "#4CC9F0", nm: "Aveugle", ds: "Tu dessines sans voir ton trait 😅. Plus de temps pour compenser.", img: MODE_ICONS.aveugle },
+                  { id: "constraints", c: "#8B7DF6", nm: "Contraintes", ds: "Chaque dessin impose une règle absurde (une couleur, sans lever le crayon...).", img: MODE_ICONS.contraintes },
+                  { id: "coop", c: "#46E0B0", nm: "Coopératif", ds: "En équipe : tous vos points sont mis en commun pour un score collectif.", img: MODE_ICONS.coop },
+                  { id: "fakeartist", c: "#FF6B6B", nm: "Faux-artiste", ds: "Un imposteur ignore le mot ; démasquez-le au vote.", img: MODE_ICONS.fakeartist },
+                  { id: "relay", c: "#4CC9F0", nm: "Relais", ds: "Deux joueurs se relaient au crayon, rotation auto.", img: MODE_ICONS.relais },
                 ] as const).map((m) => (
                   <button
                     key={m.id}
@@ -550,7 +551,7 @@ export default function LobbyPage() {
                     style={{ ["--c" as any]: m.c }}
                   >
                     <span className="cfg-check"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg></span>
-                    <span className="cfg-mic">{m.icon}</span>
+                    <span className="cfg-mic" style={{ padding: 0, overflow: "hidden" }}><img src={m.img} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /></span>
                     <span><span className="cfg-mnm">{m.nm}</span><p className="cfg-mds">{m.ds}</p></span>
                   </button>
                 ))}
