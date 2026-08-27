@@ -97,15 +97,17 @@ export default function LobbyPage() {
   }, [code]);
   const room = useRoom(code, wantsCreate);
   useGameSounds(room);
-  // Show a networking hint if the socket doesn't connect (LAN firewall, etc.).
-  const [connSlow, setConnSlow] = useState(false);
+  // Message de connexion : ton doux et rassurant, jamais alarmant.
+  // On l'affiche après ~2,5 s tant que la socket n'est pas ouverte (un
+  // hébergement gratuit peut mettre quelques secondes à se réveiller).
+  const [connWaking, setConnWaking] = useState(false);
   useEffect(() => {
     if (room.status === "open") {
-      setConnSlow(false);
+      setConnWaking(false);
       return;
     }
-    const id = window.setTimeout(() => setConnSlow(true), 6000);
-    return () => window.clearTimeout(id);
+    const t1 = window.setTimeout(() => setConnWaking(true), 2500);
+    return () => window.clearTimeout(t1);
   }, [room.status]);
 
   // Join as soon as we're connected and have a name. Idempotent server-side:
@@ -237,12 +239,14 @@ export default function LobbyPage() {
         </span>
       </header>
 
-      {!online && connSlow && (
-        <div className="mb-6 rounded-xl border border-magenta/40 bg-magenta/[0.06] p-4 text-sm">
-          <p className="mb-1 font-semibold text-magenta">Connexion au serveur impossible</p>
+      {!online && connWaking && (
+        <div className="mb-6 rounded-xl border border-gold/40 bg-gold/[0.06] p-4 text-sm">
+          <p className="mb-1 flex items-center gap-2 font-semibold text-gold">
+            <span className="h-2 w-2 shrink-0 rounded-full bg-gold animate-bulb" />
+            Connexion au serveur…
+          </p>
           <p className="text-text-muted">
-            Vérifie que le téléphone est sur le <b>même WiFi</b> que le PC, et que le <b>pare-feu Windows</b> autorise Node.js
-            (ports <b>3000</b> et <b>1999</b>) sur les réseaux privés. Le PC doit avoir lancé <code className="rounded bg-ink-surface px-1">dev:server</code> et <code className="rounded bg-ink-surface px-1">dev:web</code>.
+            Le serveur peut mettre quelques secondes à se réveiller. La partie s'ouvre dès qu'il répond.
           </p>
         </div>
       )}

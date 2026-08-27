@@ -72,7 +72,11 @@ export function createWebSocketTransport(
     ws.onclose = () => {
       emitStatus("closed");
       if (closedByUs) return;
-      const delay = Math.min(1000 * 2 ** attempts, 8000);
+      // Reconnexion rapide : lors d'un « cold start » d'un hébergeur gratuit,
+      // le serveur peut mettre plusieurs secondes à répondre. On retente
+      // souvent (plafond bas) pour se rebrancher dès qu'il est réveillé, au
+      // lieu d'attendre un long back-off exponentiel.
+      const delay = Math.min(600 * 2 ** attempts, 2000);
       attempts++;
       retryTimer = setTimeout(connect, delay);
     };
