@@ -2,9 +2,13 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-COPY . .
+COPY package.json package-lock.json* ./
+COPY apps/web/package.json ./apps/web/package.json
+COPY packages/shared/package.json ./packages/shared/package.json
 
 RUN npm install
+
+COPY . .
 
 RUN npm run build --workspace @subtitles-party/web
 
@@ -14,4 +18,4 @@ ENV HOSTNAME=0.0.0.0
 
 EXPOSE 8080
 
-CMD ["./node_modules/.bin/next", "start", "--hostname", "0.0.0.0", "--port", "8080", "--dir", "apps/web"]
+CMD ["npm", "run", "start", "--workspace", "@subtitles-party/web"]
