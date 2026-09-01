@@ -12,6 +12,7 @@ import { DrawGameView } from "@/components/DrawGameView";
 import { FakeArtistView } from "@/components/FakeArtistView";
 import { RelayView } from "@/components/RelayView";
 import { DoublageView } from "@/components/DoublageView";
+import { UI } from "./uiAssets";
 import { QuizView } from "@/components/QuizView";
 import { RecoView } from "@/components/RecoView";
 import { GameSettingsPanel } from "@/components/GameSettingsPanel";
@@ -70,6 +71,7 @@ export default function LobbyPage() {
   const [name, setName] = useState("");
   const [nameDraft, setNameDraft] = useState("");
   const [copied, setCopied] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
   const [themesOpen, setThemesOpen] = useState(false);
   const [selectedGame, setSelectedGame] = useState<"subtitles" | "draw" | "fakeartist" | "relay" | "doublage" | "quiz" | "reco" | "pixel">("draw");
@@ -83,6 +85,7 @@ export default function LobbyPage() {
   const [recoSecs, setRecoSecs] = useState(15);
   const [recoCat, setRecoCat] = useState("all");
   useEffect(() => setName(getPlayerName()), []);
+  useEffect(() => setShareUrl(window.location.href), []);
 
   // Autorisation de créer le salon, posée par l'accueil dans sessionStorage.
   // On NE peut PAS se fier à window.location au montage : lors d'une navigation
@@ -271,29 +274,50 @@ export default function LobbyPage() {
               </span>
             ))}
           </div>
-          <svg className="hidden shrink-0 text-magenta/70 sm:block" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <circle cx="9" cy="8" r="3" /><path d="M3.5 19a5.5 5.5 0 0 1 11 0" /><circle cx="16.5" cy="9" r="2.2" /><path d="M15 19a5 5 0 0 1 6.5-4.8" />
-          </svg>
+          <img src={UI.groupShieldGold} alt="" width={40} height={40} className="hidden shrink-0 select-none sm:block" draggable={false} aria-hidden />
         </div>
         <p className="mx-auto mb-4 max-w-xs text-sm text-text-muted">
           Partage ce code — ou le lien — pour que tes amis rejoignent la salle.
         </p>
-        <button
-          onClick={copyLink}
-          className={`inline-flex items-center gap-2 rounded-xl border px-5 py-2.5 font-display text-sm font-bold transition-colors ${
-            copied
-              ? "border-mint/50 bg-mint/10 text-mint"
-              : "border-gold/50 text-gold hover:bg-gold/10"
-          }`}
-        >
-          {copied ? "Lien copié ✓" : "Copier le lien d'invitation"}
-        </button>
+        <div className="flex flex-wrap items-center justify-center gap-2.5">
+          <button
+            onClick={copyLink}
+            title="Copier le lien d'invitation"
+            aria-label="Copier le lien d'invitation"
+            className="relative inline-block transition-transform hover:scale-[1.03] active:scale-95"
+          >
+            <img src={UI.copyBtnGold} alt="Copier le lien d'invitation" className="h-[52px] w-auto select-none" draggable={false} />
+            {copied && (
+              <span className="absolute inset-0 grid place-items-center rounded-2xl bg-mint/15 font-display text-sm font-bold text-mint backdrop-blur-sm">
+                Lien copié ✓
+              </span>
+            )}
+          </button>
+          <a
+            href={`mailto:?subject=${encodeURIComponent("Rejoins ma partie sur Boum !")}&body=${encodeURIComponent(shareUrl)}`}
+            title="Partager par mail"
+            aria-label="Partager par mail"
+            className="inline-flex transition-transform hover:scale-110 active:scale-95"
+          >
+            <img src={UI.shareMail} alt="Partager par mail" className="h-11 w-11 select-none" draggable={false} />
+          </a>
+          <a
+            href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent("Rejoins ma partie sur Boum !")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Partager sur Telegram"
+            aria-label="Partager sur Telegram"
+            className="inline-flex transition-transform hover:scale-110 active:scale-95"
+          >
+            <img src={UI.shareTelegram} alt="Partager sur Telegram" className="h-11 w-11 select-none" draggable={false} />
+          </a>
+        </div>
       </section>
 
       {/* players */}
       <section className="mb-8">
         <div className="cfg-head">
-          <span className="cfg-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3.2" /><path d="M3.5 19a5.5 5.5 0 0 1 11 0" /><circle cx="16.8" cy="9" r="2.3" /><path d="M15.2 19a5 5 0 0 1 6.3-4.9" /></svg></span>
+          <span className="cfg-ic"><img src={UI.groupViolet} alt="" width={22} height={22} className="select-none" draggable={false} aria-hidden /></span>
           <div>
             <h2 className="cfg-tt">Joueurs <span style={{ fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 14, color: "#6E6796" }}>{players.length}/{maxPlayers}</span></h2>
             <span className="cfg-sub">En attente dans le salon</span>
@@ -330,7 +354,7 @@ export default function LobbyPage() {
                     <span className="nm">{p.name}</span>
                     {isYou && <span className="pl-youtag">(toi)</span>}
                     {p.isHost && (
-                      <span className="pl-host"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M3 7l4.2 3L12 4l4.8 6L21 7l-1.6 11H4.6L3 7z" /></svg>Hôte</span>
+                      <span className="pl-host"><img src={UI.crownGold} alt="" width={14} height={14} className="select-none" draggable={false} aria-hidden />Hôte</span>
                     )}
                   </div>
                   <span className="pl-pstatus">
@@ -350,7 +374,7 @@ export default function LobbyPage() {
           <div className="pl-slots">
             {Array.from({ length: Math.min(maxPlayers - players.length, 8) }).map((_, i) => (
               <div key={i} className="pl-slot">
-                <span className="pl-ring"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg></span>
+                <span className="pl-ring"><img src={UI.addPlayer} alt="" width={18} height={18} className="select-none" draggable={false} aria-hidden /></span>
                 <span>Place libre</span>
               </div>
             ))}
@@ -709,7 +733,7 @@ export default function LobbyPage() {
             "Pas prêt"
           ) : (
             <>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7l-1 8 11-13h-8l1-7z" /></svg>
+              <img src={UI.flagReady} alt="" width={20} height={20} className="select-none" draggable={false} aria-hidden />
               Je suis prêt
             </>
           )}
