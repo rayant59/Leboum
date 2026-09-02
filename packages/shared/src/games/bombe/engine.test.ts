@@ -135,6 +135,29 @@ test("explosion (advance) : le joueur courant perd une vie et passe la main", ()
   assert(r.state.currentId !== victim, "la bombe passe au suivant");
 });
 
+test("explosion : pause puis le tour suivant est ARMÉ (pas de blocage)", () => {
+  const s0 = createBombe(players, { lives: 3 }, ctx(1000));
+  const victim = s0.currentId!;
+  // 1er advance = explosion → pause
+  const boom = reduceBombe(s0, { type: "advance" }, ctx(2000)).state;
+  eq(boom.explodePause, true, "on est en pause d'explosion");
+  eq(boom.justExploded, victim, "explosion affichée pendant la pause");
+  // pendant la pause, toute soumission est ignorée
+  const during = reduceBombe(boom, submit(boom.currentId!, wordWith(boom.syllable)), ctx(2100));
+  assert(!during.error, "pas d'erreur pendant la pause");
+  eq(during.state.usedWords.length, 0, "aucun mot pris en compte pendant la pause");
+  // 2e advance = fin de pause → le tour est réellement armé, explosion effacée
+  const next = reduceBombe(boom, { type: "advance" }, ctx(3600)).state;
+  eq(next.explodePause, false, "la pause est finie");
+  eq(next.justExploded, null, "l'explosion est effacée → la saisie se débloque");
+  assert(next.currentId != null && next.currentId !== victim, "un joueur suivant est actif");
+  assert(next.deadline != null && next.deadline > 3600, "un nouveau minuteur est armé");
+  // et ce joueur peut jouer normalement
+  const play = reduceBombe(next, submit(next.currentId!, wordWith(next.syllable)), ctx(3700));
+  assert(!play.error, "le joueur suivant peut jouer");
+  eq(play.state.usedWords.length, 1, "son mot est bien pris en compte");
+});
+
 test("élimination à 0 vie + victoire du dernier debout", () => {
   let s: BombeState = createBombe(players, { lives: 1 }, ctx(1000));
   // 2 explosions consécutives éliminent 2 joueurs (1 vie chacun) → il en reste 1.

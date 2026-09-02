@@ -53,7 +53,9 @@ export interface BombeState {
   turnsSurvived: Record<PlayerId, number>; // stats
   lastWord: string | null;                 // dernier mot validé (affichage)
   lastWordBy: PlayerId | null;
-  justExploded: PlayerId | null;           // pour l'animation d'explosion (un tick)
+  justExploded: PlayerId | null;           // victime de la dernière explosion (animation)
+  explodePause: boolean;                    // true pendant la pause « la bombe a sauté »
+  pendingNext: PlayerId | null;             // joueur à qui armer le tour après la pause
   winnerId: PlayerId | null;
   config: BombeConfig;
 }

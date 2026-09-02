@@ -23,6 +23,8 @@ export const BOMBE_LIVES_MAX = 10;
 export const BOMBE_SEC_MIN = 2;
 export const BOMBE_SEC_MAX = 30;
 const RECENT_SYLLABLES = 12;
+/** Durée de la pause « la bombe a sauté » avant que le tour suivant démarre. */
+export const BOMBE_EXPLODE_PAUSE_MS = 1600;
 
 /** Lettres qui comptent pour la collecte (A-V). W, X, Y, Z sont ignorées. */
 export const BOMBE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUV".split("");
@@ -115,6 +117,8 @@ export function createBombe(players: GamePlayer[], settings: BombeSettings, ctx:
     lastWord: null,
     lastWordBy: null,
     justExploded: null,
+    explodePause: false,
+    pendingNext: null,
     winnerId: null,
     config,
   };
@@ -164,6 +168,7 @@ export function reduceBombe(
     case "client": {
       const { playerId, msg } = action;
       if (state.phase !== "playing") return ok(state);
+      if (state.explodePause) return ok(state); // pause d'explosion : personne ne joue
       if (msg.kind !== "submit") return ok(state);
       if (playerId !== state.currentId) return ok(state); // seul le joueur courant joue
       // Garde-fou : si le minuteur est déjà écoulé, on ignore (l'explosion va suivre).
@@ -212,8 +217,29 @@ export function reduceBombe(
     }
 
     case "advance": {
-      // L'échéance a été atteinte → EXPLOSION sur le joueur courant.
-      if (state.phase !== "playing" || state.currentId == null) return ok(state);
+      if (state.phase !== "playing") return ok(state);
+
+      // Second tic : la pause d'explosion est terminée → on arme VRAIMENT le tour
+      // suivant (nouvelle syllabe + nouveau minuteur) et on efface l'explosion.
+      if (state.explodePause) {
+        const resumed: BombeState = {
+          ...state,
+          explodePause: false,
+          pendingNext: null,
+          justExploded: null,
+        };
+        const target = state.pendingNext;
+        if (target == null || (state.lives[target] ?? 0) <= 0) {
+          // le suivant prévu n'est plus jouable → on recalcule
+          const alt = nextPlayer(resumed, state.currentId ?? target ?? "");
+          if (alt == null) return ok(checkOver(resumed));
+          return ok(armTurn(resumed, alt, ctx));
+        }
+        return ok(armTurn(resumed, target, ctx));
+      }
+
+      // Premier tic : l'échéance est atteinte → EXPLOSION sur le joueur courant.
+      if (state.currentId == null) return ok(state);
       const victim = state.currentId;
       const remaining = Math.max(0, (state.lives[victim] ?? 0) - 1);
       const lives = { ...state.lives, [victim]: remaining };
@@ -231,7 +257,16 @@ export function reduceBombe(
       if (over.phase === "gameover") return ok(over);
       const next = nextPlayer(exploded, victim);
       if (next == null) return ok(checkOver(exploded));
-      return ok(armTurn(exploded, next, ctx));
+      // Pause « la bombe a sauté » : on montre l'explosion ~1,6 s (currentId passe
+      // déjà au suivant pour le surlignage), puis le prochain `advance` arme le tour.
+      return ok({
+        ...exploded,
+        currentId: next,
+        explodePause: true,
+        pendingNext: next,
+        turnStartedAt: ctx.now,
+        deadline: ctx.now + BOMBE_EXPLODE_PAUSE_MS,
+      });
     }
 
     case "presence": {
@@ -242,7 +277,7 @@ export function reduceBombe(
       if (state.currentId != null && !connectedIds.includes(state.currentId)) {
         const heir = nextPlayer(next, state.currentId);
         if (heir != null && heir !== state.currentId) {
-          next = armTurn({ ...next, justExploded: null, letterEvent: null }, heir, ctx);
+          next = armTurn({ ...next, justExploded: null, letterEvent: null, explodePause: false, pendingNext: null }, heir, ctx);
         }
       }
       return ok(next);
