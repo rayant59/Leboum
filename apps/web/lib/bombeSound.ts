@@ -11,17 +11,22 @@
 import { isSoundOn } from "@/lib/sound";
 
 const BASE = "/sounds/bombe";
+// Version des sons : à incrémenter à CHAQUE remplacement d'un .mp3. Le suffixe
+// « ?v=N » change l'URL, ce qui force le navigateur et le CDN à recharger les
+// nouveaux fichiers au lieu de resservir les anciens depuis le cache.
+const V = "3";
+const u = (name: string) => `${BASE}/${name}.mp3?v=${V}`;
 
 /** Sons « one-shot ». */
 const CLIP: Record<string, string> = {
-  bonmot: `${BASE}/bonmot.mp3`,
-  mauvaismot: `${BASE}/mauvaismot.mp3`,
-  effacer: `${BASE}/effacer.mp3`,
-  explosion: `${BASE}/explosion.mp3`,
+  bonmot: u("bonmot"),
+  mauvaismot: u("mauvaismot"),
+  effacer: u("effacer"),
+  explosion: u("explosion"),
 };
-const COUNTDOWN_URL = `${BASE}/compte3s.mp3`;
-const CHRONO_URL = `${BASE}/chrono.mp3`;
-const TOUCHES = [`${BASE}/touche1.mp3`, `${BASE}/touche2.mp3`, `${BASE}/touche3.mp3`];
+const COUNTDOWN_URL = u("compte3s");
+const CHRONO_URL = u("chrono");
+const TOUCHES = [u("touche1"), u("touche2"), u("touche3")];
 
 export type BombeClip = keyof typeof CLIP;
 
