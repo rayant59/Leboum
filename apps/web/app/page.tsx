@@ -11,7 +11,7 @@ const TAGLINES = [
   "...devine l'image pixel par pixel",
   "...devine ce que je dessine",
   "...démasque l'imposteur",
-  "...improvise les voix",
+  "...imite le son le plus drôle",
 ];
 
 const ACCENTS = {
@@ -36,7 +36,7 @@ type Accent = keyof typeof ACCENTS;
 
 const GAMES: { img: string; accent: Accent; name: string; desc: string; players: string; variants: string[] }[] = [
   { img: "/games/draw.png", accent: "magenta", name: "Dessin & Devinette", desc: "Dessine le mot secret, les autres devinent — avec ses variantes.", players: "2–8", variants: ["Classique", "Faux-artiste", "Relais"] },
-  { img: "/games/doublage.png", accent: "mint", name: "Doublage", desc: "Doublez une vidéo à votre sauce et improvisez les voix.", players: "2–10", variants: [] },
+  { img: "/games/mimic.png", accent: "mint", name: "Mimic", desc: "Imite un son avec ta voix — une seule prise, puis on vote pour la meilleure imitation !", players: "2–8", variants: [] },
   { img: "/games/quiz.png", accent: "violet", name: "Quiz", desc: "Répondez à des questions et montrez votre culture !", players: "1–12", variants: [] },
   { img: "/games/reco.png", accent: "cyan", name: "Reconnaissance", desc: "Devinez le personnage, le lieu, l'œuvre… sur une vraie image.", players: "1–12", variants: [] },
   { img: "/games/pixel.png", accent: "mint", name: "Pixel incoming", desc: "Une image se dévoile pixel par pixel : devine le plus vite possible !", players: "1–12", variants: [] },

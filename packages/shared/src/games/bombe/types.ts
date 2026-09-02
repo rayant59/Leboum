@@ -24,6 +24,15 @@ export interface BombeConfig {
 export type BombeClientAction =
   | { kind: "submit"; text: string };     // le joueur courant valide un mot
 
+/** Événement « nouvelle(s) lettre(s) » pour l'animation (un tick). */
+export interface BombeLetterEvent {
+  playerId: PlayerId;
+  newLetters: string[];   // lettres A-V nouvellement découvertes (majuscules)
+  gainedLife: boolean;    // le joueur a gagné +1 vie
+  atMax: boolean;         // lettres découvertes mais déjà au max de vies
+  at: number;             // horloge serveur (pour dédupliquer l'animation)
+}
+
 /** État interne autoritaire (jamais envoyé tel quel au client). */
 export interface BombeState {
   phase: BombePhase;
@@ -37,6 +46,8 @@ export interface BombeState {
   turnStartedAt: number;                   // début du tour (horloge serveur)
   deadline: number | null;                 // instant EXACT d'explosion (secret)
   usedWords: string[];                     // mots déjà joués (normalisés) — interdits
+  usedLetters: string[];                   // lettres A-V déjà découvertes (majuscules)
+  letterEvent: BombeLetterEvent | null;    // dernière découverte de lettre (animation)
   recentSyllables: string[];               // anti-répétition
   wordsFound: Record<PlayerId, number>;    // stats
   turnsSurvived: Record<PlayerId, number>; // stats
@@ -79,6 +90,8 @@ export interface BombePublic {
   justExploded: PlayerId | null;
   usedCount: number;
   aliveCount: number;
+  usedLetters: string[];            // lettres A-V découvertes (pour l'affichage de la grille)
+  letterEvent: BombeLetterEvent | null; // animation « nouvelle lettre »
   winnerId: PlayerId | null;
   // stats de fin
   stats: { words: string | null; survivor: string | null } | null;

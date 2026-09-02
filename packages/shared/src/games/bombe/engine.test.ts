@@ -1,7 +1,7 @@
 // Run: npx tsx engine.test.ts
 import type { GamePlayer } from "../../game/types";
 import type { GameAction, GameContext } from "../../platform/types";
-import { createBombe, reduceBombe, projectBombe, bombeDeadline, bombeIsOver } from "./engine";
+import { createBombe, reduceBombe, projectBombe, bombeDeadline, bombeIsOver, bombeWordLetters, resolveBombeConfig } from "./engine";
 import { setBombeDictionary, bombeNormalize, bombeSyllableCount } from "./dictionary";
 import type { BombeClientAction, BombeState } from "./types";
 
@@ -172,6 +172,83 @@ test("projection : ne révèle jamais la deadline exacte, seulement des bornes",
   eq(pub.maxDeadline, s.turnStartedAt + s.config.maxMs, "borne haute exposée");
   eq(pub.syllable, s.syllable, "syllabe visible");
   eq(pub.ranking.length, players.length, "classement complet");
+});
+
+// ── Nouvelles règles : lettres A-V, vies, timer ────────────────────────────
+
+// État de départ avec syllabe forcée "ar" (dans "arbre") et timer non expiré.
+function baseFor(cur: string, lives = 3): BombeState {
+  let s = createBombe(players, { lives }, ctx(1000));
+  // on force le joueur courant = cur et une syllabe connue
+  s = { ...s, currentId: cur, syllable: "ar", deadline: 10_000_000 };
+  return s;
+}
+
+test("mauvais mot → timer inchangé (le tour continue)", () => {
+  const s = baseFor("a");
+  const before = s.deadline;
+  const r = reduceBombe(s, submit("a", "maison"), ctx(2000)); // pas de "ar"
+  eq(r.error?.code, "bombe_syllable", "erreur syllabe");
+  eq(r.state.currentId, "a", "toujours le même joueur");
+  eq(r.state.deadline, before, "le minuteur ne change pas");
+});
+
+test("nouvelle lettre sous le max → +1 vie + lettres enregistrées", () => {
+  const s = { ...baseFor("a", 3), lives: { a: 2, b: 3, c: 3, d: 3 } };
+  const r = reduceBombe(s, submit("a", "arbre"), ctx(2000)); // A R B E
+  assert(!r.error, "mot accepté");
+  eq(r.state.lives["a"], 3, "+1 vie (2 → 3)");
+  assert(r.state.letterEvent?.gainedLife === true, "event +1 vie");
+  assert(["A", "R", "B", "E"].every((l) => r.state.usedLetters.includes(l)), "A R B E enregistrées");
+});
+
+test("plusieurs nouvelles lettres → +1 vie SEULEMENT", () => {
+  const s = { ...baseFor("a", 5), lives: { a: 1, b: 5, c: 5, d: 5 } };
+  const r = reduceBombe(s, submit("a", "arbre"), ctx(2000)); // 4 nouvelles lettres
+  eq(r.state.lives["a"], 2, "une seule vie gagnée");
+});
+
+test("joueur au max → aucune vie, mais lettres enregistrées (atMax)", () => {
+  const s = baseFor("a", 3); // a a 3/3
+  const r = reduceBombe(s, submit("a", "arbre"), ctx(2000));
+  eq(r.state.lives["a"], 3, "toujours 3 (pas de dépassement)");
+  assert(r.state.letterEvent?.atMax === true, "atMax signalé");
+  assert(r.state.usedLetters.includes("A"), "lettre quand même enregistrée");
+});
+
+test("lettre déjà utilisée → aucune récompense", () => {
+  const s = { ...baseFor("a", 3), lives: { a: 2, b: 3, c: 3, d: 3 }, usedLetters: ["A", "R", "B", "E"] };
+  const r = reduceBombe(s, submit("a", "arbre"), ctx(2000));
+  eq(r.state.lives["a"], 2, "pas de +1 vie");
+  eq(r.state.letterEvent, null, "aucun event lettre");
+});
+
+test("timer expiré → soumission ignorée (l'explosion suivra)", () => {
+  const s = { ...baseFor("a", 3), deadline: 1500 };
+  const r = reduceBombe(s, submit("a", "arbre"), ctx(2000)); // now 2000 > 1500
+  eq(r.state.currentId, "a", "rien ne change");
+  eq(r.state.usedWords.length, 0, "mot non enregistré");
+});
+
+test("lettres : accents normalisés, W/X/Y/Z ignorées", () => {
+  eq(bombeWordLetters(bombeNormalize("Éléphant")).join(""), "ELPHANT", "accents retirés");
+  eq(bombeWordLetters(bombeNormalize("çà")).join(""), "CA", "ç→C à→A");
+  eq(bombeWordLetters("wxyzab").join(""), "AB", "W X Y Z ignorées");
+  eq(bombeWordLetters("arbrear").join(""), "ARBE", "lettres uniques");
+});
+
+test("config : jusqu'à 10 vies autorisées", () => {
+  eq(resolveBombeConfig({ lives: 10 }).lives, 10, "10 vies OK");
+  eq(resolveBombeConfig({ lives: 99 }).lives, 10, "plafonné à 10");
+  eq(resolveBombeConfig({ minSeconds: 2, maxSeconds: 4 }).minMs, 2000, "min 2s autorisé");
+});
+
+test("projection : usedLetters et letterEvent exposés", () => {
+  const s = { ...baseFor("a", 3), lives: { a: 2, b: 3, c: 3, d: 3 } };
+  const r = reduceBombe(s, submit("a", "arbre"), ctx(2000));
+  const pub = projectBombe(r.state, "b");
+  assert(pub.usedLetters.includes("A"), "usedLetters exposées");
+  assert(pub.letterEvent?.gainedLife === true, "letterEvent exposé");
 });
 
 console.log(`\n${passed} réussis, ${failed} échoués\n`);

@@ -1,0 +1,31 @@
+# ============================================================================
+#  MANIFESTE DES SONS — mode « Mimic »
+# ============================================================================
+# Un pack de démarrage (sons « absurdes » synthétisés) est DÉJÀ inclus et jouable.
+# Ce fichier sert à AJOUTER tes propres sons (animaux, véhicules, voix…).
+#
+# Format : une ligne par son
+#     fichier.mp3 | Nom affiché | catégorie
+#
+#   - dépose le fichier audio dans apps/web/public/sounds/ (sous-dossiers OK)
+#   - catégories : animals · vehicles · objects · voices · absurd · custom
+#   - tu peux aussi grouper avec une section :   == animals ==
+#
+# Les lignes vides et celles commençant par # sont ignorées.
+# Après modification, redéploie/relance le serveur.
+#
+# ---- EXEMPLES (décommente et remplace par tes vrais fichiers) --------------
+#
+# == animals ==
+# animals/chien.mp3 | Chien | animals
+# animals/chat.mp3 | Chat | animals
+# animals/vache.mp3 | Vache | animals
+# animals/coq.mp3 | Coq | animals
+#
+# == vehicles ==
+# vehicles/moto.mp3 | Moto | vehicles
+# vehicles/klaxon.mp3 | Klaxon | vehicles
+#
+# == voices ==
+# voices/rire.mp3 | Rire | voices
+# voices/bebe.mp3 | Bébé qui pleure | voices

@@ -12,6 +12,7 @@ import {
   type RoomErrorCode,
   type SubtitlesErrorCode,
   type DoublageClientAction,
+  type MimicClientAction,
 } from "@subtitles-party/shared";
 import { getPlayerId } from "./identity";
 import {
@@ -89,6 +90,13 @@ export interface UseRoom {
   sendSpeaking: (speaking: boolean) => void;
   quizAnswer: (value: number | boolean | string) => void;
   bombeSubmit: (text: string) => void;
+  // mimic game
+  mimicAction: (action: MimicClientAction) => void;
+  sendVoiceTake: (round: number, audio: string) => void;
+  voiceTakes: Map<string, string>; // `${round}:${playerId}` -> audio data URL
+  // bombe live typing
+  sendBombeTyping: (text: string) => void;
+  bombeTyping: { from: string; text: string } | null;
   // draw game
   chooseWord: (word: string) => void;
   guess: (text: string) => void;
@@ -120,6 +128,8 @@ export function useRoom(code: string, create = false): UseRoom {
   const [reactions, setReactions] = useState<FloatingReaction[]>([]);
   const [speakingIds, setSpeakingIds] = useState<Set<string>>(new Set());
   const [chat, setChat] = useState<ChatEntry[]>([]);
+  const [voiceTakes, setVoiceTakes] = useState<Map<string, string>>(new Map());
+  const [bombeTyping, setBombeTyping] = useState<{ from: string; text: string } | null>(null);
   const strokeQueueRef = useRef<StrokeEvent[]>([]);
   const strokeResetRef = useRef(0);
   const eventId = useRef(0);
@@ -143,6 +153,8 @@ export function useRoom(code: string, create = false): UseRoom {
         setYou(msg.you);
         if (msg.state.phase !== "in_game") {
           setChat([]);
+          setVoiceTakes(new Map());
+          setBombeTyping(null);
           strokeQueueRef.current = [];
           strokeResetRef.current++;
         }
@@ -150,6 +162,14 @@ export function useRoom(code: string, create = false): UseRoom {
         setError({ code: msg.code, message: msg.message });
       } else if (msg.type === "chat") {
         setChat((prev) => [...prev.slice(-80), { id: eventId.current++, from: msg.from, name: msg.name, text: msg.text, kind: msg.kind }]);
+      } else if (msg.type === "voice_take") {
+        setVoiceTakes((prev) => {
+          const next = new Map(prev);
+          next.set(`${msg.round}:${msg.from}`, msg.audio);
+          return next;
+        });
+      } else if (msg.type === "bombe_typing") {
+        setBombeTyping({ from: msg.from, text: msg.text });
       } else if (msg.type === "stroke") {
         strokeQueueRef.current.push({ id: eventId.current++, type: "stroke", stroke: msg.stroke, from: msg.from });
         if (strokeQueueRef.current.length > 9000) strokeQueueRef.current.splice(0, strokeQueueRef.current.length - 9000);
@@ -248,6 +268,9 @@ export function useRoom(code: string, create = false): UseRoom {
   const sendSpeaking = useCallback((speaking: boolean) => send.current?.send({ type: "speaking", speaking }), [send]);
   const quizAnswer = useCallback((value: number | boolean | string) => send.current?.send({ type: "game", action: { kind: "answer", value } }), [send]);
   const bombeSubmit = useCallback((text: string) => send.current?.send({ type: "game", action: { kind: "submit", text } }), [send]);
+  const mimicAction = useCallback((action: MimicClientAction) => send.current?.send({ type: "game", action }), [send]);
+  const sendVoiceTake = useCallback((round: number, audio: string) => send.current?.send({ type: "voice_take", round, audio }), [send]);
+  const sendBombeTyping = useCallback((text: string) => send.current?.send({ type: "bombe_typing", text }), [send]);
   const sendStroke = useCallback(
     (stroke: DrawStroke) => send.current?.send({ type: "draw_stroke", stroke }),
     [send],
@@ -278,6 +301,7 @@ export function useRoom(code: string, create = false): UseRoom {
     state, gameId, game, settings, you, status, error, clearError,
     join, setReady, setName, setAvatar, setSettings, selectGame, startGame, leave, pendingGame,
     submitLines, vote, skipPhase, debugFill, returnLobby, playAgain, react, reactions, speakingIds, sendSpeaking, quizAnswer, bombeSubmit,
+    mimicAction, sendVoiceTake, voiceTakes, sendBombeTyping, bombeTyping,
     chooseWord, guess, sendTalk, castVote, doublageAction, revealTheme, endDrawing, sendStroke, sendFill, clearCanvas, chat, strokeQueueRef, strokeResetRef, serverNow,
   };
 }

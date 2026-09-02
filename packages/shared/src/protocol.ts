@@ -16,9 +16,10 @@ import type { DoublageClientAction, DoublagePublic } from "./games/doublage/type
 import type { QuizClientAction, QuizPublic } from "./games/quiz/types";
 import type { RecoPublic } from "./games/reconnaissance/types";
 import type { BombeClientAction, BombePublic } from "./games/bombe/types";
+import type { MimicClientAction, MimicPublic } from "./games/mimic/types";
 
 /** Any game's public projection. Discriminate with the state message `gameId`. */
-export type AnyPublicGame = PublicGameState | DrawPublic | FakeArtistPublic | RelayPublic | DoublagePublic | QuizPublic | RecoPublic | BombePublic;
+export type AnyPublicGame = PublicGameState | DrawPublic | FakeArtistPublic | RelayPublic | DoublagePublic | QuizPublic | RecoPublic | BombePublic | MimicPublic;
 
 // --- Client -> server -------------------------------------------------------
 
@@ -31,7 +32,9 @@ export type ClientMessage =
   | { type: "set_settings"; settings: GameSettings } // host only
   | { type: "set_pending_game"; gameId: string } // host only: preview selection to guests
   | { type: "start_game"; gameId: string; settings?: unknown }
-  | { type: "game"; action: GameClientAction | DrawClientAction | FakeArtistClientAction | DoublageClientAction | QuizClientAction | BombeClientAction }
+  | { type: "game"; action: GameClientAction | DrawClientAction | FakeArtistClientAction | DoublageClientAction | QuizClientAction | BombeClientAction | MimicClientAction }
+  | { type: "voice_take"; round: number; audio: string } // mimic: my recorded take (base64 data URL), relayed to all
+  | { type: "bombe_typing"; text: string } // bombe: live preview of what the active player is typing
   | { type: "skip" } // host advances the current game phase early
   | { type: "debug_fill" } // host-only TEST helper: auto-write for everyone
   | { type: "return_lobby" } // host-only: end the game, back to the lobby
@@ -66,4 +69,6 @@ export type ServerMessage =
   | { type: "stroke"; stroke: DrawStroke; from: PlayerId } // ephemeral draw relay
   | { type: "fill"; x: number; y: number; color: string; from: PlayerId } // ephemeral bucket fill
   | { type: "draw_clear"; from: PlayerId } // ephemeral: clear a canvas (per author)
-  | { type: "chat"; from: PlayerId; name: string; text: string; kind: "guess" | "correct" | "system" | "talk" };
+  | { type: "chat"; from: PlayerId; name: string; text: string; kind: "guess" | "correct" | "system" | "talk" }
+  | { type: "voice_take"; round: number; from: PlayerId; audio: string } // mimic: a player's recorded take, relayed to all
+  | { type: "bombe_typing"; from: PlayerId; text: string }; // bombe: live typing preview of the active player

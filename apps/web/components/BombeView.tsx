@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { BOMBE_ALPHABET } from "@subtitles-party/shared";
 import type { BombePublic } from "@subtitles-party/shared";
 import type { UseRoom } from "@/lib/useRoom";
 import { Avatar } from "@/components/Avatar";
@@ -34,6 +35,51 @@ function Hearts({ n, max }: { n: number; max: number }) {
   );
 }
 
+/** Grille des lettres A-V : découvertes en surbrillance, à découvrir en grisé. */
+function LettersGrid({ used }: { used: string[] }) {
+  const set = new Set(used);
+  return (
+    <div className="mx-auto mt-4 max-w-md">
+      <p className="eyebrow mb-1.5 text-center text-text-faint">Lettres · {set.size}/{BOMBE_ALPHABET.length} <span className="text-gold">(nouvelle lettre = +1 ❤️)</span></p>
+      <div className="flex flex-wrap justify-center gap-1">
+        {BOMBE_ALPHABET.map((l) => {
+          const on = set.has(l);
+          return (
+            <span
+              key={l}
+              className={`grid h-7 w-7 place-items-center rounded-md border font-display text-sm font-bold ${on ? "border-mint/60 bg-mint/15 text-mint" : "border-ink-border bg-ink-deep text-text-faint opacity-50"}`}
+            >
+              {l}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** Toast « nouvelle lettre » — non bloquant, disparaît tout seul. */
+function LetterToast({ ev, nameOf }: { ev: BombePublic["letterEvent"]; nameOf: (id: string | null) => string }) {
+  if (!ev) return null;
+  return (
+    <div className="pointer-events-none fixed inset-x-0 top-6 z-50 flex justify-center px-4" style={{ animation: "revealPop 0.35s ease-out" }}>
+      <div className="rounded-2xl border-2 border-gold/60 bg-[rgba(20,16,42,0.95)] px-5 py-3 text-center shadow-[0_10px_40px_-10px_rgba(255,194,75,0.6)]">
+        {ev.gainedLife ? (
+          <>
+            <p className="font-display text-lg font-extrabold text-gold">🔤 NOUVELLE LETTRE ! <span className="text-magenta">+1 ❤️</span></p>
+            <p className="text-sm text-text-muted">{nameOf(ev.playerId)} découvre : <b className="text-mint">{ev.newLetters.join(" · ")}</b></p>
+          </>
+        ) : (
+          <>
+            <p className="font-display text-lg font-extrabold text-gold">🔤 LETTRE DÉCOUVERTE</p>
+            <p className="text-sm text-text-muted">❤️ Vie maximale atteinte · <b className="text-mint">{ev.newLetters.join(" · ")}</b></p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function BombeView({ room }: { room: UseRoom }) {
   const game = room.game as BombePublic;
   const you = room.you;
@@ -41,6 +87,39 @@ export function BombeView({ room }: { room: UseRoom }) {
   const fuse = useFuse(game, room.serverNow);
   const [text, setText] = useState("");
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const lastTypedRef = useRef(0);
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [toast, setToast] = useState<BombePublic["letterEvent"]>(null);
+
+  // Live typing : le joueur actif diffuse son texte (throttlé ~120ms).
+  function pushTyping(v: string) {
+    const val = v.trim().slice(0, 48);
+    const now = Date.now();
+    const elapsed = now - lastTypedRef.current;
+    if (elapsed >= 120) { lastTypedRef.current = now; room.sendBombeTyping(val); }
+    else {
+      if (typingTimer.current) clearTimeout(typingTimer.current);
+      typingTimer.current = setTimeout(() => { lastTypedRef.current = Date.now(); room.sendBombeTyping(val); }, 120 - elapsed);
+    }
+  }
+  function onType(v: string) {
+    setText(v);
+    if (room.error) room.clearError();
+    if (game.youAreCurrent) pushTyping(v);
+  }
+
+  // Toast « nouvelle lettre » (déclenché par letterEvent.at, non bloquant).
+  const lastLetterAt = useRef(0);
+  useEffect(() => {
+    const ev = game.letterEvent;
+    if (ev && ev.at !== lastLetterAt.current) {
+      lastLetterAt.current = ev.at;
+      setToast(ev);
+      playSound(ev.gainedLife ? "youFound" : "chime");
+      const t = setTimeout(() => setToast(null), 2600);
+      return () => clearTimeout(t);
+    }
+  }, [game.letterEvent]);
 
   const byId = new Map(game.players.map((p) => [p.id, p]));
   const nameOf = (id: string | null) => (id ? byId.get(id)?.name ?? "?" : "?");
@@ -98,7 +177,11 @@ export function BombeView({ room }: { room: UseRoom }) {
     const t = text.trim();
     if (!t) return;
     room.bombeSubmit(t);
+    room.sendBombeTyping(""); // efface l'aperçu live chez les autres
   }
+
+  // Aperçu live du joueur actif (visible par les AUTRES uniquement).
+  const liveTyping = !game.youAreCurrent && room.bombeTyping && room.bombeTyping.from === game.currentId ? room.bombeTyping.text : "";
 
   // --- écran de victoire ----------------------------------------------------
   if (game.phase === "gameover") {
@@ -129,6 +212,7 @@ export function BombeView({ room }: { room: UseRoom }) {
   return (
     <>
       <BoumBackdrop />
+      <LetterToast ev={toast} nameOf={nameOf} />
       <main className="relative z-[1] mx-auto max-w-3xl px-4 py-5" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
         <div className="mb-3 flex items-center justify-between">
           <span className="eyebrow">💣 Bombe · {game.aliveCount} en vie · {game.usedCount} mots joués</span>
@@ -194,6 +278,9 @@ export function BombeView({ room }: { room: UseRoom }) {
                 Au tour de <span className="text-gold">{currentName}</span>…
               </p>
             )}
+            {liveTyping && !exploded && (
+              <p className="mt-1 font-mono text-sm text-mint animate-pop">✍️ {currentName} écrit : <b>{liveTyping}</b></p>
+            )}
             {game.lastWord && !exploded && (
               <p className="mt-1 text-sm text-text-muted">
                 Dernier mot : <b className="text-mint">{game.lastWord}</b>{game.lastWordBy && <> par {nameOf(game.lastWordBy)}</>}
@@ -208,7 +295,7 @@ export function BombeView({ room }: { room: UseRoom }) {
                 <input
                   ref={inputRef}
                   value={text}
-                  onChange={(e) => { setText(e.target.value); if (room.error) room.clearError(); }}
+                  onChange={(e) => onType(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") send(); }}
                   autoFocus
                   autoComplete="off"
@@ -220,8 +307,8 @@ export function BombeView({ room }: { room: UseRoom }) {
                 <button onClick={send} className="arc arc-p" style={{ padding: "0 22px" }}>OK</button>
               </div>
               {room.error && (
-                <p className="mt-2 rounded-xl border border-danger/40 bg-danger/10 px-3 py-2 text-center text-sm text-danger">
-                  {room.error.message}
+                <p key={room.error.message} className="mt-2 rounded-xl border border-danger/40 bg-danger/10 px-3 py-2 text-center text-sm text-danger" style={{ animation: "shake 0.32s" }}>
+                  ❌ {room.error.message} <span className="text-text-faint">(le timer continue, réessaie !)</span>
                 </p>
               )}
             </div>
@@ -254,6 +341,9 @@ export function BombeView({ room }: { room: UseRoom }) {
             </div>
           ))}
         </section>
+
+        {/* Lettres A-V découvertes */}
+        <LettersGrid used={game.usedLetters} />
       </main>
     </>
   );

@@ -19,10 +19,24 @@ import { bombeNormalize, bombeWordMatches, isBombeWord, pickBombeSyllable } from
 import type { BombeConfig, BombePublic, BombeRankRow, BombeSettings, BombeState } from "./types";
 
 export const BOMBE_LIVES_MIN = 1;
-export const BOMBE_LIVES_MAX = 5;
-export const BOMBE_SEC_MIN = 3;
+export const BOMBE_LIVES_MAX = 10;
+export const BOMBE_SEC_MIN = 2;
 export const BOMBE_SEC_MAX = 30;
 const RECENT_SYLLABLES = 12;
+
+/** Lettres qui comptent pour la collecte (A-V). W, X, Y, Z sont ignorées. */
+export const BOMBE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUV".split("");
+const AV_SET = new Set(BOMBE_ALPHABET);
+
+/** Lettres A-V uniques d'un mot déjà normalisé (accents retirés, minuscules). */
+export function bombeWordLetters(normalized: string): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const ch of normalized.toUpperCase()) {
+    if (AV_SET.has(ch) && !seen.has(ch)) { seen.add(ch); out.push(ch); }
+  }
+  return out;
+}
 
 export function resolveBombeConfig(settings: BombeSettings): BombeConfig {
   const lives = clamp(settings.lives ?? 3, BOMBE_LIVES_MIN, BOMBE_LIVES_MAX);
@@ -93,6 +107,8 @@ export function createBombe(players: GamePlayer[], settings: BombeSettings, ctx:
     turnStartedAt: ctx.now,
     deadline: null,
     usedWords: [],
+    usedLetters: [],
+    letterEvent: null,
     recentSyllables: [],
     wordsFound: rec0(players),
     turnsSurvived: rec0(players),
@@ -150,6 +166,8 @@ export function reduceBombe(
       if (state.phase !== "playing") return ok(state);
       if (msg.kind !== "submit") return ok(state);
       if (playerId !== state.currentId) return ok(state); // seul le joueur courant joue
+      // Garde-fou : si le minuteur est déjà écoulé, on ignore (l'explosion va suivre).
+      if (state.deadline != null && ctx.now > state.deadline) return ok(state);
       const w = bombeNormalize(msg.text);
       const match = bombeWordMatches(msg.text, state.syllable);
       if (!match.ok) {
@@ -162,11 +180,27 @@ export function reduceBombe(
       if (state.usedWords.includes(w)) {
         return fail(state, { code: "bombe_used", message: "Ce mot a déjà été utilisé." });
       }
-      // Bon mot ! La bombe passe aussitôt au joueur suivant.
+      // Bon mot ! On regarde les nouvelles lettres A-V découvertes.
+      const maxLives = state.config.lives;
+      const curLives = state.lives[playerId] ?? 0;
+      const wordLetters = bombeWordLetters(w);
+      const newLetters = wordLetters.filter((l) => !state.usedLetters.includes(l));
+      const gainedLife = newLetters.length > 0 && curLives < maxLives; // +1 vie max par mot
+      const atMax = newLetters.length > 0 && curLives >= maxLives;
+      const lives = gainedLife ? { ...state.lives, [playerId]: Math.min(maxLives, curLives + 1) } : state.lives;
+      const usedLetters = newLetters.length ? [...state.usedLetters, ...newLetters] : state.usedLetters;
+      const letterEvent = newLetters.length
+        ? { playerId, newLetters, gainedLife, atMax, at: ctx.now }
+        : null;
+
+      // La bombe passe aussitôt au joueur suivant.
       const next = nextPlayer(state, playerId);
       const advanced: BombeState = {
         ...state,
+        lives,
         usedWords: [...state.usedWords, w],
+        usedLetters,
+        letterEvent,
         wordsFound: { ...state.wordsFound, [playerId]: (state.wordsFound[playerId] ?? 0) + 1 },
         turnsSurvived: { ...state.turnsSurvived, [playerId]: (state.turnsSurvived[playerId] ?? 0) + 1 },
         lastWord: w,
@@ -189,6 +223,7 @@ export function reduceBombe(
         lives,
         eliminated,
         justExploded: victim,
+        letterEvent: null,
         lastWord: null,
         lastWordBy: null,
       };
@@ -207,7 +242,7 @@ export function reduceBombe(
       if (state.currentId != null && !connectedIds.includes(state.currentId)) {
         const heir = nextPlayer(next, state.currentId);
         if (heir != null && heir !== state.currentId) {
-          next = armTurn({ ...next, justExploded: null }, heir, ctx);
+          next = armTurn({ ...next, justExploded: null, letterEvent: null }, heir, ctx);
         }
       }
       return ok(next);
@@ -283,6 +318,8 @@ export function projectBombe(state: BombeState, viewerId: PlayerId): BombePublic
     justExploded: state.justExploded,
     usedCount: state.usedWords.length,
     aliveCount: alive.length,
+    usedLetters: state.usedLetters,
+    letterEvent: state.letterEvent,
     winnerId: state.winnerId,
     stats,
   };

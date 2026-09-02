@@ -41,6 +41,10 @@ import {
   bombeModule,
   setBombeDictionary,
   bombeDictSize,
+  mimicModule,
+  setMimicSounds,
+  parseMimicSounds,
+  mimicSoundCount,
   swapActiveDrawer,
   type RelayState,
 
@@ -226,7 +230,37 @@ const PORT = Number(process.env.PORT ?? 1999);
   console.log(`[motbombe] aucun fichier motbombe/*.txt — dictionnaire de secours utilisé (${bombeDictSize()} mots)`);
 })();
 
+// Load the reference sounds for the Mimic game from apps/web/public/sounds/sounds.txt
+// (manifest: "fichier.mp3 | Nom | catégorie"). Additive on top of the starter pack.
+(() => {
+  const dirs = [
+    resolve(process.cwd(), "apps", "web", "public", "sounds"),
+    resolve(process.cwd(), "..", "apps", "web", "public", "sounds"),
+    resolve(__dirname, "..", "apps", "web", "public", "sounds"),
+  ];
+  for (const dir of dirs) {
+    try {
+      if (!existsSync(dir)) continue;
+      const txts = readdirSync(dir).filter(
+        (f) => f.toLowerCase().endsWith(".txt") && f.toLowerCase() !== "readme.txt",
+      );
+      if (!txts.length) continue;
+      const text = txts.map((f) => readFileSync(resolve(dir, f), "utf8")).join("\n");
+      const sounds = parseMimicSounds(text);
+      if (!sounds.length) continue; // manifeste vide → on garde le pack de démarrage
+      setMimicSounds(sounds);
+      console.log(`[mimic-sounds] ${sounds.length} son(s) perso chargé(s) (${txts.join(", ")}) — total jouable: ${mimicSoundCount()}`);
+      return;
+    } catch {
+      /* ignore and try next */
+    }
+  }
+  console.log(`[mimic-sounds] aucun manifeste — pack de démarrage utilisé (${mimicSoundCount()} sons)`);
+})();
+
 const GRACE_MS = 45_000;
+/** Taille max d'une prise vocale (base64) relayée dans le mode Mimic. */
+const MAX_TAKE_BYTES = 260_000;
 
 /** The only emojis clients may broadcast as live reactions. */
 const REACTION_EMOJIS = ["😂", "😮", "🔥", "❤️", "👏", "💀"];
@@ -245,6 +279,7 @@ interface Room {
   /** Any OTHER game, hosted generically via the platform contract. */
   mod: { module: AnyGameModule; state: unknown } | null;
   strokes: unknown[]; // ephemeral stroke buffer for the current draw turn
+  mimicTakes: Map<string, string>; // mimic: `${round}:${playerId}` -> base64 audio (for playback + reconnection)
   pendingSettings: unknown; // settings for a generic game, from start_game
   relayTimers: NodeJS.Timeout[]; // active-drawer rotation timers (relay)
   settings: GameSettings; // host-chosen lobby settings, applied at start
@@ -265,6 +300,7 @@ const GAME_REGISTRY: Record<string, AnyGameModule> = {
   reco: recoModule,
   pixel: pixelModule,
   bombe: bombeModule,
+  mimic: mimicModule,
 };
 const gameCtx = (): GameContext => ({ now: Date.now(), rng: Math.random });
 
@@ -284,6 +320,7 @@ function getRoom(code: string, allowCreate = false): Room | null {
       twists: [],
       mod: null,
       strokes: [],
+      mimicTakes: new Map(),
       pendingSettings: null,
       relayTimers: [],
       settings: DEFAULT_GAME_SETTINGS,
@@ -543,6 +580,7 @@ function startGame(room: Room) {
     room.game = null;
     room.tokens = null;
     room.strokes = [];
+    room.mimicTakes.clear();
     const settings = mod.sanitizeSettings(room.pendingSettings ?? undefined);
     room.mod = { module: mod, state: mod.createState(players, settings, gameCtx()) };
     scheduleGameTick(room);
@@ -695,6 +733,16 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
       ws.send(JSON.stringify(m));
     }
   }
+  // Replay buffered voice takes (Mimic) so a (re)connecting client can play them.
+  if (room.mod && room.mod.module.id === "mimic") {
+    for (const [key, audio] of room.mimicTakes) {
+      const sep = key.indexOf(":");
+      const round = Number(key.slice(0, sep)) || 0;
+      const from = key.slice(sep + 1);
+      const m: ServerMessage = { type: "voice_take", round, from, audio };
+      ws.send(JSON.stringify(m));
+    }
+  }
 
   ws.on("message", (raw) => {
     let msg: ClientMessage;
@@ -800,6 +848,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
         room.tokens = null;
         room.mod = null;
         room.strokes = [];
+        room.mimicTakes.clear();
         clearSwaps(room);
         const players = Object.fromEntries(
           Object.entries(room.state.players).map(([id, p]) => [id, { ...p, isReady: false }]),
@@ -841,6 +890,29 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
         if (!text) return;
         const name = room.state.players[playerId]?.name ?? "?";
         relay(room, { type: "chat", from: playerId, name, text, kind: "talk" });
+        return;
+      }
+
+      case "voice_take": {
+        // Mimic: a player's recorded take. Buffered (for playback + reconnection)
+        // and relayed to everyone. Heavy audio never enters the game state.
+        if (!room.mod || room.mod.module.id !== "mimic") return;
+        const audio = typeof msg.audio === "string" ? msg.audio : "";
+        if (!audio || audio.length > MAX_TAKE_BYTES) return;
+        const round = Number.isFinite(msg.round) ? Math.max(0, Math.floor(msg.round)) : 0;
+        room.mimicTakes.set(`${round}:${playerId}`, audio);
+        relay(room, { type: "voice_take", round, from: playerId, audio });
+        return;
+      }
+
+      case "bombe_typing": {
+        // Bombe: live preview of the active player's typing. Only relayed when it
+        // comes from the current player; the text is a preview, never validated.
+        if (!room.mod || room.mod.module.id !== "bombe") return;
+        const st = room.mod.state as { currentId?: string | null };
+        if (playerId !== st.currentId) return;
+        const text = typeof msg.text === "string" ? msg.text.slice(0, 48) : "";
+        relay(room, { type: "bombe_typing", from: playerId, text });
         return;
       }
 

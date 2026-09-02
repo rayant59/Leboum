@@ -16,6 +16,7 @@ import { UI } from "./uiAssets";
 import { QuizView } from "@/components/QuizView";
 import { RecoView } from "@/components/RecoView";
 import { BombeView } from "@/components/BombeView";
+import { MimicView } from "@/components/MimicView";
 import { GameSettingsPanel } from "@/components/GameSettingsPanel";
 import { Avatar } from "@/components/Avatar";
 import { ProfileModal } from "@/components/ProfileModal";
@@ -59,11 +60,20 @@ function PresetStepper({
 const GAME_META: Record<string, { label: string; img: string; tint: string }> = {
   subtitles: { label: "Sous-titres", img: "/games/subtitles.png", tint: "#FFC24B" },
   draw: { label: "Dessin & Devinette", img: "/games/draw.png", tint: "#FF4D8D" },
-  doublage: { label: "Doublage", img: "/games/doublage.png", tint: "#46E0B0" },
+  mimic: { label: "Mimic", img: "/games/mimic.png", tint: "#46E0B0" },
   quiz: { label: "Quiz", img: "/games/quiz.png", tint: "#8B7DF6" },
   reco: { label: "Reconnaissance", img: "/games/reco.png", tint: "#4CC9F0" },
   pixel: { label: "Pixel incoming", img: "/games/pixel.png", tint: "#46E0B0" },
   bombe: { label: "Bombe", img: "/games/bombe.png", tint: "#FF6B4D" },
+};
+
+/** Presets de vitesse de la bombe → bornes min/max (secondes) du minuteur aléatoire. */
+const BOMBE_SPEEDS: Record<"tresrapide" | "rapide" | "normal" | "long" | "treslong", { label: string; min: number; max: number }> = {
+  tresrapide: { label: "Très rapide", min: 2, max: 4 },
+  rapide: { label: "Rapide", min: 3, max: 6 },
+  normal: { label: "Normal", min: 5, max: 10 },
+  long: { label: "Long", min: 8, max: 15 },
+  treslong: { label: "Très long", min: 12, max: 20 },
 };
 
 export default function LobbyPage() {
@@ -76,7 +86,7 @@ export default function LobbyPage() {
   const [shareUrl, setShareUrl] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
   const [themesOpen, setThemesOpen] = useState(false);
-  const [selectedGame, setSelectedGame] = useState<"subtitles" | "draw" | "fakeartist" | "relay" | "doublage" | "quiz" | "reco" | "pixel" | "bombe">("draw");
+  const [selectedGame, setSelectedGame] = useState<"subtitles" | "draw" | "fakeartist" | "relay" | "mimic" | "quiz" | "reco" | "pixel" | "bombe">("draw");
   const [drawMode, setDrawMode] = useState("classic");
   const [drawRounds, setDrawRounds] = useState(3);
   const [drawThemes, setDrawThemes] = useState<string[]>([]);
@@ -87,9 +97,10 @@ export default function LobbyPage() {
   const [recoSecs, setRecoSecs] = useState(15);
   const [recoCat, setRecoCat] = useState("all");
   const [bombeLives, setBombeLives] = useState(3);
-  const [bombeMin, setBombeMin] = useState(5);
-  const [bombeMax, setBombeMax] = useState(12);
+  const [bombeSpeed, setBombeSpeed] = useState<"tresrapide" | "rapide" | "normal" | "long" | "treslong">("normal");
   const [bombeLen, setBombeLen] = useState<"2" | "23" | "3">("23");
+  const [mimicRounds, setMimicRounds] = useState(4);
+  const [mimicRecord, setMimicRecord] = useState(6);
   useEffect(() => setName(getPlayerName()), []);
   useEffect(() => setShareUrl(window.location.href), []);
 
@@ -228,6 +239,7 @@ export default function LobbyPage() {
     if (room.gameId === "fakeartist") return <FakeArtistView room={room} />;
     if (room.gameId === "relay") return <RelayView room={room} />;
     if (room.gameId === "doublage") return <DoublageView room={room} />;
+    if (room.gameId === "mimic") return <MimicView room={room} />;
     if (room.gameId === "quiz") return <QuizView room={room} />;
     if (room.gameId === "reco") return <RecoView room={room} />;
     if (room.gameId === "pixel") return <RecoView room={room} pixel />;
@@ -415,7 +427,7 @@ export default function LobbyPage() {
             {(
               [
                 { id: "draw", img: "/games/draw.png", label: "Dessin & Devinette", players: "2–8", desc: "Dessine le mot secret, les autres devinent — avec ses variantes.", tint: "#FF4D8D", tintBg: "rgba(255,77,141,0.12)", tintBorder: "rgba(255,77,141,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 5.6l3.9 3.9" /><path d="M4 20l1.3-4.4L15.7 5.2a1.9 1.9 0 0 1 2.7 0l.4.4a1.9 1.9 0 0 1 0 2.7L8.4 18.7 4 20Z" /></svg> },
-                { id: "doublage", img: "/games/doublage.png", label: "Doublage", players: "2–10", desc: "Doublez une vidéo à votre sauce et improvisez les voix.", tint: "#46E0B0", tintBg: "rgba(70,224,176,0.12)", tintBorder: "rgba(70,224,176,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M6 11a6 6 0 0 0 12 0" /><path d="M12 17v3.2" /><path d="M9 20.2h6" /></svg> },
+                { id: "mimic", img: "/games/mimic.png", label: "Mimic", players: "2–8", desc: "Imite un son avec ta voix — une seule prise. Les autres votent pour la meilleure imitation !", tint: "#46E0B0", tintBg: "rgba(70,224,176,0.12)", tintBorder: "rgba(70,224,176,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M6 11a6 6 0 0 0 12 0" /><path d="M12 17v3.2" /><path d="M9 20.2h6" /></svg> },
                 { id: "quiz", img: "/games/quiz.png", label: "Quiz", players: "2–8", desc: "Répondez à des questions et montrez votre culture !", tint: "#8B7DF6", tintBg: "rgba(139,125,246,0.14)", tintBorder: "rgba(139,125,246,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4" /><circle cx="12" cy="17.5" r="0.6" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="9" /></svg> },
                 { id: "reco", img: "/games/reco.png", label: "Reconnaissance", players: "1–12", desc: "Devinez le personnage, le film, le lieu et bien plus.", tint: "#4CC9F0", tintBg: "rgba(76,201,240,0.14)", tintBorder: "rgba(76,201,240,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="14" rx="2.5" /><circle cx="9" cy="10" r="2" /><path d="M4 17l4.5-4 3 2.5L15 12l5 4.5" /></svg> },
                 { id: "pixel", img: "/games/pixel.png", label: "Pixel incoming", players: "1–12", desc: "Une image se dévoile pixel par pixel — devine le plus vite possible !", tint: "#46E0B0", tintBg: "rgba(70,224,176,0.12)", tintBorder: "rgba(70,224,176,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="6" height="6"/><rect x="15" y="3" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/><rect x="3" y="15" width="6" height="6"/><rect x="15" y="15" width="6" height="6"/></svg> },
@@ -486,13 +498,20 @@ export default function LobbyPage() {
         <p className="eyebrow mb-2 px-1">Réglages</p>
         {selectedGame === "subtitles" ? (
           <GameSettingsPanel settings={room.settings} isHost={isHost} onChange={room.setSettings} />
-        ) : selectedGame === "doublage" ? (
-          <div className="panel space-y-2 p-4 text-sm">
-            <p className="text-text-muted">
-              🎙️ Doublez une vidéo à plusieurs voix ! Vous choisirez la scène et vos personnages, testerez votre micro,
-              puis parlerez par-dessus la vidéo synchronisée. <span className="text-text-faint">(2 joueurs minimum · micro requis)</span>
-            </p>
-            <p className="text-text-faint">Prototype « Doublage libre » — improvisation totale, aucun mot imposé.</p>
+        ) : selectedGame === "mimic" ? (
+          <div className="cfg-grp">
+            <div className="cfg-head">
+              <span className="cfg-ic" style={{ background: "rgba(70,224,176,0.14)", color: "#46E0B0", borderColor: "rgba(70,224,176,0.4)" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M6 11a6 6 0 0 0 12 0" /><path d="M12 17v3.2" /><path d="M9 20.2h6" /></svg></span>
+              <div><h2 className="cfg-tt">Réglages de Mimic</h2><span className="cfg-sub">Un son · une prise · votes 🎤</span></div>
+            </div>
+            <div className="panel space-y-3 p-4">
+              <p className="text-sm text-text-muted">
+                🎤 Un son est joué, tout le monde l'imite <b>en une seule prise</b> (micro requis, idéalement en https/localhost). On rejoue les imitations, puis chacun vote pour la meilleure. Le plus de votes gagne !
+              </p>
+              <PresetStepper label="Nombre de manches" sub="Longueur de la partie" value={mimicRounds} values={[3, 4, 5, 6]} unit="manches" onChange={setMimicRounds} disabled={!isHost} />
+              <PresetStepper label="Temps d'enregistrement" sub="Durée d'une prise" value={mimicRecord} values={[4, 6, 8, 10]} unit="secondes" onChange={setMimicRecord} disabled={!isHost} />
+              <p className="text-xs text-text-faint">Ajoute tes propres sons (animaux, voix…) dans <span className="font-mono">apps/web/public/sounds/</span> via <span className="font-mono">sounds.txt</span> — un pack de démarrage est déjà inclus.</p>
+            </div>
           </div>
         ) : selectedGame === "quiz" ? (
           <div className="cfg-grp">
@@ -538,9 +557,23 @@ export default function LobbyPage() {
               <p className="text-sm text-text-muted">
                 💣 Une syllabe apparaît (ex. <b>AR</b>). Le joueur dont c'est le tour doit vite écrire un mot français qui la contient (<i>arbre</i>, <i>canard</i>, <i>guitare</i>…). Bon mot → la bombe passe au suivant. Trop lent → elle explose : −1 vie ! Dernier survivant gagne.
               </p>
-              <PresetStepper label="Vies par joueur" sub="Avant élimination" value={bombeLives} values={[1, 2, 3, 4, 5]} unit="vies" onChange={setBombeLives} disabled={!isHost} />
-              <PresetStepper label="Temps minimum" sub="Durée mini de la bombe" value={bombeMin} values={[3, 4, 5, 6, 8]} unit="secondes" onChange={(v) => { setBombeMin(v); if (v >= bombeMax) setBombeMax(v + 3); }} disabled={!isHost} />
-              <PresetStepper label="Temps maximum" sub="Durée maxi de la bombe" value={bombeMax} values={[8, 10, 12, 15, 20]} unit="secondes" onChange={(v) => { setBombeMax(v); if (v <= bombeMin) setBombeMin(Math.max(3, v - 3)); }} disabled={!isHost} />
+              <PresetStepper label="Vies par joueur" sub="Avant élimination (défaut 3)" value={bombeLives} values={[1, 2, 3, 4, 5, 6, 10]} unit="vies" onChange={setBombeLives} disabled={!isHost} />
+              <div>
+                <p className="mb-2 text-sm font-medium">Vitesse de la bombe</p>
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                  {(["tresrapide", "rapide", "normal", "long", "treslong"] as const).map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setBombeSpeed(s)}
+                      disabled={!isHost}
+                      className={`rounded-lg border py-2 text-xs font-medium transition-colors ${bombeSpeed === s ? "border-gold bg-gold/[0.08] text-gold" : "border-ink-border bg-ink-surface"}`}
+                    >
+                      {BOMBE_SPEEDS[s].label}
+                      <span className="block text-[10px] font-normal text-text-faint">{BOMBE_SPEEDS[s].min}-{BOMBE_SPEEDS[s].max}s</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div>
                 <p className="mb-2 text-sm font-medium">Longueur des syllabes</p>
                 <div className="grid grid-cols-3 gap-2">
@@ -727,11 +760,12 @@ export default function LobbyPage() {
                   "Le plus rapide à trouver marque le plus de points.",
                   "On révèle la réponse, le classement se met à jour, puis image suivante !",
                 ]
-              : selectedGame === "doublage"
+              : selectedGame === "mimic"
                 ? [
-                    "Choisissez une scène et répartissez les personnages.",
-                    "Testez votre micro, puis doublez la vidéo en direct par-dessus le son.",
-                    "Improvisez les voix — aucun mot imposé, juste du fun.",
+                    "Un son est joué : écoutez-le bien.",
+                    "Après le 3·2·1, tout le monde enregistre son imitation EN MÊME TEMPS — une seule prise, pas de deuxième chance !",
+                    "On réécoute les imitations une par une (silence, on écoute !).",
+                    "Chacun vote pour la meilleure imitation (pas la sienne). Le plus de votes marque le plus, sur plusieurs manches.",
                   ]
                 : selectedGame === "draw"
                   ? drawMode === "fakeartist"
@@ -794,8 +828,8 @@ export default function LobbyPage() {
               onClick={() =>
                 selectedGame === "subtitles"
                   ? room.startGame("subtitles")
-                  : selectedGame === "doublage"
-                    ? room.startGame("doublage")
+                  : selectedGame === "mimic"
+                    ? room.startGame("mimic", { totalRounds: mimicRounds, recordSeconds: mimicRecord })
                     : selectedGame === "quiz"
                       ? room.startGame("quiz", { totalQuestions: quizCount, secondsPerQuestion: quizSecs, types: quizType })
                       : selectedGame === "reco"
@@ -803,7 +837,7 @@ export default function LobbyPage() {
                         : selectedGame === "pixel"
                           ? room.startGame("pixel", { totalQuestions: recoCount, secondsPerQuestion: recoSecs, category: recoCat })
                           : selectedGame === "bombe"
-                          ? room.startGame("bombe", { lives: bombeLives, minSeconds: bombeMin, maxSeconds: bombeMax, minLetters: bombeLen === "3" ? 3 : 2, maxLetters: bombeLen === "2" ? 2 : 3 })
+                          ? room.startGame("bombe", { lives: bombeLives, minSeconds: BOMBE_SPEEDS[bombeSpeed].min, maxSeconds: BOMBE_SPEEDS[bombeSpeed].max, minLetters: bombeLen === "3" ? 3 : 2, maxLetters: bombeLen === "2" ? 2 : 3 })
                           : drawMode === "fakeartist"
                             ? room.startGame("fakeartist", { totalRounds: drawRounds })
                             : drawMode === "relay"
