@@ -5,6 +5,10 @@ import { BOMBE_ALPHABET } from "@subtitles-party/shared";
 import type { BombePublic } from "@subtitles-party/shared";
 import type { UseRoom } from "@/lib/useRoom";
 import { isSoundOn, setSoundOn, playSound } from "@/lib/sound";
+import {
+  preloadBombeSounds, playBombe, playTouche,
+  startChrono, stopChrono, playCountdown, stopBombeTimers,
+} from "@/lib/bombeSound";
 
 // ── Palette « Nocturne » (design fourni) ────────────────────────────────────
 const C = {
@@ -247,8 +251,14 @@ export function BombeView({ room }: { room: UseRoom }) {
     }
   }
   function onType(v: string) {
+    const prev = text;
     setText(v);
     if (room.error) room.clearError();
+    // Sons de frappe : clic clavier quand on ajoute, « effacer » quand on vide.
+    if (game.youAreCurrent && game.phase === "playing") {
+      if (v.length > prev.length) playTouche();
+      else if (v.length < prev.length && v.trim().length === 0 && prev.trim().length > 0) playBombe("effacer", 0.8);
+    }
     if (game.youAreCurrent) pushTyping(v);
   }
   function send() {
@@ -272,24 +282,56 @@ export function BombeView({ room }: { room: UseRoom }) {
     }
   }, [turnKey, game.youAreCurrent, room]);
 
-  // Sons.
+  // ── Sons (vrais fichiers audio pour la Bombe) ─────────────────────────────
+  // Préchargement + coupe tout au démontage.
+  useEffect(() => { preloadBombeSounds(); return () => stopBombeTimers(); }, []);
+
+  // « À toi de jouer » + démarre/coupe le chronomètre stressant selon le tour.
   const prevCurrent = useRef<string | null>(null);
+  const cdPlayed = useRef(false);
   useEffect(() => {
-    if (game.phase === "playing" && game.youAreCurrent && prevCurrent.current !== game.currentId) playSound("yourTurn");
+    const yourTurn = game.phase === "playing" && game.youAreCurrent && !game.justExploded;
+    if (yourTurn && prevCurrent.current !== game.currentId) playSound("yourTurn");
     prevCurrent.current = game.currentId;
-  }, [game.currentId, game.youAreCurrent, game.phase]);
+    // nouveau tour → on réarme le décompte des 3 s
+    cdPlayed.current = false;
+    if (yourTurn) startChrono();
+    else stopBombeTimers();
+  }, [game.currentId, game.youAreCurrent, game.phase, game.justExploded]);
+
+  // Bon mot ! (un mot vient d'être validé par quelqu'un)
   const prevUsed = useRef(game.usedCount);
-  useEffect(() => { if (game.usedCount > prevUsed.current) playSound("correct"); prevUsed.current = game.usedCount; }, [game.usedCount]);
-  const prevExploded = useRef<string | null>(null);
-  useEffect(() => { if (game.justExploded && game.justExploded !== prevExploded.current) playSound("timeUp"); prevExploded.current = game.justExploded; }, [game.justExploded]);
-  const prevPhase = useRef(game.phase);
-  useEffect(() => { if (prevPhase.current !== game.phase && game.phase === "gameover") playSound("win"); prevPhase.current = game.phase; }, [game.phase]);
-  const tickRef = useRef(false);
   useEffect(() => {
-    if (game.phase === "playing" && game.youAreCurrent && fuse.secs <= 3 && fuse.secs > 0 && !tickRef.current) {
-      playSound("tick"); tickRef.current = true; setTimeout(() => (tickRef.current = false), 450);
+    if (game.usedCount > prevUsed.current) { playBombe("bonmot"); if (game.youAreCurrent) stopChrono(); }
+    prevUsed.current = game.usedCount;
+  }, [game.usedCount, game.youAreCurrent]);
+
+  // Mauvais mot (le joueur courant a une erreur de saisie).
+  const prevErr = useRef<string | null>(null);
+  useEffect(() => {
+    const code = room.error?.code ?? null;
+    if (code && code !== prevErr.current && game.youAreCurrent && game.phase === "playing") playBombe("mauvaismot");
+    prevErr.current = code;
+  }, [room.error, game.youAreCurrent, game.phase]);
+
+  // La bombe explose.
+  const prevExploded = useRef<string | null>(null);
+  useEffect(() => {
+    if (game.justExploded && game.justExploded !== prevExploded.current) { stopBombeTimers(); playBombe("explosion"); }
+    prevExploded.current = game.justExploded;
+  }, [game.justExploded]);
+
+  const prevPhase = useRef(game.phase);
+  useEffect(() => { if (prevPhase.current !== game.phase && game.phase === "gameover") { stopBombeTimers(); playSound("win"); } prevPhase.current = game.phase; }, [game.phase]);
+
+  // Décompte des 3 dernières secondes (une fois par tour, pour le joueur courant).
+  useEffect(() => {
+    if (game.phase === "playing" && game.youAreCurrent && !game.justExploded && fuse.secs > 0 && fuse.secs <= 3.15 && !cdPlayed.current) {
+      cdPlayed.current = true;
+      stopChrono();          // on laisse la place au décompte
+      playCountdown();
     }
-  }, [fuse.secs, game.youAreCurrent, game.phase]);
+  }, [fuse.secs, game.youAreCurrent, game.phase, game.justExploded]);
   // Toast nouvelle lettre.
   const lastLetterAt = useRef(0);
   useEffect(() => {
