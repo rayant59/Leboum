@@ -15,9 +15,10 @@ import type { RelayPublic } from "./games/relay/types";
 import type { DoublageClientAction, DoublagePublic } from "./games/doublage/types";
 import type { QuizClientAction, QuizPublic } from "./games/quiz/types";
 import type { RecoPublic } from "./games/reconnaissance/types";
+import type { BombeClientAction, BombePublic } from "./games/bombe/types";
 
 /** Any game's public projection. Discriminate with the state message `gameId`. */
-export type AnyPublicGame = PublicGameState | DrawPublic | FakeArtistPublic | RelayPublic | DoublagePublic | QuizPublic | RecoPublic;
+export type AnyPublicGame = PublicGameState | DrawPublic | FakeArtistPublic | RelayPublic | DoublagePublic | QuizPublic | RecoPublic | BombePublic;
 
 // --- Client -> server -------------------------------------------------------
 
@@ -30,7 +31,7 @@ export type ClientMessage =
   | { type: "set_settings"; settings: GameSettings } // host only
   | { type: "set_pending_game"; gameId: string } // host only: preview selection to guests
   | { type: "start_game"; gameId: string; settings?: unknown }
-  | { type: "game"; action: GameClientAction | DrawClientAction | FakeArtistClientAction | DoublageClientAction | QuizClientAction }
+  | { type: "game"; action: GameClientAction | DrawClientAction | FakeArtistClientAction | DoublageClientAction | QuizClientAction | BombeClientAction }
   | { type: "skip" } // host advances the current game phase early
   | { type: "debug_fill" } // host-only TEST helper: auto-write for everyone
   | { type: "return_lobby" } // host-only: end the game, back to the lobby

@@ -15,6 +15,7 @@ import { DoublageView } from "@/components/DoublageView";
 import { UI } from "./uiAssets";
 import { QuizView } from "@/components/QuizView";
 import { RecoView } from "@/components/RecoView";
+import { BombeView } from "@/components/BombeView";
 import { GameSettingsPanel } from "@/components/GameSettingsPanel";
 import { Avatar } from "@/components/Avatar";
 import { ProfileModal } from "@/components/ProfileModal";
@@ -62,6 +63,7 @@ const GAME_META: Record<string, { label: string; img: string; tint: string }> = 
   quiz: { label: "Quiz", img: "/games/quiz.png", tint: "#8B7DF6" },
   reco: { label: "Reconnaissance", img: "/games/reco.png", tint: "#4CC9F0" },
   pixel: { label: "Pixel incoming", img: "/games/pixel.png", tint: "#46E0B0" },
+  bombe: { label: "Bombe", img: "/games/bombe.png", tint: "#FF6B4D" },
 };
 
 export default function LobbyPage() {
@@ -74,7 +76,7 @@ export default function LobbyPage() {
   const [shareUrl, setShareUrl] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
   const [themesOpen, setThemesOpen] = useState(false);
-  const [selectedGame, setSelectedGame] = useState<"subtitles" | "draw" | "fakeartist" | "relay" | "doublage" | "quiz" | "reco" | "pixel">("draw");
+  const [selectedGame, setSelectedGame] = useState<"subtitles" | "draw" | "fakeartist" | "relay" | "doublage" | "quiz" | "reco" | "pixel" | "bombe">("draw");
   const [drawMode, setDrawMode] = useState("classic");
   const [drawRounds, setDrawRounds] = useState(3);
   const [drawThemes, setDrawThemes] = useState<string[]>([]);
@@ -84,6 +86,10 @@ export default function LobbyPage() {
   const [recoCount, setRecoCount] = useState(10);
   const [recoSecs, setRecoSecs] = useState(15);
   const [recoCat, setRecoCat] = useState("all");
+  const [bombeLives, setBombeLives] = useState(3);
+  const [bombeMin, setBombeMin] = useState(5);
+  const [bombeMax, setBombeMax] = useState(12);
+  const [bombeLen, setBombeLen] = useState<"2" | "23" | "3">("23");
   useEffect(() => setName(getPlayerName()), []);
   useEffect(() => setShareUrl(window.location.href), []);
 
@@ -225,6 +231,7 @@ export default function LobbyPage() {
     if (room.gameId === "quiz") return <QuizView room={room} />;
     if (room.gameId === "reco") return <RecoView room={room} />;
     if (room.gameId === "pixel") return <RecoView room={room} pixel />;
+    if (room.gameId === "bombe") return <BombeView room={room} />;
     return room.gameId === "draw" ? <DrawGameView room={room} /> : <GameView room={room} />;
   }
 
@@ -412,6 +419,7 @@ export default function LobbyPage() {
                 { id: "quiz", img: "/games/quiz.png", label: "Quiz", players: "2–8", desc: "Répondez à des questions et montrez votre culture !", tint: "#8B7DF6", tintBg: "rgba(139,125,246,0.14)", tintBorder: "rgba(139,125,246,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4" /><circle cx="12" cy="17.5" r="0.6" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="9" /></svg> },
                 { id: "reco", img: "/games/reco.png", label: "Reconnaissance", players: "1–12", desc: "Devinez le personnage, le film, le lieu et bien plus.", tint: "#4CC9F0", tintBg: "rgba(76,201,240,0.14)", tintBorder: "rgba(76,201,240,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="14" rx="2.5" /><circle cx="9" cy="10" r="2" /><path d="M4 17l4.5-4 3 2.5L15 12l5 4.5" /></svg> },
                 { id: "pixel", img: "/games/pixel.png", label: "Pixel incoming", players: "1–12", desc: "Une image se dévoile pixel par pixel — devine le plus vite possible !", tint: "#46E0B0", tintBg: "rgba(70,224,176,0.12)", tintBorder: "rgba(70,224,176,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="6" height="6"/><rect x="15" y="3" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/><rect x="3" y="15" width="6" height="6"/><rect x="15" y="15" width="6" height="6"/></svg> },
+                { id: "bombe", img: "/games/bombe.png", label: "Bombe", players: "2–12", desc: "Trouve vite un mot avec la syllabe avant que la bombe explose !", tint: "#FF6B4D", tintBg: "rgba(255,107,77,0.14)", tintBorder: "rgba(255,107,77,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="14" r="7" /><path d="M16 9l2-2" /><path d="M18 7l1 .3M19 5.5l.3-1M20.5 6.8l1-.3" /></svg> },
               ] as const
             ).map((c) => {
               const sel = selectedGame === c.id;
@@ -519,6 +527,41 @@ export default function LobbyPage() {
               </div>
             </div>
           </div>
+          </div>
+        ) : selectedGame === "bombe" ? (
+          <div className="cfg-grp">
+            <div className="cfg-head">
+              <span className="cfg-ic" style={{ background: "rgba(255,107,77,0.14)", color: "#FF6B4D", borderColor: "rgba(255,107,77,0.4)" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="14" r="7" /><path d="M16 9l2-2" /><path d="M18 7l1 .3M19 5.5l.3-1M20.5 6.8l1-.3" /></svg></span>
+              <div><h2 className="cfg-tt">Réglages de la Bombe</h2><span className="cfg-sub">Rapide, stressant, nerveux 💣</span></div>
+            </div>
+            <div className="panel space-y-3 p-4">
+              <p className="text-sm text-text-muted">
+                💣 Une syllabe apparaît (ex. <b>AR</b>). Le joueur dont c'est le tour doit vite écrire un mot français qui la contient (<i>arbre</i>, <i>canard</i>, <i>guitare</i>…). Bon mot → la bombe passe au suivant. Trop lent → elle explose : −1 vie ! Dernier survivant gagne.
+              </p>
+              <PresetStepper label="Vies par joueur" sub="Avant élimination" value={bombeLives} values={[1, 2, 3, 4, 5]} unit="vies" onChange={setBombeLives} disabled={!isHost} />
+              <PresetStepper label="Temps minimum" sub="Durée mini de la bombe" value={bombeMin} values={[3, 4, 5, 6, 8]} unit="secondes" onChange={(v) => { setBombeMin(v); if (v >= bombeMax) setBombeMax(v + 3); }} disabled={!isHost} />
+              <PresetStepper label="Temps maximum" sub="Durée maxi de la bombe" value={bombeMax} values={[8, 10, 12, 15, 20]} unit="secondes" onChange={(v) => { setBombeMax(v); if (v <= bombeMin) setBombeMin(Math.max(3, v - 3)); }} disabled={!isHost} />
+              <div>
+                <p className="mb-2 text-sm font-medium">Longueur des syllabes</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { id: "2", label: "2 lettres", sub: "plus facile" },
+                    { id: "23", label: "2 ou 3", sub: "équilibré" },
+                    { id: "3", label: "3 lettres", sub: "difficile" },
+                  ] as const).map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setBombeLen(t.id)}
+                      disabled={!isHost}
+                      className={`rounded-lg border py-2 text-sm font-medium transition-colors ${bombeLen === t.id ? "border-gold bg-gold/[0.08] text-gold" : "border-ink-border bg-ink-surface"}`}
+                    >
+                      {t.label}<span className="block text-[10px] font-normal text-text-faint">{t.sub}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className="text-xs text-text-faint">Le temps exact d'explosion est secret : la bombe peut sauter n'importe quand entre le mini et le maxi. Anti-triche : tout est validé côté serveur.</p>
+            </div>
           </div>
         ) : (selectedGame === "reco" || selectedGame === "pixel") ? (
           <div className="cfg-grp">
@@ -663,7 +706,14 @@ export default function LobbyPage() {
           <span className="text-text-faint transition-transform group-open:rotate-180">⌄</span>
         </summary>
         <ol className="mt-3 space-y-2.5 text-sm text-text-muted">
-          {(selectedGame === "quiz"
+          {(selectedGame === "bombe"
+            ? [
+                "Une syllabe s'affiche (ex. « AR ») et c'est au tour d'un joueur.",
+                "Écris vite un mot français qui contient cette syllabe (n'importe où) et valide.",
+                "Bon mot → la bombe passe aussitôt au joueur suivant avec une nouvelle syllabe.",
+                "Trop lent ? La bombe explose : tu perds une vie. À 0 vie, tu es éliminé. Le dernier survivant gagne !",
+              ]
+            : selectedGame === "quiz"
             ? [
                 "Une question s'affiche pour tout le monde en même temps.",
                 "Réponds le plus vite possible : plus tu es rapide, plus tu marques.",
@@ -752,6 +802,8 @@ export default function LobbyPage() {
                         ? room.startGame("reco", { totalQuestions: recoCount, secondsPerQuestion: recoSecs, category: recoCat })
                         : selectedGame === "pixel"
                           ? room.startGame("pixel", { totalQuestions: recoCount, secondsPerQuestion: recoSecs, category: recoCat })
+                          : selectedGame === "bombe"
+                          ? room.startGame("bombe", { lives: bombeLives, minSeconds: bombeMin, maxSeconds: bombeMax, minLetters: bombeLen === "3" ? 3 : 2, maxLetters: bombeLen === "2" ? 2 : 3 })
                           : drawMode === "fakeartist"
                             ? room.startGame("fakeartist", { totalRounds: drawRounds })
                             : drawMode === "relay"

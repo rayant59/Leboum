@@ -38,6 +38,9 @@ import {
   quizModule,
   recoModule,
   pixelModule,
+  bombeModule,
+  setBombeDictionary,
+  bombeDictSize,
   swapActiveDrawer,
   type RelayState,
 
@@ -195,6 +198,34 @@ const PORT = Number(process.env.PORT ?? 1999);
     }
   }
 })();
+// Load the French dictionary for the Bombe game from motbombe/*.txt (one word
+// per line; lines starting with # are ignored). Looked up from a few likely
+// locations so it works whether the server runs from the repo root or elsewhere.
+(() => {
+  const dirs = [
+    resolve(process.cwd(), "motbombe"),
+    resolve(process.cwd(), "..", "motbombe"),
+    resolve(__dirname, "..", "motbombe"),
+  ];
+  for (const dir of dirs) {
+    try {
+      if (!existsSync(dir)) continue;
+      const files = readdirSync(dir).filter((f) => f.toLowerCase().endsWith(".txt") && f.toLowerCase() !== "readme.txt");
+      if (!files.length) continue;
+      // NB : on évite `push(...bigArray)` — étaler 300k+ éléments dépasse la
+      // limite d'arguments de JS. `concat` n'a pas ce problème.
+      let words: string[] = [];
+      for (const f of files) words = words.concat(readFileSync(resolve(dir, f), "utf8").split(/\r?\n/));
+      setBombeDictionary(words);
+      console.log(`[motbombe] dictionnaire chargé : ${bombeDictSize()} mots (${files.join(", ")})`);
+      return;
+    } catch {
+      /* ignore and try next */
+    }
+  }
+  console.log(`[motbombe] aucun fichier motbombe/*.txt — dictionnaire de secours utilisé (${bombeDictSize()} mots)`);
+})();
+
 const GRACE_MS = 45_000;
 
 /** The only emojis clients may broadcast as live reactions. */
@@ -233,6 +264,7 @@ const GAME_REGISTRY: Record<string, AnyGameModule> = {
   quiz: quizModule,
   reco: recoModule,
   pixel: pixelModule,
+  bombe: bombeModule,
 };
 const gameCtx = (): GameContext => ({ now: Date.now(), rng: Math.random });
 

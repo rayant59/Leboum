@@ -9,7 +9,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "test": "tsx src/room/engine.test.ts && tsx src/game/subtitles.test.ts && tsx src/game/settings.test.ts && tsx src/game/twists.test.ts && tsx src/games/draw/engine.test.ts",
+    "test": "tsx src/room/engine.test.ts && tsx src/game/subtitles.test.ts && tsx src/game/settings.test.ts && tsx src/game/twists.test.ts && tsx src/games/draw/engine.test.ts && tsx src/games/bombe/engine.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "description": "",

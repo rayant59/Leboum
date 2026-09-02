@@ -37,3 +37,7 @@ export * from "./games/reconnaissance/types";
 export * from "./games/reconnaissance/engine";
 export * from "./games/reconnaissance/module";
 export * from "./games/pixel/module";
+export * from "./games/bombe/dictionary";
+export * from "./games/bombe/types";
+export * from "./games/bombe/engine";
+export * from "./games/bombe/module";
