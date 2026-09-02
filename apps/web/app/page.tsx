@@ -7,6 +7,7 @@ import { generateRoomCode, isValidRoomCode, sanitizeName } from "@subtitles-part
 import { getPlayerName, setPlayerName } from "@/lib/identity";
 
 const TAGLINES = [
+  "...trouve le mot avant que ça explose",
   "...devine l'image pixel par pixel",
   "...devine ce que je dessine",
   "...démasque l'imposteur",
@@ -19,6 +20,7 @@ const ACCENTS = {
   mint: "#46E0B0",
   violet: "#8B7DF6",
   cyan: "#4CC9F0",
+  orange: "#FF6B4D",
 } as const;
 
 const BORDERS = {
@@ -27,6 +29,7 @@ const BORDERS = {
   mint: "rgba(70,224,176,0.32)",
   violet: "rgba(139,125,246,0.4)",
   cyan: "rgba(76,201,240,0.4)",
+  orange: "rgba(255,107,77,0.4)",
 } as const;
 
 type Accent = keyof typeof ACCENTS;
@@ -37,6 +40,7 @@ const GAMES: { img: string; accent: Accent; name: string; desc: string; players:
   { img: "/games/quiz.png", accent: "violet", name: "Quiz", desc: "Répondez à des questions et montrez votre culture !", players: "1–12", variants: [] },
   { img: "/games/reco.png", accent: "cyan", name: "Reconnaissance", desc: "Devinez le personnage, le lieu, l'œuvre… sur une vraie image.", players: "1–12", variants: [] },
   { img: "/games/pixel.png", accent: "mint", name: "Pixel incoming", desc: "Une image se dévoile pixel par pixel : devine le plus vite possible !", players: "1–12", variants: [] },
+  { img: "/games/bombe.png", accent: "orange", name: "Bombe", desc: "Trouve vite un mot avec la syllabe avant que la bombe explose !", players: "2–12", variants: [] },
 ];
 
 const DOT_COLORS = ["rgba(255,194,75,0.7)", "rgba(255,77,141,0.6)", "rgba(70,224,176,0.6)", "rgba(243,238,255,0.5)"];
