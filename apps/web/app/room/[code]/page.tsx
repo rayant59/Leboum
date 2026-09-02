@@ -493,7 +493,9 @@ export default function LobbyPage() {
         </section>
       )}
 
-      {/* settings */}
+      {/* settings — réservé à l'hôte : les invités voient seulement la carte
+          « Jeu choisi par l'hôte » plus haut, jamais le choix des modes/réglages. */}
+      {isHost && (
       <section className="mb-8">
         <p className="eyebrow mb-2 px-1">Réglages</p>
         {selectedGame === "subtitles" ? (
@@ -631,7 +633,7 @@ export default function LobbyPage() {
             {/* MODE */}
             <div className="cfg-grp">
               <div className="cfg-head">
-                <span className="cfg-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 11a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z" /><path d="M18 15a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z" /><rect x="2.5" y="3" width="19" height="18" rx="4" /><path d="M8 8h9" /><path d="M7 16h9" /></svg></span>
+                <span className="cfg-ic-img"><img src="/ui/modejeu.png" alt="" draggable={false} /></span>
                 <div><h2 className="cfg-tt">Mode de jeu</h2><span className="cfg-sub">Choisis comment vous jouez</span></div>
               </div>
               <div className="cfg-modes">
@@ -661,7 +663,7 @@ export default function LobbyPage() {
             {/* MANCHES */}
             <div className="cfg-grp">
               <div className="cfg-head">
-                <span className="cfg-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a9 9 0 1 0 9 9" /><path d="M21 3v5h-5" /></svg></span>
+                <span className="cfg-ic-img"><img src="/ui/manche.png" alt="" draggable={false} /></span>
                 <div><h2 className="cfg-tt">Manches</h2><span className="cfg-sub">Réglage de la partie</span></div>
               </div>
               <div className="cfg-rounds">
@@ -731,6 +733,7 @@ export default function LobbyPage() {
           </div>
         )}
       </section>
+      )}
 
       {/* rules */}
       <details className="panel group mb-6 px-4 py-3">

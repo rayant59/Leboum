@@ -144,6 +144,14 @@
 .cfg-grp:first-child { margin-top: 0; }
 .cfg-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; padding: 0 2px; }
 .cfg-ic { width: 32px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 10px; background: rgba(255,194,75,.1); color: #FFC24B; border: 1px solid rgba(255,194,75,.28); }
+/* Icône image néon (Mode de jeu / Manches) — pas de fond, léger flottement + halo. */
+.cfg-ic-img { width: 44px; height: 44px; flex: none; display: grid; place-items: center; background: none; border: none; border-radius: 0; overflow: visible; }
+.cfg-ic-img img { width: 100%; height: 100%; object-fit: contain; display: block; animation: cfgIcFloat 3.4s ease-in-out infinite; will-change: transform, filter; }
+@keyframes cfgIcFloat {
+  0%, 100% { transform: translateY(0) scale(1);      filter: drop-shadow(0 3px 7px rgba(0,0,0,.45)) drop-shadow(0 0 6px rgba(150,120,255,.35)); }
+  50%      { transform: translateY(-3px) scale(1.05); filter: drop-shadow(0 6px 11px rgba(0,0,0,.5))  drop-shadow(0 0 13px rgba(150,120,255,.6)); }
+}
+@media (prefers-reduced-motion: reduce) { .cfg-ic-img img { animation: none; } }
 .cfg-tt { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px; letter-spacing: -.01em; margin: 0; line-height: 1; color: #F3EEFF; }
 .cfg-sub { font-family: 'Space Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: .2em; color: #6E6796; margin-top: 5px; display: block; }
 .cfg-modes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
