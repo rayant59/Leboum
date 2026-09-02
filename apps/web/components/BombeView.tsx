@@ -254,10 +254,10 @@ export function BombeView({ room }: { room: UseRoom }) {
     const prev = text;
     setText(v);
     if (room.error) room.clearError();
-    // Sons de frappe : clic clavier quand on ajoute, « effacer » quand on vide.
+    // Sons de frappe : clic clavier quand on AJOUTE, « effacer » quand on EFFACE.
     if (game.youAreCurrent && game.phase === "playing") {
       if (v.length > prev.length) playTouche();
-      else if (v.length < prev.length && v.trim().length === 0 && prev.trim().length > 0) playBombe("effacer", 0.8);
+      else if (v.length < prev.length) playBombe("effacer", 0.8);
     }
     if (game.youAreCurrent) pushTyping(v);
   }
