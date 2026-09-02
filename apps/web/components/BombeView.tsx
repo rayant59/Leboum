@@ -9,18 +9,21 @@ import { BoumBackdrop } from "@/components/BoumBackdrop";
 import { ResultsScreen } from "@/components/ResultsScreen";
 import { SoundToggle, playSound } from "@/lib/sound";
 
-/** Fraction de temps écoulée vers la borne haute (0 → 1). Sert UNIQUEMENT à
- *  l'animation : le vrai instant d'explosion reste secret côté serveur. */
+/** Mèche calée sur la VRAIE échéance : la bombe explose pile quand la mèche
+ *  arrive au bout (fini le « explose trop tôt »). Le mystère vient de la durée
+ *  aléatoire choisie par le serveur à chaque tour. */
 function useFuse(game: BombePublic, serverNow: () => number) {
   const [, force] = useState(0);
   useEffect(() => {
     const id = setInterval(() => force((n) => n + 1), 80);
     return () => clearInterval(id);
   }, []);
-  if (game.phase !== "playing") return 0;
-  const span = Math.max(1, game.maxMs);
-  const elapsed = serverNow() - game.turnStartedAt;
-  return Math.max(0, Math.min(1, elapsed / span));
+  if (game.phase !== "playing" || game.deadline == null) return { frac: 0, secs: 0 };
+  const now = serverNow();
+  const total = Math.max(1, game.deadline - game.turnStartedAt);
+  const frac = Math.max(0, Math.min(1, (now - game.turnStartedAt) / total));
+  const secs = Math.max(0, (game.deadline - now) / 1000);
+  return { frac, secs };
 }
 
 function Hearts({ n, max }: { n: number; max: number }) {
@@ -166,17 +169,19 @@ export function BombeView({ room }: { room: UseRoom }) {
 
   const tickRef = useRef(false);
   useEffect(() => {
-    if (game.phase === "playing" && game.youAreCurrent && fuse > 0.66 && !tickRef.current) {
+    if (game.phase === "playing" && game.youAreCurrent && fuse.secs <= 3 && fuse.secs > 0 && !tickRef.current) {
       playSound("tick");
       tickRef.current = true;
-      setTimeout(() => (tickRef.current = false), 500);
+      setTimeout(() => (tickRef.current = false), 450);
     }
-  }, [fuse, game.youAreCurrent, game.phase]);
+  }, [fuse.secs, game.youAreCurrent, game.phase]);
 
   function send() {
     const t = text.trim();
     if (!t) return;
     room.bombeSubmit(t);
+    if (typingTimer.current) clearTimeout(typingTimer.current); // évite un renvoi tardif
+    lastTypedRef.current = Date.now();
     room.sendBombeTyping(""); // efface l'aperçu live chez les autres
   }
 
@@ -203,11 +208,12 @@ export function BombeView({ room }: { room: UseRoom }) {
     );
   }
 
-  // --- couleur de danger selon le temps écoulé ------------------------------
-  const danger = fuse; // 0 → 1
+  // --- couleur de danger selon le temps restant -----------------------------
+  const danger = fuse.frac; // 0 → 1
   const bombColor = danger < 0.5 ? "#FFC24B" : danger < 0.8 ? "#FF8A3D" : "#FF4D4D";
   const shake = danger > 0.55;
   const exploded = game.justExploded;
+  const secsLeft = Math.ceil(fuse.secs);
 
   return (
     <>
@@ -258,6 +264,7 @@ export function BombeView({ room }: { room: UseRoom }) {
                   <div className="font-display text-5xl font-black tracking-wider text-white" style={{ textShadow: `0 2px 16px ${bombColor}` }}>
                     {game.syllable.toUpperCase()}
                   </div>
+                  <div className="mt-1 font-mono text-xl font-extrabold tabular-nums" style={{ color: bombColor }}>{secsLeft}s</div>
                 </div>
               )}
             </div>
@@ -278,8 +285,17 @@ export function BombeView({ room }: { room: UseRoom }) {
                 Au tour de <span className="text-gold">{currentName}</span>…
               </p>
             )}
-            {liveTyping && !exploded && (
-              <p className="mt-1 font-mono text-sm text-mint animate-pop">✍️ {currentName} écrit : <b>{liveTyping}</b></p>
+            {!game.youAreCurrent && !exploded && (
+              <div className="mt-2 flex min-h-[34px] items-center justify-center">
+                {liveTyping ? (
+                  <span className="inline-flex items-center gap-2 rounded-full border border-mint/50 bg-mint/[0.08] px-3 py-1.5 animate-pop">
+                    <span>✍️</span>
+                    <span className="font-mono text-base font-bold text-mint">{liveTyping}<span className="animate-pulse">▏</span></span>
+                  </span>
+                ) : (
+                  <span className="text-xs text-text-faint">{currentName} réfléchit…</span>
+                )}
+              </div>
             )}
             {game.lastWord && !exploded && (
               <p className="mt-1 text-sm text-text-muted">

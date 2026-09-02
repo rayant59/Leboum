@@ -165,10 +165,10 @@ test("helpers deadline/isOver", () => {
   assert(bombeIsOver(over), "isOver = true");
 });
 
-test("projection : ne révèle jamais la deadline exacte, seulement des bornes", () => {
+test("projection : deadline réelle exposée (mèche honnête) + bornes", () => {
   const s = createBombe(players, { lives: 3, minSeconds: 5, maxSeconds: 12 }, ctx(1000));
   const pub = projectBombe(s, players[0].id);
-  assert(!("deadline" in pub), "pas de champ deadline dans le public");
+  eq(pub.deadline, s.deadline, "deadline réelle exposée pour l'animation");
   eq(pub.maxDeadline, s.turnStartedAt + s.config.maxMs, "borne haute exposée");
   eq(pub.syllable, s.syllable, "syllabe visible");
   eq(pub.ranking.length, players.length, "classement complet");

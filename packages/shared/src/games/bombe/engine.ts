@@ -308,6 +308,7 @@ export function projectBombe(state: BombeState, viewerId: PlayerId): BombePublic
     turnStartedAt: state.turnStartedAt,
     minMs: state.config.minMs,
     maxMs: state.config.maxMs,
+    deadline: state.deadline,
     maxDeadline: state.turnStartedAt + state.config.maxMs,
     lives: state.lives,
     maxLives: state.config.lives,

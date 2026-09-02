@@ -76,11 +76,14 @@ export interface BombePublic {
   syllable: string;                 // affichée en gros
   currentId: PlayerId | null;
   youAreCurrent: boolean;
-  // Timer : uniquement des bornes pour l'animation. Le vrai instant est secret.
+  // Timer. On expose la vraie échéance pour que la mèche brûle EXACTEMENT jusqu'à
+  // l'explosion (sinon la bombe « explose trop tôt » visuellement). La part de
+  // mystère vient de la durée aléatoire choisie par le serveur à chaque tour.
   turnStartedAt: number;
   minMs: number;
   maxMs: number;
-  maxDeadline: number;              // turnStartedAt + maxMs (borne haute, jamais l'exact)
+  deadline: number | null;          // instant réel d'explosion (horloge serveur)
+  maxDeadline: number;              // turnStartedAt + maxMs (borne haute)
   lives: Record<PlayerId, number>;
   maxLives: number;
   eliminatedIds: PlayerId[];
