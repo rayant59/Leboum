@@ -281,3 +281,15 @@
   0%, 100% { text-shadow: 0 0 18px rgba(255,194,75,0.5); }
   50% { text-shadow: 0 0 30px rgba(255,194,75,0.9); }
 }
+
+/* Mode Bombe — design « Nocturne » : tremblement, halo, curseur. */
+@keyframes tremor {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-1px, 1px); }
+  40% { transform: translate(1px, -1px); }
+  60% { transform: translate(-1px, -1px); }
+  80% { transform: translate(1px, 1px); }
+}
+@keyframes pulseGlow { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+@keyframes caretBlink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes bombBreak { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.35); opacity: 0; } }

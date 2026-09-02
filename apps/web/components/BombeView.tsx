@@ -1,17 +1,38 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { BOMBE_ALPHABET } from "@subtitles-party/shared";
 import type { BombePublic } from "@subtitles-party/shared";
 import type { UseRoom } from "@/lib/useRoom";
-import { Avatar } from "@/components/Avatar";
-import { BoumBackdrop } from "@/components/BoumBackdrop";
-import { ResultsScreen } from "@/components/ResultsScreen";
-import { SoundToggle, playSound } from "@/lib/sound";
+import { isSoundOn, setSoundOn, playSound } from "@/lib/sound";
 
-/** Mèche calée sur la VRAIE échéance : la bombe explose pile quand la mèche
- *  arrive au bout (fini le « explose trop tôt »). Le mystère vient de la durée
- *  aléatoire choisie par le serveur à chaque tour. */
+// ── Palette « Nocturne » (design fourni) ────────────────────────────────────
+const C = {
+  bg: "#161826",
+  surface: "#232532",
+  track: "#292b31",
+  line: "rgba(233,233,237,.16)",
+  outline: "#3f424d",
+  accent: "#9184d9",
+  accentT: "#b5abfc",
+  accentT2: "#d2cefd",
+  accentChip: "rgba(145,132,217,.16)",
+  accentRing: "rgba(145,132,217,.5)",
+  avatar: "#796cbf",
+  danger: "#e0685e",
+  text: "#e9e9ed",
+  muted: "#9397ab",
+  faint: "#75798c",
+  dim: "#595d6c",
+};
+const RING_R = 109;
+const RING_C = 2 * Math.PI * RING_R; // ≈ 684.9
+
+function initials(name: string) {
+  return (name || "?").trim().slice(0, 2).toUpperCase();
+}
+
+/** Mèche calée sur la VRAIE échéance : la bombe explose pile au bout. */
 function useFuse(game: BombePublic, serverNow: () => number) {
   const [, force] = useState(0);
   useEffect(() => {
@@ -26,31 +47,105 @@ function useFuse(game: BombePublic, serverNow: () => number) {
   return { frac, secs };
 }
 
-function Hearts({ n, max }: { n: number; max: number }) {
+// ── Avatar carré à initiales (comme le design) ──────────────────────────────
+function Plate({ name, color, size = 34, dim = false }: { name: string; color?: string; size?: number; dim?: boolean }) {
   return (
-    <span className="inline-flex items-center gap-0.5" aria-label={`${n} vies`}>
+    <span
+      style={{
+        display: "grid", placeItems: "center", width: size, height: size, flex: "none",
+        borderRadius: 8, background: dim ? C.outline : color || C.avatar,
+        fontSize: size >= 30 ? 13 : 10, fontWeight: 600, color: dim ? "#b2b6ca" : "#f5f4ff",
+      }}
+    >
+      {initials(name)}
+    </span>
+  );
+}
+
+function Hearts({ n, max }: { n: number; max: number }) {
+  if (max > 6) {
+    return (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 13 }}>
+        <span>❤️</span>
+        <span style={{ color: n <= 1 ? C.danger : C.faint, fontSize: 12 }}>×{n}</span>
+      </span>
+    );
+  }
+  return (
+    <span style={{ display: "flex", gap: 3, alignItems: "center" }}>
       {Array.from({ length: max }).map((_, i) => (
-        <span key={i} className={`text-[15px] leading-none ${i < n ? "" : "opacity-25 grayscale"}`}>
-          {i < n ? "❤️" : "🖤"}
-        </span>
+        <span key={i} style={{ fontSize: 14, lineHeight: 1, opacity: i < n ? 1 : 0.28, filter: i < n ? undefined : "grayscale(1)" }}>❤️</span>
       ))}
     </span>
   );
 }
 
-/** Grille des lettres A-V : découvertes en surbrillance, à découvrir en grisé. */
-function LettersGrid({ used }: { used: string[] }) {
+// ── Liste des joueurs (sidebar + mobile) ────────────────────────────────────
+function PlayerList({ game, you }: { game: BombePublic; you: string }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {game.ranking.map((r) => {
+        const current = r.isCurrent && !r.eliminated;
+        return (
+          <div
+            key={r.id}
+            style={{
+              position: "relative", display: "flex", alignItems: "center", gap: 12,
+              padding: current ? "12px 14px 12px 16px" : "12px 14px",
+              borderRadius: 8, background: current ? C.surface : "transparent",
+              boxShadow: current
+                ? `0 0 0 1px ${C.accent}, 0 0 26px -12px rgba(145,132,217,.9)`
+                : r.eliminated ? `0 0 0 1px ${C.surface}` : `0 0 0 1px ${C.track}`,
+              opacity: r.eliminated ? 0.45 : 1,
+            }}
+          >
+            {current && <span style={{ position: "absolute", left: 0, top: 13, bottom: 13, width: 2, borderRadius: 2, background: C.accent }} />}
+            <Plate name={r.name} color={r.color} dim={r.eliminated} />
+            <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 3 }}>
+              <span style={{ fontSize: 14, fontWeight: 500, textDecoration: r.eliminated ? "line-through" : undefined, textDecorationColor: C.faint }}>
+                {r.name}{r.id === you && <span style={{ color: C.faint, fontWeight: 400 }}> · toi</span>}
+              </span>
+              {r.eliminated ? (
+                <span style={{ fontSize: 11, color: C.faint }}>éliminé · {r.wordsFound} mot{r.wordsFound > 1 ? "s" : ""}</span>
+              ) : (
+                <span style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <Hearts n={r.lives} max={game.maxLives} />
+                  <span style={{ marginLeft: 2, fontSize: 11, color: r.lives === 1 ? C.danger : C.faint }}>
+                    {r.lives === 1 ? "dernière vie" : `${r.wordsFound} mot${r.wordsFound > 1 ? "s" : ""}`}
+                  </span>
+                </span>
+              )}
+            </span>
+            {current && <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: ".14em", color: C.accentT }}>à toi</span>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Grille des lettres A-V ───────────────────────────────────────────────────
+function Letters({ used }: { used: string[] }) {
   const set = new Set(used);
   return (
-    <div className="mx-auto mt-4 max-w-md">
-      <p className="eyebrow mb-1.5 text-center text-text-faint">Lettres · {set.size}/{BOMBE_ALPHABET.length} <span className="text-gold">(nouvelle lettre = +1 ❤️)</span></p>
-      <div className="flex flex-wrap justify-center gap-1">
+    <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+        <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: ".18em", color: C.faint }}>Lettres</span>
+        <span style={{ fontSize: 10, color: C.faint }}>{set.size} / {BOMBE_ALPHABET.length}</span>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
         {BOMBE_ALPHABET.map((l) => {
           const on = set.has(l);
           return (
             <span
               key={l}
-              className={`grid h-7 w-7 place-items-center rounded-md border font-display text-sm font-bold ${on ? "border-mint/60 bg-mint/15 text-mint" : "border-ink-border bg-ink-deep text-text-faint opacity-50"}`}
+              style={{
+                display: "grid", placeItems: "center", width: 22, height: 22, borderRadius: 4,
+                fontSize: 11, fontWeight: 500,
+                color: on ? C.accentT2 : C.dim,
+                background: on ? C.accentChip : "transparent",
+                boxShadow: on ? `inset 0 0 0 1px ${C.accentRing}` : undefined,
+              }}
             >
               {l}
             </span>
@@ -61,25 +156,68 @@ function LettersGrid({ used }: { used: string[] }) {
   );
 }
 
-/** Toast « nouvelle lettre » — non bloquant, disparaît tout seul. */
-function LetterToast({ ev, nameOf }: { ev: BombePublic["letterEvent"]; nameOf: (id: string | null) => string }) {
-  if (!ev) return null;
+// ── La bombe (anneau + syllabe + secondes) ──────────────────────────────────
+function Bomb({ syllable, secs, frac, color, exploded, tremor }: { syllable: string; secs: number; frac: number; color: string; exploded: boolean; tremor: boolean }) {
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-6 z-50 flex justify-center px-4" style={{ animation: "revealPop 0.35s ease-out" }}>
-      <div className="rounded-2xl border-2 border-gold/60 bg-[rgba(20,16,42,0.95)] px-5 py-3 text-center shadow-[0_10px_40px_-10px_rgba(255,194,75,0.6)]">
-        {ev.gainedLife ? (
+    <div style={{ position: "relative", width: 230, maxWidth: "72vw", aspectRatio: "1 / 1", display: "grid", placeItems: "center" }}>
+      <svg viewBox="0 0 230 230" width="100%" height="100%" style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
+        <circle cx="115" cy="115" r={RING_R} fill="none" stroke={C.track} strokeWidth="3" />
+        {exploded ? (
+          <circle cx="115" cy="115" r={RING_R} fill="none" stroke="rgba(224,104,94,.35)" strokeWidth="3" strokeDasharray="14 22" />
+        ) : (
+          <circle
+            cx="115" cy="115" r={RING_R} fill="none" stroke={color} strokeWidth="3" strokeLinecap="round"
+            strokeDasharray={RING_C} strokeDashoffset={RING_C * frac}
+            style={{ transition: "stroke-dashoffset 0.12s linear, stroke 0.3s" }}
+          />
+        )}
+      </svg>
+      {!exploded && (
+        <div style={{ position: "absolute", inset: 24, borderRadius: "50%", background: `radial-gradient(circle at 50% 45%, ${color}2e, transparent 70%)`, animation: tremor ? "pulseGlow 1s ease-in-out infinite" : undefined }} />
+      )}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, position: "relative" }}>
+        {exploded ? (
           <>
-            <p className="font-display text-lg font-extrabold text-gold">🔤 NOUVELLE LETTRE ! <span className="text-magenta">+1 ❤️</span></p>
-            <p className="text-sm text-text-muted">{nameOf(ev.playerId)} découvre : <b className="text-mint">{ev.newLetters.join(" · ")}</b></p>
+            <span style={{ fontSize: "clamp(20px,6vw,28px)", textTransform: "uppercase", letterSpacing: ".2em", color: C.danger }}>0 s</span>
+            <span style={{ fontSize: "clamp(34px,10vw,64px)", fontWeight: 500, letterSpacing: ".06em", lineHeight: 1, color: C.dim }}>{(syllable || "").toUpperCase()}</span>
           </>
         ) : (
           <>
-            <p className="font-display text-lg font-extrabold text-gold">🔤 LETTRE DÉCOUVERTE</p>
-            <p className="text-sm text-text-muted">❤️ Vie maximale atteinte · <b className="text-mint">{ev.newLetters.join(" · ")}</b></p>
+            <span style={{ fontSize: "clamp(18px,5vw,26px)", lineHeight: 1 }}>💣</span>
+            <span style={{ fontSize: "clamp(34px,10vw,64px)", fontWeight: 500, letterSpacing: ".06em", lineHeight: 1, color: C.text }}>{(syllable || "").toUpperCase()}</span>
+            <span style={{ fontSize: "clamp(10px,2.4vw,12px)", textTransform: "uppercase", letterSpacing: ".2em", color }}>{Math.ceil(secs)} s</span>
           </>
         )}
       </div>
     </div>
+  );
+}
+
+/** Découpe le texte pour surligner la 1re occurrence de la syllabe. */
+function Highlighted({ text, syllable }: { text: string; syllable: string }) {
+  const low = text.toLowerCase();
+  const s = (syllable || "").toLowerCase();
+  const i = s ? low.indexOf(s) : -1;
+  if (i < 0) return <span style={{ color: C.text }}>{text}</span>;
+  return (
+    <>
+      <span style={{ color: C.text }}>{text.slice(0, i)}</span>
+      <span style={{ color: C.accentT }}>{text.slice(i, i + s.length)}</span>
+      <span style={{ color: C.text }}>{text.slice(i + s.length)}</span>
+    </>
+  );
+}
+
+function SonButton() {
+  const [on, setOn] = useState(true);
+  useEffect(() => setOn(isSoundOn()), []);
+  return (
+    <button
+      onClick={() => { const n = !on; setSoundOn(n); setOn(n); if (n) playSound("click"); }}
+      style={{ border: `1px solid ${C.outline}`, background: "transparent", color: C.muted, fontFamily: "inherit", fontSize: 12, padding: "6px 12px", borderRadius: 8, cursor: "pointer" }}
+    >
+      {on ? "🔔 Son" : "🔕 Son"}
+    </button>
   );
 }
 
@@ -94,7 +232,10 @@ export function BombeView({ room }: { room: UseRoom }) {
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [toast, setToast] = useState<BombePublic["letterEvent"]>(null);
 
-  // Live typing : le joueur actif diffuse son texte (throttlé ~120ms).
+  const byId = new Map(game.players.map((p) => [p.id, p]));
+  const nameOf = (id: string | null) => (id ? byId.get(id)?.name ?? "?" : "?");
+
+  // Live typing (throttlé) — joueur actif seulement.
   function pushTyping(v: string) {
     const val = v.trim().slice(0, 48);
     const now = Date.now();
@@ -110,8 +251,46 @@ export function BombeView({ room }: { room: UseRoom }) {
     if (room.error) room.clearError();
     if (game.youAreCurrent) pushTyping(v);
   }
+  function send() {
+    const t = text.trim();
+    if (!t) return;
+    room.bombeSubmit(t);
+    if (typingTimer.current) clearTimeout(typingTimer.current);
+    lastTypedRef.current = Date.now();
+    room.sendBombeTyping("");
+  }
 
-  // Toast « nouvelle lettre » (déclenché par letterEvent.at, non bloquant).
+  // Reset input au changement de tour + refocus.
+  const turnKey = `${game.currentId}|${game.syllable}|${game.usedCount}`;
+  const prevTurn = useRef(turnKey);
+  useEffect(() => {
+    if (prevTurn.current !== turnKey) {
+      prevTurn.current = turnKey;
+      setText("");
+      room.clearError();
+      if (game.youAreCurrent) setTimeout(() => inputRef.current?.focus(), 30);
+    }
+  }, [turnKey, game.youAreCurrent, room]);
+
+  // Sons.
+  const prevCurrent = useRef<string | null>(null);
+  useEffect(() => {
+    if (game.phase === "playing" && game.youAreCurrent && prevCurrent.current !== game.currentId) playSound("yourTurn");
+    prevCurrent.current = game.currentId;
+  }, [game.currentId, game.youAreCurrent, game.phase]);
+  const prevUsed = useRef(game.usedCount);
+  useEffect(() => { if (game.usedCount > prevUsed.current) playSound("correct"); prevUsed.current = game.usedCount; }, [game.usedCount]);
+  const prevExploded = useRef<string | null>(null);
+  useEffect(() => { if (game.justExploded && game.justExploded !== prevExploded.current) playSound("timeUp"); prevExploded.current = game.justExploded; }, [game.justExploded]);
+  const prevPhase = useRef(game.phase);
+  useEffect(() => { if (prevPhase.current !== game.phase && game.phase === "gameover") playSound("win"); prevPhase.current = game.phase; }, [game.phase]);
+  const tickRef = useRef(false);
+  useEffect(() => {
+    if (game.phase === "playing" && game.youAreCurrent && fuse.secs <= 3 && fuse.secs > 0 && !tickRef.current) {
+      playSound("tick"); tickRef.current = true; setTimeout(() => (tickRef.current = false), 450);
+    }
+  }, [fuse.secs, game.youAreCurrent, game.phase]);
+  // Toast nouvelle lettre.
   const lastLetterAt = useRef(0);
   useEffect(() => {
     const ev = game.letterEvent;
@@ -124,243 +303,225 @@ export function BombeView({ room }: { room: UseRoom }) {
     }
   }, [game.letterEvent]);
 
-  const byId = new Map(game.players.map((p) => [p.id, p]));
-  const nameOf = (id: string | null) => (id ? byId.get(id)?.name ?? "?" : "?");
+  const exploded = !!game.justExploded;
+  const danger = fuse.frac;
+  const ringColor = exploded ? "rgba(224,104,94,.5)" : game.youAreCurrent ? C.danger : C.accent;
+  const tremor = game.phase === "playing" && !exploded;
+  const tremorAnim = tremor ? `tremor ${Math.max(0.32, 1.1 - danger * 0.7)}s ease-in-out infinite` : undefined;
   const currentName = nameOf(game.currentId);
-
-  // Nouvelle syllabe / nouveau tour → on nettoie l'input et l'erreur, et on refocus.
-  const turnKey = `${game.currentId}|${game.syllable}|${game.usedCount}`;
-  const prevTurn = useRef(turnKey);
-  useEffect(() => {
-    if (prevTurn.current !== turnKey) {
-      prevTurn.current = turnKey;
-      setText("");
-      room.clearError();
-      if (game.youAreCurrent) setTimeout(() => inputRef.current?.focus(), 30);
-    }
-  }, [turnKey, game.youAreCurrent, room]);
-
-  // Sons : c'est à toi, mot validé, explosion, victoire, tic-tac de fin.
-  const prevCurrent = useRef<string | null>(null);
-  useEffect(() => {
-    if (game.phase === "playing" && game.youAreCurrent && prevCurrent.current !== game.currentId) {
-      playSound("yourTurn");
-    }
-    prevCurrent.current = game.currentId;
-  }, [game.currentId, game.youAreCurrent, game.phase]);
-
-  const prevUsed = useRef(game.usedCount);
-  useEffect(() => {
-    if (game.usedCount > prevUsed.current) playSound("correct");
-    prevUsed.current = game.usedCount;
-  }, [game.usedCount]);
-
-  const prevExploded = useRef<string | null>(null);
-  useEffect(() => {
-    if (game.justExploded && game.justExploded !== prevExploded.current) playSound("timeUp");
-    prevExploded.current = game.justExploded;
-  }, [game.justExploded]);
-
-  const prevPhase = useRef(game.phase);
-  useEffect(() => {
-    if (prevPhase.current !== game.phase && game.phase === "gameover") playSound("win");
-    prevPhase.current = game.phase;
-  }, [game.phase]);
-
-  const tickRef = useRef(false);
-  useEffect(() => {
-    if (game.phase === "playing" && game.youAreCurrent && fuse.secs <= 3 && fuse.secs > 0 && !tickRef.current) {
-      playSound("tick");
-      tickRef.current = true;
-      setTimeout(() => (tickRef.current = false), 450);
-    }
-  }, [fuse.secs, game.youAreCurrent, game.phase]);
-
-  function send() {
-    const t = text.trim();
-    if (!t) return;
-    room.bombeSubmit(t);
-    if (typingTimer.current) clearTimeout(typingTimer.current); // évite un renvoi tardif
-    lastTypedRef.current = Date.now();
-    room.sendBombeTyping(""); // efface l'aperçu live chez les autres
-  }
-
-  // Aperçu live du joueur actif (visible par les AUTRES uniquement).
   const liveTyping = !game.youAreCurrent && room.bombeTyping && room.bombeTyping.from === game.currentId ? room.bombeTyping.text : "";
 
-  // --- écran de victoire ----------------------------------------------------
+  // ══════════════════ FIN DE PARTIE ══════════════════
   if (game.phase === "gameover") {
+    const winner = game.ranking[0];
     return (
-      <>
-        <BoumBackdrop />
-        <main className="relative z-[1] mx-auto max-w-2xl px-5 py-8" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-          <ResultsScreen
-            ranking={game.ranking.map((r) => ({ id: r.id, name: r.name, color: r.color, avatar: r.avatar, score: r.wordsFound }))}
-            you={you}
-            stats={{ fastest: null, brain: game.stats?.words ?? null, streak: null }}
-            isHost={isHost}
-            onReturn={() => room.returnLobby()}
-            onReplay={() => room.playAgain()}
-          />
-          <p className="mt-4 text-center text-xs text-text-faint">Le score affiché = nombre de mots trouvés · 🧠 = le plus de mots</p>
-        </main>
-      </>
+      <main style={{ minHeight: "100dvh", background: C.bg, color: C.text, fontFamily: "'Inter', system-ui, sans-serif" }}>
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 lg:flex-row lg:gap-0 lg:p-6">
+          {/* Classement */}
+          <aside className="order-2 w-full lg:order-1 lg:w-72 lg:flex-none" style={{ display: "flex", flexDirection: "column", gap: 18, padding: 20, borderRadius: 14, background: C.bg, boxShadow: `0 0 0 1px ${C.track}` }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: C.faint }}>Classement</span>
+              <span style={{ fontSize: 20, fontWeight: 500, letterSpacing: "-.015em" }}>Partie terminée</span>
+              <span style={{ fontSize: 12, color: C.faint }}>{game.usedCount} mots joués</span>
+            </div>
+            <div style={{ height: 1, background: C.line }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {game.ranking.map((r, i) => (
+                <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 8, boxShadow: i === 0 ? `0 0 0 1px ${C.accent}` : `0 0 0 1px ${C.track}`, opacity: r.eliminated && i > 0 ? 0.6 : 1 }}>
+                  <span style={{ width: 16, textAlign: "center", fontSize: 13, fontWeight: 600, color: i === 0 ? C.accentT : C.faint }}>{i + 1}</span>
+                  <Plate name={r.name} color={r.color} size={28} />
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 500 }}>{r.name}{r.id === you && <span style={{ color: C.faint, fontWeight: 400 }}> · toi</span>}</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: i === 0 ? C.text : C.muted }}>{r.wordsFound}</span>
+                </div>
+              ))}
+            </div>
+          </aside>
+          {/* Résultat */}
+          <div className="order-1 flex-1 lg:order-2" style={{ display: "flex", flexDirection: "column", background: `radial-gradient(120% 85% at 50% 6%, rgba(145,132,217,.10), transparent 60%)`, borderRadius: 14 }}>
+            <div style={{ height: 2, background: `linear-gradient(90deg,transparent,${C.accent} 5%,${C.accent} 62%,rgba(145,132,217,0) 63%)` }} />
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 22, padding: "40px 24px" }}>
+              <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".2em", color: C.faint }}>{game.stats?.survivor ? "Dernier survivant" : "Fin de partie"}</span>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+                <Plate name={winner?.name ?? ""} color={winner?.color} size={64} />
+                <span style={{ fontSize: 34, fontWeight: 500, letterSpacing: "-.015em" }}>🏆 {winner?.name}{winner?.id === you ? " (toi)" : ""}</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 22, flexWrap: "wrap", justifyContent: "center" }}>
+                <Stat n={winner?.wordsFound ?? 0} label="mots trouvés" />
+                <span style={{ width: 1, height: 34, background: C.line }} />
+                <Stat n={winner?.lives ?? 0} label="vies restantes" />
+                <span style={{ width: 1, height: 34, background: C.line }} />
+                <Stat n={game.usedLetters.length} label="lettres découvertes" />
+              </div>
+            </div>
+            {isHost && (
+              <div style={{ padding: "0 28px 30px", display: "flex", gap: 10, justifyContent: "center" }}>
+                <button onClick={() => room.returnLobby()} style={btnGhost}>Retour au salon</button>
+                <button onClick={() => room.playAgain()} style={btnAccent}>Rejouer</button>
+              </div>
+            )}
+          </div>
+        </div>
+        {toast && <LetterToast ev={toast} nameOf={nameOf} />}
+      </main>
     );
   }
 
-  // --- couleur de danger selon le temps restant -----------------------------
-  const danger = fuse.frac; // 0 → 1
-  const bombColor = danger < 0.5 ? "#FFC24B" : danger < 0.8 ? "#FF8A3D" : "#FF4D4D";
-  const shake = danger > 0.55;
-  const exploded = game.justExploded;
-  const secsLeft = Math.ceil(fuse.secs);
+  // ══════════════════ EN JEU ══════════════════
+  const sidebar = (
+    <aside className="order-2 w-full lg:order-1 lg:w-72 lg:flex-none" style={{ display: "flex", flexDirection: "column", gap: 18, padding: 20, borderRadius: 14, background: C.bg, boxShadow: `0 0 0 1px ${C.track}` }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: C.faint }}>Bombe</span>
+        <span style={{ fontSize: 20, fontWeight: 500, letterSpacing: "-.015em" }}>{game.aliveCount} en jeu</span>
+        <span style={{ fontSize: 12, color: C.faint }}>{game.usedCount} mots joués</span>
+      </div>
+      <div style={{ height: 1, background: C.line }} />
+      <PlayerList game={game} you={you} />
+      <div style={{ marginTop: "auto" }}><Letters used={game.usedLetters} /></div>
+    </aside>
+  );
 
   return (
-    <>
-      <BoumBackdrop />
-      <LetterToast ev={toast} nameOf={nameOf} />
-      <main className="relative z-[1] mx-auto max-w-3xl px-4 py-5" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-        <div className="mb-3 flex items-center justify-between">
-          <span className="eyebrow">💣 Bombe · {game.aliveCount} en vie · {game.usedCount} mots joués</span>
-          <div className="flex items-center gap-2">
-            <SoundToggle />
-            {isHost && <button onClick={() => room.skipPhase()} className="rounded-md border border-ink-border px-2 py-1 text-xs text-text-muted transition-colors hover:border-magenta hover:text-magenta" title="Faire exploser maintenant (hôte)">💥 Skip</button>}
+    <main style={{ minHeight: "100dvh", background: C.bg, color: C.text, fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 lg:flex-row lg:gap-0 lg:p-6">
+        {sidebar}
+        {/* Zone principale */}
+        <div className="order-1 flex-1 lg:order-2" style={{ display: "flex", flexDirection: "column", background: exploded || game.youAreCurrent ? `radial-gradient(120% 85% at 50% 6%, rgba(224,104,94,.10), transparent 60%)` : `radial-gradient(120% 85% at 50% 6%, rgba(145,132,217,.08), transparent 60%)`, borderRadius: 14, minHeight: "70vh" }}>
+          <div style={{ height: 2, background: `linear-gradient(90deg,transparent,${ringColor} 5%,${ringColor} 62%,rgba(0,0,0,0) 63%)` }} />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px" }}>
+            <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: C.faint }}>{exploded ? "La bombe a sauté" : "Manche en cours"}</span>
+            <div style={{ display: "flex", gap: 8 }}>
+              <SonButton />
+              {isHost && <button onClick={() => room.skipPhase()} style={{ border: `1px solid ${C.outline}`, background: "transparent", color: C.muted, fontFamily: "inherit", fontSize: 12, padding: "6px 12px", borderRadius: 8, cursor: "pointer" }}>💥 Skip</button>}
+            </div>
+          </div>
+
+          {/* Bombe */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, animation: tremorAnim }}>
+            <Bomb syllable={game.syllable} secs={fuse.secs} frac={danger} color={ringColor} exploded={exploded} tremor={tremor} />
+            {!exploded && !game.youAreCurrent && (
+              <span style={{ fontSize: 13, color: C.muted }}>Au tour de <span style={{ color: C.accentT }}>{currentName}</span></span>
+            )}
+            {exploded && (
+              <span style={{ fontSize: 13, color: C.faint }}>Nouvelle syllabe dans un instant…</span>
+            )}
+          </div>
+
+          {/* Plaque selon l'état */}
+          <div style={{ padding: "0 clamp(16px,4vw,40px) 30px", display: "flex", flexDirection: "column", gap: 12 }}>
+            {exploded ? (
+              <ExplosionPlate game={game} nameOf={nameOf} />
+            ) : game.youAreCurrent ? (
+              <>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 9 }}>
+                    <Plate name={nameOf(you)} color={byId.get(you)?.color} size={22} />
+                    <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: C.accentT }}>Ton mot</span>
+                  </span>
+                  <span style={{ fontSize: 11, color: C.faint }}>Entrée pour valider</span>
+                </div>
+                <div
+                  onClick={() => inputRef.current?.focus()}
+                  style={{ position: "relative", display: "flex", alignItems: "center", gap: 16, padding: "clamp(14px,3vw,24px) clamp(16px,3vw,26px)", borderRadius: 14, background: C.surface, boxShadow: `0 0 0 1px ${C.accent}, inset 0 1px 0 rgba(233,233,237,.05), 0 20px 44px -28px rgba(0,0,0,.9)`, cursor: "text" }}
+                >
+                  <span style={{ flex: 1, minWidth: 0, fontSize: "clamp(28px,7vw,48px)", fontWeight: 500, letterSpacing: "-.02em", lineHeight: 1.15, whiteSpace: "nowrap", overflow: "hidden" }}>
+                    {text ? <Highlighted text={text} syllable={game.syllable} /> : <span style={{ color: C.faint }}>un mot avec {game.syllable.toUpperCase()}…</span>}
+                    <span style={{ display: "inline-block", width: 3, height: "0.7em", marginLeft: 6, verticalAlign: "-0.08em", background: C.accent, animation: "caretBlink 1.05s step-end infinite" }} />
+                  </span>
+                  <input
+                    ref={inputRef}
+                    value={text}
+                    onChange={(e) => onType(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") send(); }}
+                    autoFocus autoComplete="off" autoCorrect="off" spellCheck={false}
+                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0, cursor: "text", border: "none", background: "transparent", color: "transparent" }}
+                  />
+                  <button onClick={send} style={{ flex: "none", position: "relative", zIndex: 1, border: `1px solid ${C.accent}`, background: C.accentChip, color: C.accentT2, fontFamily: "inherit", fontSize: 14, fontWeight: 500, padding: "12px clamp(16px,3vw,26px)", borderRadius: 8, cursor: "pointer" }}>Valider</button>
+                </div>
+                {room.error ? (
+                  <span key={room.error.message} style={{ fontSize: 12, color: C.danger, animation: "shake 0.32s" }}>❌ {room.error.message} <span style={{ color: C.faint }}>· le timer continue</span></span>
+                ) : (
+                  <span style={{ fontSize: 12, color: C.faint }}>Doit contenir <span style={{ color: C.accentT2 }}>{game.syllable.toLowerCase()}</span> · jamais joué</span>
+                )}
+              </>
+            ) : (
+              <>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 9 }}>
+                    <Plate name={currentName} color={byId.get(game.currentId ?? "")?.color} size={22} />
+                    <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: C.accentT }}>{currentName} écrit</span>
+                  </span>
+                  <span style={{ fontSize: 11, color: C.faint }}>Tu regardes</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "clamp(14px,3vw,24px) clamp(16px,3vw,26px)", borderRadius: 14, background: C.surface, boxShadow: `0 0 0 1px ${C.track}` }}>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: "clamp(24px,6vw,44px)", fontWeight: 500, letterSpacing: "-.02em", lineHeight: 1.15, whiteSpace: "nowrap", overflow: "hidden" }}>
+                    {liveTyping ? (
+                      <>
+                        <Highlighted text={liveTyping} syllable={game.syllable} />
+                        <span style={{ display: "inline-block", width: 3, height: "0.7em", marginLeft: 6, verticalAlign: "-0.08em", background: C.accent, animation: "caretBlink 1.05s step-end infinite" }} />
+                      </>
+                    ) : (
+                      <span style={{ color: C.faint }}>{currentName} réfléchit…</span>
+                    )}
+                  </span>
+                  <span style={{ fontSize: 11, color: C.faint, flex: "none" }}>en direct</span>
+                </div>
+                <span style={{ fontSize: 12, color: C.faint }}>Prépare le tien : un mot avec <span style={{ color: C.accentT2 }}>{game.syllable.toLowerCase()}</span></span>
+              </>
+            )}
           </div>
         </div>
+      </div>
+      {toast && <LetterToast ev={toast} nameOf={nameOf} />}
+    </main>
+  );
+}
 
-        {/* La bombe */}
-        <section className="grid place-items-center py-4">
-          <div
-            className="relative grid place-items-center"
-            style={{ width: 220, height: 220 }}
-          >
-            {/* anneau de minuterie (se vide vers la borne haute) */}
-            <svg width="220" height="220" viewBox="0 0 220 220" className="absolute inset-0 -rotate-90">
-              <circle cx="110" cy="110" r="100" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" />
-              <circle
-                cx="110" cy="110" r="100" fill="none" stroke={bombColor} strokeWidth="8" strokeLinecap="round"
-                strokeDasharray={2 * Math.PI * 100}
-                strokeDashoffset={2 * Math.PI * 100 * danger}
-                style={{ transition: "stroke-dashoffset 0.1s linear, stroke 0.3s" }}
-              />
-            </svg>
-            {/* corps de la bombe */}
-            <div
-              className="grid place-items-center rounded-full"
-              style={{
-                width: 168, height: 168,
-                background: exploded
-                  ? "radial-gradient(circle, #FF4D4D, #7a1010)"
-                  : `radial-gradient(circle at 38% 32%, #3a3357, #14102a)`,
-                boxShadow: `0 0 ${20 + danger * 50}px ${bombColor}${exploded ? "" : "55"}, inset 0 4px 12px rgba(0,0,0,0.5)`,
-                border: `2px solid ${bombColor}66`,
-                animation: exploded ? "bombPop 0.5s ease-out" : shake ? `wiggle ${0.5 - danger * 0.3}s ease-in-out infinite` : undefined,
-              }}
-            >
-              {exploded ? (
-                <span className="text-6xl" style={{ animation: "bombPop 0.5s ease-out" }}>💥</span>
-              ) : (
-                <div className="text-center">
-                  <div className="font-display text-5xl font-black tracking-wider text-white" style={{ textShadow: `0 2px 16px ${bombColor}` }}>
-                    {game.syllable.toUpperCase()}
-                  </div>
-                  <div className="mt-1 font-mono text-xl font-extrabold tabular-nums" style={{ color: bombColor }}>{secsLeft}s</div>
-                </div>
-              )}
-            </div>
-            {/* mèche/étincelle */}
-            {!exploded && (
-              <span className="absolute -top-1 right-8 text-2xl" style={{ animation: `wiggle ${Math.max(0.15, 0.5 - danger * 0.35)}s ease-in-out infinite` }}>🔥</span>
-            )}
-          </div>
+function Stat({ n, label }: { n: number; label: string }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+      <span style={{ fontSize: 30, fontWeight: 500, color: C.text }}>{n}</span>
+      <span style={{ fontSize: 11, color: C.faint }}>{label}</span>
+    </div>
+  );
+}
 
-          {/* à qui de jouer */}
-          <div className="mt-3 text-center">
-            {exploded ? (
-              <p className="font-display text-xl font-extrabold text-magenta animate-pop">💥 {nameOf(exploded)} a explosé !</p>
-            ) : game.youAreCurrent ? (
-              <p className="font-display text-2xl font-extrabold text-mint animate-pop">À toi de jouer ! 🔥</p>
-            ) : (
-              <p className="font-display text-xl font-bold text-text">
-                Au tour de <span className="text-gold">{currentName}</span>…
-              </p>
-            )}
-            {!game.youAreCurrent && !exploded && (
-              <div className="mt-2 flex min-h-[34px] items-center justify-center">
-                {liveTyping ? (
-                  <span className="inline-flex items-center gap-2 rounded-full border border-mint/50 bg-mint/[0.08] px-3 py-1.5 animate-pop">
-                    <span>✍️</span>
-                    <span className="font-mono text-base font-bold text-mint">{liveTyping}<span className="animate-pulse">▏</span></span>
-                  </span>
-                ) : (
-                  <span className="text-xs text-text-faint">{currentName} réfléchit…</span>
-                )}
-              </div>
-            )}
-            {game.lastWord && !exploded && (
-              <p className="mt-1 text-sm text-text-muted">
-                Dernier mot : <b className="text-mint">{game.lastWord}</b>{game.lastWordBy && <> par {nameOf(game.lastWordBy)}</>}
-              </p>
-            )}
-          </div>
-
-          {/* saisie (joueur courant uniquement) */}
-          {game.youAreCurrent && !exploded ? (
-            <div className="mt-4 w-full max-w-md">
-              <div className="flex gap-2">
-                <input
-                  ref={inputRef}
-                  value={text}
-                  onChange={(e) => onType(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") send(); }}
-                  autoFocus
-                  autoComplete="off"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  placeholder={`un mot avec « ${game.syllable.toUpperCase()} »…`}
-                  className="flex-1 rounded-2xl border-2 border-gold/50 bg-ink-deep px-4 py-3.5 text-lg outline-none focus:border-gold"
-                />
-                <button onClick={send} className="arc arc-p" style={{ padding: "0 22px" }}>OK</button>
-              </div>
-              {room.error && (
-                <p key={room.error.message} className="mt-2 rounded-xl border border-danger/40 bg-danger/10 px-3 py-2 text-center text-sm text-danger" style={{ animation: "shake 0.32s" }}>
-                  ❌ {room.error.message} <span className="text-text-faint">(le timer continue, réessaie !)</span>
-                </p>
-              )}
-            </div>
-          ) : (
-            <p className="mt-4 h-[52px] text-center text-sm text-text-faint">
-              {exploded ? "La bombe passe au joueur suivant…" : `Trouve un mot contenant « ${game.syllable.toUpperCase()} ».`}
-            </p>
-          )}
-        </section>
-
-        {/* joueurs + vies */}
-        <section className="mx-auto mt-2 max-w-md space-y-2">
-          {game.ranking.map((r) => (
-            <div
-              key={r.id}
-              className="flex items-center gap-3 rounded-xl border p-2.5 transition-all"
-              style={{
-                borderColor: r.isCurrent ? "rgba(70,224,176,0.6)" : r.eliminated ? "#2a2340" : "#332A5A",
-                background: r.isCurrent ? "rgba(70,224,176,0.08)" : "rgba(28,22,54,0.5)",
-                opacity: r.eliminated ? 0.5 : 1,
-              }}
-            >
-              <Avatar name={r.name} color={r.color} avatar={r.avatar} size={30} />
-              <span className="flex-1 truncate font-medium">
-                {r.name}{r.id === you && " (toi)"}
-                {r.isCurrent && !r.eliminated && <span className="ml-2 text-xs font-bold text-mint">● à lui</span>}
-              </span>
-              {r.wordsFound > 0 && <span className="font-mono text-xs text-text-faint">{r.wordsFound} mot{r.wordsFound > 1 ? "s" : ""}</span>}
-              {r.eliminated ? <span className="text-lg" title="Éliminé">💀</span> : <Hearts n={r.lives} max={game.maxLives} />}
-            </div>
-          ))}
-        </section>
-
-        {/* Lettres A-V découvertes */}
-        <LettersGrid used={game.usedLetters} />
-      </main>
+function ExplosionPlate({ game, nameOf }: { game: BombePublic; nameOf: (id: string | null) => string }) {
+  const victim = game.justExploded;
+  const victimLives = victim ? game.lives[victim] ?? 0 : 0;
+  return (
+    <>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: C.danger }}>{nameOf(victim)} perd une vie</span>
+        <span style={{ fontSize: 11, color: C.faint }}>{victimLives <= 0 ? "éliminé 💀" : `Il reste ${victimLives} vie${victimLives > 1 ? "s" : ""}`}</span>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "20px 24px", borderRadius: 14, background: C.surface, boxShadow: `0 0 0 1px rgba(224,104,94,.4)` }}>
+        <span style={{ flex: 1, fontSize: "clamp(22px,5vw,40px)", fontWeight: 500, color: C.dim }}>💥</span>
+        <span style={{ fontSize: 12, color: C.faint }}>temps écoulé</span>
+      </div>
+      <span style={{ fontSize: 12, color: C.faint }}>La main passe à <span style={{ color: C.accentT2 }}>{nameOf(game.currentId)}</span></span>
     </>
   );
 }
+
+function LetterToast({ ev, nameOf }: { ev: NonNullable<BombePublic["letterEvent"]>; nameOf: (id: string | null) => string }) {
+  return (
+    <div style={{ position: "fixed", inset: "24px 0 auto 0", zIndex: 50, display: "flex", justifyContent: "center", pointerEvents: "none", padding: "0 16px", animation: "revealPop 0.35s ease-out" }}>
+      <div style={{ borderRadius: 14, border: `1px solid ${C.accentRing}`, background: "rgba(22,24,38,0.96)", padding: "12px 20px", textAlign: "center", boxShadow: "0 12px 40px -12px rgba(145,132,217,.7)" }}>
+        {ev.gainedLife ? (
+          <>
+            <p style={{ fontSize: 15, fontWeight: 600, color: C.accentT }}>🔤 Nouvelle lettre ! <span style={{ color: C.danger }}>+1 ❤️</span></p>
+            <p style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>{nameOf(ev.playerId)} découvre : <b style={{ color: C.accentT2 }}>{ev.newLetters.join(" · ")}</b></p>
+          </>
+        ) : (
+          <>
+            <p style={{ fontSize: 15, fontWeight: 600, color: C.accentT }}>🔤 Lettre découverte</p>
+            <p style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>❤️ Vie maximale · <b style={{ color: C.accentT2 }}>{ev.newLetters.join(" · ")}</b></p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const btnGhost: CSSProperties = { border: `1px solid ${C.outline}`, background: "transparent", color: C.muted, fontFamily: "inherit", fontSize: 13, padding: "10px 18px", borderRadius: 8, cursor: "pointer" };
+const btnAccent: CSSProperties = { border: `1px solid ${C.accent}`, background: C.accentChip, color: C.accentT2, fontFamily: "inherit", fontSize: 13, fontWeight: 500, padding: "10px 22px", borderRadius: 8, cursor: "pointer" };
