@@ -142,6 +142,42 @@ export function pickBombeSyllable(
   return chosen;
 }
 
+/**
+ * Quelques mots du dico contenant la syllabe — affichés pendant la pause
+ * d'explosion pour « apprendre » des mots qu'on aurait pu jouer.
+ * On privilégie des mots courts et lisibles (3 à 10 lettres).
+ */
+export function bombeExampleWords(
+  syllable: string,
+  count = 4,
+  rng: () => number = Math.random,
+  exclude: readonly string[] = [],
+): string[] {
+  const s = bombeNormalize(syllable);
+  if (!s) return [];
+  const skip = new Set(exclude.map(bombeNormalize));
+  const matches: string[] = [];
+  for (const w of DICT) {
+    if (w.length < 3 || w.length > 10) continue;
+    if (skip.has(w) || !w.includes(s)) continue;
+    matches.push(w);
+    if (matches.length >= 500) break; // échantillon suffisant, on ne scanne pas tout
+  }
+  if (matches.length === 0) return [];
+  const out: string[] = [];
+  const used = new Set<number>();
+  const n = Math.min(count, matches.length);
+  while (out.length < n && used.size < matches.length) {
+    let idx = Math.floor(rng() * matches.length);
+    let guard = 0;
+    while (used.has(idx) && guard++ < 30) idx = Math.floor(rng() * matches.length);
+    if (used.has(idx)) break;
+    used.add(idx);
+    out.push(matches[idx]);
+  }
+  return out;
+}
+
 /** Un mot proposé est-il valide pour cette syllabe (contient la syllabe + dico) ? */
 export function bombeWordMatches(word: string, syllable: string): { ok: boolean; reason?: "empty" | "syllable" | "unknown" } {
   const w = bombeNormalize(word);

@@ -1,7 +1,7 @@
 import type { GamePlayer } from "../../game/types";
 import type { PlayerId } from "../../room/types";
 
-export type BombePhase = "playing" | "gameover";
+export type BombePhase = "countdown" | "playing" | "gameover";
 
 /** Réglages choisis par l'hôte dans le lobby. */
 export interface BombeSettings {
@@ -57,6 +57,7 @@ export interface BombeState {
   justExploded: PlayerId | null;           // victime de la dernière explosion (animation)
   explodePause: boolean;                    // true pendant la pause « la bombe a sauté »
   pendingNext: PlayerId | null;             // joueur à qui armer le tour après la pause
+  exampleWords: string[];                   // mots à apprendre affichés pendant l'explosion
   winnerId: PlayerId | null;
   config: BombeConfig;
 }
@@ -98,6 +99,7 @@ export interface BombePublic {
   aliveCount: number;
   usedLetters: string[];            // lettres A-V découvertes (pour l'affichage de la grille)
   letterEvent: BombeLetterEvent | null; // animation « nouvelle lettre »
+  exampleWords: string[];           // mots à apprendre pendant la pause d'explosion
   winnerId: PlayerId | null;
   // stats de fin
   stats: { words: string | null; survivor: string | null } | null;

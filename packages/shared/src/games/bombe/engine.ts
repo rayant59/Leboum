@@ -15,7 +15,7 @@
 import type { GamePlayer } from "../../game/types";
 import type { PlayerId } from "../../room/types";
 import type { GameAction, GameContext, GameError, GameReduceResult } from "../../platform/types";
-import { bombeNormalize, bombeWordMatches, isBombeWord, pickBombeSyllable } from "./dictionary";
+import { bombeNormalize, bombeWordMatches, isBombeWord, pickBombeSyllable, bombeExampleWords } from "./dictionary";
 import type { BombeConfig, BombePublic, BombeRankRow, BombeSettings, BombeState } from "./types";
 
 export const BOMBE_LIVES_MIN = 1;
@@ -25,6 +25,8 @@ export const BOMBE_SEC_MAX = 30;
 const RECENT_SYLLABLES = 12;
 /** Durée de la pause « la bombe a sauté » avant que le tour suivant démarre. */
 export const BOMBE_EXPLODE_PAUSE_MS = 1600;
+/** Petit décompte avant que la partie démarre vraiment (3, 2, 1…). */
+export const BOMBE_COUNTDOWN_MS = 3000;
 
 /** Lettres qui comptent pour la collecte (A-V). W, X, Y, Z sont ignorées. */
 export const BOMBE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUV".split("");
@@ -84,10 +86,12 @@ function armTurn(state: BombeState, currentId: PlayerId, ctx: GameContext): Bomb
   });
   return {
     ...state,
+    phase: "playing",
     currentId,
     syllable,
     turnStartedAt: ctx.now,
     deadline: ctx.now + randomFuse(state.config, ctx.rng),
+    exampleWords: [],
     recentSyllables: [syllable, ...state.recentSyllables].slice(0, RECENT_SYLLABLES),
   };
 }
@@ -98,7 +102,7 @@ export function createBombe(players: GamePlayer[], settings: BombeSettings, ctx:
   const lives: Record<PlayerId, number> = {};
   for (const p of players) lives[p.id] = config.lives;
   const base: BombeState = {
-    phase: "playing",
+    phase: "countdown",
     players,
     connectedIds: players.map((p) => p.id),
     order,
@@ -107,10 +111,12 @@ export function createBombe(players: GamePlayer[], settings: BombeSettings, ctx:
     currentId: order[0] ?? null,
     syllable: "",
     turnStartedAt: ctx.now,
-    deadline: null,
+    // Petit décompte avant le vrai départ : la bombe n'est pas encore armée.
+    deadline: ctx.now + BOMBE_COUNTDOWN_MS,
     usedWords: [],
     usedLetters: [],
     letterEvent: null,
+    exampleWords: [],
     recentSyllables: [],
     wordsFound: rec0(players),
     turnsSurvived: rec0(players),
@@ -122,7 +128,7 @@ export function createBombe(players: GamePlayer[], settings: BombeSettings, ctx:
     winnerId: null,
     config,
   };
-  return armTurn(base, order[0] ?? "", ctx);
+  return base;
 }
 
 const ok = (state: BombeState): GameReduceResult<BombeState> => ({ state });
@@ -223,6 +229,10 @@ export function reduceBombe(
     }
 
     case "advance": {
+      // Fin du décompte de départ → on arme le tout premier tour.
+      if (state.phase === "countdown") {
+        return ok(armTurn(state, state.currentId ?? state.order[0] ?? "", ctx));
+      }
       if (state.phase !== "playing") return ok(state);
 
       // Second tic : la pause d'explosion est terminée → on arme VRAIMENT le tour
@@ -250,12 +260,15 @@ export function reduceBombe(
       const remaining = Math.max(0, (state.lives[victim] ?? 0) - 1);
       const lives = { ...state.lives, [victim]: remaining };
       const eliminated = remaining === 0 ? [...state.eliminated, victim] : state.eliminated;
+      // Quelques mots qu'on aurait pu jouer (à apprendre pendant la pause).
+      const examples = bombeExampleWords(state.syllable, 4, ctx.rng, state.usedWords);
       const exploded: BombeState = {
         ...state,
         lives,
         eliminated,
         justExploded: victim,
         letterEvent: null,
+        exampleWords: examples,
         lastWord: null,
         lastWordBy: null,
       };
@@ -293,7 +306,8 @@ export function reduceBombe(
 
 /** Deadline exposée au serveur pour planifier l'explosion (jamais au client tel quel). */
 export function bombeDeadline(state: BombeState): number | null {
-  return state.phase === "playing" ? state.deadline : null;
+  // Le serveur planifie aussi la fin du décompte de départ (countdown → playing).
+  return state.phase === "gameover" ? null : state.deadline;
 }
 
 export function bombeIsOver(state: BombeState): boolean {
@@ -362,6 +376,7 @@ export function projectBombe(state: BombeState, viewerId: PlayerId): BombePublic
     aliveCount: alive.length,
     usedLetters: state.usedLetters,
     letterEvent: state.letterEvent,
+    exampleWords: state.exampleWords,
     winnerId: state.winnerId,
     stats,
   };

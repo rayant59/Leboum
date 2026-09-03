@@ -56,29 +56,35 @@ const submit = (playerId: string, text: string): GameAction<BombeClientAction> =
   msg: { kind: "submit", text },
 });
 const wordWith = (s: string) => WORDS.find((w) => bombeNormalize(w).includes(s))!;
+// Crée une partie ET consomme le décompte de départ → phase "playing" prête à jouer.
+const started = (pl: GamePlayer[], settings: Parameters<typeof createBombe>[1], c: GameContext): BombeState =>
+  reduceBombe(createBombe(pl, settings, c), { type: "advance" }, c).state;
 
 setBombeDictionary(WORDS);
 
 console.log("\nBombe — engine\n");
 
-test("création : phase playing, 1er joueur courant, syllabe + minuteur posés", () => {
-  const s = createBombe(players, { lives: 3 }, ctx(1000));
-  eq(s.phase, "playing", "phase playing");
+test("création : décompte d'abord, puis phase playing après le 1er advance", () => {
+  const s0 = createBombe(players, { lives: 3 }, ctx(1000));
+  eq(s0.phase, "countdown", "on démarre par un décompte");
+  assert(s0.deadline != null && s0.deadline > 1000, "le décompte a une échéance");
+  assert(players.every((p) => s0.lives[p.id] === 3), "tout le monde a 3 vies");
+  const s = reduceBombe(s0, { type: "advance" }, ctx(4000)).state; // fin du décompte
+  eq(s.phase, "playing", "phase playing après le décompte");
   assert(s.currentId != null, "un joueur courant");
   assert(s.syllable.length >= 2, "une syllabe est posée");
-  assert(s.deadline != null && s.deadline > 1000, "un minuteur (deadline) est armé");
-  assert(players.every((p) => s.lives[p.id] === 3), "tout le monde a 3 vies");
+  assert(s.deadline != null && s.deadline > 4000, "la bombe est armée");
   assert(bombeSyllableCount(s.syllable) > 0, "la syllabe est réellement jouable");
 });
 
 test("le minuteur reste dans les bornes min/max", () => {
-  const s = createBombe(players, { lives: 3, minSeconds: 5, maxSeconds: 12 }, ctx(1000));
+  const s = started(players, { lives: 3, minSeconds: 5, maxSeconds: 12 }, ctx(1000));
   const fuse = (s.deadline ?? 0) - s.turnStartedAt;
   assert(fuse >= 5000 && fuse <= 12000, `minuteur dans [5000,12000], obtenu ${fuse}`);
 });
 
 test("bon mot : la bombe passe au joueur suivant + nouvelle syllabe", () => {
-  const s0 = createBombe(players, { lives: 3 }, ctx(1000));
+  const s0 = started(players, { lives: 3 }, ctx(1000));
   const cur = s0.currentId!;
   const w = wordWith(s0.syllable);
   const r = reduceBombe(s0, submit(cur, w), ctx(1100));
@@ -91,7 +97,7 @@ test("bon mot : la bombe passe au joueur suivant + nouvelle syllabe", () => {
 });
 
 test("mot sans la syllabe → refusé (erreur syllable), tour inchangé", () => {
-  const s0 = createBombe(players, { lives: 3 }, ctx(1000));
+  const s0 = started(players, { lives: 3 }, ctx(1000));
   const cur = s0.currentId!;
   const bad = WORDS.find((w) => !bombeNormalize(w).includes(s0.syllable))!;
   const r = reduceBombe(s0, submit(cur, bad), ctx(1100));
@@ -100,7 +106,7 @@ test("mot sans la syllabe → refusé (erreur syllable), tour inchangé", () => 
 });
 
 test("mot inconnu du dico → refusé (erreur unknown)", () => {
-  const s0 = createBombe(players, { lives: 3 }, ctx(1000));
+  const s0 = started(players, { lives: 3 }, ctx(1000));
   const cur = s0.currentId!;
   const fake = "qq" + s0.syllable + "qq"; // contient la syllabe mais pas dans le dico
   const r = reduceBombe(s0, submit(cur, fake), ctx(1100));
@@ -108,7 +114,7 @@ test("mot inconnu du dico → refusé (erreur unknown)", () => {
 });
 
 test("mot déjà utilisé → refusé (erreur used)", () => {
-  const s0 = createBombe(players, { lives: 3 }, ctx(1000));
+  const s0 = started(players, { lives: 3 }, ctx(1000));
   const cur = s0.currentId!;
   const w = wordWith(s0.syllable);
   const seeded: BombeState = { ...s0, usedWords: [bombeNormalize(w)] };
@@ -117,7 +123,7 @@ test("mot déjà utilisé → refusé (erreur used)", () => {
 });
 
 test("un joueur qui n'est pas le joueur courant est ignoré", () => {
-  const s0 = createBombe(players, { lives: 3 }, ctx(1000));
+  const s0 = started(players, { lives: 3 }, ctx(1000));
   const other = players.find((p) => p.id !== s0.currentId)!.id;
   const w = wordWith(s0.syllable);
   const r = reduceBombe(s0, submit(other, w), ctx(1100));
@@ -127,7 +133,7 @@ test("un joueur qui n'est pas le joueur courant est ignoré", () => {
 });
 
 test("explosion (advance) : le joueur courant perd une vie et passe la main", () => {
-  const s0 = createBombe(players, { lives: 3 }, ctx(1000));
+  const s0 = started(players, { lives: 3 }, ctx(1000));
   const victim = s0.currentId!;
   const r = reduceBombe(s0, { type: "advance" }, ctx(2000));
   eq(r.state.lives[victim], 2, "une vie en moins");
@@ -136,7 +142,7 @@ test("explosion (advance) : le joueur courant perd une vie et passe la main", ()
 });
 
 test("explosion : pause puis le tour suivant est ARMÉ (pas de blocage)", () => {
-  const s0 = createBombe(players, { lives: 3 }, ctx(1000));
+  const s0 = started(players, { lives: 3 }, ctx(1000));
   const victim = s0.currentId!;
   // 1er advance = explosion → pause
   const boom = reduceBombe(s0, { type: "advance" }, ctx(2000)).state;
@@ -158,8 +164,17 @@ test("explosion : pause puis le tour suivant est ARMÉ (pas de blocage)", () => 
   eq(play.state.usedWords.length, 1, "son mot est bien pris en compte");
 });
 
+test("explosion : des mots à apprendre (contenant la syllabe) sont exposés", () => {
+  const s = { ...baseFor("a", 3), syllable: "ar", deadline: 10_000_000 };
+  const boom = reduceBombe(s, { type: "advance" }, ctx(2000)).state;
+  assert(boom.exampleWords.length > 0, "des mots exemples sont fournis");
+  assert(boom.exampleWords.every((w) => bombeNormalize(w).includes("ar")), "chaque mot contient la syllabe");
+  const pub = projectBombe(boom, "b");
+  assert(pub.exampleWords.length > 0, "exposés dans la projection");
+});
+
 test("élimination à 0 vie + victoire du dernier debout", () => {
-  let s: BombeState = createBombe(players, { lives: 1 }, ctx(1000));
+  let s: BombeState = started(players, { lives: 1 }, ctx(1000));
   // 2 explosions consécutives éliminent 2 joueurs (1 vie chacun) → il en reste 1.
   for (let i = 0; i < 5 && s.phase === "playing"; i++) {
     s = reduceBombe(s, { type: "advance" }, ctx(2000 + i * 1000)).state;
@@ -171,7 +186,7 @@ test("élimination à 0 vie + victoire du dernier debout", () => {
 });
 
 test("presence : si le joueur courant part, la main passe sans pénalité", () => {
-  const s0 = createBombe(players, { lives: 3 }, ctx(1000));
+  const s0 = started(players, { lives: 3 }, ctx(1000));
   const cur = s0.currentId!;
   const others = players.map((p) => p.id).filter((id) => id !== cur);
   const r = reduceBombe(s0, { type: "presence", connectedIds: others }, ctx(1500));
@@ -189,7 +204,7 @@ test("helpers deadline/isOver", () => {
 });
 
 test("projection : deadline réelle exposée (mèche honnête) + bornes", () => {
-  const s = createBombe(players, { lives: 3, minSeconds: 5, maxSeconds: 12 }, ctx(1000));
+  const s = started(players, { lives: 3, minSeconds: 5, maxSeconds: 12 }, ctx(1000));
   const pub = projectBombe(s, players[0].id);
   eq(pub.deadline, s.deadline, "deadline réelle exposée pour l'animation");
   eq(pub.maxDeadline, s.turnStartedAt + s.config.maxMs, "borne haute exposée");
@@ -202,8 +217,8 @@ test("projection : deadline réelle exposée (mèche honnête) + bornes", () => 
 // État de départ avec syllabe forcée "ar" (dans "arbre") et timer non expiré.
 function baseFor(cur: string, lives = 3): BombeState {
   let s = createBombe(players, { lives }, ctx(1000));
-  // on force le joueur courant = cur et une syllabe connue
-  s = { ...s, currentId: cur, syllable: "ar", deadline: 10_000_000 };
+  // on force le joueur courant = cur, une syllabe connue, et la phase de jeu
+  s = { ...s, phase: "playing", currentId: cur, syllable: "ar", deadline: 10_000_000 };
   return s;
 }
 
