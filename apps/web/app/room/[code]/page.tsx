@@ -254,8 +254,7 @@ export default function LobbyPage() {
       <BoumBackdrop />
       <main className="relative z-[1] mx-auto max-w-2xl px-5 py-7" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
       {/* brand + connection */}
-      <header className="mb-6 flex items-center justify-between">
-        <SubtitleStrip caret={false}>Boum</SubtitleStrip>
+      <header className="mb-6 flex items-center justify-end">
         <span className="flex items-center gap-2 text-xs text-text-muted">
           <span className={`h-2 w-2 rounded-full ${online ? "bg-mint" : "bg-gold animate-bulb"}`} />
           {online ? "Connecté" : "Connexion…"}
@@ -278,10 +277,6 @@ export default function LobbyPage() {
       <section className="panel mb-8 p-6 text-center">
         <p className="eyebrow mb-3">Code de la salle</p>
         <div className="mb-5 flex items-center justify-center gap-4">
-          <svg className="hidden shrink-0 text-magenta/70 sm:block" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <rect x="2.5" y="5" width="14" height="10" rx="2" /><path d="M3 6l6.5 5L16 6" />
-            <path d="M15 16.5a3 3 0 0 0 4.2 0l1.3-1.3a3 3 0 0 0-4.2-4.2l-.6.6" style={{ color: "#8B7DF6" }} stroke="#8B7DF6" />
-          </svg>
           <div className="inset-well inline-flex gap-1.5 p-2.5">
             {[...code].map((c, i) => (
               <span
@@ -293,7 +288,6 @@ export default function LobbyPage() {
               </span>
             ))}
           </div>
-          <img src={UI.groupShieldGold} alt="" width={40} height={40} className="hidden shrink-0 select-none sm:block" draggable={false} aria-hidden />
         </div>
         <div className="flex flex-wrap items-center justify-center gap-2.5">
           <button
@@ -309,24 +303,6 @@ export default function LobbyPage() {
               </span>
             )}
           </button>
-          <a
-            href={`mailto:?subject=${encodeURIComponent("Rejoins ma partie sur Boum !")}&body=${encodeURIComponent(shareUrl)}`}
-            title="Partager par mail"
-            aria-label="Partager par mail"
-            className="inline-flex transition-transform hover:scale-110 active:scale-95"
-          >
-            <img src={UI.shareMail} alt="Partager par mail" className="h-11 w-11 select-none" draggable={false} />
-          </a>
-          <a
-            href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent("Rejoins ma partie sur Boum !")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Partager sur Telegram"
-            aria-label="Partager sur Telegram"
-            className="inline-flex transition-transform hover:scale-110 active:scale-95"
-          >
-            <img src={UI.shareTelegram} alt="Partager sur Telegram" className="h-11 w-11 select-none" draggable={false} />
-          </a>
         </div>
       </section>
 
@@ -731,74 +707,6 @@ export default function LobbyPage() {
         )}
       </section>
       )}
-
-      {/* rules */}
-      <details className="panel group mb-6 px-4 py-3">
-        <summary className="flex cursor-pointer select-none items-center justify-between text-sm font-medium text-text">
-          Comment jouer ?
-          <span className="text-text-faint transition-transform group-open:rotate-180">⌄</span>
-        </summary>
-        <ol className="mt-3 space-y-2.5 text-sm text-text-muted">
-          {(selectedGame === "bombe"
-            ? [
-                "Une syllabe s'affiche (ex. « AR ») et c'est au tour d'un joueur.",
-                "Écris vite un mot français qui contient cette syllabe (n'importe où) et valide.",
-                "Bon mot → la bombe passe aussitôt au joueur suivant avec une nouvelle syllabe.",
-                "Trop lent ? La bombe explose : tu perds une vie. À 0 vie, tu es éliminé. Le dernier survivant gagne !",
-              ]
-            : selectedGame === "quiz"
-            ? [
-                "Une question s'affiche pour tout le monde en même temps.",
-                "Réponds le plus vite possible : plus tu es rapide, plus tu marques.",
-                "La bonne réponse est révélée, puis on enchaîne — le classement se met à jour à chaque manche.",
-                "Le meilleur score à la fin gagne la partie !",
-              ]
-            : selectedGame === "reco"
-              ? [
-                  "Une vraie image s'affiche avec une question (« Quel est cet animal ? », etc.).",
-                  "Écris ta réponse et valide (Entrée) : les petites fautes de frappe sont tolérées.",
-                  "Le plus rapide à trouver marque le plus de points.",
-                  "On révèle la réponse, le classement se met à jour, puis image suivante !",
-                ]
-              : selectedGame === "mimic"
-                ? [
-                    "Un son est joué : écoutez-le bien.",
-                    "Après le 3·2·1, tout le monde enregistre son imitation EN MÊME TEMPS — une seule prise, pas de deuxième chance !",
-                    "On réécoute les imitations une par une (silence, on écoute !).",
-                    "Chacun vote pour la meilleure imitation (pas la sienne). Le plus de votes marque le plus, sur plusieurs manches.",
-                  ]
-                : selectedGame === "draw"
-                  ? drawMode === "fakeartist"
-                    ? [
-                        "Tout le monde reçoit le même mot… sauf l'imposteur, qui l'ignore.",
-                        "Chacun dessine sur SA toile ; observez les autres en direct.",
-                        "À la fin, votez pour démasquer le faux-artiste.",
-                      ]
-                    : drawMode === "relay"
-                      ? [
-                          "Deux joueurs se relaient au crayon sur le même mot (rotation auto).",
-                          "Les autres devinent au chat le plus vite possible.",
-                          "Bonnes réponses = points, on tourne à chaque manche.",
-                        ]
-                      : [
-                          "Un joueur dessine le mot secret ; les autres devinent au chat.",
-                          "Plus on devine vite, plus on marque — le dessinateur aussi.",
-                          "On tourne à chaque manche selon le mode choisi.",
-                        ]
-                  : [
-                      "Regardez l'extrait — une scène en langue étrangère (vous ne comprenez pas : c'est fait exprès !).",
-                      "Chacun invente le sous-titre le plus drôle (ou tout un dialogue selon la scène).",
-                      "On revoit la scène « jouée » par chaque proposition, en anonyme.",
-                      "On vote pour sa préférée (pas la sienne !). Plus on récolte de votes, plus on marque de points.",
-                    ]
-          ).map((t, i) => (
-            <li key={i} className="flex gap-2.5">
-              <span className="font-display font-bold text-gold">{i + 1}</span>
-              <span>{t}</span>
-            </li>
-          ))}
-        </ol>
-      </details>
 
       {room.error && (
         <p className="mb-4 rounded-xl border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
