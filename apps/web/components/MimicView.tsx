@@ -112,7 +112,7 @@ export function MimicView({ room }: { room: UseRoom }) {
   if (!looksLikeMimic) {
     return (
       <main className="mx-auto max-w-lg px-4 py-16 text-center">
-        <p className="eyebrow mb-2 text-magenta">Mimic indisponible</p>
+        <p className="eyebrow mb-2 text-magenta">Mimic Boum indisponible</p>
         <p className="text-text-muted">Le serveur de jeu doit être relancé (ou redéployé) pour activer ce mode.</p>
         <button onClick={() => room.returnLobby()} className="mt-5 rounded-xl border border-ink-border px-4 py-2 text-sm text-text-muted hover:border-gold hover:text-text">Retour au salon</button>
       </main>
@@ -126,7 +126,7 @@ export function MimicView({ room }: { room: UseRoom }) {
       <BoumBackdrop />
       <main className="relative z-[1] mx-auto max-w-2xl px-4 py-5" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
         <div className="mb-3 flex items-center justify-between">
-          <span className="eyebrow">🎤 Mimic · {game.phase === "prep" ? "préparation" : `manche ${game.round}/${game.totalRounds}`}</span>
+          <span className="eyebrow">🎤 Mimic Boum · {game.phase === "prep" ? "préparation" : `manche ${game.round}/${game.totalRounds}`}</span>
           <div className="flex items-center gap-2">
             {isHost && game.phase !== "prep" && game.phase !== "scoreboard" && (
               <button onClick={() => room.skipPhase()} className="rounded-md border border-ink-border px-2 py-1 text-xs text-text-muted hover:border-magenta hover:text-magenta" title="Passer (hôte)">⏭ Passer</button>

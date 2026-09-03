@@ -59,11 +59,11 @@ function PresetStepper({
 
 const GAME_META: Record<string, { label: string; img: string; tint: string }> = {
   subtitles: { label: "Sous-titres", img: "/games/subtitles.png", tint: "#FFC24B" },
-  draw: { label: "Dessin & Devinette", img: "/games/draw.png", tint: "#FF4D8D" },
-  mimic: { label: "Mimic", img: "/games/mimic.png", tint: "#46E0B0" },
-  quiz: { label: "Quiz", img: "/games/quiz.png", tint: "#8B7DF6" },
-  reco: { label: "Reconnaissance", img: "/games/reco.png", tint: "#4CC9F0" },
-  pixel: { label: "Pixel incoming", img: "/games/pixel.png", tint: "#46E0B0" },
+  draw: { label: "Boum Dessin", img: "/games/draw.png", tint: "#FF4D8D" },
+  mimic: { label: "Mimic Boum", img: "/games/mimic.png", tint: "#46E0B0" },
+  quiz: { label: "Ça te parle ?", img: "/games/quiz.png", tint: "#8B7DF6" },
+  reco: { label: "Œil de Boum", img: "/games/reco.png", tint: "#4CC9F0" },
+  pixel: { label: "Pixel Panic", img: "/games/pixel.png", tint: "#46E0B0" },
   bombe: { label: "Boum Rush", img: "/games/bombe.png", tint: "#FF6B4D" },
 };
 
@@ -399,11 +399,11 @@ export default function LobbyPage() {
           <div className="game-picker-grid">
             {(
               [
-                { id: "draw", img: "/games/draw.png", label: "Dessin & Devinette", players: "2–8", desc: "Dessine le mot secret, les autres devinent — avec ses variantes.", tint: "#FF4D8D", tintBg: "rgba(255,77,141,0.12)", tintBorder: "rgba(255,77,141,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 5.6l3.9 3.9" /><path d="M4 20l1.3-4.4L15.7 5.2a1.9 1.9 0 0 1 2.7 0l.4.4a1.9 1.9 0 0 1 0 2.7L8.4 18.7 4 20Z" /></svg> },
-                { id: "mimic", img: "/games/mimic.png", label: "Mimic", players: "2–8", desc: "Imite un son avec ta voix — une seule prise. Les autres votent pour la meilleure imitation !", tint: "#46E0B0", tintBg: "rgba(70,224,176,0.12)", tintBorder: "rgba(70,224,176,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M6 11a6 6 0 0 0 12 0" /><path d="M12 17v3.2" /><path d="M9 20.2h6" /></svg> },
-                { id: "quiz", img: "/games/quiz.png", label: "Quiz", players: "2–8", desc: "Répondez à des questions et montrez votre culture !", tint: "#8B7DF6", tintBg: "rgba(139,125,246,0.14)", tintBorder: "rgba(139,125,246,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4" /><circle cx="12" cy="17.5" r="0.6" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="9" /></svg> },
-                { id: "reco", img: "/games/reco.png", label: "Reconnaissance", players: "1–12", desc: "Devinez le personnage, le film, le lieu et bien plus.", tint: "#4CC9F0", tintBg: "rgba(76,201,240,0.14)", tintBorder: "rgba(76,201,240,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="14" rx="2.5" /><circle cx="9" cy="10" r="2" /><path d="M4 17l4.5-4 3 2.5L15 12l5 4.5" /></svg> },
-                { id: "pixel", img: "/games/pixel.png", label: "Pixel incoming", players: "1–12", desc: "Une image se dévoile pixel par pixel — devine le plus vite possible !", tint: "#46E0B0", tintBg: "rgba(70,224,176,0.12)", tintBorder: "rgba(70,224,176,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="6" height="6"/><rect x="15" y="3" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/><rect x="3" y="15" width="6" height="6"/><rect x="15" y="15" width="6" height="6"/></svg> },
+                { id: "draw", img: "/games/draw.png", label: "Boum Dessin", players: "2–8", desc: "Dessine le mot secret, les autres devinent — avec ses variantes.", tint: "#FF4D8D", tintBg: "rgba(255,77,141,0.12)", tintBorder: "rgba(255,77,141,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 5.6l3.9 3.9" /><path d="M4 20l1.3-4.4L15.7 5.2a1.9 1.9 0 0 1 2.7 0l.4.4a1.9 1.9 0 0 1 0 2.7L8.4 18.7 4 20Z" /></svg> },
+                { id: "mimic", img: "/games/mimic.png", label: "Mimic Boum", players: "2–8", desc: "Imite un son avec ta voix — une seule prise. Les autres votent pour la meilleure imitation !", tint: "#46E0B0", tintBg: "rgba(70,224,176,0.12)", tintBorder: "rgba(70,224,176,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M6 11a6 6 0 0 0 12 0" /><path d="M12 17v3.2" /><path d="M9 20.2h6" /></svg> },
+                { id: "quiz", img: "/games/quiz.png", label: "Ça te parle ?", players: "2–8", desc: "Répondez à des questions et montrez votre culture !", tint: "#8B7DF6", tintBg: "rgba(139,125,246,0.14)", tintBorder: "rgba(139,125,246,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4" /><circle cx="12" cy="17.5" r="0.6" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="9" /></svg> },
+                { id: "reco", img: "/games/reco.png", label: "Œil de Boum", players: "1–12", desc: "Devinez le personnage, le film, le lieu et bien plus.", tint: "#4CC9F0", tintBg: "rgba(76,201,240,0.14)", tintBorder: "rgba(76,201,240,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="14" rx="2.5" /><circle cx="9" cy="10" r="2" /><path d="M4 17l4.5-4 3 2.5L15 12l5 4.5" /></svg> },
+                { id: "pixel", img: "/games/pixel.png", label: "Pixel Panic", players: "1–12", desc: "Une image se dévoile pixel par pixel — devine le plus vite possible !", tint: "#46E0B0", tintBg: "rgba(70,224,176,0.12)", tintBorder: "rgba(70,224,176,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="6" height="6"/><rect x="15" y="3" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/><rect x="3" y="15" width="6" height="6"/><rect x="15" y="15" width="6" height="6"/></svg> },
                 { id: "bombe", img: "/games/bombe.png", label: "Boum Rush", players: "2–12", desc: "Trouve vite un mot avec la syllabe avant que la bombe explose !", tint: "#FF6B4D", tintBg: "rgba(255,107,77,0.14)", tintBorder: "rgba(255,107,77,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="14" r="7" /><path d="M16 9l2-2" /><path d="M18 7l1 .3M19 5.5l.3-1M20.5 6.8l1-.3" /></svg> },
               ] as const
             ).map((c) => {
@@ -435,30 +435,6 @@ export default function LobbyPage() {
                   </div>
                   <div className="font-display text-base font-bold text-text">{c.label}</div>
                   <p className="mt-1 text-sm leading-snug text-text-muted">{c.desc}</p>
-                  {c.id === "draw" && (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {([
-                        { id: "classic", label: "Classique" },
-                        { id: "fakeartist", label: "Faux-artiste" },
-                        { id: "relay", label: "Relais" },
-                      ] as const).map((v) => {
-                        const active = sel && drawMode === v.id;
-                        return (
-                          <span
-                            key={v.id}
-                            role="button"
-                            tabIndex={0}
-                            onClick={(e) => { e.stopPropagation(); setSelectedGame("draw"); setDrawMode(v.id); }}
-                            onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); setSelectedGame("draw"); setDrawMode(v.id); } }}
-                            className="cursor-pointer rounded-full border px-2.5 py-0.5 text-[11px] transition-colors"
-                            style={{ borderColor: active ? c.tint : "#332A5A", background: active ? c.tintBg : "#0E0B1A", color: active ? c.tint : "#A79FC7" }}
-                          >
-                            {v.label}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
                 </button>
               );
             })}
@@ -477,7 +453,7 @@ export default function LobbyPage() {
           <div className="cfg-grp">
             <div className="cfg-head">
               <span className="cfg-ic" style={{ background: "rgba(70,224,176,0.14)", color: "#46E0B0", borderColor: "rgba(70,224,176,0.4)" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M6 11a6 6 0 0 0 12 0" /><path d="M12 17v3.2" /><path d="M9 20.2h6" /></svg></span>
-              <div><h2 className="cfg-tt">Réglages de Mimic</h2><span className="cfg-sub">Un son · une prise · votes 🎤</span></div>
+              <div><h2 className="cfg-tt">Réglages de Mimic Boum</h2><span className="cfg-sub">Un son · une prise · votes 🎤</span></div>
             </div>
             <div className="panel space-y-3 p-4">
               <p className="text-sm text-text-muted">

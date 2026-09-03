@@ -35,11 +35,11 @@ const BORDERS = {
 type Accent = keyof typeof ACCENTS;
 
 const GAMES: { img: string; accent: Accent; name: string; desc: string; players: string; variants: string[] }[] = [
-  { img: "/games/draw.png", accent: "magenta", name: "Dessin & Devinette", desc: "Dessine le mot secret, les autres devinent — avec ses variantes.", players: "2–8", variants: [] },
-  { img: "/games/mimic.png", accent: "mint", name: "Mimic", desc: "Imite un son avec ta voix — une seule prise, puis on vote pour la meilleure imitation !", players: "2–8", variants: [] },
-  { img: "/games/quiz.png", accent: "violet", name: "Quiz", desc: "Répondez à des questions et montrez votre culture !", players: "1–12", variants: [] },
-  { img: "/games/reco.png", accent: "cyan", name: "Reconnaissance", desc: "Devinez le personnage, le lieu, l'œuvre… sur une vraie image.", players: "1–12", variants: [] },
-  { img: "/games/pixel.png", accent: "mint", name: "Pixel incoming", desc: "Une image se dévoile pixel par pixel : devine le plus vite possible !", players: "1–12", variants: [] },
+  { img: "/games/draw.png", accent: "magenta", name: "Boum Dessin", desc: "Dessine le mot secret, les autres devinent — avec ses variantes.", players: "2–8", variants: [] },
+  { img: "/games/mimic.png", accent: "mint", name: "Mimic Boum", desc: "Imite un son avec ta voix — une seule prise, puis on vote pour la meilleure imitation !", players: "2–8", variants: [] },
+  { img: "/games/quiz.png", accent: "violet", name: "Ça te parle ?", desc: "Répondez à des questions et montrez votre culture !", players: "1–12", variants: [] },
+  { img: "/games/reco.png", accent: "cyan", name: "Œil de Boum", desc: "Devinez le personnage, le lieu, l'œuvre… sur une vraie image.", players: "1–12", variants: [] },
+  { img: "/games/pixel.png", accent: "mint", name: "Pixel Panic", desc: "Une image se dévoile pixel par pixel : devine le plus vite possible !", players: "1–12", variants: [] },
   { img: "/games/bombe.png", accent: "orange", name: "Boum Rush", desc: "Trouve vite un mot avec la syllabe avant que la bombe explose !", players: "2–12", variants: [] },
 ];
 
@@ -204,9 +204,6 @@ export default function HomePage() {
             </h1>
           </div>
 
-          <p className="mn-desc" style={{ maxWidth: 448, margin: "16px auto 0", color: "#A79FC7", lineHeight: 1.5, opacity: 0, animation: "bm-fadeUp 0.6s ease 0.32s both" }}>
-            Le party-game entre amis. Une salle, un code à partager, et une soirée de jeux absurdes — dessin, doublage, quiz et images à deviner. <span style={{ color: "#6E6796" }}>Aucun compte, jouable au téléphone.</span>
-          </p>
         </header>
 
         {/* create / join */}
@@ -275,7 +272,6 @@ export default function HomePage() {
 
         {/* games showcase */}
         <section style={{ marginTop: 48, width: "min(1100px, calc(100vw - 32px))", marginLeft: "50%", transform: "translateX(-50%)" }}>
-          <p style={{ margin: "0 0 16px", textAlign: "center", fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.22em", color: "#6E6796", opacity: 0, animation: "bm-fadeUp 0.5s ease 1s both" }}>Les jeux</p>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 12 }}>
             {GAMES.map((g, i) => {
               const delay = (1.05 + i * 0.08).toFixed(2) + "s";
@@ -300,7 +296,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        <p style={{ margin: "40px 0 0", textAlign: "center", fontSize: 12, color: "#6E6796", opacity: 0, animation: "bm-fadeUp 0.6s ease 1.3s both" }}>2 à 10 joueurs · aucun compte requis · joue depuis ton téléphone</p>
       </main>
 
       {trailerOpen && <BoumTrailer onClose={() => setTrailerOpen(false)} onCreate={() => { setTrailerOpen(false); onCreate(); }} />}
