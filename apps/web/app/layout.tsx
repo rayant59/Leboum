@@ -4,10 +4,11 @@ import "./globals.css";
 
 const display = Bricolage_Grotesque({
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-display",
 });
-const body = Inter({ subsets: ["latin"], variable: "--font-body" });
+// Inter reste chargé en secours : Bricolage n'a pas d'italique.
+const body = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const mono = Space_Mono({
   subsets: ["latin"],
   weight: ["400", "700"],
