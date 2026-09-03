@@ -35,12 +35,12 @@ const BORDERS = {
 type Accent = keyof typeof ACCENTS;
 
 const GAMES: { img: string; accent: Accent; name: string; desc: string; players: string; variants: string[] }[] = [
-  { img: "/games/draw.png", accent: "magenta", name: "Dessin & Devinette", desc: "Dessine le mot secret, les autres devinent — avec ses variantes.", players: "2–8", variants: ["Classique", "Faux-artiste", "Relais"] },
+  { img: "/games/draw.png", accent: "magenta", name: "Dessin & Devinette", desc: "Dessine le mot secret, les autres devinent — avec ses variantes.", players: "2–8", variants: [] },
   { img: "/games/mimic.png", accent: "mint", name: "Mimic", desc: "Imite un son avec ta voix — une seule prise, puis on vote pour la meilleure imitation !", players: "2–8", variants: [] },
   { img: "/games/quiz.png", accent: "violet", name: "Quiz", desc: "Répondez à des questions et montrez votre culture !", players: "1–12", variants: [] },
   { img: "/games/reco.png", accent: "cyan", name: "Reconnaissance", desc: "Devinez le personnage, le lieu, l'œuvre… sur une vraie image.", players: "1–12", variants: [] },
   { img: "/games/pixel.png", accent: "mint", name: "Pixel incoming", desc: "Une image se dévoile pixel par pixel : devine le plus vite possible !", players: "1–12", variants: [] },
-  { img: "/games/bombe.png", accent: "orange", name: "Bombe", desc: "Trouve vite un mot avec la syllabe avant que la bombe explose !", players: "2–12", variants: [] },
+  { img: "/games/bombe.png", accent: "orange", name: "Boum Rush", desc: "Trouve vite un mot avec la syllabe avant que la bombe explose !", players: "2–12", variants: [] },
 ];
 
 const DOT_COLORS = ["rgba(255,194,75,0.7)", "rgba(255,77,141,0.6)", "rgba(70,224,176,0.6)", "rgba(243,238,255,0.5)"];
@@ -271,7 +271,6 @@ export default function HomePage() {
             Bande-annonce
           </button>
 
-          <p style={{ margin: "16px 0 0", textAlign: "center", fontSize: 12, color: "#6E6796", opacity: 0, animation: "bm-fadeUp 0.5s ease 0.96s both" }}>Le choix du jeu se fait dans la salle, une fois vos amis arrivés.</p>
         </div>
 
         {/* games showcase */}

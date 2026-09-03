@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { canStart, minReadyFor, sanitizeName, DRAW_THEMES } from "@subtitles-party/shared";
+import { canStart, sanitizeName, DRAW_THEMES } from "@subtitles-party/shared";
 import { getPlayerName, setPlayerName } from "@/lib/identity";
 import { useRoom } from "@/lib/useRoom";
 import { BoumBackdrop } from "@/components/BoumBackdrop";
@@ -64,7 +64,7 @@ const GAME_META: Record<string, { label: string; img: string; tint: string }> = 
   quiz: { label: "Quiz", img: "/games/quiz.png", tint: "#8B7DF6" },
   reco: { label: "Reconnaissance", img: "/games/reco.png", tint: "#4CC9F0" },
   pixel: { label: "Pixel incoming", img: "/games/pixel.png", tint: "#46E0B0" },
-  bombe: { label: "Bombe", img: "/games/bombe.png", tint: "#FF6B4D" },
+  bombe: { label: "Boum Rush", img: "/games/bombe.png", tint: "#FF6B4D" },
 };
 
 /** Presets de vitesse de la bombe → bornes min/max (secondes) du minuteur aléatoire. */
@@ -295,9 +295,6 @@ export default function LobbyPage() {
           </div>
           <img src={UI.groupShieldGold} alt="" width={40} height={40} className="hidden shrink-0 select-none sm:block" draggable={false} aria-hidden />
         </div>
-        <p className="mx-auto mb-4 max-w-xs text-sm text-text-muted">
-          Partage ce code — ou le lien — pour que tes amis rejoignent la salle.
-        </p>
         <div className="flex flex-wrap items-center justify-center gap-2.5">
           <button
             onClick={copyLink}
@@ -431,7 +428,7 @@ export default function LobbyPage() {
                 { id: "quiz", img: "/games/quiz.png", label: "Quiz", players: "2–8", desc: "Répondez à des questions et montrez votre culture !", tint: "#8B7DF6", tintBg: "rgba(139,125,246,0.14)", tintBorder: "rgba(139,125,246,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4" /><circle cx="12" cy="17.5" r="0.6" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="9" /></svg> },
                 { id: "reco", img: "/games/reco.png", label: "Reconnaissance", players: "1–12", desc: "Devinez le personnage, le film, le lieu et bien plus.", tint: "#4CC9F0", tintBg: "rgba(76,201,240,0.14)", tintBorder: "rgba(76,201,240,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="14" rx="2.5" /><circle cx="9" cy="10" r="2" /><path d="M4 17l4.5-4 3 2.5L15 12l5 4.5" /></svg> },
                 { id: "pixel", img: "/games/pixel.png", label: "Pixel incoming", players: "1–12", desc: "Une image se dévoile pixel par pixel — devine le plus vite possible !", tint: "#46E0B0", tintBg: "rgba(70,224,176,0.12)", tintBorder: "rgba(70,224,176,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="6" height="6"/><rect x="15" y="3" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/><rect x="3" y="15" width="6" height="6"/><rect x="15" y="15" width="6" height="6"/></svg> },
-                { id: "bombe", img: "/games/bombe.png", label: "Bombe", players: "2–12", desc: "Trouve vite un mot avec la syllabe avant que la bombe explose !", tint: "#FF6B4D", tintBg: "rgba(255,107,77,0.14)", tintBorder: "rgba(255,107,77,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="14" r="7" /><path d="M16 9l2-2" /><path d="M18 7l1 .3M19 5.5l.3-1M20.5 6.8l1-.3" /></svg> },
+                { id: "bombe", img: "/games/bombe.png", label: "Boum Rush", players: "2–12", desc: "Trouve vite un mot avec la syllabe avant que la bombe explose !", tint: "#FF6B4D", tintBg: "rgba(255,107,77,0.14)", tintBorder: "rgba(255,107,77,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="14" r="7" /><path d="M16 9l2-2" /><path d="M18 7l1 .3M19 5.5l.3-1M20.5 6.8l1-.3" /></svg> },
               ] as const
             ).map((c) => {
               const sel = selectedGame === c.id;
@@ -553,7 +550,7 @@ export default function LobbyPage() {
           <div className="cfg-grp">
             <div className="cfg-head">
               <span className="cfg-ic" style={{ background: "rgba(255,107,77,0.14)", color: "#FF6B4D", borderColor: "rgba(255,107,77,0.4)" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="14" r="7" /><path d="M16 9l2-2" /><path d="M18 7l1 .3M19 5.5l.3-1M20.5 6.8l1-.3" /></svg></span>
-              <div><h2 className="cfg-tt">Réglages de la Bombe</h2><span className="cfg-sub">Rapide, stressant, nerveux 💣</span></div>
+              <div><h2 className="cfg-tt">Réglages de Boum Rush</h2><span className="cfg-sub">Rapide, stressant, nerveux 💣</span></div>
             </div>
             <div className="panel space-y-3 p-4">
               <p className="text-sm text-text-muted">
@@ -859,11 +856,6 @@ export default function LobbyPage() {
           ))}
       </div>
 
-      {isHost && !startable && (
-        <p className="mt-3 text-center text-xs text-text-faint">
-          {(() => { const n = state ? minReadyFor(state, selectedGame) : 2; return `Il faut ${n} joueur${n > 1 ? "s" : ""} prêt${n > 1 ? "s" : ""} pour lancer.`; })()}
-        </p>
-      )}
       {profileOpen && me && (
         <ProfileModal
           name={me.name}
