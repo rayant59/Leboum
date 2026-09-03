@@ -91,7 +91,8 @@ function armTurn(state: BombeState, currentId: PlayerId, ctx: GameContext): Bomb
     syllable,
     turnStartedAt: ctx.now,
     deadline: ctx.now + randomFuse(state.config, ctx.rng),
-    exampleWords: [],
+    // NB : exampleWords/exampleSyllable/exampleVictimId NE sont PAS effacés ici —
+    // ils restent affichés jusqu'à la prochaine explosion.
     recentSyllables: [syllable, ...state.recentSyllables].slice(0, RECENT_SYLLABLES),
   };
 }
@@ -117,6 +118,8 @@ export function createBombe(players: GamePlayer[], settings: BombeSettings, ctx:
     usedLetters: [],
     letterEvent: null,
     exampleWords: [],
+    exampleSyllable: "",
+    exampleVictimId: null,
     recentSyllables: [],
     wordsFound: rec0(players),
     turnsSurvived: rec0(players),
@@ -269,6 +272,8 @@ export function reduceBombe(
         justExploded: victim,
         letterEvent: null,
         exampleWords: examples,
+        exampleSyllable: state.syllable,
+        exampleVictimId: victim,
         lastWord: null,
         lastWordBy: null,
       };
@@ -377,6 +382,8 @@ export function projectBombe(state: BombeState, viewerId: PlayerId): BombePublic
     usedLetters: state.usedLetters,
     letterEvent: state.letterEvent,
     exampleWords: state.exampleWords,
+    exampleSyllable: state.exampleSyllable,
+    exampleVictimId: state.exampleVictimId,
     winnerId: state.winnerId,
     stats,
   };

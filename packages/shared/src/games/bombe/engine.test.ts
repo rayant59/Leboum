@@ -164,13 +164,20 @@ test("explosion : pause puis le tour suivant est ARMÉ (pas de blocage)", () => 
   eq(play.state.usedWords.length, 1, "son mot est bien pris en compte");
 });
 
-test("explosion : des mots à apprendre (contenant la syllabe) sont exposés", () => {
+test("explosion : des mots à apprendre (contenant la syllabe) sont exposés + persistants", () => {
   const s = { ...baseFor("a", 3), syllable: "ar", deadline: 10_000_000 };
   const boom = reduceBombe(s, { type: "advance" }, ctx(2000)).state;
   assert(boom.exampleWords.length > 0, "des mots exemples sont fournis");
   assert(boom.exampleWords.every((w) => bombeNormalize(w).includes("ar")), "chaque mot contient la syllabe");
-  const pub = projectBombe(boom, "b");
-  assert(pub.exampleWords.length > 0, "exposés dans la projection");
+  eq(boom.exampleSyllable, "ar", "la syllabe ratée est mémorisée");
+  eq(boom.exampleVictimId, "a", "la victime est mémorisée");
+  // Ils restent affichés après la reprise (armTurn), jusqu'à la prochaine explosion.
+  const next = reduceBombe(boom, { type: "advance" }, ctx(3600)).state;
+  eq(next.phase, "playing", "le tour a repris");
+  assert(next.exampleWords.length > 0, "les mots restent affichés après la reprise");
+  eq(next.exampleSyllable, "ar", "la syllabe reste");
+  const pub = projectBombe(next, "b");
+  assert(pub.exampleWords.length > 0 && pub.exampleVictimId === "a", "exposés dans la projection");
 });
 
 test("élimination à 0 vie + victoire du dernier debout", () => {

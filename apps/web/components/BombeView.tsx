@@ -29,7 +29,7 @@ const C = {
   violet: "#8B7DF6",
 };
 const DISPLAY = "'Bricolage Grotesque', system-ui, sans-serif";
-const MONO = "'Space Mono', ui-monospace, monospace";
+const MONO = "'Bricolage Grotesque', system-ui, sans-serif";
 const BODY = "'Inter', system-ui, sans-serif";
 const RING = 112;
 const RING_C = 2 * Math.PI * RING; // ≈ 703.7
@@ -74,7 +74,7 @@ function Hearts({ lives, max }: { lives: number; max: number }) {
     return (
       <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
         <span style={{ fontSize: 14, lineHeight: 1 }}>❤️</span>
-        <span style={{ fontFamily: MONO, fontSize: 11, color: C.faint }}>×{lives}</span>
+        <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, color: C.faint }}>×{lives}</span>
       </span>
     );
   }
@@ -112,7 +112,7 @@ function Bomb({ syllable, secs, frac, color, exploded }: { syllable: string; sec
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 32, lineHeight: 1 }}>💥</span>
             <span style={{ fontFamily: DISPLAY, fontSize: 44, fontWeight: 800, lineHeight: 1, color: C.pink }}>0s</span>
-            <span style={{ fontFamily: MONO, fontSize: 12, textTransform: "uppercase", letterSpacing: ".22em", color: C.muted }}>{syllable}</span>
+            <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 12, textTransform: "uppercase", letterSpacing: ".16em", color: C.muted }}>{syllable}</span>
           </div>
         </>
       ) : (
@@ -125,7 +125,7 @@ function Bomb({ syllable, secs, frac, color, exploded }: { syllable: string; sec
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
             <span style={{ fontSize: 26, lineHeight: 1 }}>💣</span>
             <span style={{ fontFamily: DISPLAY, fontSize: 62, fontWeight: 800, letterSpacing: ".05em", lineHeight: 1, textShadow: `0 2px 20px ${color}80` }}>{syllable.toUpperCase()}</span>
-            <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, letterSpacing: ".14em", color }}>{Math.ceil(secs)}s</span>
+            <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 13, letterSpacing: ".14em", color }}>{Math.ceil(secs)}s</span>
           </div>
         </>
       )}
@@ -157,9 +157,18 @@ function SonButton() {
   return (
     <button
       onClick={() => { const n = !on; setSoundOn(n); setOn(n); if (!n) stopBombeTimers(); }}
-      style={{ border: `1px solid ${C.line}`, background: "transparent", color: C.muted, fontFamily: BODY, fontSize: 12, padding: "7px 13px", borderRadius: 10, cursor: "pointer" }}
+      aria-label={on ? "Couper le son" : "Activer le son"}
+      title={on ? "Couper le son" : "Activer le son"}
+      style={{ display: "grid", placeItems: "center", width: 36, height: 36, border: `1px solid ${C.line}`, background: "transparent", color: on ? C.gold : C.faint, borderRadius: 10, cursor: "pointer" }}
     >
-      {on ? "🔔 Son" : "🔕 Son"}
+      <svg width="17" height="17" viewBox="0 0 256 256" fill="currentColor" aria-hidden>
+        <path d="M155.51 24.81a8 8 0 0 0-8.42.88L77.25 80H32a16 16 0 0 0-16 16v64a16 16 0 0 0 16 16h45.25l69.84 54.31A8 8 0 0 0 160 224V32a8 8 0 0 0-4.49-7.19M32 96h40v64H32Z" />
+        {on ? (
+          <path d="M208 128a39.94 39.94 0 0 1-10 26.46 8 8 0 0 1-12-10.58 24 24 0 0 0 0-31.72 8 8 0 1 1 12-10.58A39.94 39.94 0 0 1 208 128m40 0a79.9 79.9 0 0 1-20.37 53.34 8 8 0 0 1-11.92-10.67 64 64 0 0 0 0-85.33 8 8 0 1 1 11.92-10.67A79.83 79.83 0 0 1 248 128" />
+        ) : (
+          <path d="M231.6 208a8 8 0 0 1-11.31 0L192 179.31l-28.28 28.28a8 8 0 0 1-11.32-11.31L180.69 168l-28.29-28.28a8 8 0 0 1 11.32-11.32L192 156.69l28.29-28.29a8 8 0 0 1 11.31 11.32L203.31 168l28.29 28.29a8 8 0 0 1 0 11.31" />
+        )}
+      </svg>
     </button>
   );
 }
@@ -294,7 +303,7 @@ export function BombeView({ room }: { room: UseRoom }) {
   const Sidebar = (
     <aside style={{ position: "relative", width: 296, flex: "none", display: "flex", flexDirection: "column", gap: 18, padding: "24px 20px", background: C.aside, borderRight: `1px solid ${C.line}` }} className="bmb-aside">
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        <span style={{ fontFamily: MONO, fontSize: 11, textTransform: "uppercase", letterSpacing: ".22em", color: C.faint }}>{game.phase === "gameover" ? "Classement" : "Bombe"}</span>
+        <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: C.faint }}>{game.phase === "gameover" ? "Classement" : "Bombe"}</span>
         <span style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 800, letterSpacing: "-.01em" }}>{game.phase === "gameover" ? "Partie terminée" : `${alive} en jeu`}</span>
         <span style={{ fontSize: 12, color: C.faint }}>{game.usedCount} mots joués{game.phase !== "gameover" && game.usedLetters.length ? "" : ""}</span>
       </div>
@@ -304,10 +313,10 @@ export function BombeView({ room }: { room: UseRoom }) {
           game.phase === "gameover" ? (
             <div key={row.id} style={{ position: "relative", display: "flex", alignItems: "center", gap: 12, padding: i === 0 ? "12px 14px 12px 16px" : "12px 14px", borderRadius: 14, ...(i === 0 ? { background: `${C.gold}1a`, boxShadow: `0 0 0 1px ${C.gold}8c` } : row.eliminated ? { boxShadow: `0 0 0 1px ${C.lineFaint}`, opacity: 0.5 } : { boxShadow: `0 0 0 1px ${C.line}` }) }}>
               {i === 0 && <span style={{ position: "absolute", left: 0, top: 13, bottom: 13, width: 3, borderRadius: 3, background: C.gold }} />}
-              <span style={{ fontFamily: MONO, fontSize: 12, color: i === 0 ? C.gold : C.faint, width: 14 }}>{i + 1}</span>
+              <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 12, color: i === 0 ? C.gold : C.faint, width: 14 }}>{i + 1}</span>
               <Plate name={row.name} color={row.color} />
               <span style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 600 }}>{row.name}{row.id === you && <span style={{ color: C.faint, fontWeight: 400 }}> · toi</span>}</span>
-              <span style={{ fontFamily: MONO, fontSize: 13, color: i === 0 ? C.gold : C.muted }}>{row.wordsFound}</span>
+              <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 13, color: i === 0 ? C.gold : C.muted }}>{row.wordsFound}</span>
             </div>
           ) : (
             <SidebarRow key={row.id} row={row} you={you} badge={badgeFor(row)} />
@@ -315,18 +324,38 @@ export function BombeView({ room }: { room: UseRoom }) {
         ))}
       </div>
       {game.phase !== "gameover" && (
-        <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 9 }}>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-            <span style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: ".22em", color: C.faint }}>Lettres</span>
-            <span style={{ fontFamily: MONO, fontSize: 10, color: C.faint }}>{game.usedLetters.length} / {BOMBE_ALPHABET.length}</span>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-            {BOMBE_ALPHABET.map((l) => {
-              const on = game.usedLetters.includes(l);
-              return (
-                <span key={l} style={{ display: "grid", placeItems: "center", width: 23, height: 23, borderRadius: 6, fontFamily: DISPLAY, fontSize: 11, fontWeight: 700, color: on ? C.mint : C.dim, background: on ? "rgba(70,224,176,.14)" : "transparent", boxShadow: on ? "inset 0 0 0 1px rgba(70,224,176,.5)" : "none" }}>{l}</span>
-              );
-            })}
+        <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Mots à apprendre — persistants jusqu'à la prochaine explosion. */}
+          {game.exampleWords.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "12px 13px", borderRadius: 12, background: "rgba(255,77,141,.07)", boxShadow: "inset 0 0 0 1px rgba(255,77,141,.28)" }}>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".18em", color: C.pink }}>À apprendre</span>
+                <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, color: C.faint }}>{game.exampleSyllable.toUpperCase()}</span>
+              </div>
+              <span style={{ fontSize: 11, color: C.faint, lineHeight: 1.35 }}>{nameOf(game.exampleVictimId)} aurait pu jouer&nbsp;:</span>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                {game.exampleWords.map((w, i) => (
+                  <span key={i} style={{ fontFamily: DISPLAY, fontSize: 13, fontWeight: 700, padding: "3px 9px", borderRadius: 8, background: "rgba(70,224,176,.10)", color: C.text, boxShadow: "inset 0 0 0 1px rgba(70,224,176,.3)" }}>
+                    <Highlighted text={w} syllable={game.exampleSyllable} tint={C.mint} />
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {/* Lettres A-V collectées. */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+              <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".16em", color: C.faint }}>Lettres</span>
+              <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, color: C.faint }}>{game.usedLetters.length} / {BOMBE_ALPHABET.length}</span>
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+              {BOMBE_ALPHABET.map((l) => {
+                const on = game.usedLetters.includes(l);
+                return (
+                  <span key={l} style={{ display: "grid", placeItems: "center", width: 23, height: 23, borderRadius: 6, fontFamily: DISPLAY, fontSize: 11, fontWeight: 700, color: on ? C.mint : C.dim, background: on ? "rgba(70,224,176,.14)" : "transparent", boxShadow: on ? "inset 0 0 0 1px rgba(70,224,176,.5)" : "none" }}>{l}</span>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
@@ -351,17 +380,17 @@ export function BombeView({ room }: { room: UseRoom }) {
             <span style={{ display: "flex", gap: 3, alignItems: "center" }}>
               <Hearts lives={row.lives} max={game.maxLives} />
               {/* Pas de méta en ligne quand un badge occupe déjà la droite. */}
-              {!active && <span style={{ marginLeft: 6, fontFamily: MONO, fontSize: 11, color: row.lives === 1 ? C.pink : C.faint }}>{row.lives === 1 ? "dernière vie" : `${row.wordsFound} mots`}</span>}
+              {!active && <span style={{ marginLeft: 6, fontFamily: MONO, fontWeight: 700, fontSize: 11, color: row.lives === 1 ? C.pink : C.faint }}>{row.lives === 1 ? "dernière vie" : `${row.wordsFound} mots`}</span>}
             </span>
           )}
         </span>
-        {active && <span style={{ fontFamily: MONO, fontSize: 10, textTransform: "uppercase", letterSpacing: ".16em", color: tint }}>{badge!.text}</span>}
+        {active && <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".16em", color: tint }}>{badge!.text}</span>}
       </div>
     );
   }
 
-  const shell: CSSProperties = { minHeight: "100dvh", background: C.bg, color: C.text, fontFamily: BODY };
-  const card: CSSProperties = { position: "relative", display: "flex", flex: 1, minHeight: "70vh", overflow: "hidden" };
+  const shell: CSSProperties = { minHeight: "100dvh", background: C.bg, color: C.text, fontFamily: BODY, display: "flex", flexDirection: "column" };
+  const card: CSSProperties = { position: "relative", display: "flex", flex: 1, minHeight: 0, overflow: "hidden" };
 
   // ══════════════════ FIN DE PARTIE ══════════════════
   if (game.phase === "gameover") {
@@ -375,7 +404,7 @@ export function BombeView({ room }: { room: UseRoom }) {
           <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ height: 3, background: `linear-gradient(90deg,transparent,${C.gold} 5%,${C.gold} 95%,transparent)` }} />
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 26, padding: 24 }}>
-              <span style={{ fontFamily: MONO, fontSize: 11, textTransform: "uppercase", letterSpacing: ".26em", color: C.faint }}>Survivant·e</span>
+              <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: C.faint }}>Survivant·e</span>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
                 <span style={{ boxShadow: `0 0 60px -18px ${winner?.color ?? C.violet}` }}>
                   <Plate name={winner?.name ?? "?"} color={winner?.color} size={92} />
@@ -416,7 +445,7 @@ export function BombeView({ room }: { room: UseRoom }) {
           <Aurora />
           {Sidebar}
           <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 22 }}>
-            <span style={{ fontFamily: MONO, fontSize: 11, textTransform: "uppercase", letterSpacing: ".26em", color: C.faint }}>La partie démarre</span>
+            <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: C.faint }}>La partie démarre</span>
             <div key={left} data-bmb-anim style={{ position: "relative", width: 238, height: 238, display: "grid", placeItems: "center", animation: "bmbCountPop .5s ease-out" }}>
               <div style={{ position: "absolute", inset: 26, borderRadius: "50%", background: `radial-gradient(circle at 50% 42%, ${C.gold}33, transparent 70%)` }} />
               <span style={{ fontFamily: DISPLAY, fontSize: 120, fontWeight: 800, lineHeight: 1, color: C.gold, textShadow: `0 4px 30px ${C.gold}66` }}>{left}</span>
@@ -443,14 +472,12 @@ export function BombeView({ room }: { room: UseRoom }) {
         <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
           <div style={{ height: 3, background: exploded ? C.pink : `linear-gradient(90deg,transparent,${railColor} 5%,${railColor} ${railW.replace("%", "")}%,${railColor}00 calc(${railW} + 1%))` }} />
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 28px" }}>
-            <span style={{ fontFamily: MONO, fontSize: 11, textTransform: "uppercase", letterSpacing: ".22em", color: exploded ? C.pink : C.faint }}>{exploded ? "La bombe a sauté" : "Manche en cours"}</span>
+            <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: exploded ? C.pink : C.faint }}>{exploded ? "La bombe a sauté" : "Manche en cours"}</span>
             <div style={{ display: "flex", gap: 8 }}>
-              {exploded ? (
-                <span style={{ fontSize: 11, color: C.faint }}>Nouvelle syllabe dans un instant…</span>
-              ) : (
+              {!exploded && (
                 <>
                   <SonButton />
-                  {isHost && <button onClick={() => room.skipPhase()} style={{ border: `1px solid ${C.line}`, background: "transparent", color: C.muted, fontFamily: BODY, fontSize: 12, padding: "7px 13px", borderRadius: 10, cursor: "pointer" }}>💥 Skip</button>}
+                  {isHost && <button onClick={() => room.skipPhase()} aria-label="Passer" title="Passer le tour" style={{ display: "grid", placeItems: "center", width: 36, height: 36, border: `1px solid ${C.line}`, background: "transparent", color: C.faint, borderRadius: 10, cursor: "pointer", fontSize: 15 }}>💥</button>}
                 </>
               )}
             </div>
@@ -471,32 +498,24 @@ export function BombeView({ room }: { room: UseRoom }) {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 9 }}>
                     <Plate name={nameOf(game.justExploded)} color={colorOf(game.justExploded)} size={22} />
-                    <span style={{ fontFamily: MONO, fontSize: 11, textTransform: "uppercase", letterSpacing: ".22em", color: C.pink }}>{nameOf(game.justExploded)} perd une vie</span>
+                    <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: C.pink }}>{nameOf(game.justExploded)} perd une vie</span>
                   </span>
-                  <span style={{ fontSize: 11, color: C.faint }}>{(() => { const v = game.lives[game.justExploded ?? ""] ?? 0; return v <= 0 ? "éliminé·e" : `Il reste ${v} vie${v > 1 ? "s" : ""}`; })()}</span>
                 </div>
-                {/* Mots à apprendre */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "20px 26px", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 2px rgba(255,77,141,.55), 0 0 50px -26px rgba(255,77,141,.9)` }}>
-                  <span style={{ fontFamily: MONO, fontSize: 11, textTransform: "uppercase", letterSpacing: ".2em", color: C.muted }}>Tu aurais pu jouer <span style={{ color: C.pink }}>{game.syllable}</span></span>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {(game.exampleWords.length ? game.exampleWords : ["—"]).map((w, i) => (
-                      <span key={i} style={{ fontFamily: DISPLAY, fontSize: 22, fontWeight: 700, padding: "4px 12px", borderRadius: 12, background: "rgba(70,224,176,.10)", color: C.text, boxShadow: "inset 0 0 0 1px rgba(70,224,176,.35)" }}>
-                        <Highlighted text={w} syllable={game.syllable} tint={C.mint} />
-                      </span>
-                    ))}
-                  </div>
-                  <span style={{ fontSize: 12, color: C.faint }}>Quelques mots du dico — à retenir pour la prochaine fois 😉</span>
+                {/* Plaque « temps écoulé » — les mots à apprendre sont dans la barre latérale. */}
+                <div style={{ display: "flex", alignItems: "center", gap: 20, padding: "clamp(16px,3vw,24px) clamp(16px,3vw,28px)", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 2px rgba(255,77,141,.6), 0 0 50px -26px rgba(255,77,141,.9)` }}>
+                  <span style={{ flex: 1, minWidth: 0, fontFamily: DISPLAY, fontSize: "clamp(26px,6vw,52px)", fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.2, color: C.faint }}>
+                    Temps écoulé pour <span style={{ color: C.pink }}>{game.syllable.toLowerCase()}</span>
+                  </span>
+                  <span style={{ flex: "none", fontSize: 13, color: C.muted }}>mot incomplet</span>
                 </div>
-                <span style={{ fontSize: 12, color: C.faint }}>La main passe à <span style={{ color: C.gold }}>{currentName}</span></span>
               </>
             ) : game.youAreCurrent ? (
               <>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 9 }}>
                     <Plate name={nameOf(you)} color={colorOf(you)} size={22} />
-                    <span style={{ fontFamily: MONO, fontSize: 11, textTransform: "uppercase", letterSpacing: ".22em", color: C.gold }}>Ton mot</span>
+                    <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: C.gold }}>Ton mot</span>
                   </span>
-                  <span style={{ fontSize: 11, color: C.faint }}>Entrée pour valider</span>
                 </div>
                 <div onClick={() => inputRef.current?.focus()} style={{ position: "relative", display: "flex", alignItems: "center", gap: 20, padding: "clamp(16px,3vw,24px) clamp(16px,3vw,28px)", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 2px ${C.gold}80, inset 0 1px 0 rgba(243,238,255,.04), 0 20px 44px -28px rgba(0,0,0,.9)`, cursor: "text" }}>
                   <span style={{ flex: 1, minWidth: 0, fontFamily: DISPLAY, fontSize: "clamp(30px,6vw,52px)", fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", padding: "4px 8px 4px 0" }}>
@@ -513,10 +532,8 @@ export function BombeView({ room }: { room: UseRoom }) {
                   />
                   <button onClick={send} style={{ flex: "none", position: "relative", zIndex: 1, border: "none", borderRadius: 14, padding: "15px clamp(18px,3vw,30px)", fontFamily: DISPLAY, fontSize: 17, fontWeight: 700, lineHeight: 1, background: C.gold, color: C.ink, cursor: "pointer", boxShadow: `0 5px 0 ${C.goldSh}, 0 10px 18px -8px rgba(0,0,0,.6)` }}>OK</button>
                 </div>
-                {room.error ? (
+                {room.error && (
                   <span key={room.error.message} style={{ fontSize: 12, color: C.pink }}>❌ {room.error.message} <span style={{ color: C.faint }}>· le timer continue</span></span>
-                ) : (
-                  <span style={{ fontSize: 12, color: C.faint }}>Doit contenir <span style={{ color: C.gold }}>{game.syllable.toLowerCase()}</span> · jamais joué</span>
                 )}
               </>
             ) : (
@@ -524,17 +541,15 @@ export function BombeView({ room }: { room: UseRoom }) {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 9 }}>
                     <Plate name={currentName} color={colorOf(game.currentId)} size={22} />
-                    <span style={{ fontFamily: MONO, fontSize: 11, textTransform: "uppercase", letterSpacing: ".22em", color: C.mint }}>{currentName} écrit</span>
+                    <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: C.mint }}>{currentName} écrit</span>
                   </span>
-                  <span style={{ fontSize: 11, color: C.faint }}>Tu regardes</span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 20, padding: "clamp(16px,3vw,24px) clamp(16px,3vw,28px)", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 2px ${C.mint}73, inset 0 1px 0 rgba(243,238,255,.04)` }}>
                   <span style={{ flex: 1, minWidth: 0, fontFamily: DISPLAY, fontSize: "clamp(28px,6vw,52px)", fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", padding: "4px 8px 4px 0", color: C.text }}>
                     {liveTyping ? <><Highlighted text={liveTyping} syllable={game.syllable} tint={C.mint} /><Caret tint={C.mint} /></> : <span style={{ color: C.faint }}>…</span>}
                   </span>
-                  <span style={{ flex: "none", fontFamily: MONO, fontSize: 12, color: C.faint }}>en direct</span>
+                  <span style={{ flex: "none", fontFamily: MONO, fontWeight: 700, fontSize: 12, color: C.faint }}>en direct</span>
                 </div>
-                <span style={{ fontSize: 12, color: C.faint }}>Prépare le tien : un mot avec <span style={{ color: C.mint }}>{game.syllable.toLowerCase()}</span></span>
               </>
             )}
           </div>
@@ -548,7 +563,7 @@ function Stat({ n, label }: { n: number; label: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "0 clamp(14px,3vw,26px)" }}>
       <span style={{ fontFamily: DISPLAY, fontSize: 28, fontWeight: 800 }}>{n}</span>
-      <span style={{ fontFamily: MONO, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: C.faint }}>{label}</span>
+      <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: C.faint }}>{label}</span>
     </div>
   );
 }
