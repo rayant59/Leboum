@@ -25,7 +25,7 @@ const BEST_BONUS = 50;
 
 export function resolveMimicConfig(settings: MimicSettings): MimicConfig {
   const totalRounds = clamp(settings.totalRounds ?? 4, MIMIC_ROUNDS_MIN, MIMIC_ROUNDS_MAX);
-  const recordSec = clamp(settings.recordSeconds ?? 6, 4, 12);
+  const recordSec = clamp(settings.recordSeconds ?? 10, 5, 25);
   return {
     totalRounds,
     referenceMs: 6000,

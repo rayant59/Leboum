@@ -216,27 +216,35 @@ test("mauvais mot → timer inchangé (le tour continue)", () => {
   eq(r.state.deadline, before, "le minuteur ne change pas");
 });
 
-test("nouvelle lettre sous le max → +1 vie + lettres enregistrées", () => {
-  const s = { ...baseFor("a", 3), lives: { a: 2, b: 3, c: 3, d: 3 } };
+// Alphabet A-V complet (21 lettres). Il en manque une seule → "arbre" (A) complète.
+const AV = "ABCDEFGHIJKLMNOPQRSTUV".split("");
+const missingA = AV.filter((l) => l !== "A"); // 20 lettres, il manque A
+
+test("nouvelle lettre mais alphabet incomplet → AUCUNE vie (lettres enregistrées)", () => {
+  const s = { ...baseFor("a", 3), lives: { a: 2, b: 3, c: 3, d: 3 }, usedLetters: [] };
   const r = reduceBombe(s, submit("a", "arbre"), ctx(2000)); // A R B E
   assert(!r.error, "mot accepté");
-  eq(r.state.lives["a"], 3, "+1 vie (2 → 3)");
-  assert(r.state.letterEvent?.gainedLife === true, "event +1 vie");
+  eq(r.state.lives["a"], 2, "pas de vie tant que l'alphabet n'est pas complet");
+  eq(r.state.letterEvent, null, "aucun event (pas de complétion)");
   assert(["A", "R", "B", "E"].every((l) => r.state.usedLetters.includes(l)), "A R B E enregistrées");
 });
 
-test("plusieurs nouvelles lettres → +1 vie SEULEMENT", () => {
-  const s = { ...baseFor("a", 5), lives: { a: 1, b: 5, c: 5, d: 5 } };
-  const r = reduceBombe(s, submit("a", "arbre"), ctx(2000)); // 4 nouvelles lettres
-  eq(r.state.lives["a"], 2, "une seule vie gagnée");
+test("compléter l'alphabet A-V → +1 vie + grille réinitialisée", () => {
+  const s = { ...baseFor("a", 3), lives: { a: 2, b: 3, c: 3, d: 3 }, usedLetters: missingA };
+  const r = reduceBombe(s, submit("a", "arbre"), ctx(2000)); // apporte A → complète les 21
+  eq(r.state.lives["a"], 3, "+1 vie à la complétion (2 → 3)");
+  assert(r.state.letterEvent?.completed === true, "event de complétion");
+  assert(r.state.letterEvent?.gainedLife === true, "vie gagnée");
+  eq(r.state.usedLetters.length, 0, "grille réinitialisée après complétion");
 });
 
-test("joueur au max → aucune vie, mais lettres enregistrées (atMax)", () => {
-  const s = baseFor("a", 3); // a a 3/3
+test("compléter l'alphabet au max de vies → aucune vie mais grille réinitialisée (atMax)", () => {
+  const s = { ...baseFor("a", 3), usedLetters: missingA }; // a est à 3/3 (max)
   const r = reduceBombe(s, submit("a", "arbre"), ctx(2000));
   eq(r.state.lives["a"], 3, "toujours 3 (pas de dépassement)");
   assert(r.state.letterEvent?.atMax === true, "atMax signalé");
-  assert(r.state.usedLetters.includes("A"), "lettre quand même enregistrée");
+  assert(r.state.letterEvent?.completed === true, "complétion signalée");
+  eq(r.state.usedLetters.length, 0, "grille réinitialisée");
 });
 
 test("lettre déjà utilisée → aucune récompense", () => {
@@ -266,12 +274,13 @@ test("config : jusqu'à 10 vies autorisées", () => {
   eq(resolveBombeConfig({ minSeconds: 2, maxSeconds: 4 }).minMs, 2000, "min 2s autorisé");
 });
 
-test("projection : usedLetters et letterEvent exposés", () => {
-  const s = { ...baseFor("a", 3), lives: { a: 2, b: 3, c: 3, d: 3 } };
+test("projection : usedLetters et letterEvent (complétion) exposés", () => {
+  const s = { ...baseFor("a", 3), lives: { a: 2, b: 3, c: 3, d: 3 }, usedLetters: missingA };
   const r = reduceBombe(s, submit("a", "arbre"), ctx(2000));
   const pub = projectBombe(r.state, "b");
-  assert(pub.usedLetters.includes("A"), "usedLetters exposées");
-  assert(pub.letterEvent?.gainedLife === true, "letterEvent exposé");
+  eq(pub.usedLetters.length, 0, "grille réinitialisée exposée");
+  assert(pub.letterEvent?.completed === true, "letterEvent de complétion exposé");
+  assert(pub.letterEvent?.gainedLife === true, "gain de vie exposé");
 });
 
 console.log(`\n${passed} réussis, ${failed} échoués\n`);

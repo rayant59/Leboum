@@ -185,17 +185,23 @@ export function reduceBombe(
       if (state.usedWords.includes(w)) {
         return fail(state, { code: "bombe_used", message: "Ce mot a déjà été utilisé." });
       }
-      // Bon mot ! On regarde les nouvelles lettres A-V découvertes.
+      // Bon mot ! Lettres A-V nouvellement découvertes.
       const maxLives = state.config.lives;
       const curLives = state.lives[playerId] ?? 0;
       const wordLetters = bombeWordLetters(w);
       const newLetters = wordLetters.filter((l) => !state.usedLetters.includes(l));
-      const gainedLife = newLetters.length > 0 && curLives < maxLives; // +1 vie max par mot
-      const atMax = newLetters.length > 0 && curLives >= maxLives;
+      // +1 vie UNIQUEMENT quand ce mot COMPLÈTE l'alphabet A-V (les 21 lettres),
+      // jamais à chaque nouvelle lettre. Une fois complété, la grille est remise à
+      // zéro pour pouvoir la re-remplir (objectif répétable).
+      const willComplete = newLetters.length > 0 && state.usedLetters.length + newLetters.length >= BOMBE_ALPHABET.length;
+      const gainedLife = willComplete && curLives < maxLives;
+      const atMax = willComplete && curLives >= maxLives;
       const lives = gainedLife ? { ...state.lives, [playerId]: Math.min(maxLives, curLives + 1) } : state.lives;
-      const usedLetters = newLetters.length ? [...state.usedLetters, ...newLetters] : state.usedLetters;
-      const letterEvent = newLetters.length
-        ? { playerId, newLetters, gainedLife, atMax, at: ctx.now }
+      const usedLetters = willComplete
+        ? []
+        : (newLetters.length ? [...state.usedLetters, ...newLetters] : state.usedLetters);
+      const letterEvent = willComplete
+        ? { playerId, newLetters, gainedLife, atMax, completed: true, at: ctx.now }
         : null;
 
       // La bombe passe aussitôt au joueur suivant.

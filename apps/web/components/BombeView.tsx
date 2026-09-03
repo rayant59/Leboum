@@ -551,13 +551,13 @@ function LetterToast({ ev, nameOf }: { ev: NonNullable<BombePublic["letterEvent"
       <div style={{ borderRadius: 14, border: `1px solid ${C.accentRing}`, background: "rgba(22,24,38,0.96)", padding: "12px 20px", textAlign: "center", boxShadow: "0 12px 40px -12px rgba(145,132,217,.7)" }}>
         {ev.gainedLife ? (
           <>
-            <p style={{ fontSize: 15, fontWeight: 600, color: C.accentT }}>🔤 Nouvelle lettre ! <span style={{ color: C.danger }}>+1 ❤️</span></p>
-            <p style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>{nameOf(ev.playerId)} découvre : <b style={{ color: C.accentT2 }}>{ev.newLetters.join(" · ")}</b></p>
+            <p style={{ fontSize: 15, fontWeight: 600, color: C.accentT }}>🔤 Alphabet complété ! <span style={{ color: C.danger }}>+1 ❤️</span></p>
+            <p style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>{nameOf(ev.playerId)} a rempli l'alphabet A→V</p>
           </>
         ) : (
           <>
-            <p style={{ fontSize: 15, fontWeight: 600, color: C.accentT }}>🔤 Lettre découverte</p>
-            <p style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>❤️ Vie maximale · <b style={{ color: C.accentT2 }}>{ev.newLetters.join(" · ")}</b></p>
+            <p style={{ fontSize: 15, fontWeight: 600, color: C.accentT }}>🔤 Alphabet complété !</p>
+            <p style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>❤️ Vie déjà au maximum · {nameOf(ev.playerId)}</p>
           </>
         )}
       </div>

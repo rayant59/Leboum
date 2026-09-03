@@ -100,7 +100,7 @@ export default function LobbyPage() {
   const [bombeSpeed, setBombeSpeed] = useState<"tresrapide" | "rapide" | "normal" | "long" | "treslong">("normal");
   const [bombeLen, setBombeLen] = useState<"2" | "23" | "3">("23");
   const [mimicRounds, setMimicRounds] = useState(4);
-  const [mimicRecord, setMimicRecord] = useState(6);
+  const [mimicRecord, setMimicRecord] = useState(10);
   useEffect(() => setName(getPlayerName()), []);
   useEffect(() => setShareUrl(window.location.href), []);
 
@@ -511,7 +511,7 @@ export default function LobbyPage() {
                 🎤 Un son est joué, tout le monde l'imite <b>en une seule prise</b> (micro requis, idéalement en https/localhost). On rejoue les imitations, puis chacun vote pour la meilleure. Le plus de votes gagne !
               </p>
               <PresetStepper label="Nombre de manches" sub="Longueur de la partie" value={mimicRounds} values={[3, 4, 5, 6]} unit="manches" onChange={setMimicRounds} disabled={!isHost} />
-              <PresetStepper label="Temps d'enregistrement" sub="Durée d'une prise" value={mimicRecord} values={[4, 6, 8, 10]} unit="secondes" onChange={setMimicRecord} disabled={!isHost} />
+              <PresetStepper label="Temps d'enregistrement" sub="Durée d'une prise" value={mimicRecord} values={[8, 10, 15, 20]} unit="secondes" onChange={setMimicRecord} disabled={!isHost} />
               <p className="text-xs text-text-faint">Ajoute tes propres sons (animaux, voix…) dans <span className="font-mono">apps/web/public/sounds/</span> via <span className="font-mono">sounds.txt</span> — un pack de démarrage est déjà inclus.</p>
             </div>
           </div>

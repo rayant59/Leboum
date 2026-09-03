@@ -27,9 +27,10 @@ export type BombeClientAction =
 /** Événement « nouvelle(s) lettre(s) » pour l'animation (un tick). */
 export interface BombeLetterEvent {
   playerId: PlayerId;
-  newLetters: string[];   // lettres A-V nouvellement découvertes (majuscules)
-  gainedLife: boolean;    // le joueur a gagné +1 vie
-  atMax: boolean;         // lettres découvertes mais déjà au max de vies
+  newLetters: string[];   // lettres A-V qui ont complété l'alphabet (majuscules)
+  gainedLife: boolean;    // le joueur a gagné +1 vie (alphabet complété)
+  atMax: boolean;         // alphabet complété mais déjà au max de vies
+  completed: boolean;     // l'alphabet A-V complet vient d'être rempli
   at: number;             // horloge serveur (pour dédupliquer l'animation)
 }
 
