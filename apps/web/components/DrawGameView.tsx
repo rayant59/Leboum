@@ -1122,7 +1122,7 @@ export function DrawGameView({ room }: { room: UseRoom }) {
           {/* ═══ CHOOSING (7a) ═══ */}
           {game.phase === "choosing" && (
             <div className="dv-stage" style={{ padding: "16px 32px 28px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+              <div className="dv-head" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
                   <AvatarRing name={drawerName} color={color(game.drawerId ?? "")} avatar={avatarOf(game.drawerId ?? "")} size={48} ring={LB.gold} p={pRemain} />
                   <span style={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -1133,7 +1133,7 @@ export function DrawGameView({ room }: { room: UseRoom }) {
                 {soundBtn}
               </div>
               {game.youAreDrawer ? (
-                <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 18, padding: "20px 0" }}>
+                <div className="dv-choicecards" style={{ flex: 1, display: "flex", alignItems: "center", gap: 18, padding: "20px 0" }}>
                   {(game.wordChoices ?? []).map((w) => (
                     <button key={w} onClick={() => room.chooseWord(w)} className="lb-card3d" style={{ flex: "1 1 0", minWidth: 0, textAlign: "left", border: "none", borderRadius: 20, padding: "34px 28px", background: LB.raised, cursor: "pointer", boxShadow: `0 0 0 1px ${LB.line}, 0 6px 0 ${LB.lineFaint}` }}>
                       <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: w.length > 12 ? 26 : 34, lineHeight: 1, color: LB.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>{w}</span>
@@ -1151,10 +1151,10 @@ export function DrawGameView({ room }: { room: UseRoom }) {
           {/* ═══ DRAWING — dessinateur (7b) ═══ */}
           {game.phase === "drawing" && game.youAreDrawer && (
             <div className="dv-stage" style={{ padding: "14px 26px 16px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
+              <div className="dv-head" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
                   <AvatarRing name={name(you)} color={color(you)} avatar={avatarOf(you)} size={40} ring={LB.gold} p={pRemain} />
-                  <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 26, letterSpacing: ".02em" }}>{game.word}</span>
+                  <span className="dv-word" style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 26, letterSpacing: ".02em" }}>{game.word}</span>
                   {secs != null && <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: LB.gold }}>{secs}s</span>}
                   {game.constraint && (
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 8, padding: "5px 10px", background: hexA(LB.pink, 0.12), boxShadow: `inset 0 0 0 1px ${hexA(LB.pink, 0.4)}`, fontSize: 12, fontWeight: 600, color: LB.pink }}>{game.constraint}</span>
@@ -1182,10 +1182,10 @@ export function DrawGameView({ room }: { room: UseRoom }) {
           {/* ═══ GUESSING — je devine (7c) ═══ */}
           {game.phase === "drawing" && !game.youAreDrawer && (
             <div className="dv-stage" style={{ padding: "14px 26px 16px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
+              <div className="dv-head" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8, flexWrap: "wrap" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0, flexWrap: "wrap" }}>
                   <AvatarRing name={drawerName} color={color(game.drawerId ?? "")} avatar={avatarOf(game.drawerId ?? "")} size={40} ring={LB.mint} p={pRemain} />
-                  <WordStencil segments={game.wordSegments} separators={game.wordSeparators} color={LB.mint} />
+                  <span className="dv-stencil"><WordStencil segments={game.wordSegments} separators={game.wordSeparators} color={LB.mint} /></span>
                   <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: LB.faint }}>{letters} lettres</span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

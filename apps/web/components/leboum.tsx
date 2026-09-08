@@ -141,7 +141,7 @@ export const LB_SCOPED_CSS = `
 .lb-scope .dc-toolbtn:hover{transform:translateY(-1px)}
 .lb-scope .dc-toolbtn:active{transform:translateY(1px)}
 @media (max-width:899px){
-  .lb-scope .lb-rail{display:none}
+  .lb-scope .lb-rail{display:none !important}
   .lb-scope .lb-mobilehead{display:flex}
   .lb-scope .lb-pad{padding-left:18px !important;padding-right:18px !important}
 }
@@ -152,6 +152,19 @@ export const LB_SCOPED_CSS = `
    à partir de 900px elle est pilotée par la hauteur dispo pour que toile +
    palette + champ de réponse tiennent dans un seul écran, sans scroll. */
 .lb-scope .dv-grid{display:flex;flex-direction:column;gap:16px}
+/* Mobile Boum Dessin : en-tête qui s'empile, outils compacts, palette en barres */
+@media (max-width:899px){
+  .lb-scope .dv-head{flex-wrap:wrap;gap:8px 10px}
+  .lb-scope .dv-word{font-size:22px !important}
+  .lb-scope .dv-stage{padding-left:14px !important;padding-right:14px !important}
+  .lb-scope .dc-tools{gap:6px !important;order:2 !important}
+  .lb-scope .dc-toolbtn{width:38px !important;height:38px !important;border-radius:11px}
+  .lb-scope .dc-bottombar{gap:10px !important}
+  .lb-scope .dv-stencil span{font-size:20px !important;letter-spacing:.3em !important}
+  .lb-scope .dv-choicecards{flex-direction:column !important;align-items:stretch !important}
+  .lb-scope .dv-choicecards button{flex:none !important}
+  .lb-scope input.lb-input{font-size:24px !important}
+}
 .lb-scope .dc-fit .dc-panel{flex:none}
 @media (min-width:900px){
   .lb-scope .dv-stage{flex:1;min-height:0;display:flex;flex-direction:column}
