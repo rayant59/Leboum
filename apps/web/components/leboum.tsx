@@ -135,6 +135,11 @@ export const LB_SCOPED_CSS = `
 .lb-scope .lb-tile:hover{box-shadow:0 0 0 1px ${hexA(LB.gold, 0.6)}, 0 4px 0 ${LB.lineFaint}}
 .lb-scope .lb-tile:active{transform:translateY(3px)}
 .lb-scope input.lb-input::placeholder{color:${LB.dim};opacity:1}
+.lb-scope .lb-card3d{transition:box-shadow .12s ease,transform .06s ease}
+.lb-scope .lb-card3d:hover{box-shadow:0 0 0 1px ${hexA(LB.gold, 0.65)}, 0 6px 0 ${LB.lineFaint} !important}
+.lb-scope .lb-card3d:active{transform:translateY(4px);box-shadow:0 0 0 1px ${hexA(LB.gold, 0.65)}, 0 2px 0 ${LB.lineFaint} !important}
+.lb-scope .dc-toolbtn:hover{transform:translateY(-1px)}
+.lb-scope .dc-toolbtn:active{transform:translateY(1px)}
 @media (max-width:899px){
   .lb-scope .lb-rail{display:none}
   .lb-scope .lb-mobilehead{display:flex}

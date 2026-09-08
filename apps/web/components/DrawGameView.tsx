@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode, type CSSProperties } from "react";
 import type { DrawPublic, DrawStroke } from "@subtitles-party/shared";
 import type { UseRoom } from "@/lib/useRoom";
-import { ResultsScreen } from "@/components/ResultsScreen";
 import { SoundToggle } from "@/lib/sound";
 import { Avatar } from "@/components/Avatar";
-import { LB, DISPLAY, MONO, hexA, Aurora, Rail, type RailRow, lbShell, lbCard, lbGoldBtn, lbGhostBtn, topBar, LB_SCOPED_CSS } from "@/components/leboum";
+import { LB, DISPLAY, MONO, hexA, Aurora, type RailRow, lbShell, lbCard, lbGoldBtn, lbGhostBtn, topBar, LB_SCOPED_CSS } from "@/components/leboum";
 
 const CW = 1200;
 const CH = 800;
@@ -25,7 +24,7 @@ const TOOLS: { id: Tool; label: string }[] = [
 
 /** Clean line-art icons (no emoji). Stroke uses currentColor so the button's
  *  text colour drives the icon colour. */
-function ToolSvg({ id }: { id: Tool | "clear" }) {
+function ToolSvg({ id }: { id: Tool | "clear" | "undo" }) {
   const p = { fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   switch (id) {
     case "brush":
@@ -42,14 +41,16 @@ function ToolSvg({ id }: { id: Tool | "clear" }) {
       return <svg viewBox="0 0 24 24" className="h-5 w-5"><circle {...p} cx="12" cy="12" r="8" /></svg>;
     case "arrow":
       return <svg viewBox="0 0 24 24" className="h-5 w-5"><path {...p} d="M4 20 20 4M20 4v7M20 4h-7" /></svg>;
+    case "undo":
+      return <svg viewBox="0 0 24 24" className="h-5 w-5"><path {...p} d="M9 14L4 9l5-5" /><path {...p} d="M4 9h11a5 5 0 0 1 5 5v0a5 5 0 0 1-5 5H8" /></svg>;
     case "clear":
       return <svg viewBox="0 0 24 24" className="h-5 w-5"><path {...p} d="M5 7h14M10 7V5h4v2M6 7l1 12h10l1-12" /></svg>;
   }
 }
 
-/** Tool glyph: uses the player's custom image at /tools/<id>.png when present,
- *  otherwise falls back to the clean SVG (never an emoji). */
-function ToolGlyph({ id }: { id: Tool | "clear" }) {
+/** Tool glyph: uses the neon image at /tools/<id>.png when present, otherwise
+ *  falls back to the clean SVG (never an emoji). The PNG fills the button. */
+function ToolGlyph({ id }: { id: Tool | "clear" | "undo" }) {
   const [imgOk, setImgOk] = useState(false);
   const src = `/tools/${id}.png`;
   useEffect(() => {
@@ -60,7 +61,17 @@ function ToolGlyph({ id }: { id: Tool | "clear" }) {
     im.src = src;
     return () => { alive = false; };
   }, [src]);
-  return imgOk ? <img src={src} alt="" className="h-9 w-9 object-contain" /> : <ToolSvg id={id} />;
+  return imgOk ? <img src={src} alt="" className="h-full w-full object-contain" draggable={false} /> : <ToolSvg id={id} />;
+}
+
+/** Bouton d'outil neon : 44px, sans bordure, l'actif porte le double anneau doré. */
+function toolBtnStyle(active: boolean): CSSProperties {
+  return {
+    width: 44, height: 44, padding: 0, border: "none", background: "transparent", borderRadius: 13,
+    cursor: "pointer", display: "grid", placeItems: "center", flex: "none",
+    boxShadow: active ? "0 0 0 2px #FFC24B, 0 0 0 5px rgba(255,194,75,.22)" : "none",
+    transition: "transform .06s ease, box-shadow .12s ease",
+  };
 }
 
 // §1 — colours grouped into families. Each family shows ONE primary swatch;
@@ -348,6 +359,7 @@ export function DrawCanvas({
   turnKey,
   authorFilter,
   fit = false,
+  ctaSlot,
 }: {
   room: UseRoom;
   drawable: boolean;
@@ -356,6 +368,7 @@ export function DrawCanvas({
   turnKey?: string;
   authorFilter?: string | null; // impostor mode: show only this author's strokes
   fit?: boolean; // true = la toile se cale sur la hauteur dispo (desktop), pas de scroll
+  ctaSlot?: ReactNode; // bouton "J'ai fini" injecté à gauche de la barre du bas
 }) {
   const mainRef = useRef<HTMLCanvasElement | null>(null);
   const overRef = useRef<HTMLCanvasElement | null>(null);
@@ -653,76 +666,61 @@ export function DrawCanvas({
         </div>
       )}
 
-      <div className="dc-row flex flex-col gap-3 sm:flex-row sm:items-start">
-        {/* §6 — vertical toolbar on the left (wraps to a row on mobile) */}
+      <div className="dc-row flex flex-col gap-3 sm:flex-row sm:items-stretch">
+        {/* Barre d'outils neon — 9 boutons PNG borderless, actif = double anneau doré */}
         {drawable && (
           <div className="dc-tools order-2 flex shrink-0 flex-wrap gap-1.5 sm:order-1 sm:flex-col sm:flex-nowrap">
             {TOOLS.filter((t) => toolAllowed(t.id)).map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setTool(t.id)}
-                title={t.label}
-                aria-label={t.label}
-                className={`grid h-11 w-11 place-items-center rounded-xl border transition-colors ${tool === t.id ? "border-gold bg-gold/10 text-gold" : "border-ink-border bg-ink-surface text-text-muted hover:text-text"}`}
-              >
+              <button key={t.id} onClick={() => setTool(t.id)} title={t.label} aria-label={t.label} className="dc-toolbtn" style={toolBtnStyle(tool === t.id)}>
                 <ToolGlyph id={t.id} />
               </button>
             ))}
-            <button
-              onClick={undo}
-              disabled={!canUndo}
-              title="Annuler le dernier trait"
-              aria-label="Annuler le dernier trait"
-              className="grid h-11 w-11 place-items-center rounded-xl border border-ink-border text-text-muted transition-colors hover:border-gold hover:text-gold disabled:opacity-30 disabled:hover:border-ink-border disabled:hover:text-text-muted sm:mt-1"
-            >
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 14L4 9l5-5" />
-                <path d="M4 9h11a5 5 0 0 1 5 5v0a5 5 0 0 1-5 5H8" />
-              </svg>
+            <button onClick={undo} disabled={!canUndo} title="Annuler le dernier trait" aria-label="Annuler le dernier trait" className="dc-toolbtn" style={{ ...toolBtnStyle(false), opacity: canUndo ? 1 : 0.3, cursor: canUndo ? "pointer" : "default", marginTop: 4 }}>
+              <ToolGlyph id="undo" />
             </button>
-            <button
-              onClick={() => { historyRef.current = []; curTraitRef.current = []; setCanUndo(false); setColorLocked(false); setTraits(0); room.clearCanvas(); }}
-              title="Tout effacer"
-              aria-label="Tout effacer"
-              className="grid h-11 w-11 place-items-center rounded-xl border border-ink-border text-text-faint transition-colors hover:border-magenta hover:text-magenta"
-            >
+            <button onClick={() => { historyRef.current = []; curTraitRef.current = []; setCanUndo(false); setColorLocked(false); setTraits(0); room.clearCanvas(); }} title="Tout effacer" aria-label="Tout effacer" className="dc-toolbtn" style={toolBtnStyle(false)}>
               <ToolGlyph id="clear" />
             </button>
           </div>
         )}
 
-        {/* §7 — the canvas is the main element and takes the remaining width */}
+        {/* La toile prend le reste */}
         <div className="dc-col order-1 min-w-0 flex-1 sm:order-2">
           <div className="dc-wrap">
-            <div className={`dc-box relative w-full select-none overflow-hidden rounded-2xl border border-ink-border${shake && shaking ? " animate-canvasshake" : ""}`} style={{ aspectRatio: "3 / 2", transform: (roam || shrink) ? `translate(${roamX}px, ${roamY}px) scale(${shrinkScale})` : undefined, transformOrigin: "center", transition: roam ? "transform .09s linear" : "transform .2s linear" }}>
-              <canvas ref={mainRef} {...handlers} className="absolute inset-0 h-full w-full touch-none bg-white" style={{ cursor: drawable ? "none" : "default" }} />
+            <div className={`dc-box relative w-full select-none overflow-hidden rounded-2xl${shake && shaking ? " animate-canvasshake" : ""}`} style={{ aspectRatio: "3 / 2", boxShadow: `inset 0 0 0 1px ${LB.line}`, transform: (roam || shrink) ? `translate(${roamX}px, ${roamY}px) scale(${shrinkScale})` : undefined, transformOrigin: "center", transition: roam ? "transform .09s linear" : "transform .2s linear" }}>
+              <canvas ref={mainRef} {...handlers} className="absolute inset-0 h-full w-full touch-none" style={{ background: "#EDEAF6", cursor: drawable ? "none" : "default" }} />
               <canvas ref={overRef} className="pointer-events-none absolute inset-0 h-full w-full" />
               {fog && <div className="pointer-events-none absolute inset-0" style={{ background: "linear-gradient(160deg, #eef1f6, #cfd6e3)", opacity: fogOpacity, transition: "opacity .3s linear" }} />}
               {drawable && cursorVisible && cursorPos && <CustomCursor tool={tool} pos={cursorPos} size={width * scaleRef.current} color={color} />}
             </div>
           </div>
-
-          {drawable && (
-            <div className="dc-panel mt-3 space-y-2.5">
-              <ColorPalette color={color} setColor={setColor} locked={paletteLocked} noVariants={oneColor} />
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-text-faint">Taille</span>
-                {[4, 8, 16, 28].map((w) => (
-                  <button
-                    key={w}
-                    onClick={() => setWidth(w)}
-                    className={`grid h-8 w-8 place-items-center rounded-lg border transition-colors ${width === w ? "border-gold bg-gold/10" : "border-ink-border bg-ink-surface"}`}
-                    aria-label={`Épaisseur ${w}`}
-                  >
-                    <span className="rounded-full bg-text" style={{ width: w / 2 + 2, height: w / 2 + 2 }} />
-                  </button>
-                ))}
-              </div>
-              {capped && <p className="text-xs text-magenta">Limite de traits atteinte — « Tout effacer » pour recommencer.</p>}
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Barre du bas : CTA « J'ai fini » + palette + tailles (pleine largeur) */}
+      {drawable && (
+        <div className="dc-bottombar" style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 18, padding: "14px 2px 2px" }}>
+          {ctaSlot}
+          {ctaSlot && <span style={{ width: 1, height: 32, background: LB.line, flex: "none" }} />}
+          <div style={{ flex: "1 1 auto", minWidth: 0 }}>
+            <ColorPalette color={color} setColor={setColor} locked={paletteLocked} noVariants={oneColor} />
+          </div>
+          <span style={{ width: 1, height: 32, background: LB.line, flex: "none" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: "none" }}>
+            <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".16em", color: LB.faint }}>Taille</span>
+            {[4, 8, 16, 28].map((w, i) => {
+              const dot = [4, 6, 10, 16][i];
+              const on = width === w;
+              return (
+                <button key={w} onClick={() => setWidth(w)} aria-label={`Épaisseur ${w}`} style={{ display: "grid", placeItems: "center", width: 32, height: 32, borderRadius: 10, border: "none", background: on ? hexA(LB.gold, 0.14) : "transparent", boxShadow: on ? `inset 0 0 0 1px ${LB.gold}` : `inset 0 0 0 1px ${LB.line}`, cursor: "pointer" }}>
+                  <span style={{ borderRadius: 99, background: on ? LB.gold : LB.text, width: dot, height: dot }} />
+                </button>
+              );
+            })}
+          </div>
+          {capped && <span style={{ fontSize: 12, color: LB.pink, width: "100%" }}>Limite de traits atteinte — « Tout effacer » pour recommencer.</span>}
+        </div>
+      )}
     </div>
   );
 }
@@ -782,10 +780,10 @@ export function ChatPanel({ room }: { room: UseRoom }) {
     setTalkText("");
   };
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <div
         ref={listRef}
-        className="mb-2 min-h-[12rem] flex-1 space-y-1.5 overflow-y-auto rounded-xl border border-ink-border bg-ink-surface p-3.5 text-sm leading-relaxed"
+        className="mb-2 min-h-[8rem] min-w-0 flex-1 space-y-1.5 overflow-y-auto break-words rounded-xl border border-ink-border bg-ink-surface p-3.5 text-sm leading-relaxed"
       >
         {room.chat.length === 0 && <p className="text-text-faint">Discussion et propositions apparaissent ici. Écris ta réponse sous le dessin, discute ici.</p>}
         {room.chat.map((m) => {
@@ -814,16 +812,16 @@ export function ChatPanel({ room }: { room: UseRoom }) {
           );
         })}
       </div>
-      <div className="flex gap-2">
+      <div className="flex min-w-0 gap-2">
         <input
           value={talkText}
           onChange={(e) => setTalkText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submitTalk()}
           placeholder="💬 Discuter…"
           maxLength={140}
-          className="flex-1 rounded-xl border border-ink-border bg-ink-deep px-4 py-2.5 text-sm text-text-muted outline-none transition-colors focus:border-text-faint"
+          className="min-w-0 flex-1 rounded-xl border border-ink-border bg-ink-deep px-3 py-2.5 text-sm text-text-muted outline-none transition-colors focus:border-text-faint"
         />
-        <button onClick={submitTalk} className="rounded-xl border border-ink-border px-3.5 text-sm text-text-muted transition-colors hover:text-text">
+        <button onClick={submitTalk} className="shrink-0 rounded-xl border border-ink-border px-3 text-sm text-text-muted transition-colors hover:text-text">
           Envoyer
         </button>
       </div>
@@ -881,6 +879,123 @@ function BlindReveal({ room }: { room: UseRoom }) {
   );
 }
 
+// ── Anneau de chrono autour d'un avatar carré (spec socle) ──────────────────
+function AvatarRing({ name, color, avatar, size = 40, ring = LB.gold, p = 1 }: { name: string; color: string; avatar?: string | null; size?: number; ring?: string; p?: number }) {
+  const sw = 3, r = (size - sw) / 2, circ = 2 * Math.PI * r;
+  const off = circ * (1 - Math.max(0, Math.min(1, p)));
+  return (
+    <span style={{ position: "relative", width: size, height: size, flex: "none", display: "inline-grid", placeItems: "center" }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }} aria-hidden>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={LB.lineFaint} strokeWidth={sw} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={ring} strokeWidth={sw} strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={off} />
+      </svg>
+      <Avatar name={name} color={color} avatar={avatar} size={size - 10} />
+    </span>
+  );
+}
+
+// ── Gabarit du mot pour les devineurs : un underscore par lettre, .34em mint ─
+function WordStencil({ segments, separators, color = LB.mint }: { segments: string[]; separators?: string[]; color?: string }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", flexWrap: "wrap" }}>
+      {segments.map((seg, i) => (
+        <span key={i} style={{ display: "inline-flex", alignItems: "center" }}>
+          {i > 0 && (separators?.[i - 1] === "-"
+            ? <span style={{ margin: "0 6px", fontFamily: DISPLAY, fontWeight: 800, fontSize: 28, color: LB.faint }}>-</span>
+            : <span style={{ width: 22 }} aria-hidden />)}
+          <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 30, letterSpacing: ".34em", color, lineHeight: 1 }}>{[...seg].join(" ")}</span>
+        </span>
+      ))}
+    </span>
+  );
+}
+
+// ── Plaque de saisie « Proposer » (gros texte + caret + CTA doré) ───────────
+function GuessPlate({ room }: { room: UseRoom }) {
+  const [text, setText] = useState("");
+  const [wrong, setWrong] = useState(false);
+  const lastId = useRef(-1);
+  useEffect(() => {
+    for (const m of room.chat) {
+      if (m.id <= lastId.current) continue;
+      if (m.from === room.you && m.kind === "guess") { setWrong(true); window.setTimeout(() => setWrong(false), 450); }
+    }
+    if (room.chat.length) lastId.current = Math.max(lastId.current, room.chat[room.chat.length - 1].id);
+  }, [room.chat, room.you]);
+  const submit = () => { const t = text.trim(); if (!t) return; room.guess(t); setText(""); };
+  return (
+    <div className={wrong ? "animate-shake" : ""} style={{ display: "flex", alignItems: "stretch", gap: 14 }}>
+      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "16px 22px", borderRadius: 18, background: LB.bg, boxShadow: `0 0 0 2px ${hexA(wrong ? LB.pink : LB.gold, 0.5)}, inset 0 1px 0 rgba(243,238,255,.04)` }}>
+        <input
+          className="lb-input"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && submit()}
+          placeholder="Tape le mot que tu devines…"
+          maxLength={40}
+          autoFocus
+          autoComplete="off"
+          style={{ flex: 1, minWidth: 0, border: "none", outline: "none", background: "transparent", color: LB.text, fontFamily: DISPLAY, fontWeight: 800, fontSize: 34, letterSpacing: "-.01em", lineHeight: 1.15, caretColor: LB.gold }}
+        />
+      </div>
+      <button onClick={submit} className="lb-gold" style={{ ...lbGoldBtn, alignSelf: "stretch", padding: "0 30px" }}>Proposer</button>
+    </div>
+  );
+}
+
+// ── Rejoue le dessin du tour (toutes les traces depuis le dernier clear) ────
+function TurnDrawing({ room, style }: { room: UseRoom; style?: CSSProperties }) {
+  const ref = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    const c = ref.current; if (!c) return;
+    const ctx = c.getContext("2d"); if (!ctx) return;
+    ctx.fillStyle = "#EDEAF6"; ctx.fillRect(0, 0, CW, CH);
+    const evs = room.strokeQueueRef.current;
+    let start = 0;
+    for (let i = evs.length - 1; i >= 0; i--) { const e = evs[i] as { type: string; from?: string }; if (e.type === "clear" && (e.from === "*" || e.from == null)) { start = i + 1; break; } }
+    for (let i = start; i < evs.length; i++) { const e = evs[i]; if (e.type === "stroke") drawStroke(ctx, e.stroke); else if (e.type === "fill") floodFill(ctx, e.x, e.y, e.color); }
+  }, [room]);
+  return <canvas ref={ref} width={CW} height={CH} style={{ display: "block", width: "100%", height: "100%", objectFit: "contain", ...style }} />;
+}
+
+// ── Rail du mode Dessin (joueurs + chat optionnel dans le rail) ─────────────
+function DrawRail({ kicker, heading, sub, rows, chat }: { kicker: string; heading: string; sub: string; rows: RailRow[]; chat?: ReactNode }) {
+  return (
+    <aside className="lb-rail" style={{ position: "relative", width: chat ? 264 : 296, flex: "none", zIndex: 1, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 16, padding: "24px 20px", background: LB.aside, borderRight: `1px solid ${LB.line}`, minHeight: 0, overflow: "hidden" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: "none" }}>
+        <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: LB.faint }}>{kicker}</span>
+        <span style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.1 }}>{heading}</span>
+        <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 12, color: LB.faint }}>{sub}</span>
+      </div>
+      <div style={{ height: 1, flex: "none", background: "linear-gradient(90deg,transparent,rgba(243,238,255,.14) 18%,rgba(243,238,255,.14) 82%,transparent)" }} />
+      <div style={{ flex: "none", display: "flex", flexDirection: "column", gap: 8 }}>
+        {rows.map((r) => {
+          const ac = r.accent;
+          return (
+            <div key={r.id} style={{ position: "relative", display: "flex", alignItems: "center", gap: 12, padding: ac ? "12px 14px 12px 16px" : "12px 14px", borderRadius: 14, background: ac ? hexA(ac, 0.1) : "transparent", boxShadow: ac ? `0 0 0 1px ${hexA(ac, 0.55)}, 0 0 26px -12px ${hexA(ac, 0.9)}` : `0 0 0 1px ${LB.line}` }}>
+              {ac && <span style={{ position: "absolute", left: 0, top: 13, bottom: 13, width: 3, borderRadius: 3, background: ac }} />}
+              {r.rank != null && <span style={{ flex: "none", width: 14, fontFamily: DISPLAY, fontWeight: 700, fontSize: 12, color: r.rank === 1 ? LB.gold : LB.faint }}>{r.rank}</span>}
+              <Avatar name={r.name} color={r.color} avatar={r.avatar} size={34} />
+              <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 3 }}>
+                <span style={{ fontSize: 14, fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}{r.you && <span style={{ color: LB.faint, fontWeight: 400 }}> · toi</span>}</span>
+                {r.meta && <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 11, color: r.meta.color }}>{r.meta.text}</span>}
+              </span>
+              {r.badge && <span style={{ flex: "none", marginLeft: 6, whiteSpace: "nowrap", fontFamily: DISPLAY, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".16em", color: r.badge.color }}>{r.badge.text}</span>}
+              {r.score && <span style={{ flex: "none", fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: r.rank === 1 ? LB.gold : LB.muted }}>{r.score}</span>}
+            </div>
+          );
+        })}
+      </div>
+      {chat && (
+        <>
+          <span style={{ flex: "none", fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: LB.faint, marginTop: 2 }}>Discussion</span>
+          <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>{chat}</div>
+        </>
+      )}
+    </aside>
+  );
+}
+
 export function DrawGameView({ room }: { room: UseRoom }) {
   const game = room.game as DrawPublic;
   const you = room.you;
@@ -894,68 +1009,62 @@ export function DrawGameView({ room }: { room: UseRoom }) {
   const turnKey = `${game.round}-${game.turnInRound}-${game.drawerId ?? ""}`;
   const isCoop = game.mode === "coop";
   const teamScore = Object.values(game.scores).reduce((a, b) => a + b, 0);
-  const totalMs = game.config?.drawMs ?? 0;
+  const revealResult = game.result;
+  const foundIdx = (id: string) => game.foundOrder.indexOf(id);
 
-  // ── Écran final : plein écran, sans rail ──────────────────────────────────
+  // Fraction de temps restant (anneau + barre de tour).
+  const totalMs = game.phase === "choosing" ? (game.config?.chooseMs ?? 0) : (game.config?.drawMs ?? 0);
+  const remaining = game.deadline != null ? Math.max(0, game.deadline - room.serverNow()) : 0;
+  const pRemain = totalMs > 0 ? Math.max(0, Math.min(1, remaining / totalMs)) : 0;
+
+  // ══════════════════ FINAL — classement (7e) ══════════════════
   if (game.phase === "scoreboard") {
+    const ranked = [...game.players].sort((a, b) => (game.scores[b.id] ?? 0) - (game.scores[a.id] ?? 0));
+    const winner = ranked[0];
+    const finalRows: RailRow[] = ranked.map((p, i) => ({
+      id: p.id, name: p.name, color: p.color, avatar: p.avatar, you: p.id === you,
+      rank: i + 1, accent: i === 0 ? LB.gold : p.id === you ? LB.violet : undefined,
+      score: (game.scores[p.id] ?? 0).toLocaleString("fr-FR"),
+    }));
     return (
       <main style={lbShell} className="lb-scope">
         <style dangerouslySetInnerHTML={{ __html: LB_SCOPED_CSS }} />
         <div style={lbCard}>
           <Aurora tint="rgba(255,194,75,.14)" tint2="rgba(139,125,246,.10)" />
+          <DrawRail kicker="Classement" heading={isCoop ? "Bravo l'équipe !" : "Partie terminée"} sub={`${game.totalRounds} manches`} rows={finalRows} />
           <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflowY: "auto" }}>
             <div style={topBar(LB.gold)} />
-            {isCoop ? (
-              <div style={{ flex: 1, display: "grid", placeItems: "center", padding: 28 }}>
-                <div style={{ width: "100%", maxWidth: 420, textAlign: "center" }}>
-                  <div style={{ fontSize: 44, marginBottom: 10 }}>🤝</div>
-                  <h1 style={{ fontFamily: DISPLAY, fontSize: 34, fontWeight: 800, marginBottom: 6 }}>Bravo l'équipe !</h1>
-                  <p style={{ color: LB.muted, marginBottom: 18 }}>Score collectif : <span style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 800, color: LB.mint }}>{teamScore}</span></p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8, textAlign: "left" }}>
-                    {[...game.players].sort((a, b) => (game.scores[b.id] ?? 0) - (game.scores[a.id] ?? 0)).map((p) => (
-                      <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 14, background: LB.surface, boxShadow: `0 0 0 1px ${LB.line}` }}>
-                        <Avatar name={p.name} color={color(p.id)} avatar={avatarOf(p.id)} size={36} />
-                        <span style={{ flex: 1, fontWeight: 600 }}>{p.name}{p.id === you && <span style={{ color: LB.faint, fontWeight: 400 }}> · toi</span>}</span>
-                        <span style={{ fontFamily: DISPLAY, fontWeight: 700, color: LB.muted }}>+{game.scores[p.id] ?? 0}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 22 }}>
-                    {isHost ? (
-                      <>
-                        <button onClick={() => room.playAgain()} className="lb-gold" style={{ ...lbGoldBtn, width: "100%" }}>Rejouer une partie</button>
-                        <button onClick={() => room.returnLobby()} className="lb-ghost" style={{ ...lbGhostBtn, width: "100%" }}>Retour au salon</button>
-                      </>
-                    ) : (
-                      <p style={{ fontSize: 14, color: LB.muted }}>En attente de l'hôte…</p>
-                    )}
-                  </div>
-                </div>
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 44, padding: 34, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 9, fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: LB.faint }}>
+                  <img src="/tools/palette.png" alt="" width={22} height={22} style={{ display: "block" }} />
+                  {isCoop ? "Score collectif" : "Meilleur crayon"}
+                </span>
+                <span style={{ boxShadow: `0 0 60px -18px ${hexA(LB.gold, 1)}`, borderRadius: 22, width: 92, height: 92 }}>
+                  <Avatar name={winner?.name ?? "?"} color={winner?.color ?? LB.violet} avatar={winner?.avatar} size={92} />
+                </span>
+                <span style={{ fontFamily: DISPLAY, fontSize: 54, fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1 }}>{isCoop ? "" : winner?.name ?? "—"}</span>
+                <span style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 800, color: LB.gold }}>{(isCoop ? teamScore : (game.scores[winner?.id ?? ""] ?? 0)).toLocaleString("fr-FR")} points</span>
               </div>
-            ) : (
-              <div style={{ flex: 1, minHeight: 0 }}>
-                <ResultsScreen
-                  ranking={[...game.players]
-                    .sort((a, b) => (game.scores[b.id] ?? 0) - (game.scores[a.id] ?? 0))
-                    .map((p) => ({ id: p.id, name: p.name, color: color(p.id), avatar: avatarOf(p.id), score: game.scores[p.id] ?? 0 }))}
-                  you={you}
-                  stats={null}
-                  isHost={isHost}
-                  onReturn={() => room.returnLobby()}
-                  onReplay={() => room.playAgain()}
-                />
-                {!isHost && <p style={{ marginTop: 12, textAlign: "center", fontSize: 14, color: LB.muted }}>En attente de l'hôte…</p>}
-              </div>
-            )}
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, padding: "0 34px 30px" }}>
+              {isHost ? (
+                <>
+                  <button onClick={() => room.returnLobby()} className="lb-ghost" style={lbGhostBtn}>Salon</button>
+                  <button onClick={() => room.playAgain()} className="lb-gold" style={lbGoldBtn}>Rejouer</button>
+                </>
+              ) : (
+                <span style={{ fontSize: 14, color: LB.muted }}>En attente de l'hôte…</span>
+              )}
+            </div>
           </div>
         </div>
       </main>
     );
   }
 
-  // ── Rail joueurs ──────────────────────────────────────────────────────────
-  const foundIdx = (id: string) => game.foundOrder.indexOf(id);
-  const revealResult = game.result;
+  // ══════════════════ Rail (joueurs, + chat en DRAWING/GUESSING) ══════════════
+  const withChat = game.phase === "drawing";
   const railRows: RailRow[] = [...game.players]
     .sort((a, b) => (game.scores[b.id] ?? 0) - (game.scores[a.id] ?? 0))
     .map((p) => {
@@ -963,161 +1072,185 @@ export function DrawGameView({ room }: { room: UseRoom }) {
       const isDrawer = p.id === game.drawerId;
       const found = game.phase === "reveal" ? revealResult?.guesserIds.includes(p.id) : game.guessedIds.includes(p.id);
       const fi = foundIdx(p.id);
-      return {
+      const row: RailRow = {
         id: p.id, name: p.name, color: p.color, avatar: p.avatar, you: isYou,
         accent: isDrawer ? LB.gold : found ? LB.mint : isYou ? LB.violet : undefined,
-        badge: isDrawer ? { text: "dessine", color: LB.gold } : found ? { text: fi >= 0 ? `${fi + 1}ᵉ` : "trouvé", color: LB.mint } : undefined,
         score: (game.scores[p.id] ?? 0).toLocaleString("fr-FR"),
-      } as RailRow;
+      };
+      if (game.phase === "reveal") {
+        row.badge = isDrawer ? { text: "dessinateur", color: LB.gold } : found ? { text: fi >= 0 ? `${fi + 1}ᵉ` : "trouvé", color: LB.mint } : { text: "0", color: LB.pink };
+      } else {
+        row.badge = isDrawer ? { text: "dessine", color: LB.gold } : found ? { text: "a trouvé", color: LB.mint } : undefined;
+      }
+      return row;
     });
-
   const foundCount = game.foundOrder.length;
-  const railHeading = game.phase === "choosing" ? "Choix du mot" : game.phase === "reveal" ? "Fin du tour" : "On dessine";
-  const railSub = game.phase === "reveal"
-    ? (revealResult && revealResult.guesserIds.length > 0 ? `${revealResult.guesserIds.length} ont trouvé` : "personne n'a trouvé")
-    : `${foundCount}/${Math.max(0, game.players.length - 1)} ont trouvé`;
+  const railHeading = game.phase === "choosing" ? `Manche ${game.round} / ${game.totalRounds}`
+    : game.phase === "reveal" ? "Tour terminé"
+    : game.youAreDrawer ? (game.word ?? "On dessine") : `${drawerName} dessine`;
+  const railSub = game.phase === "choosing" ? `tour ${game.turnInRound + 1} sur ${game.players.length}`
+    : game.phase === "reveal" ? "points du tour"
+    : `${foundCount} sur ${Math.max(0, game.players.length - 1)} ont trouvé`;
+
+  // Devineur ? (phase drawing mais pas le dessinateur = GUESSING, tout en mint)
+  const guessing = game.phase === "drawing" && !game.youAreDrawer;
+  const accent = guessing || game.phase === "reveal" ? LB.mint : LB.gold;
+  const P = game.phase === "reveal" ? 95 : Math.max(5, Math.min(95, Math.round((1 - pRemain) * 100)));
+  const letters = game.wordSegments.reduce((n, s) => n + s.length, 0);
+
+  // Propositions récentes (bandeau GUESSING).
+  const proposals = room.chat.filter((m) => m.kind === "guess" || m.kind === "correct").slice(-4);
 
   const rail = (
-    <Rail
-      kicker={`Boum Dessin · manche ${game.round}/${game.totalRounds}`}
-      heading={railHeading}
-      sub={railSub}
-      rows={railRows}
-      foot={isCoop ? (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", borderRadius: 14, background: hexA(LB.mint, 0.08), boxShadow: `0 0 0 1px ${hexA(LB.mint, 0.4)}` }}>
-          <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".14em", color: LB.mint }}>🤝 Équipe</span>
-          <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 16, color: LB.mint }}>{teamScore}</span>
-        </div>
-      ) : undefined}
-    />
+    <DrawRail kicker={`Boum Dessin · manche ${game.round}/${game.totalRounds}`} heading={railHeading} sub={railSub} rows={railRows}
+      chat={withChat ? <ChatPanel room={room} /> : undefined} />
   );
 
-  // ── Barre d'accent haute ──────────────────────────────────────────────────
-  const remaining = game.deadline != null ? Math.max(0, game.deadline - room.serverNow()) : 0;
-  const frac = totalMs > 0 ? Math.min(1, Math.max(0, 1 - remaining / totalMs)) : 0;
-  const barAccent = game.phase === "reveal" ? LB.mint : LB.gold;
-  const P = game.phase === "reveal" ? 95 : Math.max(5, Math.min(95, Math.round(frac * 100)));
-
-  // Chip mobile (rail masqué sur petit écran).
-  const mobileHead = (
-    <div className="lb-mobilehead" style={{ display: "none", alignItems: "center", gap: 10, padding: "12px 18px 0" }}>
-      <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".14em", color: LB.faint }}>Boum Dessin · manche {game.round}/{game.totalRounds}</span>
-    </div>
-  );
+  const soundBtn = <SoundToggle />;
+  const skipBtn = isHost ? <SkipButton onSkip={room.skipPhase} /> : null;
 
   return (
     <main style={lbShell} className="lb-scope">
       <style dangerouslySetInnerHTML={{ __html: LB_SCOPED_CSS }} />
       <div style={lbCard}>
-        <Aurora tint={game.phase === "reveal" ? "rgba(70,224,176,.12)" : "rgba(255,194,75,.10)"} tint2="rgba(139,125,246,.12)" />
+        <Aurora tint={accent === LB.mint ? "rgba(70,224,176,.12)" : "rgba(255,194,75,.10)"} tint2="rgba(139,125,246,.12)" />
         {rail}
 
         <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflowY: "auto" }}>
-          <div style={topBar(barAccent, P)} />
-          {mobileHead}
+          <div style={topBar(accent, P)} />
 
-          {/* En-tête : mot / mot masqué + chrono + actions dessinateur */}
-          <div className="lb-pad" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "16px 32px", flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0, flexWrap: "wrap" }}>
-              {game.phase === "choosing" ? (
-                <span style={{ fontFamily: DISPLAY, fontSize: 22, fontWeight: 800 }}>{game.youAreDrawer ? "À toi de dessiner" : `${drawerName} choisit un mot…`}</span>
-              ) : game.youAreDrawer ? (
-                <span style={{ display: "inline-flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
-                  <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: LB.faint }}>Dessine</span>
-                  <span style={{ fontFamily: DISPLAY, fontSize: 30, fontWeight: 800, color: LB.gold, letterSpacing: "-.01em" }}>{game.word}</span>
-                </span>
-              ) : (
-                <MaskedWord segments={game.wordSegments} separators={game.wordSeparators} />
-              )}
-              {game.phase !== "choosing" && !game.youAreDrawer && game.themeRevealed && game.theme && (
-                <span style={{ padding: "5px 10px", borderRadius: 8, background: hexA(LB.pink, 0.14), boxShadow: `inset 0 0 0 1px ${hexA(LB.pink, 0.45)}`, fontFamily: DISPLAY, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".12em", color: LB.pink }}>Thème · {game.theme}</span>
-              )}
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              {secs != null && game.phase !== "choosing" && (
-                <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 15, letterSpacing: ".04em", color: secs <= 5 ? LB.pink : LB.gold }}>{secs}s</span>
-              )}
-              <SoundToggle />
-              {isHost && <SkipButton onSkip={room.skipPhase} />}
-            </div>
-          </div>
-
-          {/* Contenu par phase */}
+          {/* ═══ CHOOSING (7a) ═══ */}
           {game.phase === "choosing" && (
-            <div style={{ flex: 1, display: "grid", placeItems: "center", padding: 28 }}>
+            <div className="dv-stage" style={{ padding: "16px 32px 28px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+                  <AvatarRing name={drawerName} color={color(game.drawerId ?? "")} avatar={avatarOf(game.drawerId ?? "")} size={48} ring={LB.gold} p={pRemain} />
+                  <span style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                    <span style={{ fontFamily: DISPLAY, fontSize: 19, fontWeight: 700 }}>{game.youAreDrawer ? "À toi de dessiner" : `${drawerName} choisit un mot`}</span>
+                    <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: LB.gold }}>{secs != null ? `${secs}s pour choisir` : "choix du mot"}</span>
+                  </span>
+                </div>
+                {soundBtn}
+              </div>
               {game.youAreDrawer ? (
-                <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
-                  <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 12, textTransform: "uppercase", letterSpacing: ".16em", color: LB.faint }}>Choisis ton mot{secs != null ? ` · ${secs}s` : ""}</span>
-                  <div style={{ display: "flex", gap: 14, flexWrap: "wrap", justifyContent: "center" }}>
-                    {(game.wordChoices ?? []).map((w) => (
-                      <button key={w} onClick={() => room.chooseWord(w)} className="lb-tile" style={{ border: "none", borderRadius: 16, padding: "22px 30px", background: LB.surface, color: LB.text, fontFamily: DISPLAY, fontSize: 22, fontWeight: 800, cursor: "pointer", boxShadow: `0 0 0 1px ${LB.line}, 0 4px 0 ${LB.lineFaint}` }}>{w}</button>
-                    ))}
-                  </div>
+                <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 18, padding: "20px 0" }}>
+                  {(game.wordChoices ?? []).map((w) => (
+                    <button key={w} onClick={() => room.chooseWord(w)} className="lb-card3d" style={{ flex: "1 1 0", minWidth: 0, textAlign: "left", border: "none", borderRadius: 20, padding: "34px 28px", background: LB.raised, cursor: "pointer", boxShadow: `0 0 0 1px ${LB.line}, 0 6px 0 ${LB.lineFaint}` }}>
+                      <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: w.length > 12 ? 26 : 34, lineHeight: 1, color: LB.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>{w}</span>
+                    </button>
+                  ))}
                 </div>
               ) : (
-                <p style={{ color: LB.muted, fontSize: 16 }}><span style={{ fontWeight: 700, color: LB.text }}>{drawerName}</span> choisit un mot…</p>
+                <div style={{ flex: 1, display: "grid", placeItems: "center" }}>
+                  <p style={{ color: LB.muted, fontSize: 16 }}><span style={{ fontWeight: 700, color: LB.text }}>{drawerName}</span> choisit un mot…</p>
+                </div>
               )}
             </div>
           )}
 
-          {game.phase === "drawing" && (
-            <div className="lb-pad dv-stage" style={{ padding: "6px 32px 20px" }}>
-              {/* Bandeau dessinateur : révéler thème / j'ai fini + contrainte */}
-              {(game.youAreDrawer || game.constraint) && (
-                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                  {game.youAreDrawer && (!game.themeRevealed ? (
-                    <button onClick={() => room.revealTheme()} className="lb-tile" style={{ border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 600, color: LB.pink, background: hexA(LB.pink, 0.1), boxShadow: `inset 0 0 0 1px ${hexA(LB.pink, 0.4)}`, cursor: "pointer" }}>Révéler le thème (indice)</button>
-                  ) : (
-                    <span style={{ fontSize: 12, color: LB.faint }}>Thème révélé aux joueurs ✓</span>
-                  ))}
-                  {game.youAreDrawer && (game.finished ? (
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 700, color: LB.mint, background: hexA(LB.mint, 0.1), boxShadow: `inset 0 0 0 1px ${hexA(LB.mint, 0.45)}` }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>
-                      Dessin terminé — les joueurs continuent de deviner
-                    </span>
-                  ) : (
-                    <button onClick={() => room.endDrawing()} className="lb-tile" title="Signaler que ton dessin est fini (la manche continue)" style={{ display: "inline-flex", alignItems: "center", gap: 6, border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 700, color: LB.mint, background: hexA(LB.mint, 0.12), boxShadow: `inset 0 0 0 1px ${hexA(LB.mint, 0.45)}`, cursor: "pointer" }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>
-                      J'ai terminé
-                    </button>
-                  ))}
+          {/* ═══ DRAWING — dessinateur (7b) ═══ */}
+          {game.phase === "drawing" && game.youAreDrawer && (
+            <div className="dv-stage" style={{ padding: "14px 26px 16px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+                  <AvatarRing name={name(you)} color={color(you)} avatar={avatarOf(you)} size={40} ring={LB.gold} p={pRemain} />
+                  <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 26, letterSpacing: ".02em" }}>{game.word}</span>
+                  {secs != null && <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: LB.gold }}>{secs}s</span>}
                   {game.constraint && (
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, borderRadius: 10, padding: "8px 14px", background: hexA(LB.pink, 0.08), boxShadow: `inset 0 0 0 1px ${hexA(LB.pink, 0.4)}` }}>
-                      <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".14em", color: LB.pink }}>Contrainte</span>
-                      <span style={{ fontSize: 13, fontWeight: 600 }}>{game.constraint}</span>
-                    </span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 8, padding: "5px 10px", background: hexA(LB.pink, 0.12), boxShadow: `inset 0 0 0 1px ${hexA(LB.pink, 0.4)}`, fontSize: 12, fontWeight: 600, color: LB.pink }}>{game.constraint}</span>
                   )}
-                  {game.mode === "blind" && game.youAreDrawer && <span style={{ fontSize: 12, color: LB.muted }}>Mode aveugle : tu ne vois pas ton trait 👀</span>}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {!game.themeRevealed
+                    ? <button onClick={() => room.revealTheme()} className="lb-ghost" style={{ border: `1px solid ${LB.line}`, background: "transparent", color: LB.muted, fontFamily: MONO, fontWeight: 700, fontSize: 12, textTransform: "uppercase", letterSpacing: ".08em", padding: "10px 16px", borderRadius: 10, cursor: "pointer" }}>Révéler le thème</button>
+                    : <span style={{ fontSize: 12, color: LB.faint }}>Thème révélé ✓</span>}
+                  {soundBtn}{skipBtn}
+                </div>
+              </div>
+              <div className="dv-canvasfill">
+                <DrawCanvas
+                  room={room} drawable blind={game.mode === "blind"} constraintRule={game.constraintRule} turnKey={turnKey} fit
+                  ctaSlot={game.finished
+                    ? <span style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 12, padding: "12px 18px", fontFamily: DISPLAY, fontWeight: 700, fontSize: 14, color: LB.mint, background: hexA(LB.mint, 0.12), boxShadow: `inset 0 0 0 1px ${hexA(LB.mint, 0.45)}`, flex: "none" }}>Dessin terminé ✓</span>
+                    : <button onClick={() => room.endDrawing()} className="lb-gold" style={{ ...lbGoldBtn, flex: "none" }}>J'ai fini</button>}
+                />
+              </div>
+              {game.mode === "blind" && <p style={{ marginTop: 8, textAlign: "center", fontSize: 12, color: LB.muted }}>Mode aveugle : tu ne vois pas ton trait 👀</p>}
+            </div>
+          )}
+
+          {/* ═══ GUESSING — je devine (7c) ═══ */}
+          {game.phase === "drawing" && !game.youAreDrawer && (
+            <div className="dv-stage" style={{ padding: "14px 26px 16px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0, flexWrap: "wrap" }}>
+                  <AvatarRing name={drawerName} color={color(game.drawerId ?? "")} avatar={avatarOf(game.drawerId ?? "")} size={40} ring={LB.mint} p={pRemain} />
+                  <WordStencil segments={game.wordSegments} separators={game.wordSeparators} color={LB.mint} />
+                  <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: LB.faint }}>{letters} lettres</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {game.themeRevealed && game.theme && (
+                    <span style={{ padding: "5px 10px", borderRadius: 8, background: hexA(LB.violet, 0.14), boxShadow: `inset 0 0 0 1px ${hexA(LB.violet, 0.45)}`, fontFamily: DISPLAY, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".12em", color: LB.violet }}>{game.theme}</span>
+                  )}
+                  {secs != null && <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: LB.mint }}>{secs}s</span>}
+                  {soundBtn}{skipBtn}
+                </div>
+              </div>
+
+              {proposals.length > 0 && (
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+                  {proposals.map((m) => (
+                    <span key={m.id} style={{ display: "inline-flex", alignItems: "center", gap: 8, borderRadius: 12, padding: "8px 12px", background: m.kind === "correct" ? hexA(LB.mint, 0.1) : LB.surface, boxShadow: m.kind === "correct" ? `0 0 0 1px ${hexA(LB.mint, 0.45)}` : `0 0 0 1px ${LB.line}` }}>
+                      <Avatar name={m.name} color={color(m.from)} avatar={avatarOf(m.from)} size={22} />
+                      <span style={{ fontSize: 13, color: m.kind === "correct" ? LB.mint : LB.muted, fontWeight: m.kind === "correct" ? 700 : 400, fontStyle: m.kind === "guess" ? "italic" : "normal" }}>{m.kind === "correct" ? "a trouvé" : m.text}</span>
+                    </span>
+                  ))}
                 </div>
               )}
 
-              <div className="dv-grid">
-                <div className="dv-canvascol" style={{ minWidth: 0 }}>
-                  <div className="dv-canvasfill">
-                    <DrawCanvas room={room} drawable={game.youAreDrawer} blind={game.mode === "blind" && game.youAreDrawer} constraintRule={game.youAreDrawer ? game.constraintRule : null} turnKey={turnKey} fit />
-                  </div>
-                  {!game.youAreDrawer && game.finished && !game.youGuessed && (
-                    <p style={{ marginTop: 10, borderRadius: 10, padding: "8px 12px", textAlign: "center", fontSize: 12, fontWeight: 600, color: LB.mint, background: hexA(LB.mint, 0.07), boxShadow: `inset 0 0 0 1px ${hexA(LB.mint, 0.4)}` }}>
-                      Le dessinateur a terminé — à toi de deviner, le temps continue !
-                    </p>
-                  )}
-                  {!game.youAreDrawer && !game.youGuessed && <GuessBar room={room} />}
-                  {game.youGuessed && <p style={{ marginTop: 10, textAlign: "center", fontSize: 14, color: LB.mint }}>Bien joué, tu as trouvé ! 🎉</p>}
-                </div>
-                <div className="dv-chatcol">
-                  <ChatPanel room={room} />
-                </div>
+              <div className="dv-canvasfill" style={{ display: "flex", flexDirection: "column" }}>
+                <DrawCanvas room={room} drawable={false} blind={false} turnKey={turnKey} fit />
+              </div>
+
+              <div style={{ marginTop: 12 }}>
+                {game.youGuessed
+                  ? <p style={{ textAlign: "center", fontFamily: DISPLAY, fontWeight: 700, fontSize: 16, color: LB.mint }}>Bien joué, tu as trouvé ! 🎉</p>
+                  : <GuessPlate room={room} />}
               </div>
             </div>
           )}
 
+          {/* ═══ REVEAL — fin du tour (7d) ═══ */}
           {game.phase === "reveal" && (
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 22, padding: 28, textAlign: "center" }}>
-              <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: LB.faint }}>Le mot était</span>
-              <span style={{ fontFamily: DISPLAY, fontSize: 58, fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1, color: LB.gold, textShadow: `0 0 30px ${hexA(LB.gold, 0.4)}` }}>{revealResult?.word}</span>
-              <span style={{ fontSize: 14, color: LB.muted }}>{revealResult && revealResult.guesserIds.length > 0 ? `Trouvé par ${revealResult.guesserIds.map(name).join(", ")}` : "Personne n'a trouvé cette fois"}</span>
+            <div className="dv-stage" style={{ padding: "14px 32px 22px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
+                <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: LB.mint }}>Le mot était</span>
+                <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".14em", color: LB.faint }}>Prochain tour dans un instant…</span>
+              </div>
+              <div className="dv-canvasfill" style={{ display: "flex", justifyContent: "center", minHeight: 0 }}>
+                <div style={{ position: "relative", height: "100%", aspectRatio: "3 / 2", maxWidth: "100%", borderRadius: 20, overflow: "hidden", boxShadow: `0 0 0 1px ${hexA(LB.mint, 0.45)}` }}>
+                  <TurnDrawing room={room} />
+                  <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "52px 26px 22px", background: "linear-gradient(180deg,transparent,rgba(14,11,26,.94))" }}>
+                    <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 46, letterSpacing: "-.02em", lineHeight: 1, color: LB.mint }}>{revealResult?.word}</span>
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14, flexWrap: "wrap" }}>
+                {game.foundOrder.map((id, i) => (
+                  <span key={id} style={{ display: "inline-flex", alignItems: "center", gap: 10, borderRadius: 14, padding: "10px 14px", background: i === 0 ? hexA(LB.mint, 0.1) : "transparent", boxShadow: i === 0 ? `0 0 0 1px ${hexA(LB.mint, 0.5)}` : `0 0 0 1px ${LB.line}` }}>
+                    <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".14em", color: i === 0 ? LB.mint : LB.faint }}>{i + 1}{i === 0 ? "er" : "e"}</span>
+                    <Avatar name={name(id)} color={color(id)} avatar={avatarOf(id)} size={26} />
+                    <span style={{ fontSize: 15, fontWeight: 600 }}>{name(id)}</span>
+                  </span>
+                ))}
+                {game.drawerId && (
+                  <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 10, borderRadius: 14, padding: "10px 14px", boxShadow: `0 0 0 1px ${hexA(LB.gold, 0.5)}`, background: hexA(LB.gold, 0.08) }}>
+                    <Avatar name={name(game.drawerId)} color={color(game.drawerId)} avatar={avatarOf(game.drawerId)} size={26} />
+                    <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".14em", color: LB.gold }}>dessinateur</span>
+                  </span>
+                )}
+              </div>
               {game.mode === "blind" && game.youAreDrawer && <BlindReveal room={room} />}
-              <span style={{ fontSize: 13, color: LB.faint }}>Prochain tour dans un instant…</span>
             </div>
           )}
         </div>
