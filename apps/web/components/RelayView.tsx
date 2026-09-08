@@ -131,7 +131,7 @@ export function RelayView({ room }: { room: UseRoom }) {
           </div>
 
           {game.phase === "drawing" && (
-            <div className="lb-pad" style={{ flex: 1, minHeight: 0, padding: "6px 32px 28px" }}>
+            <div className="lb-pad dv-stage" style={{ padding: "6px 32px 20px" }}>
               {/* Bandeau relais : à qui le stylo */}
               <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, marginBottom: 14 }}>
                 {game.youAreDrawer ? (
@@ -144,18 +144,19 @@ export function RelayView({ room }: { room: UseRoom }) {
                 )}
               </div>
 
-              <div style={{ display: "grid", gap: 24, gridTemplateColumns: "minmax(0,1fr)", alignItems: "start" }} className="rl-grid">
-                <div style={{ minWidth: 0 }}>
-                  <DrawCanvas room={room} drawable={game.youAreActive} blind={false} />
+              <div className="dv-grid">
+                <div className="dv-canvascol" style={{ minWidth: 0 }}>
+                  <div className="dv-canvasfill">
+                    <DrawCanvas room={room} drawable={game.youAreActive} blind={false} fit />
+                  </div>
                   {!game.youAreDrawer && !game.youGuessed && <GuessBar room={room} />}
-                  {game.youGuessed && <p style={{ marginTop: 12, textAlign: "center", fontSize: 14, color: LB.mint }}>Bien joué, tu as trouvé ! 🎉</p>}
-                  {game.youAreDrawer && !game.youAreActive && <p style={{ marginTop: 12, textAlign: "center", fontSize: 13, color: LB.faint }}>Prépare la suite du dessin…</p>}
+                  {game.youGuessed && <p style={{ marginTop: 10, textAlign: "center", fontSize: 14, color: LB.mint }}>Bien joué, tu as trouvé ! 🎉</p>}
+                  {game.youAreDrawer && !game.youAreActive && <p style={{ marginTop: 10, textAlign: "center", fontSize: 13, color: LB.faint }}>Prépare la suite du dessin…</p>}
                 </div>
-                <div style={{ display: "flex", minHeight: 0, flexDirection: "column" }}>
+                <div className="dv-chatcol">
                   <ChatPanel room={room} />
                 </div>
               </div>
-              <style dangerouslySetInnerHTML={{ __html: "@media(min-width:1100px){.rl-grid{grid-template-columns:minmax(0,1fr) 320px}}" }} />
             </div>
           )}
 

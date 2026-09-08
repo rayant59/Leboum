@@ -141,4 +141,23 @@ export const LB_SCOPED_CSS = `
   .lb-scope .lb-pad{padding-left:18px !important;padding-right:18px !important}
 }
 @media (min-width:900px){ .lb-scope .lb-mobilehead{display:none} }
+
+/* ── Toile de dessin qui tient dans la hauteur de page (desktop) ──────────
+   Par défaut (mobile) la toile garde sa largeur pleine et la page défile ;
+   à partir de 900px elle est pilotée par la hauteur dispo pour que toile +
+   palette + champ de réponse tiennent dans un seul écran, sans scroll. */
+.lb-scope .dv-grid{display:flex;flex-direction:column;gap:16px}
+.lb-scope .dc-fit .dc-panel{flex:none}
+@media (min-width:900px){
+  .lb-scope .dv-stage{flex:1;min-height:0;display:flex;flex-direction:column}
+  .lb-scope .dv-grid{flex-direction:row;flex:1;min-height:0;gap:24px}
+  .lb-scope .dv-canvascol{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
+  .lb-scope .dv-canvasfill{flex:1;min-height:0}
+  .lb-scope .dv-chatcol{width:320px;flex:none;min-height:0;display:flex;flex-direction:column}
+  .lb-scope .dc-fit .dc-row{flex:1;min-height:0;align-items:stretch}
+  .lb-scope .dc-fit .dc-tools{align-self:flex-start;max-height:100%;overflow-y:auto}
+  .lb-scope .dc-fit .dc-col{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
+  .lb-scope .dc-fit .dc-wrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+  .lb-scope .dc-fit .dc-box{height:100%;width:auto;max-width:100%}
+}
 `;

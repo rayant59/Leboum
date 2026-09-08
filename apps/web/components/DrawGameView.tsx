@@ -347,6 +347,7 @@ export function DrawCanvas({
   constraintRule,
   turnKey,
   authorFilter,
+  fit = false,
 }: {
   room: UseRoom;
   drawable: boolean;
@@ -354,6 +355,7 @@ export function DrawCanvas({
   constraintRule?: string | null;
   turnKey?: string;
   authorFilter?: string | null; // impostor mode: show only this author's strokes
+  fit?: boolean; // true = la toile se cale sur la hauteur dispo (desktop), pas de scroll
 }) {
   const mainRef = useRef<HTMLCanvasElement | null>(null);
   const overRef = useRef<HTMLCanvasElement | null>(null);
@@ -629,7 +631,7 @@ export function DrawCanvas({
     : { onContextMenu: (e: React.MouseEvent) => e.preventDefault() };
 
   return (
-    <div>
+    <div className={fit ? "dc-fit" : undefined} style={fit ? { display: "flex", flexDirection: "column", height: "100%", minHeight: 0 } : undefined}>
       {drawable && constraintRule && (
         <div className="mb-2.5 flex flex-wrap items-center gap-2 rounded-lg border border-magenta/30 bg-magenta/[0.06] px-3 py-1.5 text-xs text-magenta">
           <span className="font-semibold">Contrainte active :</span>
@@ -651,10 +653,10 @@ export function DrawCanvas({
         </div>
       )}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+      <div className="dc-row flex flex-col gap-3 sm:flex-row sm:items-start">
         {/* §6 — vertical toolbar on the left (wraps to a row on mobile) */}
         {drawable && (
-          <div className="order-2 flex shrink-0 flex-wrap gap-1.5 sm:order-1 sm:flex-col sm:flex-nowrap">
+          <div className="dc-tools order-2 flex shrink-0 flex-wrap gap-1.5 sm:order-1 sm:flex-col sm:flex-nowrap">
             {TOOLS.filter((t) => toolAllowed(t.id)).map((t) => (
               <button
                 key={t.id}
@@ -690,16 +692,18 @@ export function DrawCanvas({
         )}
 
         {/* §7 — the canvas is the main element and takes the remaining width */}
-        <div className="order-1 min-w-0 flex-1 sm:order-2">
-          <div className={`relative w-full select-none overflow-hidden rounded-2xl border border-ink-border${shake && shaking ? " animate-canvasshake" : ""}`} style={{ aspectRatio: "3 / 2", transform: (roam || shrink) ? `translate(${roamX}px, ${roamY}px) scale(${shrinkScale})` : undefined, transformOrigin: "center", transition: roam ? "transform .09s linear" : "transform .2s linear" }}>
-            <canvas ref={mainRef} {...handlers} className="absolute inset-0 h-full w-full touch-none bg-white" style={{ cursor: drawable ? "none" : "default" }} />
-            <canvas ref={overRef} className="pointer-events-none absolute inset-0 h-full w-full" />
-            {fog && <div className="pointer-events-none absolute inset-0" style={{ background: "linear-gradient(160deg, #eef1f6, #cfd6e3)", opacity: fogOpacity, transition: "opacity .3s linear" }} />}
-            {drawable && cursorVisible && cursorPos && <CustomCursor tool={tool} pos={cursorPos} size={width * scaleRef.current} color={color} />}
+        <div className="dc-col order-1 min-w-0 flex-1 sm:order-2">
+          <div className="dc-wrap">
+            <div className={`dc-box relative w-full select-none overflow-hidden rounded-2xl border border-ink-border${shake && shaking ? " animate-canvasshake" : ""}`} style={{ aspectRatio: "3 / 2", transform: (roam || shrink) ? `translate(${roamX}px, ${roamY}px) scale(${shrinkScale})` : undefined, transformOrigin: "center", transition: roam ? "transform .09s linear" : "transform .2s linear" }}>
+              <canvas ref={mainRef} {...handlers} className="absolute inset-0 h-full w-full touch-none bg-white" style={{ cursor: drawable ? "none" : "default" }} />
+              <canvas ref={overRef} className="pointer-events-none absolute inset-0 h-full w-full" />
+              {fog && <div className="pointer-events-none absolute inset-0" style={{ background: "linear-gradient(160deg, #eef1f6, #cfd6e3)", opacity: fogOpacity, transition: "opacity .3s linear" }} />}
+              {drawable && cursorVisible && cursorPos && <CustomCursor tool={tool} pos={cursorPos} size={width * scaleRef.current} color={color} />}
+            </div>
           </div>
 
           {drawable && (
-            <div className="mt-3 space-y-2.5">
+            <div className="dc-panel mt-3 space-y-2.5">
               <ColorPalette color={color} setColor={setColor} locked={paletteLocked} noVariants={oneColor} />
               <div className="flex items-center gap-2">
                 <span className="text-xs text-text-faint">Taille</span>
@@ -1057,7 +1061,7 @@ export function DrawGameView({ room }: { room: UseRoom }) {
           )}
 
           {game.phase === "drawing" && (
-            <div className="lb-pad" style={{ flex: 1, minHeight: 0, padding: "6px 32px 28px" }}>
+            <div className="lb-pad dv-stage" style={{ padding: "6px 32px 20px" }}>
               {/* Bandeau dessinateur : révéler thème / j'ai fini + contrainte */}
               {(game.youAreDrawer || game.constraint) && (
                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, marginBottom: 14 }}>
@@ -1087,22 +1091,23 @@ export function DrawGameView({ room }: { room: UseRoom }) {
                 </div>
               )}
 
-              <div style={{ display: "grid", gap: 24, gridTemplateColumns: "minmax(0,1fr)", alignItems: "start" }} className="dv-grid">
-                <div style={{ minWidth: 0 }}>
-                  <DrawCanvas room={room} drawable={game.youAreDrawer} blind={game.mode === "blind" && game.youAreDrawer} constraintRule={game.youAreDrawer ? game.constraintRule : null} turnKey={turnKey} />
+              <div className="dv-grid">
+                <div className="dv-canvascol" style={{ minWidth: 0 }}>
+                  <div className="dv-canvasfill">
+                    <DrawCanvas room={room} drawable={game.youAreDrawer} blind={game.mode === "blind" && game.youAreDrawer} constraintRule={game.youAreDrawer ? game.constraintRule : null} turnKey={turnKey} fit />
+                  </div>
                   {!game.youAreDrawer && game.finished && !game.youGuessed && (
-                    <p style={{ marginTop: 12, borderRadius: 10, padding: "8px 12px", textAlign: "center", fontSize: 12, fontWeight: 600, color: LB.mint, background: hexA(LB.mint, 0.07), boxShadow: `inset 0 0 0 1px ${hexA(LB.mint, 0.4)}` }}>
+                    <p style={{ marginTop: 10, borderRadius: 10, padding: "8px 12px", textAlign: "center", fontSize: 12, fontWeight: 600, color: LB.mint, background: hexA(LB.mint, 0.07), boxShadow: `inset 0 0 0 1px ${hexA(LB.mint, 0.4)}` }}>
                       Le dessinateur a terminé — à toi de deviner, le temps continue !
                     </p>
                   )}
                   {!game.youAreDrawer && !game.youGuessed && <GuessBar room={room} />}
-                  {game.youGuessed && <p style={{ marginTop: 12, textAlign: "center", fontSize: 14, color: LB.mint }}>Bien joué, tu as trouvé ! 🎉</p>}
+                  {game.youGuessed && <p style={{ marginTop: 10, textAlign: "center", fontSize: 14, color: LB.mint }}>Bien joué, tu as trouvé ! 🎉</p>}
                 </div>
-                <div style={{ display: "flex", minHeight: 0, flexDirection: "column" }} className="dv-chat">
+                <div className="dv-chatcol">
                   <ChatPanel room={room} />
                 </div>
               </div>
-              <style dangerouslySetInnerHTML={{ __html: "@media(min-width:1100px){.dv-grid{grid-template-columns:minmax(0,1fr) 320px}}" }} />
             </div>
           )}
 
