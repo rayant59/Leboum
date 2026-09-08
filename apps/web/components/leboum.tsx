@@ -126,6 +126,10 @@ export function topBar(color: string, pct = 95): CSSProperties {
 }
 
 export const LB_SCOPED_CSS = `
+@keyframes lbRingPulse{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.55);opacity:0}}
+@keyframes lbPulseSoft{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes lbSpin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){ .lb-scope [data-lb-anim]{animation:none !important} }
 .lb-scope button.lb-gold{transition:transform .06s ease,box-shadow .12s ease,filter .12s ease}
 .lb-scope button.lb-gold:hover{filter:brightness(1.04)}
 .lb-scope button.lb-gold:active{transform:translateY(4px);box-shadow:0 1px 0 ${LB.goldSh} !important}
