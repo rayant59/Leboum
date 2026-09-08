@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import type { DrawPublic, DrawStroke } from "@subtitles-party/shared";
 import type { UseRoom } from "@/lib/useRoom";
-import { BoumBackdrop } from "@/components/BoumBackdrop";
 import { ResultsScreen } from "@/components/ResultsScreen";
 import { SoundToggle } from "@/lib/sound";
 import { Avatar } from "@/components/Avatar";
+import { LB, DISPLAY, MONO, hexA, Aurora, Rail, type RailRow, lbShell, lbCard, lbGoldBtn, lbGhostBtn, topBar, LB_SCOPED_CSS } from "@/components/leboum";
 
 const CW = 1200;
 const CH = 800;
@@ -78,10 +78,6 @@ const COLOR_FAMILIES: { name: string; main: string; variants: string[] }[] = [
   { name: "Marron", main: "#8B5A2B", variants: ["#4A2E12", "#6B4020", "#8B5A2B", "#B07A45", "#D2A679"] },
   { name: "Blanc", main: "#FFFFFF", variants: ["#FFFFFF"] },
 ];
-
-function initials(name: string) {
-  return name.trim().slice(0, 2).toUpperCase() || "?";
-}
 
 /** Host "skip phase" control with a two-click confirmation to avoid misfires. */
 export function SkipButton({ onSkip }: { onSkip: () => void }) {
@@ -894,215 +890,233 @@ export function DrawGameView({ room }: { room: UseRoom }) {
   const turnKey = `${game.round}-${game.turnInRound}-${game.drawerId ?? ""}`;
   const isCoop = game.mode === "coop";
   const teamScore = Object.values(game.scores).reduce((a, b) => a + b, 0);
+  const totalMs = game.config?.drawMs ?? 0;
 
-  const FoundList = () =>
-    game.foundOrder.length > 0 ? (
-      <div className="rounded-xl border border-ink-border bg-ink-surface p-3">
-        <p className="eyebrow mb-2 text-gold">🏆 Ont trouvé</p>
-        <ol className="space-y-1 text-sm">
-          {game.foundOrder.map((id, i) => (
-            <li key={id} className="flex items-center gap-2">
-              <span className="w-4 font-mono text-text-faint">{i + 1}.</span>
-              <span className="grid h-5 w-5 place-items-center rounded font-display text-[9px] font-bold text-ink-deep" style={{ backgroundColor: color(id) }}>{initials(name(id))}</span>
-              <span className="font-medium">{name(id)}{id === you && " (toi)"}</span>
-            </li>
-          ))}
-        </ol>
-      </div>
-    ) : null;
-
-  return (
-    <>
-      <BoumBackdrop />
-      <main className="relative z-[1] mx-auto max-w-7xl px-4 py-6" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-      <div className="mb-3 flex items-center justify-between">
-        <span className="eyebrow">Manche {game.round}/{game.totalRounds}</span>
-        <div className="flex items-center gap-2">
-          {isCoop && (
-            <span className="rounded-full border border-mint/40 bg-mint/[0.08] px-2.5 py-0.5 text-xs font-semibold text-mint">
-              🤝 Équipe : {teamScore}
-            </span>
-          )}
-          <SoundToggle />
-          {secs != null && <span className={`font-mono text-sm tabular-nums ${secs <= 5 ? "text-magenta" : "text-text-muted"}`}>{secs}s</span>}
-          {isHost && game.phase !== "scoreboard" && (
-            <SkipButton onSkip={room.skipPhase} />
-          )}
-        </div>
-      </div>
-
-      {(game.phase === "drawing" || game.phase === "reveal") && (
-        <div className="mb-4 flex flex-wrap gap-1.5">
-          {game.players.map((p) => {
-            const done = game.guessedIds.includes(p.id) || p.id === game.drawerId;
-            const isDrawer = p.id === game.drawerId;
-            return (
-              <span key={p.id} title={p.name} className={`relative grid h-8 w-8 place-items-center rounded-lg font-display text-[11px] font-bold text-ink-deep ${done ? "" : "opacity-25"}`} style={{ backgroundColor: p.color }}>
-                {initials(p.name)}
-                {isDrawer ? <span className="absolute -bottom-1 -right-1 text-[11px]">✏️</span> : done && <span className="absolute -bottom-1 -right-1 grid h-3.5 w-3.5 place-items-center rounded-full bg-mint text-[8px] font-bold text-ink-deep">✓</span>}
-              </span>
-            );
-          })}
-        </div>
-      )}
-
-      {game.phase === "choosing" && (
-        <div className="animate-pop grid min-h-[40vh] place-items-center text-center">
-          {game.youAreDrawer ? (
-            <div>
-              <p className="eyebrow mb-4">Choisis ton mot</p>
-              <div className="flex flex-col gap-3 sm:flex-row">
-                {(game.wordChoices ?? []).map((w) => (
-                  <button key={w} onClick={() => room.chooseWord(w)} className="rounded-xl border border-ink-border bg-ink-surface px-6 py-4 font-display text-lg font-bold transition-colors hover:border-gold hover:text-gold">{w}</button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <p className="text-text-muted"><span className="font-semibold text-text">{drawerName}</span> choisit un mot…</p>
-          )}
-        </div>
-      )}
-
-      {game.phase === "drawing" && (
-        <div className="animate-pop">
-          <div className="mb-6 text-center sm:mb-8">
-            {game.youAreDrawer ? (
-              <div className="flex flex-col items-center gap-2">
-                <p className="font-display text-xl font-bold">Dessine : <span className="text-gold">{game.word}</span></p>
-                <div className="flex flex-wrap items-center justify-center gap-2">
-                  {!game.themeRevealed ? (
-                    <button onClick={() => room.revealTheme()} className="rounded-lg border border-magenta/50 px-3 py-1.5 text-xs font-medium text-magenta transition-colors hover:bg-magenta/10">Révéler le thème (indice)</button>
-                  ) : (
-                    <p className="text-xs text-text-faint">Thème révélé aux joueurs ✓</p>
-                  )}
-                  {game.finished ? (
-                    <p className="inline-flex items-center gap-1.5 rounded-lg border border-mint/50 bg-mint/[0.08] px-3 py-1.5 text-xs font-bold text-mint">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>
-                      Dessin terminé — les joueurs continuent de deviner
-                    </p>
-                  ) : (
-                    <button
-                      onClick={() => room.endDrawing()}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-mint/50 bg-mint/[0.08] px-3 py-1.5 text-xs font-bold text-mint transition-colors hover:bg-mint/20"
-                      title="Signaler que ton dessin est fini (la manche continue)"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>
-                      J'ai terminé
-                    </button>
-                  )}
+  // ── Écran final : plein écran, sans rail ──────────────────────────────────
+  if (game.phase === "scoreboard") {
+    return (
+      <main style={lbShell} className="lb-scope">
+        <style dangerouslySetInnerHTML={{ __html: LB_SCOPED_CSS }} />
+        <div style={lbCard}>
+          <Aurora tint="rgba(255,194,75,.14)" tint2="rgba(139,125,246,.10)" />
+          <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflowY: "auto" }}>
+            <div style={topBar(LB.gold)} />
+            {isCoop ? (
+              <div style={{ flex: 1, display: "grid", placeItems: "center", padding: 28 }}>
+                <div style={{ width: "100%", maxWidth: 420, textAlign: "center" }}>
+                  <div style={{ fontSize: 44, marginBottom: 10 }}>🤝</div>
+                  <h1 style={{ fontFamily: DISPLAY, fontSize: 34, fontWeight: 800, marginBottom: 6 }}>Bravo l'équipe !</h1>
+                  <p style={{ color: LB.muted, marginBottom: 18 }}>Score collectif : <span style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 800, color: LB.mint }}>{teamScore}</span></p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, textAlign: "left" }}>
+                    {[...game.players].sort((a, b) => (game.scores[b.id] ?? 0) - (game.scores[a.id] ?? 0)).map((p) => (
+                      <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 14, background: LB.surface, boxShadow: `0 0 0 1px ${LB.line}` }}>
+                        <Avatar name={p.name} color={color(p.id)} avatar={avatarOf(p.id)} size={36} />
+                        <span style={{ flex: 1, fontWeight: 600 }}>{p.name}{p.id === you && <span style={{ color: LB.faint, fontWeight: 400 }}> · toi</span>}</span>
+                        <span style={{ fontFamily: DISPLAY, fontWeight: 700, color: LB.muted }}>+{game.scores[p.id] ?? 0}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 22 }}>
+                    {isHost ? (
+                      <>
+                        <button onClick={() => room.playAgain()} className="lb-gold" style={{ ...lbGoldBtn, width: "100%" }}>Rejouer une partie</button>
+                        <button onClick={() => room.returnLobby()} className="lb-ghost" style={{ ...lbGhostBtn, width: "100%" }}>Retour au salon</button>
+                      </>
+                    ) : (
+                      <p style={{ fontSize: 14, color: LB.muted }}>En attente de l'hôte…</p>
+                    )}
+                  </div>
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center gap-3">
-                <MaskedWord segments={game.wordSegments} separators={game.wordSeparators} />
-                <p className="text-xs text-text-faint">
-                  <span className="text-text-muted">{name(game.drawerId ?? "")}</span> dessine · {game.foundOrder.length}/{Math.max(0, game.players.length - 1)} ont trouvé
-                </p>
-                {game.themeRevealed && game.theme && <p className="animate-pop text-sm"><span className="eyebrow text-magenta">Thème</span> <span className="ml-1 font-semibold">{game.theme}</span></p>}
+              <div style={{ flex: 1, minHeight: 0 }}>
+                <ResultsScreen
+                  ranking={[...game.players]
+                    .sort((a, b) => (game.scores[b.id] ?? 0) - (game.scores[a.id] ?? 0))
+                    .map((p) => ({ id: p.id, name: p.name, color: color(p.id), avatar: avatarOf(p.id), score: game.scores[p.id] ?? 0 }))}
+                  you={you}
+                  stats={null}
+                  isHost={isHost}
+                  onReturn={() => room.returnLobby()}
+                  onReplay={() => room.playAgain()}
+                />
+                {!isHost && <p style={{ marginTop: 12, textAlign: "center", fontSize: 14, color: LB.muted }}>En attente de l'hôte…</p>}
               </div>
             )}
           </div>
+        </div>
+      </main>
+    );
+  }
 
-          {game.constraint && (
-            <div className="mx-auto mb-3 flex max-w-md items-center justify-center gap-2.5 rounded-xl border border-magenta/40 bg-magenta/[0.08] px-4 py-2 text-center">
-              <span className="eyebrow text-magenta">Contrainte</span>
-              <span className="text-sm font-medium">{game.constraint}</span>
+  // ── Rail joueurs ──────────────────────────────────────────────────────────
+  const foundIdx = (id: string) => game.foundOrder.indexOf(id);
+  const revealResult = game.result;
+  const railRows: RailRow[] = [...game.players]
+    .sort((a, b) => (game.scores[b.id] ?? 0) - (game.scores[a.id] ?? 0))
+    .map((p) => {
+      const isYou = p.id === you;
+      const isDrawer = p.id === game.drawerId;
+      const found = game.phase === "reveal" ? revealResult?.guesserIds.includes(p.id) : game.guessedIds.includes(p.id);
+      const fi = foundIdx(p.id);
+      return {
+        id: p.id, name: p.name, color: p.color, avatar: p.avatar, you: isYou,
+        accent: isDrawer ? LB.gold : found ? LB.mint : isYou ? LB.violet : undefined,
+        badge: isDrawer ? { text: "dessine", color: LB.gold } : found ? { text: fi >= 0 ? `${fi + 1}ᵉ` : "trouvé", color: LB.mint } : undefined,
+        score: (game.scores[p.id] ?? 0).toLocaleString("fr-FR"),
+      } as RailRow;
+    });
+
+  const foundCount = game.foundOrder.length;
+  const railHeading = game.phase === "choosing" ? "Choix du mot" : game.phase === "reveal" ? "Fin du tour" : "On dessine";
+  const railSub = game.phase === "reveal"
+    ? (revealResult && revealResult.guesserIds.length > 0 ? `${revealResult.guesserIds.length} ont trouvé` : "personne n'a trouvé")
+    : `${foundCount}/${Math.max(0, game.players.length - 1)} ont trouvé`;
+
+  const rail = (
+    <Rail
+      kicker={`Boum Dessin · manche ${game.round}/${game.totalRounds}`}
+      heading={railHeading}
+      sub={railSub}
+      rows={railRows}
+      foot={isCoop ? (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", borderRadius: 14, background: hexA(LB.mint, 0.08), boxShadow: `0 0 0 1px ${hexA(LB.mint, 0.4)}` }}>
+          <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".14em", color: LB.mint }}>🤝 Équipe</span>
+          <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 16, color: LB.mint }}>{teamScore}</span>
+        </div>
+      ) : undefined}
+    />
+  );
+
+  // ── Barre d'accent haute ──────────────────────────────────────────────────
+  const remaining = game.deadline != null ? Math.max(0, game.deadline - room.serverNow()) : 0;
+  const frac = totalMs > 0 ? Math.min(1, Math.max(0, 1 - remaining / totalMs)) : 0;
+  const barAccent = game.phase === "reveal" ? LB.mint : LB.gold;
+  const P = game.phase === "reveal" ? 95 : Math.max(5, Math.min(95, Math.round(frac * 100)));
+
+  // Chip mobile (rail masqué sur petit écran).
+  const mobileHead = (
+    <div className="lb-mobilehead" style={{ display: "none", alignItems: "center", gap: 10, padding: "12px 18px 0" }}>
+      <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".14em", color: LB.faint }}>Boum Dessin · manche {game.round}/{game.totalRounds}</span>
+    </div>
+  );
+
+  return (
+    <main style={lbShell} className="lb-scope">
+      <style dangerouslySetInnerHTML={{ __html: LB_SCOPED_CSS }} />
+      <div style={lbCard}>
+        <Aurora tint={game.phase === "reveal" ? "rgba(70,224,176,.12)" : "rgba(255,194,75,.10)"} tint2="rgba(139,125,246,.12)" />
+        {rail}
+
+        <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflowY: "auto" }}>
+          <div style={topBar(barAccent, P)} />
+          {mobileHead}
+
+          {/* En-tête : mot / mot masqué + chrono + actions dessinateur */}
+          <div className="lb-pad" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "16px 32px", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0, flexWrap: "wrap" }}>
+              {game.phase === "choosing" ? (
+                <span style={{ fontFamily: DISPLAY, fontSize: 22, fontWeight: 800 }}>{game.youAreDrawer ? "À toi de dessiner" : `${drawerName} choisit un mot…`}</span>
+              ) : game.youAreDrawer ? (
+                <span style={{ display: "inline-flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
+                  <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: LB.faint }}>Dessine</span>
+                  <span style={{ fontFamily: DISPLAY, fontSize: 30, fontWeight: 800, color: LB.gold, letterSpacing: "-.01em" }}>{game.word}</span>
+                </span>
+              ) : (
+                <MaskedWord segments={game.wordSegments} separators={game.wordSeparators} />
+              )}
+              {game.phase !== "choosing" && !game.youAreDrawer && game.themeRevealed && game.theme && (
+                <span style={{ padding: "5px 10px", borderRadius: 8, background: hexA(LB.pink, 0.14), boxShadow: `inset 0 0 0 1px ${hexA(LB.pink, 0.45)}`, fontFamily: DISPLAY, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".12em", color: LB.pink }}>Thème · {game.theme}</span>
+              )}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              {secs != null && game.phase !== "choosing" && (
+                <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 15, letterSpacing: ".04em", color: secs <= 5 ? LB.pink : LB.gold }}>{secs}s</span>
+              )}
+              <SoundToggle />
+              {isHost && <SkipButton onSkip={room.skipPhase} />}
+            </div>
+          </div>
+
+          {/* Contenu par phase */}
+          {game.phase === "choosing" && (
+            <div style={{ flex: 1, display: "grid", placeItems: "center", padding: 28 }}>
+              {game.youAreDrawer ? (
+                <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
+                  <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 12, textTransform: "uppercase", letterSpacing: ".16em", color: LB.faint }}>Choisis ton mot{secs != null ? ` · ${secs}s` : ""}</span>
+                  <div style={{ display: "flex", gap: 14, flexWrap: "wrap", justifyContent: "center" }}>
+                    {(game.wordChoices ?? []).map((w) => (
+                      <button key={w} onClick={() => room.chooseWord(w)} className="lb-tile" style={{ border: "none", borderRadius: 16, padding: "22px 30px", background: LB.surface, color: LB.text, fontFamily: DISPLAY, fontSize: 22, fontWeight: 800, cursor: "pointer", boxShadow: `0 0 0 1px ${LB.line}, 0 4px 0 ${LB.lineFaint}` }}>{w}</button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p style={{ color: LB.muted, fontSize: 16 }}><span style={{ fontWeight: 700, color: LB.text }}>{drawerName}</span> choisit un mot…</p>
+              )}
             </div>
           )}
-          {game.mode === "blind" && game.youAreDrawer && <p className="mb-3 text-center text-sm text-text-muted">Mode aveugle : tu ne vois pas ton trait. Bonne chance !</p>}
 
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
-            <div>
-              <DrawCanvas room={room} drawable={game.youAreDrawer} blind={game.mode === "blind" && game.youAreDrawer} constraintRule={game.youAreDrawer ? game.constraintRule : null} turnKey={turnKey} />
-              {!game.youAreDrawer && game.finished && !game.youGuessed && (
-                <p className="mt-3 rounded-lg border border-mint/40 bg-mint/[0.07] px-3 py-1.5 text-center text-xs font-medium text-mint">
-                  Le dessinateur a terminé son dessin — à toi de deviner, le temps continue !
-                </p>
-              )}
-              {!game.youAreDrawer && !game.youGuessed && <GuessBar room={room} />}
-              {game.youGuessed && <p className="mt-3 text-center text-sm text-mint">Bien joué, tu as trouvé ! 🎉</p>}
-            </div>
-            <div className="flex min-h-0 flex-col gap-4">
-              <FoundList />
-              <ChatPanel room={room} />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {game.phase === "reveal" && (
-        <div className="text-center">
-          <p className="eyebrow mb-2">Le mot était</p>
-          <h2 className="animate-reveal mb-1 font-display text-5xl font-extrabold text-gold drop-shadow-[0_0_18px_rgba(255,194,75,0.35)]">{game.result?.word}</h2>
-          <p className="mb-5 text-sm text-text-muted">{game.result && game.result.guesserIds.length > 0 ? `Trouvé par ${game.result.guesserIds.map(name).join(", ")}` : "Personne n'a trouvé cette fois"}</p>
-          <div className="mx-auto max-w-sm space-y-2 text-left">
-            {[...game.players].sort((a, b) => (game.scores[b.id] ?? 0) - (game.scores[a.id] ?? 0)).map((p) => {
-              const found = game.result?.guesserIds.includes(p.id);
-              const drew = p.id === game.drawerId;
-              return (
-                <div key={p.id} className={`flex items-center gap-3 rounded-xl border p-2.5 ${found || drew ? "border-mint/40 bg-mint/[0.06]" : "border-ink-border bg-ink-surface"}`}>
-                  <Avatar name={p.name} color={color(p.id)} avatar={avatarOf(p.id)} size={32} />
-                  <span className="flex-1 font-semibold">
-                    {p.name}
-                    {drew && <span className="ml-2 text-xs text-text-faint">a dessiné</span>}
-                    {found && <span className="ml-2 text-xs text-mint">a trouvé</span>}
-                  </span>
-                  <span className="font-display font-bold tabular-nums text-gold">{game.scores[p.id] ?? 0}</span>
+          {game.phase === "drawing" && (
+            <div className="lb-pad" style={{ flex: 1, minHeight: 0, padding: "6px 32px 28px" }}>
+              {/* Bandeau dessinateur : révéler thème / j'ai fini + contrainte */}
+              {(game.youAreDrawer || game.constraint) && (
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                  {game.youAreDrawer && (!game.themeRevealed ? (
+                    <button onClick={() => room.revealTheme()} className="lb-tile" style={{ border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 600, color: LB.pink, background: hexA(LB.pink, 0.1), boxShadow: `inset 0 0 0 1px ${hexA(LB.pink, 0.4)}`, cursor: "pointer" }}>Révéler le thème (indice)</button>
+                  ) : (
+                    <span style={{ fontSize: 12, color: LB.faint }}>Thème révélé aux joueurs ✓</span>
+                  ))}
+                  {game.youAreDrawer && (game.finished ? (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 700, color: LB.mint, background: hexA(LB.mint, 0.1), boxShadow: `inset 0 0 0 1px ${hexA(LB.mint, 0.45)}` }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>
+                      Dessin terminé — les joueurs continuent de deviner
+                    </span>
+                  ) : (
+                    <button onClick={() => room.endDrawing()} className="lb-tile" title="Signaler que ton dessin est fini (la manche continue)" style={{ display: "inline-flex", alignItems: "center", gap: 6, border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 700, color: LB.mint, background: hexA(LB.mint, 0.12), boxShadow: `inset 0 0 0 1px ${hexA(LB.mint, 0.45)}`, cursor: "pointer" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>
+                      J'ai terminé
+                    </button>
+                  ))}
+                  {game.constraint && (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, borderRadius: 10, padding: "8px 14px", background: hexA(LB.pink, 0.08), boxShadow: `inset 0 0 0 1px ${hexA(LB.pink, 0.4)}` }}>
+                      <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".14em", color: LB.pink }}>Contrainte</span>
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>{game.constraint}</span>
+                    </span>
+                  )}
+                  {game.mode === "blind" && game.youAreDrawer && <span style={{ fontSize: 12, color: LB.muted }}>Mode aveugle : tu ne vois pas ton trait 👀</span>}
                 </div>
-              );
-            })}
-          </div>
-          {game.mode === "blind" && game.youAreDrawer && <BlindReveal room={room} />}
-        </div>
-      )}
+              )}
 
-      {game.phase === "scoreboard" && (
-        isCoop ? (
-          <div className="animate-pop grid min-h-[60vh] place-items-center text-center">
-            <div className="w-full max-w-sm">
-              <div className="mb-4 text-4xl">🤝</div>
-              <h1 className="mb-1 font-display text-3xl font-extrabold">Bravo l'équipe !</h1>
-              <p className="mb-5 text-text-muted">
-                Score collectif : <span className="font-display text-2xl font-extrabold text-mint">{teamScore}</span>
-              </p>
-              <div className="space-y-2 text-left">
-                {[...game.players].sort((a, b) => (game.scores[b.id] ?? 0) - (game.scores[a.id] ?? 0)).map((p) => (
-                  <div key={p.id} className="flex items-center gap-3 rounded-xl border border-ink-border bg-ink-surface p-2.5">
-                    <Avatar name={p.name} color={color(p.id)} avatar={avatarOf(p.id)} size={36} />
-                    <span className="flex-1 font-semibold">{p.name}{p.id === you && " (toi)"}</span>
-                    <span className="text-sm text-text-muted">+{game.scores[p.id] ?? 0}</span>
-                  </div>
-                ))}
+              <div style={{ display: "grid", gap: 24, gridTemplateColumns: "minmax(0,1fr)", alignItems: "start" }} className="dv-grid">
+                <div style={{ minWidth: 0 }}>
+                  <DrawCanvas room={room} drawable={game.youAreDrawer} blind={game.mode === "blind" && game.youAreDrawer} constraintRule={game.youAreDrawer ? game.constraintRule : null} turnKey={turnKey} />
+                  {!game.youAreDrawer && game.finished && !game.youGuessed && (
+                    <p style={{ marginTop: 12, borderRadius: 10, padding: "8px 12px", textAlign: "center", fontSize: 12, fontWeight: 600, color: LB.mint, background: hexA(LB.mint, 0.07), boxShadow: `inset 0 0 0 1px ${hexA(LB.mint, 0.4)}` }}>
+                      Le dessinateur a terminé — à toi de deviner, le temps continue !
+                    </p>
+                  )}
+                  {!game.youAreDrawer && !game.youGuessed && <GuessBar room={room} />}
+                  {game.youGuessed && <p style={{ marginTop: 12, textAlign: "center", fontSize: 14, color: LB.mint }}>Bien joué, tu as trouvé ! 🎉</p>}
+                </div>
+                <div style={{ display: "flex", minHeight: 0, flexDirection: "column" }} className="dv-chat">
+                  <ChatPanel room={room} />
+                </div>
               </div>
-              <div className="mt-6 space-y-2.5">
-                {isHost ? (
-                  <>
-                    <button onClick={() => room.playAgain()} className="arc arc-p arc-block">Rejouer une partie</button>
-                    <button onClick={() => room.returnLobby()} className="arc arc-sec arc-block">Retour au salon</button>
-                  </>
-                ) : (
-                  <p className="text-sm text-text-muted">En attente de l'hôte…</p>
-                )}
-              </div>
+              <style dangerouslySetInnerHTML={{ __html: "@media(min-width:1100px){.dv-grid{grid-template-columns:minmax(0,1fr) 320px}}" }} />
             </div>
-          </div>
-        ) : (
-          <div className="animate-pop">
-            <ResultsScreen
-              ranking={[...game.players]
-                .sort((a, b) => (game.scores[b.id] ?? 0) - (game.scores[a.id] ?? 0))
-                .map((p) => ({ id: p.id, name: p.name, color: color(p.id), avatar: avatarOf(p.id), score: game.scores[p.id] ?? 0 }))}
-              you={you}
-              stats={null}
-              isHost={isHost}
-              onReturn={() => room.returnLobby()}
-              onReplay={() => room.playAgain()}
-            />
-            {!isHost && <p className="mt-4 text-center text-sm text-text-muted">En attente de l'hôte…</p>}
-          </div>
-        )
-      )}
-      </main>
-    </>
+          )}
+
+          {game.phase === "reveal" && (
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 22, padding: 28, textAlign: "center" }}>
+              <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: LB.faint }}>Le mot était</span>
+              <span style={{ fontFamily: DISPLAY, fontSize: 58, fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1, color: LB.gold, textShadow: `0 0 30px ${hexA(LB.gold, 0.4)}` }}>{revealResult?.word}</span>
+              <span style={{ fontSize: 14, color: LB.muted }}>{revealResult && revealResult.guesserIds.length > 0 ? `Trouvé par ${revealResult.guesserIds.map(name).join(", ")}` : "Personne n'a trouvé cette fois"}</span>
+              {game.mode === "blind" && game.youAreDrawer && <BlindReveal room={room} />}
+              <span style={{ fontSize: 13, color: LB.faint }}>Prochain tour dans un instant…</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </main>
   );
 }

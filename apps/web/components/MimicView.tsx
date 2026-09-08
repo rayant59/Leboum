@@ -5,9 +5,9 @@ import type { MimicPublic } from "@subtitles-party/shared";
 import { mimicCategoryLabel } from "@subtitles-party/shared";
 import type { UseRoom } from "@/lib/useRoom";
 import { Avatar } from "@/components/Avatar";
-import { BoumBackdrop } from "@/components/BoumBackdrop";
 import { ResultsScreen } from "@/components/ResultsScreen";
 import { SoundToggle, playSound } from "@/lib/sound";
+import { LB, MONO, Aurora, lbShell, lbCard, topBar, LB_SCOPED_CSS } from "@/components/leboum";
 
 // --- Micro : permission, VU-mètre, enregistrement d'une prise (MediaRecorder) ---
 function useMic() {
@@ -111,40 +111,61 @@ export function MimicView({ room }: { room: UseRoom }) {
   const looksLikeMimic = !!game && typeof game.phase === "string" && "ranking" in game;
   if (!looksLikeMimic) {
     return (
-      <main className="mx-auto max-w-lg px-4 py-16 text-center">
-        <p className="eyebrow mb-2 text-magenta">Mimic Boum indisponible</p>
-        <p className="text-text-muted">Le serveur de jeu doit être relancé (ou redéployé) pour activer ce mode.</p>
-        <button onClick={() => room.returnLobby()} className="mt-5 rounded-xl border border-ink-border px-4 py-2 text-sm text-text-muted hover:border-gold hover:text-text">Retour au salon</button>
+      <main style={lbShell} className="lb-scope">
+        <style dangerouslySetInnerHTML={{ __html: LB_SCOPED_CSS }} />
+        <div style={lbCard}>
+          <Aurora tint="rgba(255,77,141,.12)" tint2="rgba(139,125,246,.10)" />
+          <div style={{ position: "relative", flex: 1, display: "grid", placeItems: "center", padding: 28, textAlign: "center" }}>
+            <div>
+              <p style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: LB.pink, marginBottom: 8 }}>Mimic Boum indisponible</p>
+              <p style={{ color: LB.muted }}>Le serveur de jeu doit être relancé (ou redéployé) pour activer ce mode.</p>
+              <button onClick={() => room.returnLobby()} className="lb-ghost" style={{ marginTop: 20, border: `1px solid ${LB.line}`, background: "transparent", color: LB.muted, fontSize: 14, padding: "10px 18px", borderRadius: 12, cursor: "pointer" }}>Retour au salon</button>
+            </div>
+          </div>
+        </div>
       </main>
     );
   }
 
   if (game.phase === "gameover") return <GameOver room={room} game={game} you={you} isHost={isHost} />;
 
+  const accent =
+    game.phase === "recording" ? LB.pink
+    : game.phase === "scoreboard" ? LB.mint
+    : LB.gold;
+
   return (
-    <>
-      <BoumBackdrop />
-      <main className="relative z-[1] mx-auto max-w-2xl px-4 py-5" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-        <div className="mb-3 flex items-center justify-between">
-          <span className="eyebrow">🎤 Mimic Boum · {game.phase === "prep" ? "préparation" : `manche ${game.round}/${game.totalRounds}`}</span>
-          <div className="flex items-center gap-2">
-            {isHost && game.phase !== "prep" && game.phase !== "scoreboard" && (
-              <button onClick={() => room.skipPhase()} className="rounded-md border border-ink-border px-2 py-1 text-xs text-text-muted hover:border-magenta hover:text-magenta" title="Passer (hôte)">⏭ Passer</button>
-            )}
-            <SoundToggle />
+    <main style={lbShell} className="lb-scope">
+      <style dangerouslySetInnerHTML={{ __html: LB_SCOPED_CSS }} />
+      <div style={lbCard}>
+        <Aurora tint={game.phase === "recording" ? "rgba(255,77,141,.12)" : game.phase === "scoreboard" ? "rgba(70,224,176,.12)" : "rgba(255,194,75,.10)"} tint2="rgba(139,125,246,.12)" />
+        <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflowY: "auto" }}>
+          <div style={topBar(accent)} />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "16px 28px" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 9, fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: LB.faint }}>
+              <span style={{ fontSize: 15 }}>🎤</span>Mimic Boum · {game.phase === "prep" ? "préparation" : `manche ${game.round}/${game.totalRounds}`}
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              {isHost && game.phase !== "prep" && game.phase !== "scoreboard" && (
+                <button onClick={() => room.skipPhase()} title="Passer (hôte)" style={{ border: `1px solid ${LB.line}`, background: "transparent", color: LB.muted, fontSize: 12, padding: "5px 10px", borderRadius: 8, cursor: "pointer" }}>⏭ Passer</button>
+              )}
+              <SoundToggle />
+            </div>
+          </div>
+
+          <div style={{ flex: 1, minHeight: 0, width: "100%", maxWidth: 640, margin: "0 auto", padding: "4px 20px 24px", fontFamily: "'Inter', system-ui, sans-serif" }}>
+            {game.phase === "prep" && <Prep room={room} game={game} mic={mic} you={you} isHost={isHost} />}
+            {game.phase === "reference" && <Reference game={game} />}
+            {game.phase === "countdown" && <Countdown room={room} game={game} />}
+            {game.phase === "recording" && <Recording room={room} game={game} mic={mic} />}
+            {game.phase === "processing" && <Processing />}
+            {game.phase === "playback" && <Playback room={room} game={game} you={you} />}
+            {game.phase === "voting" && <Voting room={room} game={game} you={you} />}
+            {game.phase === "scoreboard" && <Scoreboard room={room} game={game} you={you} isHost={isHost} />}
           </div>
         </div>
-
-        {game.phase === "prep" && <Prep room={room} game={game} mic={mic} you={you} isHost={isHost} />}
-        {game.phase === "reference" && <Reference game={game} />}
-        {game.phase === "countdown" && <Countdown room={room} game={game} />}
-        {game.phase === "recording" && <Recording room={room} game={game} mic={mic} />}
-        {game.phase === "processing" && <Processing />}
-        {game.phase === "playback" && <Playback room={room} game={game} you={you} />}
-        {game.phase === "voting" && <Voting room={room} game={game} you={you} />}
-        {game.phase === "scoreboard" && <Scoreboard room={room} game={game} you={you} isHost={isHost} />}
-      </main>
-    </>
+      </div>
+    </main>
   );
 }
 
@@ -448,19 +469,25 @@ function Scoreboard({ room, game, you, isHost }: { room: UseRoom; game: MimicPub
 // --- GAMEOVER ------------------------------------------------------------------
 function GameOver({ room, game, you, isHost }: { room: UseRoom; game: MimicPublic; you: string; isHost: boolean }) {
   return (
-    <>
-      <BoumBackdrop />
-      <main className="relative z-[1] mx-auto max-w-2xl px-5 py-8" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-        <ResultsScreen
-          ranking={game.ranking.map((r) => ({ id: r.id, name: r.name, color: r.color, avatar: r.avatar, score: r.score }))}
-          you={you}
-          stats={{ fastest: null, brain: game.stats?.bestImitator ?? null, streak: game.stats?.topVotes ?? null }}
-          isHost={isHost}
-          onReturn={() => room.returnLobby()}
-          onReplay={() => room.playAgain()}
-        />
-        <p className="mt-4 text-center text-xs text-text-faint">🏆 = plus de « meilleures imitations » · ⭐ = plus de votes reçus</p>
-      </main>
-    </>
+    <main style={lbShell} className="lb-scope">
+      <style dangerouslySetInnerHTML={{ __html: LB_SCOPED_CSS }} />
+      <div style={lbCard}>
+        <Aurora tint="rgba(255,194,75,.14)" tint2="rgba(139,125,246,.10)" />
+        <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflowY: "auto" }}>
+          <div style={topBar(LB.gold)} />
+          <div style={{ flex: 1, minHeight: 0, width: "100%", maxWidth: 640, margin: "0 auto", padding: "8px 20px 24px", fontFamily: "'Inter', system-ui, sans-serif" }}>
+            <ResultsScreen
+              ranking={game.ranking.map((r) => ({ id: r.id, name: r.name, color: r.color, avatar: r.avatar, score: r.score }))}
+              you={you}
+              stats={{ fastest: null, brain: game.stats?.bestImitator ?? null, streak: game.stats?.topVotes ?? null }}
+              isHost={isHost}
+              onReturn={() => room.returnLobby()}
+              onReplay={() => room.playAgain()}
+            />
+            <p style={{ marginTop: 16, textAlign: "center", fontSize: 12, color: LB.faint }}>🏆 = plus de « meilleures imitations » · ⭐ = plus de votes reçus</p>
+          </div>
+        </div>
+      </div>
+    </main>
   );
 }
