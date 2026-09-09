@@ -25,8 +25,10 @@ export interface DrawMode {
   id: string;
   label: string;
   description: string;
-  /** Turn timings + parameters for a game of `totalRounds` rounds. */
-  resolveConfig(totalRounds: number): DrawConfig;
+  /** Turn timings + parameters for a game of `totalRounds` rounds.
+   *  `seconds` (host-chosen drawing time, 5–300) overrides the default drawing
+   *  duration when provided; a mode may still scale it (blind gets +25 %). */
+  resolveConfig(totalRounds: number, seconds?: number): DrawConfig;
   /** Points for a correct guess, given the fraction of drawing time left (1→0). */
   scoreGuess(remainingFraction: number): number;
   /** Optional per-turn drawing constraint (constraints mode): a label to show
@@ -57,14 +59,26 @@ function clampRounds(n: number): number {
   return Math.min(DRAW_ROUNDS_MAX, Math.max(DRAW_ROUNDS_MIN, Math.round(n)));
 }
 
+export const DRAW_SECONDS_MIN = 5;
+export const DRAW_SECONDS_MAX = 300;
+
+/** Résout la durée de dessin (ms) : si l'hôte a fixé un temps (`seconds`), on
+ *  l'utilise (× le multiplicateur du mode) ; sinon on garde le défaut du mode.
+ *  `mult` porte les règles de mode (Aveugle ×1,25). */
+function drawMsFor(seconds: number | undefined, fallbackMs: number, mult = 1): number {
+  if (seconds == null || !Number.isFinite(seconds)) return fallbackMs;
+  const s = Math.min(DRAW_SECONDS_MAX, Math.max(DRAW_SECONDS_MIN, Math.round(seconds)));
+  return Math.round(s * 1000 * mult);
+}
+
 const classic: DrawMode = {
   id: "classic",
   label: "Classique",
   description: "Un dessine, les autres devinent. Le plus rapide marque le plus.",
-  resolveConfig: (totalRounds) => ({
+  resolveConfig: (totalRounds, seconds) => ({
     totalRounds: clampRounds(totalRounds),
     chooseMs: 15_000,
-    drawMs: 80_000,
+    drawMs: drawMsFor(seconds, 80_000),
     revealMs: 8_000,
     wordChoiceCount: 5,
     pointsDrawerPerGuess: 25,
@@ -77,10 +91,10 @@ const blind: DrawMode = {
   id: "blind",
   label: "Aveugle",
   description: "Tu dessines sans voir ton propre trait 😅. Plus de temps pour compenser.",
-  resolveConfig: (totalRounds) => ({
+  resolveConfig: (totalRounds, seconds) => ({
     totalRounds: clampRounds(totalRounds),
     chooseMs: 12_000,
-    drawMs: 95_000,
+    drawMs: drawMsFor(seconds, 95_000, 1.25),
     revealMs: 8_000,
     wordChoiceCount: 5,
     pointsDrawerPerGuess: 30,
@@ -93,10 +107,10 @@ const constraints: DrawMode = {
   id: "constraints",
   label: "Contraintes",
   description: "Chaque dessin impose une règle absurde (une couleur, sans lever le crayon…).",
-  resolveConfig: (totalRounds) => ({
+  resolveConfig: (totalRounds, seconds) => ({
     totalRounds: clampRounds(totalRounds),
     chooseMs: 15_000,
-    drawMs: 85_000,
+    drawMs: drawMsFor(seconds, 85_000),
     revealMs: 8_000,
     wordChoiceCount: 5,
     pointsDrawerPerGuess: 25,
@@ -109,10 +123,10 @@ const coop: DrawMode = {
   id: "coop",
   label: "Coopératif",
   description: "En équipe : tous vos points sont mis en commun pour un score collectif.",
-  resolveConfig: (totalRounds) => ({
+  resolveConfig: (totalRounds, seconds) => ({
     totalRounds: clampRounds(totalRounds),
     chooseMs: 15_000,
-    drawMs: 80_000,
+    drawMs: drawMsFor(seconds, 80_000),
     revealMs: 8_000,
     wordChoiceCount: 5,
     pointsDrawerPerGuess: 25,
@@ -132,13 +146,18 @@ export function sanitizeDrawSettings(input: Partial<DrawSettings> | undefined): 
   const themes = Array.isArray(input?.themes)
     ? input!.themes.filter((t) => DRAW_THEMES.includes(t))
     : [];
+  const seconds =
+    input?.seconds != null && Number.isFinite(input.seconds)
+      ? Math.min(DRAW_SECONDS_MAX, Math.max(DRAW_SECONDS_MIN, Math.round(input.seconds)))
+      : undefined;
   return {
     totalRounds: clampRounds(input?.totalRounds ?? DEFAULT_DRAW_SETTINGS.totalRounds),
     mode,
     themes,
+    ...(seconds != null ? { seconds } : {}),
   };
 }
 
 export function resolveDrawConfig(settings: DrawSettings): DrawConfig {
-  return getDrawMode(settings.mode).resolveConfig(settings.totalRounds);
+  return getDrawMode(settings.mode).resolveConfig(settings.totalRounds, settings.seconds);
 }

@@ -17,45 +17,68 @@ import { QuizView } from "@/components/QuizView";
 import { RecoView } from "@/components/RecoView";
 import { BombeView } from "@/components/BombeView";
 import { MimicView } from "@/components/MimicView";
-import { GameSettingsPanel } from "@/components/GameSettingsPanel";
 import { Avatar } from "@/components/Avatar";
 import { ProfileModal } from "@/components/ProfileModal";
 import { SubtitleStrip } from "@/components/SubtitleStrip";
 import { MODE_ICONS } from "./modeIcons";
 
-function PresetStepper({
-  label,
-  sub,
-  value,
-  values,
-  unit,
-  onChange,
-  disabled,
-}: {
-  label: string;
-  sub?: string;
-  value: number;
-  values: number[];
-  unit: string;
-  onChange: (v: number) => void;
-  disabled?: boolean;
-}) {
-  const idx = Math.max(0, values.indexOf(value));
-  const go = (d: number) => {
-    const ni = Math.max(0, Math.min(values.length - 1, idx + d));
-    if (values[ni] !== value) onChange(values[ni]);
-  };
-  return (
-    <div className="cfg-rounds">
-      <div className="cfg-rlab"><b>{label}</b>{sub}</div>
-      <div className="cfg-stepper">
-        <button className="cfg-sbtn" onClick={() => go(-1)} disabled={disabled || idx <= 0} aria-label="Moins"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M5 12h14" /></svg></button>
-        <div className="cfg-sval"><div className="cfg-svaln">{value}</div><div className="cfg-svalu">{unit}</div></div>
-        <button className="cfg-sbtn" onClick={() => go(1)} disabled={disabled || idx >= values.length - 1} aria-label="Plus"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg></button>
-      </div>
-    </div>
-  );
-}
+type GameId = "draw" | "mimic" | "quiz" | "reco" | "pixel" | "bombe";
+
+/** Un mode de jeu tel qu'exposé dans la salle d'attente.
+ *  `img` : illustration dédiée (modes de Dessin) ; sinon on retombe sur la
+ *  vignette du jeu. `min` : nombre de joueurs requis (mode grisé en dessous). */
+interface ModeDef { id: string; c: string; nm: string; ds: string; img?: string; min?: number }
+
+/** Catalogue des modes par jeu — seule source de vérité de la grille de modes.
+ *  Défaut = premier de la liste (`classic` partout). Le moteur retombe sur le
+ *  mode classique pour tout mode qu'il ne sait pas encore jouer. */
+const MODE_SETS: Record<GameId, ModeDef[]> = {
+  draw: [
+    { id: "classic", c: "#FFC24B", nm: "Classique", ds: "Un dessine, les autres devinent. Le plus rapide marque le plus.", img: MODE_ICONS.classique },
+    { id: "blind", c: "#4CC9F0", nm: "Aveugle", ds: "Tu dessines sans voir ton trait 😅. Plus de temps pour compenser.", img: MODE_ICONS.aveugle },
+    { id: "constraints", c: "#8B7DF6", nm: "Contraintes", ds: "Chaque dessin impose une règle absurde (une couleur, sans lever le crayon…).", img: MODE_ICONS.contraintes },
+    { id: "coop", c: "#46E0B0", nm: "Coopératif", ds: "En équipe : tous vos points sont mis en commun pour un score collectif.", img: MODE_ICONS.coop },
+    { id: "fakeartist", c: "#FF6B6B", nm: "Faux-artiste", ds: "Un imposteur ignore le mot ; démasquez-le au vote.", img: MODE_ICONS.fakeartist },
+    { id: "relay", c: "#4CC9F0", nm: "Relais", ds: "Deux joueurs se relaient au crayon, rotation auto.", img: MODE_ICONS.relais },
+  ],
+  mimic: [
+    { id: "classic", c: "#46E0B0", nm: "Classique", ds: "Chacun imite le son, puis tout le monde vote pour la meilleure prise." },
+    { id: "chain", c: "#FFC24B", nm: "Téléphone arabe", ds: "Chaque joueur imite l'imitation du précédent. Le résultat final vaut le détour.", min: 3 },
+    { id: "duel", c: "#FF6B6B", nm: "Duel", ds: "Deux joueurs s'affrontent sur le même son, le reste du salon tranche.", min: 3 },
+  ],
+  quiz: [
+    { id: "classic", c: "#8B7DF6", nm: "Classique", ds: "Une question, quatre réponses, les points au bout." },
+    { id: "speed", c: "#FFC24B", nm: "Vitesse", ds: "Plus tu réponds vite, plus tu marques. Une erreur coûte cher." },
+    { id: "survival", c: "#FF6B6B", nm: "Survie", ds: "Trois vies chacun : une mauvaise réponse et tu en perds une." },
+    { id: "teams", c: "#46E0B0", nm: "Équipes", ds: "Deux camps, une seule réponse par équipe : mettez-vous d'accord.", min: 4 },
+  ],
+  reco: [
+    { id: "classic", c: "#4CC9F0", nm: "Classique", ds: "Une image, tout le monde cherche la bonne réponse en même temps." },
+    { id: "zoom", c: "#FFC24B", nm: "Zoom arrière", ds: "On part d'un détail : l'image se dézoome jusqu'à ce que quelqu'un trouve." },
+    { id: "theme", c: "#8B7DF6", nm: "Thème imposé", ds: "Toute la manche sur une seule catégorie : cinéma, lieux, personnalités…" },
+  ],
+  pixel: [
+    { id: "classic", c: "#46E0B0", nm: "Classique", ds: "L'image se dévoile pixel par pixel, premier trouvé premier servi." },
+    { id: "rush", c: "#FF6B4D", nm: "Rush", ds: "Révélation deux fois plus rapide, mais les points doublent." },
+    { id: "coop", c: "#4CC9F0", nm: "Coopératif", ds: "Score commun : trouvez un maximum d'images avant la fin du chrono." },
+  ],
+  bombe: [
+    { id: "classic", c: "#FF6B4D", nm: "Classique", ds: "Une syllabe, un mot, la bombe tourne jusqu'à l'explosion." },
+    { id: "hardcore", c: "#FF6B6B", nm: "Hardcore", ds: "Chrono partagé de 15 s : chaque bonne réponse rend 2 s, jamais moins de 5 s." },
+    { id: "coop", c: "#46E0B0", nm: "Coopératif", ds: "Tenez ensemble le plus longtemps possible face à la bombe." },
+  ],
+};
+
+/** Réglage « Temps par tour » exposé dans la salle d'attente : libellé, presets
+ *  et défaut par jeu (saisie libre 5–300 s via « Perso »). */
+const TIMES: Record<GameId, { title: string; sub: string; opts: number[]; def: number }> = {
+  draw: { title: "Temps de dessin", sub: "Durée de chaque tour de dessin", opts: [45, 60, 80, 120], def: 80 },
+  mimic: { title: "Temps d'imitation", sub: "Durée d'enregistrement par joueur", opts: [10, 15, 20, 30], def: 15 },
+  quiz: { title: "Temps par question", sub: "Délai pour répondre", opts: [10, 15, 20, 30], def: 15 },
+  reco: { title: "Temps par image", sub: "Délai pour trouver la bonne réponse", opts: [15, 20, 30, 45], def: 20 },
+  pixel: { title: "Temps de révélation", sub: "Durée avant l'image complète", opts: [20, 30, 45, 60], def: 30 },
+  bombe: { title: "Temps par joueur", sub: "Mèche avant l'explosion", opts: [5, 7, 10, 15], def: 7 },
+};
 
 const GAME_META: Record<string, { label: string; img: string; tint: string }> = {
   subtitles: { label: "Sous-titres", img: "/games/subtitles.png", tint: "#FFC24B" },
@@ -65,15 +88,6 @@ const GAME_META: Record<string, { label: string; img: string; tint: string }> = 
   reco: { label: "Œil de Boum", img: "/games/reco.png", tint: "#4CC9F0" },
   pixel: { label: "Pixel Panic", img: "/games/pixel.png", tint: "#46E0B0" },
   bombe: { label: "Boum Rush", img: "/games/bombe.png", tint: "#FF6B4D" },
-};
-
-/** Presets de vitesse de la bombe → bornes min/max (secondes) du minuteur aléatoire. */
-const BOMBE_SPEEDS: Record<"tresrapide" | "rapide" | "normal" | "long" | "treslong", { label: string; min: number; max: number }> = {
-  tresrapide: { label: "Très rapide", min: 2, max: 4 },
-  rapide: { label: "Rapide", min: 3, max: 6 },
-  normal: { label: "Normal", min: 5, max: 10 },
-  long: { label: "Long", min: 8, max: 15 },
-  treslong: { label: "Très long", min: 12, max: 20 },
 };
 
 export default function LobbyPage() {
@@ -86,21 +100,29 @@ export default function LobbyPage() {
   const [shareUrl, setShareUrl] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
   const [themesOpen, setThemesOpen] = useState(false);
-  const [selectedGame, setSelectedGame] = useState<"subtitles" | "draw" | "fakeartist" | "relay" | "mimic" | "quiz" | "reco" | "pixel" | "bombe">("draw");
-  const [drawMode, setDrawMode] = useState("classic");
-  const [drawRounds, setDrawRounds] = useState(3);
+  const [selectedGame, setSelectedGame] = useState<GameId>("draw");
+  // Modèle unifié (SPEC §1) : nombre de manches partagé + mémoire du mode et du
+  // temps CHOISIS PAR JEU. Changer de jeu restaure ses réglages, jamais ceux des
+  // autres. Le moteur retombe sur « classique » pour un mode qu'il ne joue pas.
+  const [rounds, setRounds] = useState(3);
+  const [modeByGame, setModeByGame] = useState<Partial<Record<GameId, string>>>({});
+  const [timeByGame, setTimeByGame] = useState<Partial<Record<GameId, number>>>({});
   const [drawThemes, setDrawThemes] = useState<string[]>([]);
-  const [quizCount, setQuizCount] = useState(10);
-  const [quizSecs, setQuizSecs] = useState(15);
-  const [quizType, setQuizType] = useState<"all" | "mcq" | "truefalse" | "free">("all");
-  const [recoCount, setRecoCount] = useState(10);
-  const [recoSecs, setRecoSecs] = useState(15);
-  const [recoCat, setRecoCat] = useState("all");
-  const [bombeLives, setBombeLives] = useState(3);
-  const [bombeSpeed, setBombeSpeed] = useState<"tresrapide" | "rapide" | "normal" | "long" | "treslong">("normal");
-  const [bombeLen, setBombeLen] = useState<"2" | "23" | "3">("23");
-  const [mimicRounds, setMimicRounds] = useState(4);
-  const [mimicRecord, setMimicRecord] = useState(10);
+
+  // Mode/temps effectifs pour le jeu sélectionné (avec repli sur le défaut).
+  const modeOf = (g: GameId) => {
+    const set = MODE_SETS[g];
+    const picked = modeByGame[g];
+    return set.some((m) => m.id === picked) ? (picked as string) : set[0].id;
+  };
+  const timeOf = (g: GameId) => timeByGame[g] ?? TIMES[g].def;
+  const curMode = modeOf(selectedGame);
+  const turnSeconds = timeOf(selectedGame);
+  const setMode = (g: GameId, id: string) => setModeByGame((p) => ({ ...p, [g]: id }));
+  const setTime = (g: GameId, v: number) => setTimeByGame((p) => ({ ...p, [g]: v }));
+  /** Jeu réellement lancé : les modes Faux-artiste / Relais de Boum Dessin
+   *  routent vers leur propre moteur ; les autres modes gardent leur jeu. */
+  const launchId = selectedGame === "draw" && (curMode === "fakeartist" || curMode === "relay") ? curMode : selectedGame;
   useEffect(() => setName(getPlayerName()), []);
   useEffect(() => setShareUrl(window.location.href), []);
 
@@ -149,6 +171,20 @@ export default function LobbyPage() {
     if (meNow?.isHost) room.selectGame(selectedGame);
   }, [room, room.state, room.you, selectedGame]);
 
+  // SPEC §4 : un changement de jeu de l'hôte dé-« prête » automatiquement les
+  // invités (ils doivent reconfirmer sur la nouvelle partie).
+  const prevPending = useRef<string | null>(null);
+  useEffect(() => {
+    const st = room.state;
+    const meNow = st && room.you ? st.players[room.you] : undefined;
+    const host = meNow?.isHost ?? false;
+    const pending = room.pendingGame ?? null;
+    if (!host && meNow?.isReady && pending && prevPending.current !== null && pending !== prevPending.current) {
+      room.setReady(false);
+    }
+    prevPending.current = pending;
+  }, [room, room.pendingGame, room.state, room.you]);
+
   // --- name gate (direct link without a stored pseudo) ----------------------
   if (!name) {
     return (
@@ -196,7 +232,7 @@ export default function LobbyPage() {
   const players = state ? state.playerOrder.map((id) => state.players[id]).filter(Boolean) : [];
   const readyCount = players.filter((p) => p.isConnected && p.isReady).length;
   const maxPlayers = state?.config.maxPlayers ?? 8;
-  const startable = !!state && canStart(state, selectedGame);
+  const startable = !!state && canStart(state, launchId);
 
   async function copyLink() {
     const url = window.location.href;
@@ -219,6 +255,30 @@ export default function LobbyPage() {
       setTimeout(() => setCopied(false), 1600);
     } catch {
       // Couldn't copy automatically — the link stays visible for a manual copy.
+    }
+  }
+
+  /** Traduit le modèle unifié (jeu + mode + manches + temps) en payload de
+   *  démarrage propre à chaque moteur. Un mode que le back ne joue pas encore
+   *  est transmis tel quel : le moteur retombe alors sur « classique ». */
+  function startSelectedGame() {
+    const mode = curMode;
+    const t = turnSeconds;
+    switch (selectedGame) {
+      case "draw":
+        if (mode === "fakeartist") return room.startGame("fakeartist", { totalRounds: rounds });
+        if (mode === "relay") return room.startGame("relay", { totalRounds: rounds });
+        return room.startGame("draw", { totalRounds: rounds, mode, themes: drawThemes, seconds: t });
+      case "mimic":
+        return room.startGame("mimic", { totalRounds: rounds, recordSeconds: t, mode });
+      case "quiz":
+        return room.startGame("quiz", { totalQuestions: rounds, secondsPerQuestion: t, types: "all", mode });
+      case "reco":
+        return room.startGame("reco", { totalQuestions: rounds, secondsPerQuestion: t, category: "all", mode });
+      case "pixel":
+        return room.startGame("pixel", { totalQuestions: rounds, secondsPerQuestion: t, category: "all", mode });
+      case "bombe":
+        return room.startGame("bombe", { lives: 3, minSeconds: t, maxSeconds: t + 3, minLetters: 2, maxLetters: 3, mode });
     }
   }
 
@@ -411,7 +471,7 @@ export default function LobbyPage() {
               return (
                 <button
                   key={c.id}
-                  onClick={() => { setSelectedGame(c.id); if (c.id === "pixel" && recoSecs < 45) setRecoSecs(60); }}
+                  onClick={() => setSelectedGame(c.id)}
                   className="group relative flex flex-col overflow-hidden rounded-2xl border p-4 text-left transition-all duration-200 hover:-translate-y-0.5"
                   style={{
                     borderColor: sel ? c.tint : "#332A5A",
@@ -447,240 +507,156 @@ export default function LobbyPage() {
       {isHost && (
       <section className="mb-8">
         <p className="eyebrow mb-2 px-1">Réglages</p>
-        {selectedGame === "subtitles" ? (
-          <GameSettingsPanel settings={room.settings} isHost={isHost} onChange={room.setSettings} />
-        ) : selectedGame === "mimic" ? (
+        <div className="space-y-8">
+          {/* MODE DE JEU — grille propre au jeu sélectionné (SPEC §4) */}
           <div className="cfg-grp">
             <div className="cfg-head">
-              <span className="cfg-ic" style={{ background: "rgba(70,224,176,0.14)", color: "#46E0B0", borderColor: "rgba(70,224,176,0.4)" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M6 11a6 6 0 0 0 12 0" /><path d="M12 17v3.2" /><path d="M9 20.2h6" /></svg></span>
-              <div><h2 className="cfg-tt">Réglages de Mimic Boum</h2><span className="cfg-sub">Un son · une prise · votes 🎤</span></div>
+              <span className="cfg-ic-img"><img src="/ui/modejeu.png" alt="" draggable={false} /></span>
+              <div><h2 className="cfg-tt">Mode de jeu</h2><span className="cfg-sub">{`Pour « ${GAME_META[selectedGame].label} » — ${MODE_SETS[selectedGame].length} modes`}</span></div>
             </div>
-            <div className="panel space-y-3 p-4">
-              <p className="text-sm text-text-muted">
-                🎤 Un son est joué, tout le monde l'imite <b>en une seule prise</b> (micro requis, idéalement en https/localhost). On rejoue les imitations, puis chacun vote pour la meilleure. Le plus de votes gagne !
-              </p>
-              <PresetStepper label="Nombre de manches" sub="Longueur de la partie" value={mimicRounds} values={[3, 4, 5, 6]} unit="manches" onChange={setMimicRounds} disabled={!isHost} />
-              <PresetStepper label="Temps d'enregistrement" sub="Durée d'une prise" value={mimicRecord} values={[8, 10, 15, 20]} unit="secondes" onChange={setMimicRecord} disabled={!isHost} />
-              <p className="text-xs text-text-faint">Ajoute tes propres sons (animaux, voix…) dans <span className="font-mono">apps/web/public/sounds/</span> via <span className="font-mono">sounds.txt</span> — un pack de démarrage est déjà inclus.</p>
-            </div>
-          </div>
-        ) : selectedGame === "quiz" ? (
-          <div className="cfg-grp">
-            <div className="cfg-head">
-              <span className="cfg-ic" style={{ background: "rgba(139,125,246,0.14)", color: "#8B7DF6", borderColor: "rgba(139,125,246,0.4)" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4" /><circle cx="12" cy="17.5" r="0.7" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="9" /></svg></span>
-              <div><h2 className="cfg-tt">Réglages du Quiz</h2><span className="cfg-sub">Questions mélangées · vitesse récompensée</span></div>
-            </div>
-            <div className="panel space-y-3 p-4">
-            <p className="text-sm text-text-muted">
-              🧠 Questions rapides mélangées (jeux vidéo, films, anime, sport, insolite…). Réponds vite : la vitesse rapporte plus de points !
-            </p>
-            <PresetStepper label="Nombre de questions" sub="Longueur de la partie" value={quizCount} values={[5, 10, 15, 20]} unit="questions" onChange={setQuizCount} disabled={!isHost} />
-            <PresetStepper label="Temps par question" sub="Compte à rebours" value={quizSecs} values={[10, 15, 20, 30]} unit="secondes" onChange={setQuizSecs} disabled={!isHost} />
-            <div>
-              <p className="mb-2 text-sm font-medium">Type de questions</p>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {([
-                  { id: "all", label: "Toutes" },
-                  { id: "mcq", label: "QCM" },
-                  { id: "truefalse", label: "Vrai / Faux" },
-                  { id: "free", label: "Réponses libres" },
-                ] as const).map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => setQuizType(t.id)}
-                    disabled={!isHost}
-                    className={`rounded-lg border py-2 text-sm font-medium transition-colors ${quizType === t.id ? "border-gold bg-gold/[0.08] text-gold" : "border-ink-border bg-ink-surface"}`}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-          </div>
-        ) : selectedGame === "bombe" ? (
-          <div className="cfg-grp">
-            <div className="cfg-head">
-              <span className="cfg-ic" style={{ background: "rgba(255,107,77,0.14)", color: "#FF6B4D", borderColor: "rgba(255,107,77,0.4)" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="14" r="7" /><path d="M16 9l2-2" /><path d="M18 7l1 .3M19 5.5l.3-1M20.5 6.8l1-.3" /></svg></span>
-              <div><h2 className="cfg-tt">Réglages de Boum Rush</h2><span className="cfg-sub">Rapide, stressant, nerveux 💣</span></div>
-            </div>
-            <div className="panel space-y-3 p-4">
-              <p className="text-sm text-text-muted">
-                💣 Une syllabe apparaît (ex. <b>AR</b>). Le joueur dont c'est le tour doit vite écrire un mot français qui la contient (<i>arbre</i>, <i>canard</i>, <i>guitare</i>…). Bon mot → la bombe passe au suivant. Trop lent → elle explose : −1 vie ! Dernier survivant gagne.
-              </p>
-              <PresetStepper label="Vies par joueur" sub="Avant élimination (défaut 3)" value={bombeLives} values={[1, 2, 3, 4, 5, 6, 10]} unit="vies" onChange={setBombeLives} disabled={!isHost} />
-              <div>
-                <p className="mb-2 text-sm font-medium">Vitesse de la bombe</p>
-                <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-                  {(["tresrapide", "rapide", "normal", "long", "treslong"] as const).map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setBombeSpeed(s)}
-                      disabled={!isHost}
-                      className={`rounded-lg border py-2 text-xs font-medium transition-colors ${bombeSpeed === s ? "border-gold bg-gold/[0.08] text-gold" : "border-ink-border bg-ink-surface"}`}
-                    >
-                      {BOMBE_SPEEDS[s].label}
-                      <span className="block text-[10px] font-normal text-text-faint">{BOMBE_SPEEDS[s].min}-{BOMBE_SPEEDS[s].max}s</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="mb-2 text-sm font-medium">Longueur des syllabes</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {([
-                    { id: "2", label: "2 lettres", sub: "plus facile" },
-                    { id: "23", label: "2 ou 3", sub: "équilibré" },
-                    { id: "3", label: "3 lettres", sub: "difficile" },
-                  ] as const).map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => setBombeLen(t.id)}
-                      disabled={!isHost}
-                      className={`rounded-lg border py-2 text-sm font-medium transition-colors ${bombeLen === t.id ? "border-gold bg-gold/[0.08] text-gold" : "border-ink-border bg-ink-surface"}`}
-                    >
-                      {t.label}<span className="block text-[10px] font-normal text-text-faint">{t.sub}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <p className="text-xs text-text-faint">Le temps exact d'explosion est secret : la bombe peut sauter n'importe quand entre le mini et le maxi. Anti-triche : tout est validé côté serveur.</p>
-            </div>
-          </div>
-        ) : (selectedGame === "reco" || selectedGame === "pixel") ? (
-          <div className="cfg-grp">
-            <div className="cfg-head">
-              <span className="cfg-ic" style={{ background: "rgba(76,201,240,0.14)", color: "#4CC9F0", borderColor: "rgba(76,201,240,0.4)" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="14" rx="2.5" /><circle cx="9" cy="10" r="2" /><path d="M4 17l4.5-4 3 2.5L15 12l5 4.5" /></svg></span>
-              <div><h2 className="cfg-tt">{selectedGame === "pixel" ? "Réglages de Pixel incoming" : "Réglages de la Reconnaissance"}</h2><span className="cfg-sub">{selectedGame === "pixel" ? "L'image se dévoile pixel par pixel" : "Tes images · réponse libre"}</span></div>
-            </div>
-          <div className="panel space-y-3 p-4">
-            <p className="text-sm text-text-muted">
-              🖼️ Une image apparaît, écris ce que c'est le plus vite possible ! (pays, animaux, objets… les petites fautes sont tolérées.)
-            </p>
-            <PresetStepper label="Nombre d'images" sub="Longueur de la partie" value={recoCount} values={[5, 10, 15, 20]} unit="images" onChange={setRecoCount} disabled={!isHost} />
-            <PresetStepper label="Temps par image" sub={selectedGame === "pixel" ? "Vitesse de révélation" : "Compte à rebours"} value={recoSecs} values={selectedGame === "pixel" ? [45, 60, 75, 90] : [10, 15, 20, 30]} unit="secondes" onChange={setRecoSecs} disabled={!isHost} />
-            <div>
-              <p className="mb-2 text-sm font-medium">Catégorie</p>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {[
-                  { id: "all", label: "Toutes" },
-                  { id: "Disney", label: "Disney" },
-                  { id: "Animation", label: "Animation" },
-                  { id: "Anime", label: "Anime" },
-                  { id: "Films", label: "Films" },
-                  { id: "Jeux vidéo", label: "Jeux vidéo" },
-                ].map((c) => (
-                  <button key={c.id} onClick={() => setRecoCat(c.id)} disabled={!isHost} className={`rounded-lg border py-2 text-sm font-medium transition-colors ${recoCat === c.id ? "border-gold bg-gold/[0.08] text-gold" : "border-ink-border bg-ink-surface"}`}>{c.label}</button>
-                ))}
-              </div>
-              <p className="mt-2 text-xs text-text-faint">Les images viennent de ton dossier <span className="font-mono">public/reco/</span>. Une catégorie vide bascule sur « Toutes ».</p>
-            </div>
-          </div>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {/* MODE */}
-            <div className="cfg-grp">
-              <div className="cfg-head">
-                <span className="cfg-ic-img"><img src="/ui/modejeu.png" alt="" draggable={false} /></span>
-                <div><h2 className="cfg-tt">Mode de jeu</h2><span className="cfg-sub">Choisis comment vous jouez</span></div>
-              </div>
-              <div className="cfg-modes">
-                {([
-                  { id: "classic", c: "#FFC24B", nm: "Classique", ds: "Un dessine, les autres devinent. Le plus rapide marque le plus.", img: MODE_ICONS.classique },
-                  { id: "blind", c: "#4CC9F0", nm: "Aveugle", ds: "Tu dessines sans voir ton trait 😅. Plus de temps pour compenser.", img: MODE_ICONS.aveugle },
-                  { id: "constraints", c: "#8B7DF6", nm: "Contraintes", ds: "Chaque dessin impose une règle absurde (une couleur, sans lever le crayon...).", img: MODE_ICONS.contraintes },
-                  { id: "coop", c: "#46E0B0", nm: "Coopératif", ds: "En équipe : tous vos points sont mis en commun pour un score collectif.", img: MODE_ICONS.coop },
-                  { id: "fakeartist", c: "#FF6B6B", nm: "Faux-artiste", ds: "Un imposteur ignore le mot ; démasquez-le au vote.", img: MODE_ICONS.fakeartist },
-                  { id: "relay", c: "#4CC9F0", nm: "Relais", ds: "Deux joueurs se relaient au crayon, rotation auto.", img: MODE_ICONS.relais },
-                ] as const).map((m) => (
+            <div className="cfg-modes">
+              {MODE_SETS[selectedGame].map((m) => {
+                const on = curMode === m.id;
+                const locked = m.min != null && players.length < m.min;
+                return (
                   <button
                     key={m.id}
-                    onClick={() => setDrawMode(m.id)}
-                    disabled={!isHost}
-                    className={`cfg-mode${drawMode === m.id ? " on" : ""}`}
-                    style={{ ["--c" as any]: m.c }}
+                    onClick={() => !locked && setMode(selectedGame, m.id)}
+                    disabled={!isHost || locked}
+                    className={`cfg-mode${on ? " on" : ""}`}
+                    style={{ ["--c" as any]: m.c, opacity: locked ? 0.55 : undefined }}
+                    title={locked ? `${m.min} joueurs minimum` : undefined}
                   >
                     <span className="cfg-check"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg></span>
-                    <span className="cfg-mic" style={{ padding: 0, overflow: "hidden" }}><img src={m.img} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /></span>
-                    <span><span className="cfg-mnm">{m.nm}</span><p className="cfg-mds">{m.ds}</p></span>
+                    <span className="cfg-mic" style={{ padding: 0, overflow: "hidden" }}><img src={m.img ?? GAME_META[selectedGame].img} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /></span>
+                    <span><span className="cfg-mnm">{m.nm}</span><p className="cfg-mds">{locked ? `${m.min} joueurs minimum` : m.ds}</p></span>
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
-
-            {/* MANCHES */}
-            <div className="cfg-grp">
-              <div className="cfg-head">
-                <span className="cfg-ic-img"><img src="/ui/manche.png" alt="" draggable={false} /></span>
-                <div><h2 className="cfg-tt">Manches</h2><span className="cfg-sub">Réglage de la partie</span></div>
-              </div>
-              <div className="cfg-rounds">
-                <div className="cfg-rlab"><b>Nombre de manches</b>La partie s'arrête au bout du compte</div>
-                <div className="cfg-stepper">
-                  <button className="cfg-sbtn" onClick={() => setDrawRounds((r) => Math.max(2, r - 1))} disabled={!isHost} aria-label="Moins"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M5 12h14" /></svg></button>
-                  <div className="cfg-sval"><div className="cfg-svaln">{drawRounds}</div><div className="cfg-svalu">manches</div></div>
-                  <button className="cfg-sbtn" onClick={() => setDrawRounds((r) => Math.min(8, r + 1))} disabled={!isHost} aria-label="Plus"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg></button>
-                </div>
-              </div>
-            </div>
-
-            {/* THÈMES (repliable) */}
-            {drawMode !== "fakeartist" && drawMode !== "relay" && (() => {
-              const selCount = drawThemes.length === 0 ? DRAW_THEMES.length : drawThemes.length;
-              const allOn = drawThemes.length === 0;
-              return (
-                <div className="cfg-grp">
-                  <button
-                    onClick={() => setThemesOpen((o) => !o)}
-                    className="cfg-collapse"
-                    aria-expanded={themesOpen}
-                  >
-                    <span className="cfg-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11.5V5a2 2 0 0 1 2-2h6.5a2 2 0 0 1 1.4.6l7.5 7.5a2 2 0 0 1 0 2.8l-6.6 6.6a2 2 0 0 1-2.8 0L3.6 12.9A2 2 0 0 1 3 11.5Z" /><circle cx="7.5" cy="7.5" r="1.3" fill="currentColor" /></svg></span>
-                    <div className="min-w-0 flex-1"><h2 className="cfg-tt">Thèmes</h2><span className="cfg-sub">{themesOpen ? "Ce qui peut tomber" : `${selCount} sur ${DRAW_THEMES.length} sélectionnés`}</span></div>
-                    <span className={`cfg-choose${themesOpen ? "" : " pulse"}`}>
-                      {themesOpen ? "Fermer" : "Choisir"}
-                      <svg className="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" style={{ transform: themesOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
-                    </span>
-                  </button>
-                  {themesOpen && (
-                    <div className="mt-3">
-                      <div className="cfg-themesbar">
-                        <button className="cfg-toggleall" onClick={() => setDrawThemes([])} disabled={!isHost}>
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>
-                          Tout sélectionner
-                        </button>
-                        <span className="cfg-selnote"><b>{selCount}</b> thèmes sur {DRAW_THEMES.length}</span>
-                      </div>
-                      <div className="cfg-tags">
-                        {DRAW_THEMES.map((t) => {
-                          const on = allOn || drawThemes.includes(t);
-                          return (
-                            <button
-                              key={t}
-                              disabled={!isHost}
-                              onClick={() =>
-                                setDrawThemes((prev) => {
-                                  const base = prev.length === 0 ? [...DRAW_THEMES] : prev;
-                                  const next = base.includes(t) ? base.filter((x) => x !== t) : [...base, t];
-                                  return next.length === DRAW_THEMES.length ? [] : next;
-                                })
-                              }
-                              className={`cfg-tag${on ? " on" : ""}`}
-                            >
-                              {on && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>}
-                              {t}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
           </div>
-        )}
+
+          {/* MANCHES — nombre partagé, jamais modifié par un mode (SPEC §1) */}
+          <div className="cfg-grp">
+            <div className="cfg-head">
+              <span className="cfg-ic-img"><img src="/ui/manche.png" alt="" draggable={false} /></span>
+              <div><h2 className="cfg-tt">Manches</h2><span className="cfg-sub">Réglage de la partie</span></div>
+            </div>
+            <div className="cfg-rounds">
+              <div className="cfg-rlab"><b>Nombre de manches</b>La partie s'arrête au bout du compte</div>
+              <div className="cfg-stepper">
+                <button className="cfg-sbtn" onClick={() => setRounds((r) => Math.max(2, r - 1))} disabled={!isHost} aria-label="Moins"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M5 12h14" /></svg></button>
+                <div className="cfg-sval"><div className="cfg-svaln">{rounds}</div><div className="cfg-svalu">manches</div></div>
+                <button className="cfg-sbtn" onClick={() => setRounds((r) => Math.min(8, r + 1))} disabled={!isHost} aria-label="Plus"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg></button>
+              </div>
+            </div>
+          </div>
+
+          {/* TEMPS PAR TOUR — presets + saisie libre 5–300 s, mémoire par jeu (SPEC §3) */}
+          {(() => {
+            const tCfg = TIMES[selectedGame];
+            const custom = !tCfg.opts.includes(turnSeconds);
+            const hardcoreLocked = selectedGame === "bombe" && curMode === "hardcore";
+            const timeLocked = !isHost || hardcoreLocked;
+            const hint = hardcoreLocked
+              ? "Imposé en Hardcore : chrono partagé de 15 s, +2 s par bonne réponse."
+              : selectedGame === "draw" && curMode === "blind"
+                ? `Mode Aveugle : +25 % de temps automatiquement (${Math.round(turnSeconds * 1.25)}s).`
+                : selectedGame === "pixel" && curMode === "rush"
+                  ? `Mode Rush : révélation deux fois plus rapide (~${Math.round(turnSeconds / 2)}s réels).`
+                  : `S'applique à « ${GAME_META[selectedGame].label} ». Chaque jeu garde son propre réglage.`;
+            return (
+              <div className="cfg-grp">
+                <div className="cfg-time" style={{ opacity: hardcoreLocked ? 0.55 : undefined }}>
+                  <div className="cfg-time-head">
+                    <div className="cfg-rlab"><b>{tCfg.title}</b>{tCfg.sub}</div>
+                    <div className="cfg-time-val"><span className="n">{hardcoreLocked ? 15 : turnSeconds}</span><span className="u">sec</span></div>
+                  </div>
+                  <div className="cfg-time-opts">
+                    {tCfg.opts.map((v) => (
+                      <button
+                        key={v}
+                        onClick={() => setTime(selectedGame, v)}
+                        disabled={timeLocked}
+                        className={`cfg-timebtn${!hardcoreLocked && v === turnSeconds ? " on" : ""}`}
+                      >
+                        {v}s
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => {
+                        const raw = window.prompt("Temps par tour, en secondes (5 – 300)", String(turnSeconds));
+                        if (raw == null) return;
+                        const n = Math.max(5, Math.min(300, Math.round(Number(raw) || 0)));
+                        if (n) setTime(selectedGame, n);
+                      }}
+                      disabled={timeLocked}
+                      className={`cfg-timebtn perso${!hardcoreLocked && custom ? " on" : ""}`}
+                    >
+                      Perso
+                    </button>
+                  </div>
+                  <div className="cfg-time-hint">{hint}</div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* THÈMES — Boum Dessin uniquement, hors Faux-artiste / Relais */}
+          {selectedGame === "draw" && curMode !== "fakeartist" && curMode !== "relay" && (() => {
+            const selCount = drawThemes.length === 0 ? DRAW_THEMES.length : drawThemes.length;
+            const allOn = drawThemes.length === 0;
+            return (
+              <div className="cfg-grp">
+                <button
+                  onClick={() => setThemesOpen((o) => !o)}
+                  className="cfg-collapse"
+                  aria-expanded={themesOpen}
+                >
+                  <span className="cfg-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11.5V5a2 2 0 0 1 2-2h6.5a2 2 0 0 1 1.4.6l7.5 7.5a2 2 0 0 1 0 2.8l-6.6 6.6a2 2 0 0 1-2.8 0L3.6 12.9A2 2 0 0 1 3 11.5Z" /><circle cx="7.5" cy="7.5" r="1.3" fill="currentColor" /></svg></span>
+                  <div className="min-w-0 flex-1"><h2 className="cfg-tt">Thèmes</h2><span className="cfg-sub">{themesOpen ? "Ce qui peut tomber" : `${selCount} sur ${DRAW_THEMES.length} sélectionnés`}</span></div>
+                  <span className={`cfg-choose${themesOpen ? "" : " pulse"}`}>
+                    {themesOpen ? "Fermer" : "Choisir"}
+                    <svg className="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" style={{ transform: themesOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
+                  </span>
+                </button>
+                {themesOpen && (
+                  <div className="mt-3">
+                    <div className="cfg-themesbar">
+                      <button className="cfg-toggleall" onClick={() => setDrawThemes([])} disabled={!isHost}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>
+                        Tout sélectionner
+                      </button>
+                      <span className="cfg-selnote"><b>{selCount}</b> thèmes sur {DRAW_THEMES.length}</span>
+                    </div>
+                    <div className="cfg-tags">
+                      {DRAW_THEMES.map((t) => {
+                        const on = allOn || drawThemes.includes(t);
+                        return (
+                          <button
+                            key={t}
+                            disabled={!isHost}
+                            onClick={() =>
+                              setDrawThemes((prev) => {
+                                const base = prev.length === 0 ? [...DRAW_THEMES] : prev;
+                                const next = base.includes(t) ? base.filter((x) => x !== t) : [...base, t];
+                                return next.length === DRAW_THEMES.length ? [] : next;
+                              })
+                            }
+                            className={`cfg-tag${on ? " on" : ""}`}
+                          >
+                            {on && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>}
+                            {t}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </div>
       </section>
       )}
 
@@ -709,25 +685,7 @@ export default function LobbyPage() {
         {isHost &&
           (startable ? (
             <button
-              onClick={() =>
-                selectedGame === "subtitles"
-                  ? room.startGame("subtitles")
-                  : selectedGame === "mimic"
-                    ? room.startGame("mimic", { totalRounds: mimicRounds, recordSeconds: mimicRecord })
-                    : selectedGame === "quiz"
-                      ? room.startGame("quiz", { totalQuestions: quizCount, secondsPerQuestion: quizSecs, types: quizType })
-                      : selectedGame === "reco"
-                        ? room.startGame("reco", { totalQuestions: recoCount, secondsPerQuestion: recoSecs, category: recoCat })
-                        : selectedGame === "pixel"
-                          ? room.startGame("pixel", { totalQuestions: recoCount, secondsPerQuestion: recoSecs, category: recoCat })
-                          : selectedGame === "bombe"
-                          ? room.startGame("bombe", { lives: bombeLives, minSeconds: BOMBE_SPEEDS[bombeSpeed].min, maxSeconds: BOMBE_SPEEDS[bombeSpeed].max, minLetters: bombeLen === "3" ? 3 : 2, maxLetters: bombeLen === "2" ? 2 : 3 })
-                          : drawMode === "fakeartist"
-                            ? room.startGame("fakeartist", { totalRounds: drawRounds })
-                            : drawMode === "relay"
-                              ? room.startGame("relay", { totalRounds: drawRounds })
-                              : room.startGame("draw", { totalRounds: drawRounds, mode: drawMode, themes: drawThemes })
-              }
+              onClick={() => startSelectedGame()}
               className="arc arc-p arc-block"
             >
               Lancer la partie

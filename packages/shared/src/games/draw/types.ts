@@ -23,6 +23,7 @@ export interface DrawSettings {
   totalRounds: number;
   mode: string; // DrawMode id — "classic", "turbo", …
   themes?: string[]; // allowed themes; empty/undefined = all themes
+  seconds?: number; // host-chosen drawing time per turn (5–300); default per mode
 }
 
 export interface DrawTurnResult {
