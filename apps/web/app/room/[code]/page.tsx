@@ -333,37 +333,47 @@ export default function LobbyPage() {
         </div>
       )}
 
-      {/* hero: the room code + invite — the waiting room's real job */}
-      <section className="panel mb-8 p-6 text-center">
-        <p className="eyebrow mb-3">Code de la salle</p>
-        <div className="mb-5 flex items-center justify-center gap-4">
-          <div className="inset-well inline-flex gap-1.5 p-2.5">
+      {/* hero: the room code + invite — carte fidèle à la maquette */}
+      <section
+        className="mb-8 rounded-2xl border p-6 text-center"
+        style={{ borderColor: "#332A5A", backgroundImage: "linear-gradient(180deg, rgba(37,28,69,0.72), rgba(28,22,54,0.72))", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 0 rgba(255,255,255,0.02), 0 22px 44px -26px rgba(0,0,0,0.95)", backdropFilter: "blur(6px)" }}
+      >
+        <p style={{ margin: "0 0 12px", fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".16em", color: "#6E6796" }}>Code de la salle</p>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+          <div style={{ display: "inline-flex", gap: 6, padding: 10, borderRadius: 12, background: "rgba(14,11,26,0.8)", boxShadow: "inset 0 2px 10px rgba(0,0,0,0.55)" }}>
             {[...code].map((c, i) => (
               <span
                 key={i}
-                className="grid h-14 w-11 place-items-center rounded-lg border border-gold/40 bg-ink-deep font-mono text-2xl font-bold text-gold"
-                style={{ boxShadow: "0 0 20px rgba(255,194,75,0.18), inset 0 1px 0 rgba(255,255,255,0.06)", animation: `tilePop 0.5s cubic-bezier(0.34,1.56,0.64,1) ${(0.12 + i * 0.09).toFixed(2)}s both` }}
+                style={{ display: "grid", placeItems: "center", width: 44, height: 56, borderRadius: 8, border: "1px solid rgba(255,194,75,0.4)", background: "#0E0B1A", fontFamily: "'Space Mono', monospace", fontSize: 24, fontWeight: 700, color: "#FFC24B", boxShadow: "0 0 20px rgba(255,194,75,0.18), inset 0 1px 0 rgba(255,255,255,0.06)", animation: `tilePop 0.5s cubic-bezier(0.34,1.56,0.64,1) ${(0.12 + i * 0.09).toFixed(2)}s both` }}
               >
                 {c}
               </span>
             ))}
           </div>
         </div>
-        <div className="flex flex-wrap items-center justify-center gap-2.5">
-          <button
-            onClick={copyLink}
-            title="Copier le lien d'invitation"
-            aria-label="Copier le lien d'invitation"
-            className="relative inline-block transition-transform hover:scale-[1.03] active:scale-95"
-          >
-            <img src={UI.copyBtnGold} alt="Copier le lien d'invitation" className="h-[52px] w-auto select-none" draggable={false} />
-            {copied && (
-              <span className="absolute inset-0 grid place-items-center rounded-2xl bg-mint/15 font-display text-sm font-bold text-mint backdrop-blur-sm">
-                Lien copié ✓
-              </span>
+        <button
+          onClick={copyLink}
+          title="Copier le lien d'invitation"
+          aria-label="Copier le lien d'invitation"
+          className="lb-copy"
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "12px 20px 12px 14px", borderRadius: 999,
+            fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 700, fontSize: 14.5, lineHeight: 1,
+            border: `1px solid ${copied ? "rgba(70,224,176,.6)" : "rgba(255,194,75,.55)"}`,
+            background: copied ? "linear-gradient(180deg, rgba(70,224,176,.22), rgba(70,224,176,.08))" : "linear-gradient(180deg, rgba(255,194,75,.20), rgba(255,194,75,.06))",
+            color: copied ? "#8BF0CE" : "#FFD98A",
+            boxShadow: copied ? "0 5px 0 #17624a, 0 12px 22px -12px rgba(70,224,176,.55), inset 0 1px 0 rgba(255,255,255,.18)" : "0 5px 0 #8f620c, 0 12px 22px -12px rgba(255,194,75,.55), inset 0 1px 0 rgba(255,255,255,.18)",
+          }}
+        >
+          <span style={{ display: "grid", placeItems: "center", width: 28, height: 28, flex: "none", borderRadius: "50%", background: copied ? "rgba(70,224,176,.18)" : "rgba(255,194,75,.16)" }}>
+            {copied ? (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round"><path d="M10.5 13.5a4.5 4.5 0 0 0 6.4 0l2.1-2.1a4.5 4.5 0 0 0-6.4-6.4l-1 1" /><path d="M13.5 10.5a4.5 4.5 0 0 0-6.4 0L5 12.6a4.5 4.5 0 0 0 6.4 6.4l1-1" /></svg>
             )}
-          </button>
-        </div>
+          </span>
+          <span>{copied ? "Lien copié" : "Copier le lien d'invitation"}</span>
+        </button>
       </section>
 
       {/* players */}
