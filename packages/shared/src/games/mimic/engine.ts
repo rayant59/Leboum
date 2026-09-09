@@ -22,6 +22,9 @@ export const MIMIC_ROUNDS_MAX = 8;
 const RECENT_SOUNDS = 12;
 const POINTS_PER_VOTE = 100;
 const BEST_BONUS = 50;
+// Points de participation : récompense pour avoir réellement imité (prise non vide),
+// pour que le mode donne des points en autonomie même sans recevoir de vote.
+const PARTICIPATION_POINTS = 25;
 
 export function resolveMimicMode(mode: string | undefined): MimicMode {
   return mode === "chain" || mode === "duel" ? mode : "classic";
@@ -33,7 +36,7 @@ export function resolveMimicConfig(settings: MimicSettings): MimicConfig {
   return {
     totalRounds,
     mode: resolveMimicMode(settings.mode),
-    referenceMs: 6000,
+    referenceMs: 9000,
     countdownMs: 3000,
     recordMs: recordSec * 1000,
     processingMs: 2500,
@@ -381,7 +384,9 @@ function tally(state: MimicState, ctx: GameContext): MimicState {
   // classic
   for (const p of state.players) {
     const v = roundVotes[p.id] ?? 0;
-    scores[p.id] = (scores[p.id] ?? 0) + v * POINTS_PER_VOTE;
+    // A réellement joué sa prise (enregistrement non vide) → points de participation.
+    const performed = !!state.submitted[p.id] && !state.emptyTake[p.id];
+    scores[p.id] = (scores[p.id] ?? 0) + (performed ? PARTICIPATION_POINTS : 0) + v * POINTS_PER_VOTE;
     votesReceivedTotal[p.id] = (votesReceivedTotal[p.id] ?? 0) + v;
   }
   let maxV = 0;

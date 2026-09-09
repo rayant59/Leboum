@@ -328,12 +328,24 @@ function Listening({ room, game, isHost }: { room: UseRoom; game: MimicPublic; i
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [blocked, setBlocked] = useState(false);
   const totalRef = useRef<number>(0);
+  const skippedRef = useRef(false);
   const secs = useCountdown(game.deadline, room.serverNow);
   useEffect(() => {
     if (totalRef.current === 0 && secs != null) totalRef.current = Math.max(0.5, secs);
     const a = audioRef.current;
     if (a && game.sound?.src) { a.currentTime = 0; a.play().then(() => setBlocked(false)).catch(() => setBlocked(true)); }
   }, [game.sound?.src]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Dès que le son de référence est terminé, on passe à l'imitation sans attendre
+  // la deadline (l'hôte fait autorité : il déclenche le skip une seule fois).
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    const onEnded = () => {
+      if (isHost && !skippedRef.current) { skippedRef.current = true; room.skipPhase(); }
+    };
+    a.addEventListener("ended", onEnded);
+    return () => a.removeEventListener("ended", onEnded);
+  }, [isHost, room, game.sound?.src]);
   const total = totalRef.current || 4;
   const played = secs == null ? 0.46 : Math.max(0, Math.min(1, 1 - secs / total));
   const cur = Math.max(0, Math.round(total - (secs ?? 0)));

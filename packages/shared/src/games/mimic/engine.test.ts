@@ -116,7 +116,9 @@ test("vote : pas pour soi, un seul vote, tous votent → scoreboard + points", (
   eq(s.roundVotes["b"], 2, "b a 2 votes");
   eq(s.roundVotes["c"], 1, "c a 1 vote");
   assert(s.scores["b"] > s.scores["c"], "b marque plus que c");
-  assert(s.scores["a"] === 0, "a n'a reçu aucun vote");
+  eq(s.roundVotes["a"], 0, "a n'a reçu aucun vote");
+  // a n'a reçu aucun vote mais a fait sa prise → points de participation seuls.
+  eq(s.scores["a"], 25, "a n'a que les points de participation");
 });
 
 test("fin de partie après le nombre de manches → gagnant = meilleur score", () => {
