@@ -423,14 +423,18 @@ export default function LobbyPage() {
         </div>
 
         {maxPlayers - players.length > 0 && (
-          <div className="pl-slots">
-            {Array.from({ length: Math.min(maxPlayers - players.length, 8) }).map((_, i) => (
-              <div key={i} className="pl-slot">
-                <span className="pl-ring"><img src={UI.addPlayer} alt="" width={18} height={18} className="select-none" draggable={false} aria-hidden /></span>
-                <span>Place libre</span>
-              </div>
-            ))}
-          </div>
+          <button className="pl-invite" onClick={copyLink} title="Copier le lien d'invitation">
+            <span className="pl-seats">
+              {Array.from({ length: Math.min(maxPlayers - players.length, 7) }).map((_, i) => (
+                <span key={i} className="pl-seat" style={{ animationDelay: `${(i * 0.18).toFixed(2)}s` }}><span className="d" /></span>
+              ))}
+            </span>
+            <span className="pl-invite-txt">
+              <span className="t">{maxPlayers - players.length} place{maxPlayers - players.length > 1 ? "s" : ""} libre{maxPlayers - players.length > 1 ? "s" : ""}</span>
+              <span className="s">Partage le code pour les remplir</span>
+            </span>
+            <span className="pl-invite-cta"><img src={UI.addPlayer} alt="" width={15} height={15} className="select-none" draggable={false} aria-hidden />{copied ? "Lien copié ✓" : "Inviter"}</span>
+          </button>
         )}
       </section>
 
@@ -472,11 +476,13 @@ export default function LobbyPage() {
                 <button
                   key={c.id}
                   onClick={() => setSelectedGame(c.id)}
-                  className="group relative flex flex-col overflow-hidden rounded-2xl border p-4 text-left transition-all duration-200 hover:-translate-y-0.5"
+                  className="lb-gamecard group relative flex flex-col overflow-hidden rounded-2xl border p-4 text-left"
                   style={{
                     borderColor: sel ? c.tint : "#332A5A",
                     background: sel ? `linear-gradient(160deg, ${c.tintBg}, rgba(28,22,54,0.6) 60%)` : "rgba(28,22,54,0.55)",
-                    boxShadow: sel ? `0 0 0 1px ${c.tint}66, 0 14px 34px -18px ${c.tint}aa` : "none",
+                    boxShadow: sel
+                      ? `inset 0 1px 0 ${c.tint}59, 0 0 0 1px ${c.tint}66, 0 6px 0 -1px rgba(0,0,0,.4), 0 18px 34px -18px ${c.tint}aa`
+                      : "inset 0 1px 0 rgba(255,255,255,.05), 0 5px 0 -1px rgba(0,0,0,.35), 0 16px 28px -22px rgba(0,0,0,.9)",
                   }}
                 >
                   {/* decorative sparkles */}
