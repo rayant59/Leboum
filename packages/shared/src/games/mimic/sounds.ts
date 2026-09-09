@@ -60,12 +60,11 @@ export function setMimicSounds(sounds: MimicSound[]): void {
   });
 }
 
-/** Tous les sons disponibles : pack de démarrage + sons perso. */
+/** Sons jouables. Le manifeste (public/sounds/sounds.txt) fait AUTORITÉ : dès
+ *  qu'il contient des sons, ce sont les SEULS proposés (le pack de démarrage
+ *  n'est qu'un repli quand aucun manifeste n'est fourni). */
 export function mimicSounds(): MimicSound[] {
-  if (!CUSTOM_SOUNDS.length) return STARTER_SOUNDS;
-  // Les sons perso s'ajoutent au pack ; en cas d'id identique, le perso gagne.
-  const ids = new Set(CUSTOM_SOUNDS.map((s) => s.id));
-  return [...STARTER_SOUNDS.filter((s) => !ids.has(s.id)), ...CUSTOM_SOUNDS];
+  return CUSTOM_SOUNDS.length ? CUSTOM_SOUNDS : STARTER_SOUNDS;
 }
 
 export function mimicSoundCount(): number {
