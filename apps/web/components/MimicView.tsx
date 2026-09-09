@@ -399,14 +399,24 @@ function Recording({ room, game, mic, isHost }: { room: UseRoom; game: MimicPubl
     room.mimicAction({ kind: "take_done", empty: !hasAudio });
   }, [mic, room, game.round]);
 
+  // `finish` change d'identité à chaque frame (le micro re-render via son niveau).
+  // On garde une réf pour que l'envoi au démontage ne dépende PAS de `finish`
+  // (sinon la prise partait dès la 1re frame → la manche se terminait aussitôt).
+  const finishRef = useRef(finish);
+  finishRef.current = finish;
   useEffect(() => {
-    if (!active) return;
-    if (!startedRef.current && mic.status === "on") { startedRef.current = true; mic.startRecording(); }
-    playSound("start");
+    if (active) playSound("start");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  useEffect(() => { if (active && remaining <= 0.05 && !sentRef.current) void finish(false); }, [active, remaining, finish]);
-  useEffect(() => () => { if (active && !sentRef.current) void finish(false); }, [active, finish]);
+  // Démarre l'enregistrement dès que le micro est prêt (au montage ou juste après).
+  useEffect(() => {
+    if (active && !startedRef.current && mic.status === "on") { startedRef.current = true; mic.startRecording(); }
+  }, [active, mic.status]);
+  // Fin quand le chrono atteint 0 (garde-fou ; le serveur clôt aussi au deadline).
+  useEffect(() => { if (active && secs != null && secs <= 0.05 && !sentRef.current) void finish(false); }, [active, secs, finish]);
+  // Envoi de la prise UNIQUEMENT au vrai démontage (changement de phase), jamais
+  // sur un simple re-render.
+  useEffect(() => () => { if (!sentRef.current) void finishRef.current(false); }, []);
 
   const done = game.youSubmitted || sentRef.current;
   const mm = (s: number) => `0:${String(Math.max(0, Math.round(s))).padStart(2, "0")}`;
