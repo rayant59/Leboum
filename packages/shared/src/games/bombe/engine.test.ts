@@ -305,5 +305,58 @@ test("projection : usedLetters et letterEvent (complétion) exposés", () => {
   assert(pub.letterEvent?.gainedLife === true, "gain de vie exposé");
 });
 
+// --- Modes (SPEC §2) --------------------------------------------------------
+
+test("mode par défaut = classic ; inconnu → classic", () => {
+  eq(resolveBombeConfig({}).mode, "classic", "défaut classic");
+  eq(resolveBombeConfig({ mode: "xyz" }).mode, "classic", "inconnu → classic");
+});
+
+test("hardcore : chrono partagé 15 s au départ, ignore minSeconds/maxSeconds", () => {
+  const cfg = resolveBombeConfig({ mode: "hardcore", minSeconds: 20, maxSeconds: 25 });
+  eq(cfg.mode, "hardcore", "mode hardcore");
+  eq(cfg.minMs, 5000, "plancher 5 s imposé");
+  eq(cfg.maxMs, 15000, "plafond 15 s imposé (réglage ignoré)");
+  const s = started(players, { mode: "hardcore" }, ctx(1000));
+  const fuse = (s.deadline ?? 0) - s.turnStartedAt;
+  eq(fuse, 15000, `1er tour = 15 s (obtenu ${fuse})`);
+});
+
+test("hardcore : bon mot → le suivant hérite du temps restant + 2 s (borné 15 s)", () => {
+  const s0 = started(players, { mode: "hardcore" }, ctx(1000)); // deadline = 16000
+  const cur = s0.currentId!;
+  // On joue à t=9000 → il reste 7 s ; le suivant doit avoir min(15, 7+2)=9 s.
+  const r = reduceBombe(s0, submit(cur, wordWith(s0.syllable)), ctx(9000));
+  const s = r.state;
+  assert(s.currentId !== cur, "la bombe a changé de main");
+  const fuse = (s.deadline ?? 0) - s.turnStartedAt;
+  eq(fuse, 9000, `temps restant (7s) + 2s = 9s, obtenu ${fuse / 1000}s`);
+});
+
+test("hardcore : le hand-off ne dépasse jamais 15 s ni ne descend sous 5 s", () => {
+  const s0 = started(players, { mode: "hardcore" }, ctx(1000)); // 15s → deadline 16000
+  // On joue tout de suite (il reste ~15s) → 15+2 plafonné à 15.
+  const r1 = reduceBombe(s0, submit(s0.currentId!, wordWith(s0.syllable)), ctx(1001));
+  eq((r1.state.deadline ?? 0) - r1.state.turnStartedAt, 15000, "plafonné à 15 s");
+  // On joue à la toute dernière ms (reste ~0) → 0+2 mais plancher 5.
+  const r2 = reduceBombe(s0, submit(s0.currentId!, wordWith(s0.syllable)), ctx(15999));
+  eq((r2.state.deadline ?? 0) - r2.state.turnStartedAt, 5000, "plancher 5 s");
+});
+
+test("coop : la 1re explosion termine la partie, aucun joueur éliminé", () => {
+  const s0 = started(players, { mode: "coop", minSeconds: 5, maxSeconds: 5 }, ctx(1000));
+  // Deux bons mots pour gonfler le score collectif.
+  let s = reduceBombe(s0, submit(s0.currentId!, wordWith(s0.syllable)), ctx(1200)).state;
+  s = reduceBombe(s, submit(s.currentId!, wordWith(s.syllable)), ctx(1400)).state;
+  const before = projectBombe(s, "a").coopScore;
+  assert((before ?? 0) >= 2, "score collectif ≥ 2 mots");
+  // La bombe explose (échéance dépassée).
+  const boom = reduceBombe(s, { type: "advance" }, ctx((s.deadline ?? 0) + 1)).state;
+  eq(boom.phase, "gameover", "fin dès la 1re explosion");
+  assert(players.every((p) => (boom.lives[p.id] ?? 0) === (s.config.lives)), "aucune vie perdue (pas d'élimination)");
+  const pub = projectBombe(boom, "a");
+  assert(pub.coopScore != null && pub.coopScore >= 2, "score collectif exposé à la fin");
+});
+
 console.log(`\n${passed} réussis, ${failed} échoués\n`);
 if (failed > 0) process.exit(1);

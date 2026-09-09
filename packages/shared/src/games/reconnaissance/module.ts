@@ -10,6 +10,7 @@ function sanitize(input: unknown): RecoSettings {
     totalQuestions: typeof v?.totalQuestions === "number" ? v.totalQuestions : 10,
     secondsPerQuestion: typeof v?.secondsPerQuestion === "number" ? v.secondsPerQuestion : 15,
     category: typeof v?.category === "string" ? v.category : "all",
+    mode: typeof v?.mode === "string" ? v.mode : "classic",
   };
 }
 

@@ -6,7 +6,7 @@ export const MIMIC_GAME_ID = "mimic" as const;
 
 function sanitize(input: unknown): MimicSettings {
   const cfg = resolveMimicConfig((input ?? {}) as MimicSettings);
-  return { totalRounds: cfg.totalRounds, recordSeconds: Math.round(cfg.recordMs / 1000) };
+  return { totalRounds: cfg.totalRounds, recordSeconds: Math.round(cfg.recordMs / 1000), mode: cfg.mode };
 }
 
 export const mimicModule: GameModule<MimicState, MimicPublic, MimicSettings, MimicClientAction> = {

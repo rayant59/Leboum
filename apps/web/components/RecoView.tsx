@@ -118,8 +118,8 @@ function ImageFrame({
   );
 }
 
-function RecoImage({ wiki, wikiEn, localImg, accent, overlay, timeFrac }: {
-  wiki: string; wikiEn?: string; localImg?: string; accent: string; overlay?: string | null; timeFrac?: number | null;
+function RecoImage({ wiki, wikiEn, localImg, accent, overlay, timeFrac, zoom }: {
+  wiki: string; wikiEn?: string; localImg?: string; accent: string; overlay?: string | null; timeFrac?: number | null; zoom?: number | null;
 }) {
   const wikiState = useWikiImage(wiki, wikiEn);
   // A local image (dropped in public/reco/…) wins and never needs Wikipedia.
@@ -137,7 +137,18 @@ function RecoImage({ wiki, wikiEn, localImg, accent, overlay, timeFrac }: {
         </div>
       )}
       {url && (
-        <img src={url} alt="À reconnaître" draggable={false} onDragStart={(e) => e.preventDefault()} style={{ pointerEvents: "none", height: "100%", width: "100%", objectFit: "contain", userSelect: "none" }} />
+        <img
+          src={url}
+          alt="À reconnaître"
+          draggable={false}
+          onDragStart={(e) => e.preventDefault()}
+          style={{
+            pointerEvents: "none", height: "100%", width: "100%", objectFit: "contain", userSelect: "none",
+            // Mode Zoom : on part très zoomé (≈8×) et on dézoome jusqu'à 100 %
+            // au fil du temps restant (zoom = 1 + 7 × fraction restante).
+            ...(zoom != null ? { transform: `scale(${(1 + 7 * Math.max(0, Math.min(1, zoom))).toFixed(3)})`, transformOrigin: "center", transition: "transform .9s linear", willChange: "transform" } : {}),
+          }}
+        />
       )}
       {timeFrac != null && !overlay && url && (
         <div aria-hidden style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 5, background: C.lineFaint, pointerEvents: "none" }}>
@@ -333,8 +344,10 @@ export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boole
   if (game.phase === "final") return <FinalScreen game={game} you={you} room={room} />;
 
   // ── Dérivés visuels ──────────────────────────────────────────────────────
+  const isCoop = game.mode === "coop";
   const accent = pixel ? C.mint : C.violet;
-  const totalMs = game.secondsPerQuestion * 1000;
+  // Coop : la barre d'en-tête suit le chrono GLOBAL (manches × temps).
+  const totalMs = (isCoop ? game.total : 1) * game.secondsPerQuestion * 1000;
   const remaining = game.deadline != null ? Math.max(0, game.deadline - room.serverNow()) : 0;
   const frac = game.phase !== "question" ? 1 : totalMs > 0 ? Math.min(1, Math.max(0, 1 - remaining / totalMs)) : 0;
   const chip = pixel ? C.mint : C.violet;
@@ -368,8 +381,10 @@ export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boole
     };
   });
   const railKicker = pixel ? "Pixel incoming" : "Reconnaissance";
-  const railHeading = `Image ${game.index + 1} / ${game.total}`;
-  const railSub = game.phase === "reveal" ? "points de l'image" : `${game.answeredIds.length}/${game.players.length} ont trouvé`;
+  const railHeading = isCoop ? `Score : ${game.coopScore ?? 0}` : `Image ${game.index + 1} / ${game.total}`;
+  const railSub = isCoop
+    ? "images trouvées ensemble · chrono commun"
+    : game.phase === "reveal" ? "points de l'image" : `${game.answeredIds.length}/${game.players.length} ont trouvé`;
 
   // Ordre des trouvailles (révélation).
   const finders = game.ranking.filter((r) => r.correct).sort((a, b) => b.gained - a.gained);
@@ -404,6 +419,13 @@ export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boole
                   {item.category}
                 </span>
               )}
+              {isCoop && (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "5px 12px", borderRadius: 999, background: hexA(C.mint, 0.14), boxShadow: `inset 0 0 0 1px ${hexA(C.mint, 0.5)}`, color: C.mint }}>
+                  <span style={{ fontSize: 13 }}>🤝</span>
+                  <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 15 }}>{game.coopScore ?? 0}</span>
+                  <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".14em", color: hexA(C.mint, 0.85) }}>trouvées</span>
+                </span>
+              )}
             </span>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 12 }}>
               {game.phase === "question" && pixel && secs != null && (
@@ -434,7 +456,7 @@ export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boole
                     wiki={item.wiki}
                     wikiEn={item.wikiEn}
                     localImg={item.img}
-                    deadline={game.deadline}
+                    deadline={game.revealDeadline}
                     totalMs={game.secondsPerQuestion * 1000}
                     serverNow={room.serverNow}
                     revealed={game.phase !== "question"}
@@ -448,6 +470,7 @@ export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boole
                     accent={accent}
                     overlay={game.phase === "reveal" ? game.correctText : null}
                     timeFrac={game.phase === "question" ? frac : null}
+                    zoom={game.mode === "zoom" && game.phase === "question" ? frac : null}
                   />
                 )}
 
@@ -529,12 +552,33 @@ export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boole
 }
 
 function FinalScreen({ game, you, room }: { game: RecoPublic; you: string | null; room: UseRoom }) {
+  const isHost = room.state?.hostId === you;
+  // Coop : écran collectif « Score de la table » (pas de classement individuel).
+  if (game.coopScore != null) {
+    return (
+      <main className="rc-scope" style={{ minHeight: "100dvh", background: C.bg, color: C.text, fontFamily: BODY, display: "flex", flexDirection: "column", position: "relative" }}>
+        <BoumBackdrop />
+        <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, padding: 24, textAlign: "center" }}>
+          <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".2em", color: C.faint }}>Score de la table</span>
+          <span style={{ fontSize: 52 }}>🤝</span>
+          <span style={{ fontFamily: DISPLAY, fontSize: 92, fontWeight: 800, lineHeight: 1, color: C.mint, textShadow: `0 0 44px ${hexA(C.mint, 0.5)}` }}>{game.coopScore}</span>
+          <span style={{ fontFamily: DISPLAY, fontSize: 18, fontWeight: 700 }}>images trouvées ensemble avant la fin du chrono</span>
+          <span style={{ fontSize: 13, color: C.faint }}>{game.players.length} joueur·euses · battez votre record du salon !</span>
+          <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
+            {isHost && <button onClick={() => room.returnLobby()} className="rc-ghost" style={{ borderRadius: 12, border: `1px solid ${C.line}`, background: "transparent", padding: "12px 20px", fontFamily: DISPLAY, fontWeight: 700, fontSize: 15, color: C.muted, cursor: "pointer" }}>Salon</button>}
+            {isHost && <button onClick={() => room.playAgain()} className="rc-gold" style={{ borderRadius: 12, border: "none", background: `linear-gradient(180deg, ${C.mint}, #2FB48C)`, padding: "12px 24px", fontFamily: DISPLAY, fontWeight: 800, fontSize: 15, color: "#06231a", cursor: "pointer" }}>Rejouer</button>}
+            {!isHost && <span style={{ fontSize: 13, color: C.faint, alignSelf: "center" }}>L'hôte relance la partie…</span>}
+          </div>
+        </div>
+      </main>
+    );
+  }
   return (
     <ResultsScreen
       ranking={game.ranking.map((r) => ({ id: r.id, name: r.name, color: r.color, avatar: r.avatar, score: r.score }))}
       you={you}
       stats={game.stats}
-      isHost={room.state?.hostId === you}
+      isHost={isHost}
       onReturn={() => room.returnLobby()}
       onReplay={() => room.playAgain()}
     />

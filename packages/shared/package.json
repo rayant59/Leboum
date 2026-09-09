@@ -9,7 +9,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "test": "tsx src/room/engine.test.ts && tsx src/game/subtitles.test.ts && tsx src/game/settings.test.ts && tsx src/game/twists.test.ts && tsx src/games/draw/engine.test.ts && tsx src/games/bombe/engine.test.ts && tsx src/games/mimic/engine.test.ts",
+    "test": "tsx src/room/engine.test.ts && tsx src/game/subtitles.test.ts && tsx src/game/settings.test.ts && tsx src/game/twists.test.ts && tsx src/games/draw/engine.test.ts && tsx src/games/bombe/engine.test.ts && tsx src/games/mimic/engine.test.ts && tsx src/games/quiz/engine.test.ts && tsx src/games/reconnaissance/engine.test.ts && tsx src/games/relay/engine.test.ts && tsx src/games/fakeartist/engine.test.ts && tsx src/games/doublage/engine.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "description": "",

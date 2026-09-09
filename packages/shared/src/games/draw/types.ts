@@ -102,4 +102,5 @@ export interface DrawPublic {
   result: DrawTurnResult | null; // present during reveal/scoreboard
   config: DrawConfig;
   mode: string;
+  coopScore: number | null; // mode coop : total d'équipe (somme), sinon null
 }

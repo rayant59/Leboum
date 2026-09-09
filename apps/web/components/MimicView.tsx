@@ -384,6 +384,10 @@ function Recording({ room, game, mic, isHost }: { room: UseRoom; game: MimicPubl
   const sentRef = useRef(false);
   const startedRef = useRef(false);
 
+  // Modes Chaîne / Duel : seuls les joueurs « actifs » enregistrent. Les autres
+  // regardent (le serveur ignore de toute façon leurs prises).
+  const active = game.youActive;
+
   const finish = useCallback(async (empty = false) => {
     if (sentRef.current) return;
     sentRef.current = true;
@@ -396,22 +400,50 @@ function Recording({ room, game, mic, isHost }: { room: UseRoom; game: MimicPubl
   }, [mic, room, game.round]);
 
   useEffect(() => {
+    if (!active) return;
     if (!startedRef.current && mic.status === "on") { startedRef.current = true; mic.startRecording(); }
     playSound("start");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  useEffect(() => { if (remaining <= 0.05 && !sentRef.current) void finish(false); }, [remaining, finish]);
-  useEffect(() => () => { if (!sentRef.current) void finish(false); }, [finish]);
+  useEffect(() => { if (active && remaining <= 0.05 && !sentRef.current) void finish(false); }, [active, remaining, finish]);
+  useEffect(() => () => { if (active && !sentRef.current) void finish(false); }, [active, finish]);
 
   const done = game.youSubmitted || sentRef.current;
-  const mm = (s: number) => `0:0${Math.max(0, Math.round(s))}`;
+  const mm = (s: number) => `0:${String(Math.max(0, Math.round(s))).padStart(2, "0")}`;
+
+  // Libellés de contexte (mode).
+  const nameOf = (id: string | null) => (id ? game.players.find((p) => p.id === id)?.name ?? "?" : "?");
+  const chainHint = game.mode === "chain"
+    ? (game.chainHearsId ? `imite l'imitation de ${nameOf(game.chainHearsId)}` : "imite le son d'origine")
+    : null;
+
+  // Spectateur (non actif) : panneau d'attente clair selon le mode.
+  if (!active) {
+    const recorders = game.activeIds.map(nameOf);
+    const who = game.mode === "duel"
+      ? `Duel : ${recorders.join(" vs ")}`
+      : game.mode === "chain"
+        ? `Au tour de ${nameOf(game.chainRecorderId)} — ${chainHint}`
+        : "Enregistrement en cours…";
+    return (
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 34, textAlign: "center" }}>
+        <span style={{ fontSize: 40 }}>🎧</span>
+        <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 24, color: LB.text }}>{who}</span>
+        <span style={{ fontSize: 14, color: LB.muted }}>
+          {game.mode === "duel" ? "Écoute bien : c'est toi qui votes pour la meilleure imitation." : "Écoute : la chaîne se transmet une voix après l'autre."}
+        </span>
+        <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 15, color: LB.mint }}>{mm(total - remaining)} / {mm(total)}</span>
+        {skipBtn(room, isHost, game.phase)}
+      </div>
+    );
+  }
 
   return (
     <>
       <div className="dv-head" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "18px 34px 12px", flexWrap: "wrap" }}>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 12 }}>
           <span data-lb-anim style={{ width: 9, height: 9, borderRadius: "50%", background: LB.pink, animation: "lbPulseSoft 1.4s ease-in-out infinite" }} />
-          <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 26 }}>Reproduis le son</span>
+          <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 26 }}>{game.mode === "chain" ? (game.chainHearsId ? `Imite ${nameOf(game.chainHearsId)}` : "Imite le son") : "Reproduis le son"}</span>
         </span>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 12 }}>
           <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 17, color: LB.mint }}>{mm(total - remaining)} / {mm(total)}</span>
@@ -500,6 +532,9 @@ function Playback({ room, game, you, name, color, avatarOf, isHost }: { room: Us
 // ═══════ VOTING — vote interactif ════════════════════════════════════════════
 function Voting({ room, game, you, isHost }: { room: UseRoom; game: MimicPublic; you: string; isHost: boolean }) {
   const voted = !!game.yourVote;
+  // Duel : seuls les 2 duellistes sont votables, et eux ne votent pas.
+  const voteTargets = game.mode === "duel" ? game.players.filter((p) => game.activeIds.includes(p.id)) : game.players;
+  const canIVote = game.mode === "duel" ? !game.youActive : true;
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playSrc, setPlaySrc] = useState<string | null>(null);
   const playTake = (pid: string) => {
@@ -512,15 +547,15 @@ function Voting({ room, game, you, isHost }: { room: UseRoom; game: MimicPublic;
   return (
     <>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "18px 34px 8px" }}>
-        <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 26 }}>Vote pour la meilleure imitation</span>
+        <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 26 }}>{game.mode === "chain" ? "Qui a gardé le son d'origine ?" : "Vote pour la meilleure imitation"}</span>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: LB.faint }}>{game.votedIds.length}/{game.players.length} ont voté</span>
+          <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: LB.faint }}>{game.votedIds.length}/{game.mode === "duel" ? Math.max(0, game.players.length - 2) : game.players.length} ont voté</span>
           {skipBtn(room, isHost, game.phase)}
         </span>
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: 12, padding: "0 34px" }}>
-        {game.sound && <p style={{ fontSize: 13, color: LB.faint, textAlign: "center", marginBottom: 4 }}>Son : <b style={{ color: LB.text }}>{cat?.emoji} {game.sound.name}</b> · pas de vote pour toi-même</p>}
-        {game.players.map((p) => {
+        {game.sound && <p style={{ fontSize: 13, color: LB.faint, textAlign: "center", marginBottom: 4 }}>Son : <b style={{ color: LB.text }}>{cat?.emoji} {game.sound.name}</b>{game.mode === "duel" && game.youActive ? " · tu es en duel, le salon vote" : " · pas de vote pour toi-même"}</p>}
+        {voteTargets.map((p) => {
           const isYou = p.id === you;
           const picked = game.yourVote === p.id;
           const hasTake = !!room.voiceTakes.get(`${game.round}:${p.id}`);
@@ -531,7 +566,7 @@ function Voting({ room, game, you, isHost }: { room: UseRoom; game: MimicPublic;
               <span style={{ flex: 1, minWidth: 0, fontFamily: DISPLAY, fontWeight: 700, fontSize: 17, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}{isYou && <span style={{ color: LB.faint, fontWeight: 600 }}> · toi</span>}</span>
               {picked
                 ? <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: LB.gold }}>⭐ voté</span>
-                : <button onClick={() => room.mimicAction({ kind: "vote", targetId: p.id })} disabled={isYou || voted} className={isYou || voted ? undefined : "lb-gold"} style={isYou || voted
+                : <button onClick={() => room.mimicAction({ kind: "vote", targetId: p.id })} disabled={isYou || voted || !canIVote} className={isYou || voted || !canIVote ? undefined : "lb-gold"} style={isYou || voted || !canIVote
                     ? { flex: "none", border: `1px solid ${LB.line}`, background: "transparent", color: LB.faint, fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, padding: "10px 16px", borderRadius: 12, cursor: "default" }
                     : { flex: "none", border: "none", borderRadius: 12, padding: "11px 18px", fontFamily: DISPLAY, fontWeight: 700, fontSize: 14, background: LB.gold, color: LB.ink, cursor: "pointer", boxShadow: `0 4px 0 ${LB.goldSh}` }}>{game.votedIds.includes(p.id) ? "a voté" : "Voter ⭐"}</button>}
             </div>

@@ -4,8 +4,13 @@ import type { RecoItem } from "./bank";
 
 export type RecoPhase = "question" | "reveal" | "final";
 
-export interface RecoConfig { totalQuestions: number; secondsPerQuestion: number; category: string }
-export interface RecoSettings { totalQuestions?: number; secondsPerQuestion?: number; category?: string }
+/** Modes partagés par Œil de Boum (reco) et Pixel Panic (pixel).
+ *  reco : classic · zoom · theme — pixel : classic · rush · coop.
+ *  Tout mode non géré par un jeu retombe sur `classic`. */
+export type RecoMode = "classic" | "zoom" | "theme" | "rush" | "coop";
+
+export interface RecoConfig { totalQuestions: number; secondsPerQuestion: number; category: string; mode: RecoMode }
+export interface RecoSettings { totalQuestions?: number; secondsPerQuestion?: number; category?: string; mode?: string }
 export interface RecoAnswer { value: string; at: number }
 
 export interface RecoState {
@@ -25,6 +30,12 @@ export interface RecoState {
   bestStreak: Record<PlayerId, number>;
   fastMs: Record<PlayerId, number>;
   goodCount: Record<PlayerId, number>;
+  // Mode coop (Pixel) : chrono GLOBAL partagé + score collectif. `deadline`
+  // porte alors le chrono global ; `revealAt` la fin de révélation de l'image
+  // courante, et `coopScore` le nombre d'images trouvées par la table.
+  coopScore: number;
+  revealAt: number | null;
+  lastFoundBy: PlayerId | null; // dernier joueur à avoir trouvé (flash coop)
 }
 
 export type RecoClientAction = { kind: "answer"; value: string };
@@ -39,6 +50,7 @@ export interface RecoRankRow {
 export interface RecoPublic {
   phase: RecoPhase;
   players: GamePlayer[];
+  mode: RecoMode;
   index: number;
   total: number;
   item: PublicRecoItem | null; // never carries the answer during "question"
@@ -53,4 +65,9 @@ export interface RecoPublic {
   nextWiki: string | null; // reveal only: next subject, for image preloading
   nextWikiEn: string | null;
   stats: { fastest: string | null; brain: string | null; streak: string | null } | null;
+  // coop (Pixel) : score collectif + fin de révélation de l'image courante
+  // (le chrono d'en-tête reste `deadline`, qui porte le chrono global).
+  coopScore: number | null;
+  revealDeadline: number | null;
+  lastFoundBy: PlayerId | null;
 }

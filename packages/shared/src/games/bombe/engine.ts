@@ -16,7 +16,7 @@ import type { GamePlayer } from "../../game/types";
 import type { PlayerId } from "../../room/types";
 import type { GameAction, GameContext, GameError, GameReduceResult } from "../../platform/types";
 import { bombeNormalize, bombeWordMatches, isBombeWord, pickBombeSyllable, bombeExampleWords } from "./dictionary";
-import type { BombeConfig, BombePublic, BombeRankRow, BombeSettings, BombeState } from "./types";
+import type { BombeConfig, BombeMode, BombePublic, BombeRankRow, BombeSettings, BombeState } from "./types";
 
 export const BOMBE_LIVES_MIN = 1;
 export const BOMBE_LIVES_MAX = 10;
@@ -42,14 +42,30 @@ export function bombeWordLetters(normalized: string): string[] {
   return out;
 }
 
+/** Mode Hardcore : chrono partagé (SPEC §2). */
+export const HARDCORE_START_MS = 15_000;
+export const HARDCORE_STEP_MS = 2_000;
+export const HARDCORE_FLOOR_MS = 5_000;
+export const HARDCORE_CAP_MS = 15_000;
+
+export function resolveBombeMode(mode: string | undefined): BombeMode {
+  return mode === "hardcore" || mode === "coop" ? mode : "classic";
+}
+
 export function resolveBombeConfig(settings: BombeSettings): BombeConfig {
+  const mode = resolveBombeMode(settings.mode);
   const lives = clamp(settings.lives ?? 3, BOMBE_LIVES_MIN, BOMBE_LIVES_MAX);
   let minS = clamp(settings.minSeconds ?? 5, BOMBE_SEC_MIN, BOMBE_SEC_MAX);
   let maxS = clamp(settings.maxSeconds ?? 12, BOMBE_SEC_MIN, BOMBE_SEC_MAX);
   if (maxS < minS) [minS, maxS] = [maxS, minS];
   const minLetters = clamp(settings.minLetters ?? 2, 2, 3);
   const maxLetters = clamp(Math.max(settings.maxLetters ?? 3, minLetters), 2, 3);
-  return { lives, minMs: minS * 1000, maxMs: maxS * 1000, minLetters, maxLetters };
+  // Hardcore : la fenêtre de temps est imposée (5–15 s) et sert de bornes
+  // d'affichage pour la mèche ; le réglage « temps par joueur » est ignoré.
+  if (mode === "hardcore") {
+    return { lives, minMs: HARDCORE_FLOOR_MS, maxMs: HARDCORE_CAP_MS, minLetters, maxLetters, mode };
+  }
+  return { lives, minMs: minS * 1000, maxMs: maxS * 1000, minLetters, maxLetters, mode };
 }
 
 function clamp(n: number, lo: number, hi: number): number {
@@ -77,8 +93,14 @@ function randomFuse(cfg: BombeConfig, rng: () => number): number {
   return Math.round(cfg.minMs + rng() * (cfg.maxMs - cfg.minMs));
 }
 
-/** Prépare un nouveau tour : syllabe fraîche + minuteur aléatoire. */
-function armTurn(state: BombeState, currentId: PlayerId, ctx: GameContext): BombeState {
+/** Hardcore : temps transmis au joueur suivant = temps restant + 2 s, borné 5–15 s. */
+function hardcoreHandoffMs(prevRemainingMs: number): number {
+  return Math.max(HARDCORE_FLOOR_MS, Math.min(HARDCORE_CAP_MS, Math.round(prevRemainingMs) + HARDCORE_STEP_MS));
+}
+
+/** Prépare un nouveau tour : syllabe fraîche + minuteur.
+ *  `fuseMs` force la durée (mode Hardcore : chrono partagé) ; sinon aléatoire. */
+function armTurn(state: BombeState, currentId: PlayerId, ctx: GameContext, fuseMs?: number): BombeState {
   const syllable = pickBombeSyllable(ctx.rng, {
     minLetters: state.config.minLetters,
     maxLetters: state.config.maxLetters,
@@ -90,7 +112,7 @@ function armTurn(state: BombeState, currentId: PlayerId, ctx: GameContext): Bomb
     currentId,
     syllable,
     turnStartedAt: ctx.now,
-    deadline: ctx.now + randomFuse(state.config, ctx.rng),
+    deadline: ctx.now + (fuseMs != null ? fuseMs : randomFuse(state.config, ctx.rng)),
     // NB : exampleWords/exampleSyllable/exampleVictimId NE sont PAS effacés ici —
     // ils restent affichés jusqu'à la prochaine explosion.
     recentSyllables: [syllable, ...state.recentSyllables].slice(0, RECENT_SYLLABLES),
@@ -228,13 +250,19 @@ export function reduceBombe(
         justExploded: null,
       };
       if (next == null) return ok(checkOver(advanced));
-      return ok(armTurn(advanced, next, ctx));
+      // Hardcore : le chrono PARTAGÉ passe au suivant (temps restant + 2 s, borné).
+      const handoff =
+        state.config.mode === "hardcore"
+          ? hardcoreHandoffMs(state.deadline != null ? state.deadline - ctx.now : HARDCORE_CAP_MS)
+          : undefined;
+      return ok(armTurn(advanced, next, ctx, handoff));
     }
 
     case "advance": {
       // Fin du décompte de départ → on arme le tout premier tour.
       if (state.phase === "countdown") {
-        return ok(armTurn(state, state.currentId ?? state.order[0] ?? "", ctx));
+        const startFuse = state.config.mode === "hardcore" ? HARDCORE_START_MS : undefined;
+        return ok(armTurn(state, state.currentId ?? state.order[0] ?? "", ctx, startFuse));
       }
       if (state.phase !== "playing") return ok(state);
 
@@ -247,19 +275,39 @@ export function reduceBombe(
           pendingNext: null,
           justExploded: null,
         };
+        // Hardcore : après une explosion, le chrono partagé repart à 15 s.
+        const resumeFuse = state.config.mode === "hardcore" ? HARDCORE_START_MS : undefined;
         const target = state.pendingNext;
         if (target == null || (state.lives[target] ?? 0) <= 0) {
           // le suivant prévu n'est plus jouable → on recalcule
           const alt = nextPlayer(resumed, state.currentId ?? target ?? "");
           if (alt == null) return ok(checkOver(resumed));
-          return ok(armTurn(resumed, alt, ctx));
+          return ok(armTurn(resumed, alt, ctx, resumeFuse));
         }
-        return ok(armTurn(resumed, target, ctx));
+        return ok(armTurn(resumed, target, ctx, resumeFuse));
       }
 
       // Premier tic : l'échéance est atteinte → EXPLOSION sur le joueur courant.
       if (state.currentId == null) return ok(state);
       const victim = state.currentId;
+      // Coop : la bombe saute → fin immédiate, personne n'est éliminé.
+      // Score collectif = nombre de mots validés par la table avant l'explosion.
+      if (state.config.mode === "coop") {
+        return ok({
+          ...state,
+          phase: "gameover",
+          deadline: null,
+          currentId: null,
+          winnerId: null,
+          justExploded: victim,
+          letterEvent: null,
+          exampleWords: bombeExampleWords(state.syllable, 4, ctx.rng, state.usedWords),
+          exampleSyllable: state.syllable,
+          exampleVictimId: victim,
+          lastWord: null,
+          lastWordBy: null,
+        });
+      }
       const remaining = Math.max(0, (state.lives[victim] ?? 0) - 1);
       const lives = { ...state.lives, [victim]: remaining };
       const eliminated = remaining === 0 ? [...state.eliminated, victim] : state.eliminated;
@@ -385,6 +433,8 @@ export function projectBombe(state: BombeState, viewerId: PlayerId): BombePublic
     exampleSyllable: state.exampleSyllable,
     exampleVictimId: state.exampleVictimId,
     winnerId: state.winnerId,
+    mode: state.config.mode,
+    coopScore: state.config.mode === "coop" ? state.usedWords.length : null,
     stats,
   };
 }

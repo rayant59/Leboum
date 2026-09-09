@@ -403,22 +403,32 @@ export function BombeView({ room }: { room: UseRoom }) {
           {Sidebar}
           <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ height: 3, background: `linear-gradient(90deg,transparent,${C.gold} 5%,${C.gold} 95%,transparent)` }} />
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 26, padding: 24 }}>
-              <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: C.faint }}>Survivant·e</span>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-                <span style={{ boxShadow: `0 0 60px -18px ${winner?.color ?? C.violet}` }}>
-                  <Plate name={winner?.name ?? "?"} color={winner?.color} size={92} />
-                </span>
-                <span style={{ fontFamily: DISPLAY, fontSize: 58, fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1 }}>{winner?.name ?? "—"}</span>
+            {game.coopScore != null ? (
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 22, padding: 24 }}>
+                <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: C.faint }}>Score de la table</span>
+                <span style={{ fontSize: 52 }}>🤝</span>
+                <span style={{ fontFamily: DISPLAY, fontSize: 84, fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1, color: C.mint, textShadow: "0 0 40px rgba(70,224,176,.5)" }}>{game.coopScore}</span>
+                <span style={{ fontFamily: DISPLAY, fontSize: 18, fontWeight: 700, color: C.text }}>mots tenus ensemble avant l'explosion</span>
+                <span style={{ fontSize: 13, color: C.faint }}>{game.players.length} joueur·euses · battez votre record du salon !</span>
               </div>
-              <div style={{ display: "flex", alignItems: "stretch" }}>
-                <Stat n={winner?.wordsFound ?? 0} label="mots" />
-                <div style={{ width: 1, background: `linear-gradient(180deg,transparent,rgba(243,238,255,.16),transparent)` }} />
-                <Stat n={winner?.lives ?? 0} label="vies restantes" />
-                <div style={{ width: 1, background: `linear-gradient(180deg,transparent,rgba(243,238,255,.16),transparent)` }} />
-                <Stat n={wLetters} label="lettres" />
+            ) : (
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 26, padding: 24 }}>
+                <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: C.faint }}>Survivant·e</span>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+                  <span style={{ boxShadow: `0 0 60px -18px ${winner?.color ?? C.violet}` }}>
+                    <Plate name={winner?.name ?? "?"} color={winner?.color} size={92} />
+                  </span>
+                  <span style={{ fontFamily: DISPLAY, fontSize: 58, fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1 }}>{winner?.name ?? "—"}</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "stretch" }}>
+                  <Stat n={winner?.wordsFound ?? 0} label="mots" />
+                  <div style={{ width: 1, background: `linear-gradient(180deg,transparent,rgba(243,238,255,.16),transparent)` }} />
+                  <Stat n={winner?.lives ?? 0} label="vies restantes" />
+                  <div style={{ width: 1, background: `linear-gradient(180deg,transparent,rgba(243,238,255,.16),transparent)` }} />
+                  <Stat n={wLetters} label="lettres" />
+                </div>
               </div>
-            </div>
+            )}
             <div style={{ padding: "0 clamp(16px,4vw,40px) 34px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", padding: "22px 26px", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 1px ${C.line}, inset 0 1px 0 rgba(243,238,255,.04)` }}>
                 <span style={{ flex: 1, minWidth: 180, display: "flex", flexDirection: "column", gap: 3 }}>

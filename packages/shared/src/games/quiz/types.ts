@@ -4,16 +4,22 @@ import type { Question, QuizType } from "./questions";
 
 export type QuizPhase = "question" | "reveal" | "final";
 
+/** Modes de jeu du Quiz (SPEC §2). `classic` par défaut ; le moteur retombe
+ *  sur `classic` pour `teams` en dessous de 4 joueurs. */
+export type QuizMode = "classic" | "speed" | "survival" | "teams";
+
 export interface QuizConfig {
   totalQuestions: number;
   secondsPerQuestion: number;
   types: "all" | QuizType;
+  mode: QuizMode;
 }
 
 export interface QuizSettings {
   totalQuestions?: number;
   secondsPerQuestion?: number;
   types?: "all" | QuizType;
+  mode?: string;
 }
 
 export interface QuizAnswer {
@@ -38,6 +44,8 @@ export interface QuizState {
   bestStreak: Record<PlayerId, number>;
   fastMs: Record<PlayerId, number>; // fastest correct answer time (ms), for stats
   goodCount: Record<PlayerId, number>;
+  lives: Record<PlayerId, number>; // mode survival : vies restantes (éliminé à 0)
+  teamOf: Record<PlayerId, number>; // mode teams : 0 ou 1 (équipe auto-équilibrée)
 }
 
 export type QuizClientAction = { kind: "answer"; value: number | boolean | string };
@@ -60,16 +68,23 @@ export interface QuizRankRow {
   gained: number;
   correct: boolean;
   answered: boolean;
+  lives?: number; // survival
+  eliminated?: boolean; // survival
+  team?: number; // teams (0/1)
 }
 
 export interface QuizPublic {
   phase: QuizPhase;
   players: GamePlayer[];
+  mode: QuizMode;
   index: number; // 0-based
   total: number;
   question: PublicQuestion | null;
   deadline: number | null;
   secondsPerQuestion: number;
+  yourLives: number | null; // survival : vies du spectateur (null hors survival)
+  yourEliminated: boolean; // survival
+  teamScores: [number, number] | null; // teams : score cumulé par équipe
   answeredIds: PlayerId[]; // who has answered (not what)
   yourAnswer: number | boolean | string | null;
   ranking: QuizRankRow[]; // sorted desc by score

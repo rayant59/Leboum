@@ -26,6 +26,7 @@ const C = {
   pink: "#FF4D8D",
   pinkSh: "#8C2A4E",
   violet: "#8B7DF6",
+  cyan: "#4FC3F7",
 };
 const DISPLAY = "'Bricolage Grotesque', system-ui, sans-serif";
 const MONO = "'Bricolage Grotesque', system-ui, sans-serif";
@@ -149,12 +150,15 @@ export function QuizView({ room }: { room: UseRoom }) {
       score = r.score.toLocaleString("fr-FR");
     }
 
+    const teamColor = r.team === 1 ? C.cyan : C.pink;
+    const eliminated = !!r.eliminated;
     return (
       <div
         key={r.id}
         style={{
           position: "relative", display: "flex", alignItems: "center", gap: 12,
           padding: accent ? "12px 14px 12px 16px" : "12px 14px", borderRadius: 14,
+          opacity: eliminated ? 0.45 : 1,
           ...(accent ? accentBox(accent) : { boxShadow: `0 0 0 1px ${C.line}` }),
         }}
       >
@@ -162,11 +166,23 @@ export function QuizView({ room }: { room: UseRoom }) {
         {rank != null && (
           <span style={{ flex: "none", width: 14, fontFamily: DISPLAY, fontWeight: 700, fontSize: 12, color: i === 0 ? C.mint : C.faint }}>{rank}</span>
         )}
+        {r.team != null && <span style={{ flex: "none", width: 6, height: 6, borderRadius: 6, background: teamColor, boxShadow: `0 0 8px -1px ${teamColor}` }} title={`Équipe ${r.team === 1 ? "B" : "A"}`} />}
         <Avatar name={r.name} color={r.color} avatar={r.avatar} size={34} />
         <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 3 }}>
           <span style={{ fontSize: 14, fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {r.name}{isYou && <span style={{ color: C.faint, fontWeight: 400 }}> · toi</span>}
           </span>
+          {r.lives != null && (
+            <span style={{ display: "flex", gap: 2, alignItems: "center", fontSize: 10 }}>
+              {eliminated ? (
+                <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".12em", color: C.faint }}>éliminé</span>
+              ) : (
+                Array.from({ length: 3 }).map((_, k) => (
+                  <span key={k} style={{ color: k < (r.lives ?? 0) ? C.pink : C.dim, lineHeight: 1 }}>♥</span>
+                ))
+              )}
+            </span>
+          )}
           {meta && (
             <span style={{ display: "flex", gap: 3, alignItems: "center" }}>
               <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 11, color: meta.c }}>{meta.t}</span>
@@ -190,6 +206,22 @@ export function QuizView({ room }: { room: UseRoom }) {
         <span style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.1 }}>{railHeading}</span>
         <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 12, color: C.faint }}>{railSub}</span>
       </div>
+      {game.teamScores && (
+        <div style={{ display: "flex", gap: 8 }}>
+          {([["A", C.pink, game.teamScores[0]], ["B", C.cyan, game.teamScores[1]]] as const).map(([nm, col, sc]) => (
+            <div key={nm} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "9px 12px", borderRadius: 12, boxShadow: `0 0 0 1px ${hexA(col, 0.5)}`, background: hexA(col, 0.08) }}>
+              <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 12, color: col }}>Équipe {nm}</span>
+              <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 18, color: C.text }}>{sc}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {game.mode === "survival" && game.yourLives != null && !game.yourEliminated && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: 12, boxShadow: `0 0 0 1px ${hexA(C.pink, 0.45)}`, background: hexA(C.pink, 0.07) }}>
+          <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".14em", color: C.faint }}>Tes vies</span>
+          <span style={{ marginLeft: "auto", letterSpacing: 2 }}>{Array.from({ length: 3 }).map((_, k) => <span key={k} style={{ color: k < (game.yourLives ?? 0) ? C.pink : C.dim }}>♥</span>)}</span>
+        </div>
+      )}
       <div style={{ height: 1, flex: "none", background: "linear-gradient(90deg,transparent,rgba(243,238,255,.14) 18%,rgba(243,238,255,.14) 82%,transparent)" }} />
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{RailRows}</div>
     </aside>
@@ -368,8 +400,16 @@ export function QuizView({ room }: { room: UseRoom }) {
 
               {/* Zone de réponse */}
               <div style={{ flex: q?.type === "truefalse" ? "none" : 1, display: "flex", flexDirection: "column", justifyContent: q?.type === "truefalse" ? "flex-end" : "center", padding: "26px 40px 40px" }}>
+                {/* Survie : éliminé → spectateur, plus de réponse possible */}
+                {game.yourEliminated && (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: "36px 24px", borderRadius: 18, background: C.surface, boxShadow: `0 0 0 1px ${C.line}` }}>
+                    <span style={{ fontSize: 32 }}>💀</span>
+                    <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 22, color: C.text }}>Éliminé</span>
+                    <span style={{ fontSize: 14, color: C.muted, textAlign: "center" }}>Tu as épuisé tes 3 vies. Tu regardes la fin de la partie en spectateur.</span>
+                  </div>
+                )}
                 {/* QCM */}
-                {q?.type === "mcq" && q.choices && (
+                {!game.yourEliminated && q?.type === "mcq" && q.choices && (
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                     {q.choices.map((choice, i) => {
                       const letter = String.fromCharCode(65 + i);
@@ -399,7 +439,7 @@ export function QuizView({ room }: { room: UseRoom }) {
                 )}
 
                 {/* Vrai / Faux */}
-                {q?.type === "truefalse" && (
+                {!game.yourEliminated && q?.type === "truefalse" && (
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                     {[{ v: true, label: "Vrai", col: C.mint, sh: C.mintSh }, { v: false, label: "Faux", col: C.pink, sh: C.pinkSh }].map(({ v, label, col, sh }) => {
                       const picked = game.yourAnswer === v;
@@ -423,7 +463,7 @@ export function QuizView({ room }: { room: UseRoom }) {
                 )}
 
                 {/* Réponse libre — plaque de saisie de la Bombe */}
-                {q?.type === "free" && (
+                {!game.yourEliminated && q?.type === "free" && (
                   answered ? (
                     <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "24px 28px", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 2px ${hexA(C.mint, 0.5)}` }}>
                       <span style={{ display: "grid", placeItems: "center", width: 34, height: 34, flex: "none", borderRadius: 10, background: C.mint, color: C.ink }}>

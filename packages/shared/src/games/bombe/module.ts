@@ -13,6 +13,7 @@ function sanitize(input: unknown): BombeSettings {
     maxSeconds: Math.round(cfg.maxMs / 1000),
     minLetters: cfg.minLetters,
     maxLetters: cfg.maxLetters,
+    mode: cfg.mode,
   };
 }
 

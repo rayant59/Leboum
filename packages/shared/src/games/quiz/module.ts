@@ -4,6 +4,8 @@ import type { QuizClientAction, QuizPublic, QuizSettings, QuizState } from "./ty
 
 export const QUIZ_GAME_ID = "quiz" as const;
 
+const QUIZ_MODES = ["classic", "speed", "survival", "teams"];
+
 function sanitize(input: unknown): QuizSettings {
   const v = input as QuizSettings | undefined;
   const types = v?.types;
@@ -12,6 +14,7 @@ function sanitize(input: unknown): QuizSettings {
     totalQuestions: typeof v?.totalQuestions === "number" ? v.totalQuestions : 10,
     secondsPerQuestion: typeof v?.secondsPerQuestion === "number" ? v.secondsPerQuestion : 15,
     types: okTypes,
+    mode: typeof v?.mode === "string" && QUIZ_MODES.includes(v.mode) ? v.mode : "classic",
   };
 }
 

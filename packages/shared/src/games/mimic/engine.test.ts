@@ -172,5 +172,88 @@ test("projection : classement trié, son présent, deadline exposée", () => {
   assert(pub.deadline === s.deadline, "deadline exposée");
 });
 
+// --- Modes (SPEC §2) --------------------------------------------------------
+const four: GamePlayer[] = [...players, { id: "d", name: "Dan", color: "#ff0" }];
+
+test("mode par défaut = classic ; chain/duel < 3 joueurs → classic", () => {
+  eq(createMimic(players, {}, ctx(1)).config.mode, "classic", "défaut classic");
+  const two = players.slice(0, 2);
+  eq(createMimic(two, { mode: "duel" }, ctx(1)).config.mode, "classic", "duel à 2 → classic");
+  eq(createMimic(two, { mode: "chain" }, ctx(1)).config.mode, "classic", "chain à 2 → classic");
+  eq(createMimic(players, { mode: "duel" }, ctx(1)).config.mode, "duel", "duel à 3 OK");
+});
+
+test("duel : paires, seuls les 2 duellistes enregistrent, +3/+1, rotation", () => {
+  let s = createMimic(four, { mode: "duel", totalRounds: 1 }, ctx(1000));
+  s = R(s, act("a", { kind: "start" }), 1000);
+  eq(s.phase, "reference", "reference");
+  eq(s.activeIds.length, 2, "2 duellistes actifs");
+  eq(projectMimic(s, "a").duelTotal, 2, "2 duels (4 joueurs)");
+  const d1 = [...s.activeIds];
+  // un non-duelliste ne peut pas rendre de prise
+  s = R(s, adv(), 2000); s = R(s, adv(), 3000); // recording
+  const outsider = four.map((p) => p.id).find((id) => !d1.includes(id))!;
+  s = R(s, act(outsider, { kind: "take_done" }), 3050);
+  assert(!s.submitted[outsider], "un spectateur ne rend pas de prise");
+  for (const id of d1) s = R(s, act(id, { kind: "take_done" }), 3100);
+  eq(s.phase, "processing", "les 2 ont rendu → traitement");
+  s = R(s, adv(), 3300); // playback
+  while (s.phase === "playback") s = R(s, adv(), (s.deadline ?? 0) + 1);
+  eq(s.phase, "voting", "vote");
+  const voters = four.map((p) => p.id).filter((id) => !d1.includes(id));
+  for (const v of voters) s = R(s, act(v, { kind: "vote", targetId: d1[0] }), 5000);
+  eq(s.scores[d1[0]], 3, "vainqueur +3");
+  eq(s.scores[d1[1]], 1, "perdant +1");
+  eq(s.duelChampion, d1[0], "champion mémorisé");
+  eq(s.phase, "reference", "le duel suivant démarre (rotation)");
+});
+
+test("duel impair : le dernier affronte le champion précédent", () => {
+  let s = createMimic(players, { mode: "duel", totalRounds: 1 }, ctx(1000, 7));
+  s = R(s, act("a", { kind: "start" }), 1000);
+  eq(projectMimic(s, "a").duelTotal, 2, "3 joueurs → 2 duels (le 2e = dernier vs champion)");
+  const d1 = [...s.activeIds];
+  s = R(s, adv(), 2000); s = R(s, adv(), 3000);
+  for (const id of d1) s = R(s, act(id, { kind: "take_done" }), 3100);
+  s = R(s, adv(), 3300); while (s.phase === "playback") s = R(s, adv(), (s.deadline ?? 0) + 1);
+  const voter = players.map((p) => p.id).find((id) => !d1.includes(id))!;
+  s = R(s, act(voter, { kind: "vote", targetId: d1[0] }), 5000);
+  // duel 2 : le joueur restant (voter) affronte le champion d1[0]
+  eq(s.phase, "reference", "duel 2");
+  assert(s.activeIds.includes(voter) && s.activeIds.includes(d1[0]), "dernier vs champion");
+});
+
+test("chain : enregistrement séquentiel, chacun écoute le précédent", () => {
+  let s = createMimic(players, { mode: "chain", totalRounds: 1 }, ctx(1000));
+  s = R(s, act("a", { kind: "start" }), 1000);
+  eq(s.chainOrder.length, 3, "chaîne de 3");
+  eq(s.activeIds.length, 1, "un seul enregistre à la fois");
+  eq(projectMimic(s, s.chainOrder[0]).chainHearsId, null, "le 1er écoute le son source");
+  // step 0
+  s = R(s, adv(), 2000); s = R(s, adv(), 3000);
+  s = R(s, act(s.chainOrder[0], { kind: "take_done" }), 3100);
+  eq(s.phase, "reference", "on repasse en écoute pour le suivant");
+  eq(s.chainPos, 1, "position 1");
+  eq(projectMimic(s, s.chainOrder[1]).chainHearsId, s.chainOrder[0], "écoute la prise du précédent");
+  // step 1
+  s = R(s, adv(), 4000); s = R(s, adv(), 5000);
+  s = R(s, act(s.chainOrder[1], { kind: "take_done" }), 5100);
+  eq(s.chainPos, 2, "position 2");
+  // step 2 (dernier)
+  s = R(s, adv(), 6000); s = R(s, adv(), 7000);
+  s = R(s, act(s.chainOrder[2], { kind: "take_done" }), 7100);
+  eq(s.phase, "processing", "dernier → traitement");
+  s = R(s, adv(), 7300);
+  eq(s.playbackOrder.length, 3, "toute la chaîne est rejouée");
+  while (s.phase === "playback") s = R(s, adv(), (s.deadline ?? 0) + 1);
+  eq(s.phase, "voting", "vote");
+  // Origine reconnue : la majorité vote pour le 1er → +2 à tous.
+  s = R(s, act(s.chainOrder[1], { kind: "vote", targetId: s.chainOrder[0] }), 9000);
+  s = R(s, act(s.chainOrder[2], { kind: "vote", targetId: s.chainOrder[0] }), 9050);
+  s = R(s, act(s.chainOrder[0], { kind: "vote", targetId: s.chainOrder[1] }), 9100);
+  eq(s.phase, "scoreboard", "dépouillement");
+  assert(players.every((p) => (s.scores[p.id] ?? 0) >= 2), "origine reconnue → +2 à tous");
+});
+
 console.log(`\n${passed} réussis, ${failed} échoués\n`);
 if (failed > 0) process.exit(1);

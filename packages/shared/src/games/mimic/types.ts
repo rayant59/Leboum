@@ -14,13 +14,19 @@ export type MimicPhase =
   | "scoreboard"  // classement de la manche
   | "gameover";   // 🏆 victoire
 
+/** Modes (SPEC §2). `classic` par défaut ; `chain` et `duel` exigent 3 joueurs
+ *  (sinon repli sur classic). */
+export type MimicMode = "classic" | "chain" | "duel";
+
 export interface MimicSettings {
   totalRounds?: number;    // nb de manches (défaut 4)
   recordSeconds?: number;  // durée d'enregistrement (défaut 6)
+  mode?: string;           // classic | chain | duel
 }
 
 export interface MimicConfig {
   totalRounds: number;
+  mode: MimicMode;
   referenceMs: number;
   countdownMs: number;
   recordMs: number;
@@ -57,6 +63,17 @@ export interface MimicState {
   deadline: number | null;
   winnerId: PlayerId | null;
   config: MimicConfig;
+  // --- Orchestration par mode -------------------------------------------------
+  /** Qui enregistre pour la sous-manche courante. classic : tout le monde ;
+   *  duel : les 2 duellistes ; chain : uniquement le joueur courant de la chaîne. */
+  activeIds: PlayerId[];
+  // Duel
+  duelPairs: PlayerId[][];   // paires de la manche (calculées au départ)
+  duelIndex: number;         // paire courante (0-based)
+  duelChampion: PlayerId | null; // vainqueur du duel précédent (appariement impair)
+  // Chain
+  chainOrder: PlayerId[];    // ordre fixe de la chaîne
+  chainPos: number;          // position courante qui enregistre (0-based)
 }
 
 export interface MimicRankRow {
@@ -71,10 +88,24 @@ export interface MimicRankRow {
 
 export interface MimicPublic {
   phase: MimicPhase;
+  mode: MimicMode;
   players: GamePlayer[];
   round: number;
   totalRounds: number;
   sound: MimicSound | null;            // son courant (id, nom, catégorie, src)
+  // Orchestration par mode
+  activeIds: PlayerId[];               // qui enregistre pour cette sous-manche
+  youActive: boolean;                  // le spectateur enregistre-t-il ?
+  // Duel
+  duelChampionId: PlayerId | null;
+  duelNo: number;                      // n° du duel dans la manche (1-based)
+  duelTotal: number;                   // nb de duels dans la manche
+  // Chain : à qui le joueur courant doit-il ressembler (prise à écouter avant
+  // d'enregistrer, null = son d'origine) et qui enregistre.
+  chainRecorderId: PlayerId | null;
+  chainHearsId: PlayerId | null;       // null = son source ; sinon prise de ce joueur
+  chainPos: number;                    // position dans la chaîne (0-based)
+  chainLen: number;
   ready: Record<PlayerId, boolean>;
   allReady: boolean;
   submittedIds: PlayerId[];            // qui a rendu sa prise

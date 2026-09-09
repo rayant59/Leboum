@@ -15,7 +15,7 @@ import type { GamePlayer } from "../../game/types";
 import type { PlayerId } from "../../room/types";
 import type { GameAction, GameContext, GameReduceResult } from "../../platform/types";
 import { getMimicSound, pickMimicSound } from "./sounds";
-import type { MimicClientAction, MimicConfig, MimicPublic, MimicRankRow, MimicSettings, MimicState } from "./types";
+import type { MimicClientAction, MimicConfig, MimicMode, MimicPublic, MimicRankRow, MimicSettings, MimicState } from "./types";
 
 export const MIMIC_ROUNDS_MIN = 2;
 export const MIMIC_ROUNDS_MAX = 8;
@@ -23,11 +23,16 @@ const RECENT_SOUNDS = 12;
 const POINTS_PER_VOTE = 100;
 const BEST_BONUS = 50;
 
+export function resolveMimicMode(mode: string | undefined): MimicMode {
+  return mode === "chain" || mode === "duel" ? mode : "classic";
+}
+
 export function resolveMimicConfig(settings: MimicSettings): MimicConfig {
   const totalRounds = clamp(settings.totalRounds ?? 4, MIMIC_ROUNDS_MIN, MIMIC_ROUNDS_MAX);
   const recordSec = clamp(settings.recordSeconds ?? 10, 5, 25);
   return {
     totalRounds,
+    mode: resolveMimicMode(settings.mode),
     referenceMs: 6000,
     countdownMs: 3000,
     recordMs: recordSec * 1000,
@@ -57,7 +62,11 @@ function recFalse(players: GamePlayer[]): Record<PlayerId, boolean> {
 const ok = (state: MimicState): GameReduceResult<MimicState> => ({ state });
 
 export function createMimic(players: GamePlayer[], settings: MimicSettings, ctx: GameContext): MimicState {
-  const config = resolveMimicConfig(settings);
+  let config = resolveMimicConfig(settings);
+  // Chaîne / Duel exigent 3 joueurs : sinon on retombe sur classique.
+  if ((config.mode === "chain" || config.mode === "duel") && players.length < 3) {
+    config = { ...config, mode: "classic" };
+  }
   return {
     phase: "prep",
     players,
@@ -78,7 +87,33 @@ export function createMimic(players: GamePlayer[], settings: MimicSettings, ctx:
     deadline: null,
     winnerId: null,
     config,
+    activeIds: [],
+    duelPairs: [],
+    duelIndex: 0,
+    duelChampion: null,
+    chainOrder: [],
+    chainPos: 0,
   };
+}
+
+function shuffle<T>(arr: T[], rng: () => number): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/** Duel : construit les paires de la manche à partir des joueurs connectés
+ *  (mélangés). Nombre impair → le dernier affrontera le champion du duel
+ *  précédent (paire à un seul élément, complétée à la volée dans startDuel). */
+function buildDuelPairs(ids: PlayerId[]): PlayerId[][] {
+  const pairs: PlayerId[][] = [];
+  for (let i = 0; i < ids.length; i += 2) {
+    pairs.push(ids.slice(i, i + 2));
+  }
+  return pairs;
 }
 
 function connected(state: MimicState): PlayerId[] {
@@ -86,20 +121,62 @@ function connected(state: MimicState): PlayerId[] {
   return state.players.filter((p) => set.has(p.id)).map((p) => p.id);
 }
 
-/** Démarre une manche : nouveau son + phase reference. */
-function startRound(state: MimicState, round: number, ctx: GameContext): MimicState {
+function freshSound(state: MimicState, ctx: GameContext): Pick<MimicState, "soundId" | "usedSoundIds"> {
   const sound = pickMimicSound(ctx.rng, state.usedSoundIds);
   return {
-    ...state,
-    phase: "reference",
-    round,
     soundId: sound?.id ?? null,
     usedSoundIds: sound ? [sound.id, ...state.usedSoundIds].slice(0, RECENT_SOUNDS) : state.usedSoundIds,
+  };
+}
+
+/** Démarre une manche selon le mode. classic : tout le monde imite le son.
+ *  chain : ordre fixe, on commence par le 1er joueur (il écoute le son source).
+ *  duel : on construit les paires et on lance le 1er duel. */
+function startRound(state: MimicState, round: number, ctx: GameContext): MimicState {
+  const conn = connected(state);
+  const base: MimicState = {
+    ...state,
+    round,
     submitted: recFalse(state.players),
     emptyTake: recFalse(state.players),
     playbackOrder: [],
     playbackIndex: 0,
     votes: {},
+  };
+  if (state.config.mode === "duel") {
+    const pairs = buildDuelPairs(shuffle(conn, ctx.rng));
+    return startDuel({ ...base, duelPairs: pairs, duelIndex: 0, duelChampion: null }, ctx);
+  }
+  if (state.config.mode === "chain") {
+    const chainOrder = shuffle(conn, ctx.rng);
+    return {
+      ...base, ...freshSound(state, ctx),
+      chainOrder, chainPos: 0,
+      activeIds: chainOrder.length ? [chainOrder[0]] : [],
+      phase: "reference", deadline: ctx.now + state.config.referenceMs,
+    };
+  }
+  // classic
+  return {
+    ...base, ...freshSound(state, ctx),
+    activeIds: conn, phase: "reference", deadline: ctx.now + state.config.referenceMs,
+  };
+}
+
+/** Duel : démarre le duel `duelIndex`. Paire impaire (1 joueur) → complétée par
+ *  le champion du duel précédent. Son frais pour chaque duel. */
+function startDuel(state: MimicState, ctx: GameContext): MimicState {
+  let pair = state.duelPairs[state.duelIndex] ?? [];
+  if (pair.length === 1) {
+    if (state.duelChampion && state.duelChampion !== pair[0]) pair = [pair[0], state.duelChampion];
+  }
+  return {
+    ...state, ...freshSound(state, ctx),
+    submitted: recFalse(state.players),
+    emptyTake: recFalse(state.players),
+    playbackOrder: [], playbackIndex: 0, votes: {},
+    activeIds: pair,
+    phase: "reference",
     deadline: ctx.now + state.config.referenceMs,
   };
 }
@@ -128,16 +205,17 @@ export function reduceMimic(
 
         case "take_done": {
           if (state.phase !== "recording") return ok(state);
+          if (!state.activeIds.includes(playerId)) return ok(state); // seuls les actifs enregistrent
           if (state.submitted[playerId]) return ok(state); // une seule prise — verrou
           const next: MimicState = {
             ...state,
             submitted: { ...state.submitted, [playerId]: true },
             emptyTake: { ...state.emptyTake, [playerId]: !!msg.empty },
           };
-          // Tout le monde (connecté) a rendu → on passe au traitement.
-          const conn = connected(next);
-          if (conn.length > 0 && conn.every((id) => next.submitted[id])) {
-            return ok(toProcessing(next, ctx));
+          // Tous les ACTIFS connectés ont rendu → on avance (mode-aware).
+          const activeConn = next.activeIds.filter((id) => next.connectedIds.includes(id));
+          if (activeConn.length > 0 && activeConn.every((id) => next.submitted[id])) {
+            return ok(afterRecording(next, ctx));
           }
           return ok(next);
         }
@@ -146,12 +224,13 @@ export function reduceMimic(
           if (state.phase !== "voting") return ok(state);
           if (msg.targetId === playerId) return ok(state); // pas de vote pour soi
           if (!state.players.some((p) => p.id === msg.targetId)) return ok(state);
+          if (!canVoteFor(state, playerId, msg.targetId)) return ok(state);
           if (state.votes[playerId]) return ok(state); // un seul vote
           const votes = { ...state.votes, [playerId]: msg.targetId };
           const next: MimicState = { ...state, votes };
-          // Tout le monde a voté → dépouillement immédiat.
-          const conn = connected(next).filter((id) => next.players.some((p) => p.id === id));
-          if (conn.length > 0 && conn.every((id) => votes[id])) {
+          // Tous les votants attendus ont voté → dépouillement immédiat.
+          const voters = expectedVoters(next);
+          if (voters.length > 0 && voters.every((id) => votes[id])) {
             return ok(tally(next, ctx));
           }
           return ok(next);
@@ -179,13 +258,13 @@ function advance(state: MimicState, ctx: GameContext): MimicState {
     case "countdown":
       return { ...state, phase: "recording", deadline: ctx.now + state.config.recordMs };
     case "recording": {
-      // Fin du temps : ceux qui n'ont rien rendu → prise vide.
+      // Fin du temps : les ACTIFS qui n'ont rien rendu → prise vide.
       const submitted = { ...state.submitted };
       const emptyTake = { ...state.emptyTake };
-      for (const id of connected(state)) {
-        if (!submitted[id]) { submitted[id] = true; emptyTake[id] = true; }
+      for (const id of state.activeIds) {
+        if (state.connectedIds.includes(id) && !submitted[id]) { submitted[id] = true; emptyTake[id] = true; }
       }
-      return toProcessing({ ...state, submitted, emptyTake }, ctx);
+      return afterRecording({ ...state, submitted, emptyTake }, ctx);
     }
     case "processing":
       return toPlayback(state, ctx);
@@ -205,13 +284,27 @@ function advance(state: MimicState, ctx: GameContext): MimicState {
   }
 }
 
+/** Après un enregistrement : en Chaîne, on passe au joueur suivant (qui écoutera
+ *  la prise du précédent) tant qu'il en reste ; sinon on part en lecture. */
+function afterRecording(state: MimicState, ctx: GameContext): MimicState {
+  if (state.config.mode === "chain" && state.chainPos + 1 < state.chainOrder.length) {
+    const nextPos = state.chainPos + 1;
+    return { ...state, chainPos: nextPos, activeIds: [state.chainOrder[nextPos]], phase: "reference", deadline: ctx.now + state.config.referenceMs };
+  }
+  return toProcessing(state, ctx);
+}
+
 function toProcessing(state: MimicState, ctx: GameContext): MimicState {
   return { ...state, phase: "processing", deadline: ctx.now + state.config.processingMs };
 }
 
 function toPlayback(state: MimicState, ctx: GameContext): MimicState {
-  // Ordre de lecture : les joueurs connectés (prise vide incluse — on annonce « pas de prise »).
-  const order = connected(state);
+  // Ordre de lecture selon le mode. duel : les 2 duellistes ; chain : toute la
+  // chaîne (le client joue le son source en tête) ; classic : tout le monde.
+  const order =
+    state.config.mode === "duel" ? state.activeIds.filter((id) => state.connectedIds.includes(id))
+    : state.config.mode === "chain" ? state.chainOrder
+    : connected(state);
   if (order.length === 0) return toVoting({ ...state, playbackOrder: [], playbackIndex: 0 }, ctx);
   return {
     ...state,
@@ -226,7 +319,23 @@ function toVoting(state: MimicState, ctx: GameContext): MimicState {
   return { ...state, phase: "voting", votes: {}, deadline: ctx.now + state.config.votingMs };
 }
 
-/** Dépouille les votes de la manche, attribue les points, passe au scoreboard. */
+/** Votants attendus pour la sous-manche : duel → tous sauf les 2 duellistes ;
+ *  classic/chain → tout le monde. */
+function expectedVoters(state: MimicState): PlayerId[] {
+  const conn = connected(state).filter((id) => state.players.some((p) => p.id === id));
+  if (state.config.mode === "duel") return conn.filter((id) => !state.activeIds.includes(id));
+  return conn;
+}
+
+/** Cibles de vote valides : duel → uniquement les 2 duellistes. */
+function canVoteFor(state: MimicState, voterId: PlayerId, targetId: PlayerId): boolean {
+  if (state.config.mode === "duel") return state.activeIds.includes(targetId) && !state.activeIds.includes(voterId);
+  return true;
+}
+
+/** Dépouille les votes, attribue les points selon le mode, puis enchaîne :
+ *  duel → duel suivant tant qu'il en reste, sinon scoreboard ; chain/classic →
+ *  scoreboard. */
 function tally(state: MimicState, ctx: GameContext): MimicState {
   const roundVotes = rec0(state.players);
   for (const target of Object.values(state.votes)) {
@@ -234,32 +343,55 @@ function tally(state: MimicState, ctx: GameContext): MimicState {
   }
   const scores = { ...state.scores };
   const votesReceivedTotal = { ...state.votesReceivedTotal };
+  const bestCount = { ...state.bestCount };
+
+  if (state.config.mode === "duel") {
+    const [a, b] = state.activeIds;
+    const va = roundVotes[a] ?? 0, vb = roundVotes[b] ?? 0;
+    votesReceivedTotal[a] = (votesReceivedTotal[a] ?? 0) + va;
+    votesReceivedTotal[b] = (votesReceivedTotal[b] ?? 0) + vb;
+    // +3 au vainqueur, +1 au perdant ; égalité → +3 aux deux.
+    let champion: PlayerId;
+    if (va === vb) { scores[a] += 3; scores[b] += 3; champion = a; }
+    else if (va > vb) { scores[a] += 3; scores[b] += 1; champion = a; }
+    else { scores[b] += 3; scores[a] += 1; champion = b; }
+    bestCount[champion] = (bestCount[champion] ?? 0) + 1;
+    const next: MimicState = { ...state, roundVotes, scores, votesReceivedTotal, bestCount, duelChampion: champion };
+    if (state.duelIndex + 1 < state.duelPairs.length) {
+      return startDuel({ ...next, duelIndex: state.duelIndex + 1 }, ctx);
+    }
+    return { ...next, phase: "scoreboard", deadline: ctx.now + state.config.scoreboardMs };
+  }
+
+  if (state.config.mode === "chain") {
+    for (const p of state.players) votesReceivedTotal[p.id] = (votesReceivedTotal[p.id] ?? 0) + (roundVotes[p.id] ?? 0);
+    const voterCount = Object.keys(state.votes).length;
+    let topId: PlayerId | null = null, maxV = 0;
+    for (const p of state.players) { const v = roundVotes[p.id] ?? 0; if (v > maxV) { maxV = v; topId = p.id; } }
+    // Le salon « reconnaît » l'origine si une majorité converge → +2 à tous.
+    if (maxV > 0 && maxV * 2 > voterCount) {
+      for (const p of state.players) scores[p.id] += 2;
+    } else if (topId) {
+      scores[topId] += 1; // sinon +1 au dernier « fidèle »
+      bestCount[topId] = (bestCount[topId] ?? 0) + 1;
+    }
+    return { ...state, phase: "scoreboard", roundVotes, scores, votesReceivedTotal, bestCount, deadline: ctx.now + state.config.scoreboardMs };
+  }
+
+  // classic
   for (const p of state.players) {
     const v = roundVotes[p.id] ?? 0;
     scores[p.id] = (scores[p.id] ?? 0) + v * POINTS_PER_VOTE;
     votesReceivedTotal[p.id] = (votesReceivedTotal[p.id] ?? 0) + v;
   }
-  // Meilleure imitation de la manche (le plus de votes, >0) → bonus + stat.
-  const bestCount = { ...state.bestCount };
   let maxV = 0;
   for (const p of state.players) maxV = Math.max(maxV, roundVotes[p.id] ?? 0);
   if (maxV > 0) {
     for (const p of state.players) {
-      if ((roundVotes[p.id] ?? 0) === maxV) {
-        scores[p.id] += BEST_BONUS;
-        bestCount[p.id] = (bestCount[p.id] ?? 0) + 1;
-      }
+      if ((roundVotes[p.id] ?? 0) === maxV) { scores[p.id] += BEST_BONUS; bestCount[p.id] = (bestCount[p.id] ?? 0) + 1; }
     }
   }
-  return {
-    ...state,
-    phase: "scoreboard",
-    roundVotes,
-    scores,
-    votesReceivedTotal,
-    bestCount,
-    deadline: ctx.now + state.config.scoreboardMs,
-  };
+  return { ...state, phase: "scoreboard", roundVotes, scores, votesReceivedTotal, bestCount, deadline: ctx.now + state.config.scoreboardMs };
 }
 
 function afterScoreboard(state: MimicState, ctx: GameContext): MimicState {
@@ -319,12 +451,25 @@ export function projectMimic(state: MimicState, viewerId: PlayerId): MimicPublic
     };
   }
 
+  const mode = state.config.mode;
+  const chainRecorderId = mode === "chain" ? state.chainOrder[state.chainPos] ?? null : null;
+  const chainHearsId = mode === "chain" && state.chainPos > 0 ? state.chainOrder[state.chainPos - 1] ?? null : null;
   return {
     phase: state.phase,
+    mode,
     players: state.players,
     round: state.round,
     totalRounds: state.config.totalRounds,
     sound: getMimicSound(state.soundId),
+    activeIds: state.activeIds,
+    youActive: state.activeIds.includes(viewerId),
+    duelChampionId: state.duelChampion,
+    duelNo: mode === "duel" ? state.duelIndex + 1 : 0,
+    duelTotal: mode === "duel" ? state.duelPairs.length : 0,
+    chainRecorderId,
+    chainHearsId,
+    chainPos: state.chainPos,
+    chainLen: state.chainOrder.length,
     ready: state.ready,
     allReady: state.players.length > 0 && state.players.every((p) => state.ready[p.id]),
     submittedIds: Object.keys(state.submitted).filter((id) => state.submitted[id]),

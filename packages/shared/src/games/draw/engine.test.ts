@@ -314,5 +314,20 @@ test("aucun mot ne peut réapparaître pendant toute la partie", () => {
   assert(seen.size > 20, `trop peu de mots proposés (${seen.size})`);
 });
 
+test("coop : score d'équipe = somme des points, exposé via coopScore", () => {
+  let s = createDrawGame(players, { totalRounds: 2, mode: "coop" }, ctx(1000));
+  const drawer = s.drawerId!;
+  const word = s.wordChoices[0];
+  s = reduceDraw(s, choose(drawer, word), ctx(1000)).state;
+  for (const g of guessers(s)) s = reduceDraw(s, guess(g, word), ctx(1200)).state;
+  const sum = Object.values(s.scores).reduce((a, b) => a + b, 0);
+  assert(sum > 0, "l'équipe a marqué des points");
+  const pub = projectDraw(s, drawer);
+  eq(pub.coopScore, sum, "coopScore = somme des scores");
+  // Hors coop, coopScore reste null.
+  const s2 = createDrawGame(players, { totalRounds: 2, mode: "classic" }, ctx(1000));
+  eq(projectDraw(s2, s2.drawerId!).coopScore, null, "coopScore null en classique");
+});
+
 console.log(`\n${passed} réussis, ${failed} échoués\n`);
 if (failed > 0) process.exit(1);

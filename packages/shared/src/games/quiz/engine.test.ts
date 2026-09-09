@@ -133,5 +133,92 @@ test("toutes les questions ont une difficulté et un id unique", () => {
   eq(sans.length, 0, "questions sans difficulté");
 });
 
+// --- Modes (SPEC §2) --------------------------------------------------------
+import type { Question } from "./questions";
+const goodFor = (q: Question): number | boolean | string => q.answer as never;
+const wrongFor = (q: Question): number | boolean | string =>
+  q.type === "mcq" ? ((q.answer as number) + 1) % Math.max(2, q.choices!.length)
+  : q.type === "truefalse" ? !(q.answer as boolean)
+  : "___faux___";
+const four: GamePlayer[] = [
+  { id: "a", name: "Alice", color: "#f00" },
+  { id: "b", name: "Bob", color: "#0f0" },
+  { id: "c", name: "Chloé", color: "#00f" },
+  { id: "d", name: "Dan", color: "#ff0" },
+];
+
+test("mode par défaut = classic ; mode inconnu → classic", () => {
+  eq(createQuiz(players, { totalQuestions: 3 }, ctx(0)).config.mode, "classic", "défaut classic");
+  eq(createQuiz(players, { totalQuestions: 3, mode: "n'importe" }, ctx(0)).config.mode, "classic", "inconnu → classic");
+});
+
+test("speed : points dégressifs 1–3, mauvaise réponse −1 (plancher 0)", () => {
+  let s = createQuiz(players, { totalQuestions: 3, secondsPerQuestion: 10, mode: "speed" }, ctx(0));
+  const q = s.questions[0];
+  s = reduceQuiz(s, ans("a", goodFor(q)), ctx(300)).state; // très vite → ~3 pts
+  s = reduceQuiz(s, ans("b", wrongFor(q)), ctx(400)).state; // faux → −1, plancher 0
+  eq(s.phase, "reveal", "reveal");
+  assert(s.gained["a"] >= 2 && s.gained["a"] <= 3, `a marque 2–3 (obtenu ${s.gained["a"]})`);
+  eq(s.gained["b"], -1, "b perd 1");
+  eq(s.scores["b"], 0, "score b plancher 0 (jamais négatif)");
+});
+
+test("survival : 3 vies, −1 par erreur, éliminé à 0 = spectateur", () => {
+  let s = createQuiz(players, { totalQuestions: 8, secondsPerQuestion: 10, mode: "survival" }, ctx(0));
+  eq(s.lives["a"], 3, "3 vies au départ");
+  // Bob se trompe 3 fois → éliminé
+  for (let i = 0; i < 3; i++) {
+    const q = s.questions[s.index];
+    s = reduceQuiz(s, ans("a", goodFor(q)), ctx(s.startedAt + 300)).state;
+    s = reduceQuiz(s, ans("b", wrongFor(q)), ctx(s.startedAt + 400)).state;
+    s = reduceQuiz(s, { type: "advance" }, ctx((s.deadline ?? 0) + 1)).state;
+  }
+  eq(s.lives["b"], 0, "Bob n'a plus de vie");
+  const pubB = projectQuiz(s, "b");
+  assert(pubB.yourEliminated, "Bob est éliminé (spectateur)");
+  // une tentative de Bob est ignorée
+  const q = s.questions[s.index];
+  const before = { ...s.answers };
+  s = reduceQuiz(s, ans("b", goodFor(q)), ctx(s.startedAt + 200)).state;
+  eq(Object.keys(s.answers).length, Object.keys(before).length, "réponse d'un éliminé ignorée");
+});
+
+test("survival : tous éliminés → partie stoppée", () => {
+  let s = createQuiz(players, { totalQuestions: 8, secondsPerQuestion: 10, mode: "survival" }, ctx(0));
+  for (let i = 0; i < 3; i++) {
+    const q = s.questions[s.index];
+    s = reduceQuiz(s, ans("a", wrongFor(q)), ctx(s.startedAt + 300)).state;
+    s = reduceQuiz(s, ans("b", wrongFor(q)), ctx(s.startedAt + 400)).state;
+    s = reduceQuiz(s, { type: "advance" }, ctx((s.deadline ?? 0) + 1)).state;
+  }
+  eq(s.phase, "final", "partie terminée quand tout le monde est éliminé");
+});
+
+test("teams : 2 équipes, +1 partagé, 1 seule réponse par équipe", () => {
+  let s = createQuiz(four, { totalQuestions: 3, secondsPerQuestion: 10, mode: "teams" }, ctx(0));
+  eq(s.config.mode, "teams", "mode teams actif (4 joueurs)");
+  const t0 = four.filter((p) => s.teamOf[p.id] === 0);
+  const t1 = four.filter((p) => s.teamOf[p.id] === 1);
+  eq(t0.length, 2, "équipe 0 = 2 joueurs");
+  eq(t1.length, 2, "équipe 1 = 2 joueurs");
+  const q = s.questions[0];
+  // 1er de l'équipe 0 répond juste ; son coéquipier tente ensuite → ignoré
+  s = reduceQuiz(s, ans(t0[0].id, goodFor(q)), ctx(300)).state;
+  s = reduceQuiz(s, ans(t0[1].id, wrongFor(q)), ctx(350)).state;
+  assert(!s.answers[t0[1].id], "2e réponse de l'équipe verrouillée");
+  // équipe 1 répond faux
+  s = reduceQuiz(s, ans(t1[0].id, wrongFor(q)), ctx(400)).state;
+  eq(s.phase, "reveal", "reveal quand chaque équipe a répondu");
+  eq(s.scores[t0[0].id], 1, "membre équipe 0 +1");
+  eq(s.scores[t0[1].id], 1, "coéquipier partage le +1");
+  eq(s.scores[t1[0].id], 0, "équipe 1 ne marque pas");
+  const pub = projectQuiz(s, t0[0].id);
+  assert(pub.teamScores != null && pub.teamScores[0] === 1, "score d'équipe exposé");
+});
+
+test("teams < 4 joueurs → retombe sur classic", () => {
+  eq(createQuiz(players, { totalQuestions: 3, mode: "teams" }, ctx(0)).config.mode, "classic", "teams à 2 → classic");
+});
+
 console.log(`\n${passed} réussis, ${failed} échoués\n`);
 if (failed > 0) process.exit(1);

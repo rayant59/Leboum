@@ -127,5 +127,91 @@ test("catégorie « Perso » : uniquement les images locales, jamais Wikipédia"
   eq(picked.every((i) => !i.wiki), true, "un sujet Wikipédia s'est glissé dans la sélection");
 });
 
+// --- Modes (SPEC §2) --------------------------------------------------------
+
+test("mode par défaut = classic ; inconnu → classic", () => {
+  eq(createReco(players, { totalQuestions: 3 }, ctx(0)).config.mode, "classic", "défaut classic");
+  eq(createReco(players, { totalQuestions: 3, mode: "wat" }, ctx(0)).config.mode, "classic", "inconnu → classic");
+});
+
+test("rush : durée effective divisée par 2 + points doublés", () => {
+  const s = createReco(players, { totalQuestions: 3, secondsPerQuestion: 60, mode: "rush" }, ctx(0));
+  eq(s.config.mode, "rush", "mode rush");
+  eq(s.config.secondsPerQuestion, 30, "durée effective = 60/2 = 30 s");
+  eq(s.deadline, 30_000, "deadline = 30 s (chrono réel)");
+  // Une bonne réponse rapide rapporte le double du classique (>1000).
+  let r = reduceReco(s, ans("a", s.items[0].answer), ctx(1000)).state;
+  r = reduceReco(r, ans("b", "faux"), ctx(1100)).state; // tous répondu → reveal
+  assert(r.gained["a"] > 1000, `rush double les points (obtenu ${r.gained["a"]})`);
+});
+
+test("theme : catégorie « toutes » → une seule catégorie tirée et tenue", () => {
+  const s = createReco(players, { totalQuestions: 4, mode: "theme", category: "all" }, ctx(0));
+  eq(s.config.mode, "theme", "mode theme");
+  assert(s.config.category !== "all", "une catégorie a été tirée au sort");
+  assert(s.items.every((it) => it.category === s.config.category), "toutes les images de la manche partagent la catégorie");
+});
+
+test("theme : catégorie choisie par l'hôte respectée", () => {
+  const s = createReco(players, { totalQuestions: 3, mode: "theme", category: "Anime" }, ctx(0));
+  eq(s.config.category, "Anime", "catégorie de l'hôte gardée");
+});
+
+test("zoom : points = 1 + floor(temps restant × 4), plafond 4", () => {
+  const s = createReco(players, { totalQuestions: 3, secondsPerQuestion: 10, mode: "zoom" }, ctx(0));
+  // Réponse quasi instantanée (frac ~1) → plafond 4.
+  let r = reduceReco(s, ans("a", s.items[0].answer), ctx(50)).state;
+  r = reduceReco(r, ans("b", "faux"), ctx(100)).state;
+  eq(r.gained["a"], 4, "réponse ultra-rapide = 4 points (plafond)");
+  // Réponse tardive → moins de points, jamais moins de 1.
+  const s2 = createReco(players, { totalQuestions: 3, secondsPerQuestion: 10, mode: "zoom" }, ctx(0));
+  let r2 = reduceReco(s2, ans("a", s2.items[0].answer), ctx(9500)).state; // ~0.5s restant
+  r2 = reduceReco(r2, ans("b", "faux"), ctx(9600)).state;
+  assert(r2.gained["a"] >= 1 && r2.gained["a"] < 4, `réponse tardive = 1–3 (obtenu ${r2.gained["a"]})`);
+});
+
+test("coop : chrono global = manches × temps par image", () => {
+  const s = createReco(players, { totalQuestions: 4, secondsPerQuestion: 15, mode: "coop" }, ctx(0));
+  eq(s.config.mode, "coop", "mode coop");
+  eq(s.deadline, s.items.length * 15 * 1000, "chrono global = (nb images) × 15 s");
+  eq(s.coopScore, 0, "score collectif à 0");
+  assert(s.revealAt === 15_000, "révélation de la 1re image sur 15 s");
+});
+
+test("coop : bonne réponse → +1 collectif + image suivante, chrono conservé", () => {
+  const s = createReco(players, { totalQuestions: 4, secondsPerQuestion: 15, mode: "coop" }, ctx(0));
+  const globalDl = s.deadline;
+  const r = reduceReco(s, ans("a", s.items[0].answer), ctx(2000)).state;
+  eq(r.coopScore, 1, "+1 image trouvée");
+  eq(r.index, 1, "on passe à l'image suivante");
+  eq(r.deadline, globalDl, "le chrono global n'est pas remis à zéro");
+  eq(r.lastFoundBy, "a", "dernier trouveur mémorisé");
+  eq(r.phase, "question", "toujours en jeu");
+});
+
+test("coop : mauvaise réponse → −3 s au chrono commun", () => {
+  const s = createReco(players, { totalQuestions: 4, secondsPerQuestion: 15, mode: "coop" }, ctx(0));
+  const before = s.deadline!;
+  const r = reduceReco(s, ans("a", "réponse fausse xyz"), ctx(2000)).state;
+  eq(r.deadline, before - 3000, "chrono commun −3 s");
+  eq(r.coopScore, 0, "pas de point");
+  eq(r.index, 0, "on reste sur la même image");
+});
+
+test("coop : chrono écoulé → fin de partie", () => {
+  const s = createReco(players, { totalQuestions: 4, secondsPerQuestion: 15, mode: "coop" }, ctx(0));
+  const r = reduceReco(s, { type: "advance" }, ctx((s.deadline ?? 0) + 1)).state;
+  eq(r.phase, "final", "fin quand le chrono global expire");
+});
+
+test("coop : plus d'images → fin même s'il reste du temps", () => {
+  const s0 = createReco(players, { totalQuestions: 3, secondsPerQuestion: 15, mode: "coop" }, ctx(0));
+  const n = s0.items.length;
+  let s = s0;
+  for (let i = 0; i < n; i++) s = reduceReco(s, ans("a", s0.items[i].answer), ctx(1000 + i * 500)).state;
+  eq(s.phase, "final", "partie terminée quand toutes les images sont trouvées");
+  eq(s.coopScore, n, `${n} images trouvées`);
+});
+
 console.log(`\n${passed} réussis, ${failed} échoués\n`);
 if (failed > 0) process.exit(1);

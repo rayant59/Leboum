@@ -3,6 +3,13 @@ import type { PlayerId } from "../../room/types";
 
 export type BombePhase = "countdown" | "playing" | "gameover";
 
+/** Modes de jeu (SPEC §2). `classic` par défaut ; le moteur retombe dessus
+ *  pour tout mode inconnu.
+ *  - `hardcore` : chrono PARTAGÉ 15 s, +2 s par mot, plancher 5 s, ignore le
+ *    réglage de temps par joueur.
+ *  - `coop` : toute la table contre la bombe, fin à la 1re explosion. */
+export type BombeMode = "classic" | "hardcore" | "coop";
+
 /** Réglages choisis par l'hôte dans le lobby. */
 export interface BombeSettings {
   lives?: number;         // vies par joueur (défaut 3)
@@ -10,6 +17,7 @@ export interface BombeSettings {
   maxSeconds?: number;    // durée maxi de la bombe (défaut 12)
   minLetters?: number;    // longueur mini de la syllabe (2)
   maxLetters?: number;    // longueur maxi de la syllabe (3)
+  mode?: string;          // classic | hardcore | coop
 }
 
 /** Config résolue (millisecondes), autoritaire côté serveur. */
@@ -19,6 +27,7 @@ export interface BombeConfig {
   maxMs: number;
   minLetters: number;
   maxLetters: number;
+  mode: BombeMode;
 }
 
 export type BombeClientAction =
@@ -105,6 +114,8 @@ export interface BombePublic {
   exampleSyllable: string;          // syllabe ratée liée à ces mots
   exampleVictimId: PlayerId | null; // qui a raté ces mots
   winnerId: PlayerId | null;
+  mode: BombeMode;                  // mode de jeu actif
+  coopScore: number | null;         // coop : mots validés par la table (null hors coop)
   // stats de fin
   stats: { words: string | null; survivor: string | null } | null;
 }

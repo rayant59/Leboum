@@ -16,6 +16,7 @@ function sanitize(input: unknown): RecoSettings {
     // A little longer than reco by default so the picture has time to emerge.
     secondsPerQuestion: typeof v?.secondsPerQuestion === "number" ? v.secondsPerQuestion : 60,
     category: typeof v?.category === "string" ? v.category : "all",
+    mode: typeof v?.mode === "string" ? v.mode : "classic",
   };
 }
 

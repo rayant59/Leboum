@@ -332,6 +332,8 @@ export function projectDraw(state: DrawState, viewerId: PlayerId): DrawPublic {
     result: revealed ? state.result : null,
     config: state.config,
     mode: state.mode,
+    // Coop : score d'équipe unique = somme des points de tout le monde.
+    coopScore: state.mode === "coop" ? Object.values(state.scores).reduce((a, b) => a + b, 0) : null,
   };
 }
 
