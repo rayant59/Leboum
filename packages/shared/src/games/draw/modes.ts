@@ -59,6 +59,19 @@ function clampRounds(n: number): number {
   return Math.min(DRAW_ROUNDS_MAX, Math.max(DRAW_ROUNDS_MIN, Math.round(n)));
 }
 
+// Score d'une bonne devinette selon la VITESSE (V1.1). `frac` = fraction du
+// temps de dessin restante (1 au tout début → 0 à la fin). La vitesse compte
+// beaucoup plus qu'avant : plancher bas (le retardataire gagne peu), spread
+// large, mais maximum volontairement modéré pour qu'une seule manche ne rende
+// jamais un joueur irrattrapable.
+//   instantané ≈ 100 · rapide ≈ 80 · moyen ≈ 60 · tardif = 25 (plancher)
+const GUESS_FLOOR = 25;
+const GUESS_SPEED_SPAN = 75;
+function speedScore(frac: number): number {
+  const f = Math.max(0, Math.min(1, frac));
+  return GUESS_FLOOR + Math.round(GUESS_SPEED_SPAN * f);
+}
+
 export const DRAW_SECONDS_MIN = 5;
 export const DRAW_SECONDS_MAX = 300;
 
@@ -81,10 +94,9 @@ const classic: DrawMode = {
     drawMs: drawMsFor(seconds, 80_000),
     revealMs: 8_000,
     wordChoiceCount: 5,
-    pointsDrawerPerGuess: 25,
+    pointsDrawerPerGuess: 30,
   }),
-  // 60 pts base + up to 60 for speed → early guesses ~120, last ~60.
-  scoreGuess: (frac) => 60 + Math.round(60 * Math.max(0, Math.min(1, frac))),
+  scoreGuess: speedScore,
 };
 
 const blind: DrawMode = {
@@ -97,9 +109,9 @@ const blind: DrawMode = {
     drawMs: drawMsFor(seconds, 95_000, 1.25),
     revealMs: 8_000,
     wordChoiceCount: 5,
-    pointsDrawerPerGuess: 30,
+    pointsDrawerPerGuess: 35,
   }),
-  scoreGuess: (frac) => 60 + Math.round(60 * Math.max(0, Math.min(1, frac))),
+  scoreGuess: speedScore,
   blind: true,
 };
 
@@ -113,9 +125,9 @@ const constraints: DrawMode = {
     drawMs: drawMsFor(seconds, 85_000),
     revealMs: 8_000,
     wordChoiceCount: 5,
-    pointsDrawerPerGuess: 25,
+    pointsDrawerPerGuess: 30,
   }),
-  scoreGuess: (frac) => 60 + Math.round(60 * Math.max(0, Math.min(1, frac))),
+  scoreGuess: speedScore,
   constraint: (rng) => CONSTRAINTS[Math.floor(rng() * CONSTRAINTS.length)],
 };
 
@@ -129,9 +141,9 @@ const coop: DrawMode = {
     drawMs: drawMsFor(seconds, 80_000),
     revealMs: 8_000,
     wordChoiceCount: 5,
-    pointsDrawerPerGuess: 25,
+    pointsDrawerPerGuess: 30,
   }),
-  scoreGuess: (frac) => 60 + Math.round(60 * Math.max(0, Math.min(1, frac))),
+  scoreGuess: speedScore,
 };
 
 export const DRAW_MODES: Record<string, DrawMode> = { classic, blind, constraints, coop };

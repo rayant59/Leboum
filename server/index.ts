@@ -485,6 +485,23 @@ function relay(room: Room, msg: ServerMessage) {
   }
 }
 
+/** Boum Dessin — ne fais jamais attendre le chrono pour rien : dès que TOUS les
+ *  devineurs *connectés* ont trouvé le mot, on révèle immédiatement. Le moteur
+ *  pur ne connaît pas la présence (il compterait un joueur déconnecté en fenêtre
+ *  de grâce et laisserait tourner le chrono), donc on le vérifie ici, côté
+ *  adaptateur — même logique que `maybeAdvanceForPresence` pour les sous-titres. */
+function maybeAdvanceDrawForPresence(room: Room) {
+  if (!room.mod || room.mod.module.id !== "draw") return;
+  const s = room.mod.state as DrawState;
+  if (s.phase !== "drawing") return;
+  const connected = new Set(connectedPlayers(room.state).map((p) => p.id));
+  if (connected.size <= 1) return; // le dessinateur seul : le chrono/quitte s'en charge
+  const pending = s.players.filter(
+    (p) => p.id !== s.drawerId && connected.has(p.id) && s.guessedAt[p.id] == null,
+  );
+  if (pending.length === 0) advanceGame(room, Date.now());
+}
+
 /** A guess: the engine scores correct ones; the server relays chat. Correct →
  *  "a trouvé !" to all (never the word); wrong → the guess text as chat. */
 function handleDrawGuess(room: Room, playerId: string, text: string, ws: WebSocket) {
@@ -501,6 +518,8 @@ function handleDrawGuess(room: Room, playerId: string, text: string, ws: WebSock
   } else if (wasDrawing && !isDrawer && !wasGuessed) {
     relay(room, { type: "chat", from: playerId, name, text, kind: "guess" });
   }
+  // Dernier devineur connecté à trouver → on révèle sans attendre le chrono.
+  if (!wasGuessed && after.guessedAt[playerId] != null) maybeAdvanceDrawForPresence(room);
 }
 
 function handleRelayGuess(room: Room, playerId: string, text: string, ws: WebSocket) {

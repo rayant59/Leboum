@@ -387,6 +387,44 @@ async function main() {
   await sleep(60);
   check("la discussion est relayée (kind talk)", da.chats.some((m) => m.kind === "talk" && m.text.includes("salut")));
 
+  // Rythme (V1.1) : la manche se termine dès que TOUS les devineurs *connectés*
+  // ont trouvé, même si un joueur s'est déconnecté (il ne doit plus bloquer le
+  // chrono). Salon dédié pour partir d'un état propre.
+  console.log("\nServeur générique — Dessin : fin anticipée avec un joueur déconnecté\n");
+  const dea = new Client("DREND", "dea");
+  await dea.open();
+  dea.send({ type: "join", name: "DEA" });
+  const deb = new Client("DREND", "deb");
+  await deb.open();
+  deb.send({ type: "join", name: "DEB" });
+  const dec = new Client("DREND", "dec");
+  await dec.open();
+  dec.send({ type: "join", name: "DEC" });
+  await sleep(90);
+  dea.send({ type: "set_ready", ready: true });
+  deb.send({ type: "set_ready", ready: true });
+  dec.send({ type: "set_ready", ready: true });
+  await sleep(90);
+  dea.send({ type: "start_game", gameId: "draw" });
+  await sleep(120);
+  const deClients = [dea, deb, dec];
+  const deDrawer = deClients.find((c) => c.drawGame()?.youAreDrawer)!;
+  const deWord = deDrawer.drawGame()!.wordChoices![0];
+  deDrawer.send({ type: "game", action: { kind: "choose_word", word: deWord } });
+  await sleep(90);
+  // On observe l'état via le dessinateur : il reste toujours connecté (le
+  // devineur déconnecté aurait un état gelé et fausserait l'assertion).
+  check("fin anticipée : phase de dessin après le choix", deDrawer.drawGame()?.phase === "drawing");
+  const deGuessers = deClients.filter((c) => !c.drawGame()?.youAreDrawer);
+  // Un devineur se déconnecte en pleine manche (reste dans le roster en grâce).
+  deGuessers[0].ws.close();
+  await sleep(120);
+  check("toujours en dessin tant que le devineur restant n'a pas trouvé", deDrawer.drawGame()?.phase === "drawing");
+  // Le dernier devineur connecté trouve → la manche doit se révéler AUSSITÔT.
+  deGuessers[1].send({ type: "game", action: { kind: "guess", text: deWord } });
+  await sleep(100);
+  check("fin anticipée dès que tous les connectés ont trouvé (pas d'attente du chrono)", deDrawer.drawGame()?.phase === "reveal");
+
   console.log("\nServeur générique — Faux-artiste\n");
   const fa = new Client("FAKE", "fa");
   await fa.open();

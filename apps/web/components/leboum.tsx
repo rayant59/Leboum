@@ -129,6 +129,9 @@ export const LB_SCOPED_CSS = `
 @keyframes lbRingPulse{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.55);opacity:0}}
 @keyframes lbPulseSoft{0%,100%{opacity:.55}50%{opacity:1}}
 @keyframes lbSpin{to{transform:rotate(360deg)}}
+@keyframes lbCountdownPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.16)}}
+@keyframes lbToastIn{0%{opacity:0;transform:translateY(-10px) scale(.96)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes lbScorePop{0%{opacity:0;transform:translateY(6px) scale(.75)}28%{opacity:1;transform:translateY(-2px) scale(1.12)}100%{opacity:0;transform:translateY(-16px) scale(1)}}
 @media (prefers-reduced-motion: reduce){ .lb-scope [data-lb-anim]{animation:none !important} }
 .lb-scope button.lb-gold{transition:transform .06s ease,box-shadow .12s ease,filter .12s ease}
 .lb-scope button.lb-gold:hover{filter:brightness(1.04)}

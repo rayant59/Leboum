@@ -184,6 +184,39 @@ function useCountdown(deadline: number | null, serverNow: () => number) {
   return Math.max(0, Math.ceil((deadline - serverNow()) / 1000));
 }
 
+/** Compte à rebours lisible : discret tant qu'il reste du temps, puis il grossit,
+ *  passe au rose et pulse dans les 10 dernières secondes (plus vite sous 5 s) —
+ *  pour donner le petit coup de pression de fin de manche sans surcharger. */
+function CountdownPill({ secs, accent }: { secs: number | null; accent: string }) {
+  if (secs == null) return null;
+  const urgent = secs <= 10;
+  const critical = secs <= 5;
+  return (
+    <span
+      data-lb-anim={urgent ? "" : undefined}
+      style={{
+        fontFamily: DISPLAY,
+        fontWeight: 800,
+        fontSize: urgent ? 16 : 13,
+        lineHeight: 1,
+        color: urgent ? LB.pink : accent,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minWidth: urgent ? 30 : undefined,
+        padding: urgent ? "3px 8px" : undefined,
+        borderRadius: 9,
+        background: urgent ? hexA(LB.pink, 0.12) : undefined,
+        boxShadow: urgent ? `inset 0 0 0 1px ${hexA(LB.pink, 0.5)}` : undefined,
+        transition: "color .2s ease, font-size .2s ease",
+        animation: urgent ? `lbCountdownPulse ${critical ? 0.5 : 0.9}s ease-in-out infinite` : undefined,
+      }}
+    >
+      {secs}s
+    </span>
+  );
+}
+
 type Pt = { x: number; y: number };
 
 const SHIFT_COLORS = ["#111827", "#e11d48", "#2563eb", "#16a34a", "#f59e0b", "#7c3aed", "#0891b2"];
@@ -959,7 +992,7 @@ function TurnDrawing({ room, style }: { room: UseRoom; style?: CSSProperties }) 
 }
 
 // ── Rail du mode Dessin (joueurs + chat optionnel dans le rail) ─────────────
-function DrawRail({ kicker, heading, sub, rows, chat }: { kicker: string; heading: string; sub: string; rows: RailRow[]; chat?: ReactNode }) {
+function DrawRail({ kicker, heading, sub, rows, chat, pops }: { kicker: string; heading: string; sub: string; rows: RailRow[]; chat?: ReactNode; pops?: Record<string, { id: number; text: string }> }) {
   return (
     <aside className="lb-rail" style={{ position: "relative", width: chat ? 264 : 296, flex: "none", zIndex: 1, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 16, padding: "24px 20px", background: LB.aside, borderRight: `1px solid ${LB.line}`, minHeight: 0, overflow: "hidden" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: "none" }}>
@@ -982,6 +1015,9 @@ function DrawRail({ kicker, heading, sub, rows, chat }: { kicker: string; headin
               </span>
               {r.badge && <span style={{ flex: "none", marginLeft: 6, whiteSpace: "nowrap", fontFamily: DISPLAY, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".16em", color: r.badge.color }}>{r.badge.text}</span>}
               {r.score && <span style={{ flex: "none", fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: r.rank === 1 ? LB.gold : LB.muted }}>{r.score}</span>}
+              {pops?.[r.id] && (
+                <span key={pops[r.id].id} data-lb-anim="" style={{ position: "absolute", right: 14, top: -2, fontFamily: DISPLAY, fontWeight: 800, fontSize: 14, color: LB.mint, textShadow: `0 2px 10px ${hexA(LB.mint, 0.8)}`, animation: "lbScorePop 1.3s ease-out forwards", pointerEvents: "none" }}>{pops[r.id].text}</span>
+              )}
             </div>
           );
         })}
@@ -996,6 +1032,145 @@ function DrawRail({ kicker, heading, sub, rows, chat }: { kicker: string; headin
   );
 }
 
+// ── Feedback d'événements (Étape 2) ────────────────────────────────────────
+// Rend perceptible AUSSITÔT, pour tout le monde, les moments clés de la manche :
+// « 🟢 X a trouvé ! +72 », dessinateur qui termine, joueur qui rejoint. Le son
+// est déjà géré par useGameSounds ; ici on ajoute uniquement le visuel, à partir
+// de l'état déjà diffusé (scores, guessedIds) — aucune nouvelle plomberie.
+type DrawToast = { id: number; icon: string; title: string; points: string | null; accent: string; mine: boolean };
+type ScorePop = { id: number; text: string };
+
+function useDrawFeedback(
+  game: DrawPublic,
+  nameOf: (id: string) => string,
+  you: string,
+  turnKey: string,
+): { toasts: DrawToast[]; pops: Record<string, ScorePop> } {
+  const [toasts, setToasts] = useState<DrawToast[]>([]);
+  const [pops, setPops] = useState<Record<string, ScorePop>>({});
+  const scores = useRef<Record<string, number>>({});
+  const announced = useRef<Set<string>>(new Set());
+  const finishedRef = useRef(false);
+  const countRef = useRef(game.players.length);
+  const seeded = useRef(false);
+  const idRef = useRef(1);
+
+  // Nouveau tour → on ré-arme les annonces (les mêmes joueurs peuvent re-trouver).
+  useEffect(() => {
+    announced.current = new Set();
+    finishedRef.current = false;
+  }, [turnKey]);
+
+  useEffect(() => {
+    // Premier passage (ou reconnexion) : on prend l'état comme référence, sans
+    // rejouer l'historique.
+    if (!seeded.current) {
+      for (const p of game.players) scores.current[p.id] = game.scores[p.id] ?? 0;
+      announced.current = new Set(game.guessedIds);
+      finishedRef.current = !!game.finished;
+      countRef.current = game.players.length;
+      seeded.current = true;
+      return;
+    }
+
+    const newToasts: DrawToast[] = [];
+    const newPops: Record<string, ScorePop> = {};
+
+    // Toute hausse de score → petit « +N » sur la ligne du joueur (devineurs ET
+    // dessinateur qui gagne des points à chaque bonne réponse).
+    for (const p of game.players) {
+      const gained = (game.scores[p.id] ?? 0) - (scores.current[p.id] ?? 0);
+      if (gained > 0) newPops[p.id] = { id: idRef.current++, text: `+${gained}` };
+    }
+
+    // Nouveau devineur qui trouve → toast « 🟢 X a trouvé ! +N ».
+    if (game.phase === "drawing" || game.phase === "reveal") {
+      for (const id of game.foundOrder) {
+        if (id === game.drawerId || announced.current.has(id)) continue;
+        announced.current.add(id);
+        const gained = (game.scores[id] ?? 0) - (scores.current[id] ?? 0);
+        const mine = id === you;
+        newToasts.push({
+          id: idRef.current++,
+          icon: "🟢",
+          title: mine ? "Bien joué, trouvé !" : `${nameOf(id)} a trouvé !`,
+          points: gained > 0 ? `+${gained}` : null,
+          accent: LB.mint,
+          mine,
+        });
+      }
+    }
+
+    // Le dessinateur annonce son dessin terminé.
+    if (game.finished && !finishedRef.current) {
+      finishedRef.current = true;
+      if (game.drawerId) {
+        newToasts.push({ id: idRef.current++, icon: "✏️", title: `${nameOf(game.drawerId)} a terminé son dessin`, points: null, accent: LB.gold, mine: game.drawerId === you });
+      }
+    }
+
+    // Un joueur rejoint la partie.
+    if (game.players.length > countRef.current) {
+      const newcomer = game.players[game.players.length - 1];
+      if (newcomer) newToasts.push({ id: idRef.current++, icon: "👋", title: `${newcomer.name} a rejoint`, points: null, accent: LB.violet, mine: newcomer.id === you });
+    }
+
+    // On enregistre la nouvelle référence de scores + effectif.
+    scores.current = {};
+    for (const p of game.players) scores.current[p.id] = game.scores[p.id] ?? 0;
+    countRef.current = game.players.length;
+
+    if (newToasts.length) {
+      setToasts((ts) => [...ts, ...newToasts].slice(-4));
+      for (const t of newToasts) {
+        const tid = t.id;
+        setTimeout(() => setToasts((ts) => ts.filter((x) => x.id !== tid)), 2800);
+      }
+    }
+    if (Object.keys(newPops).length) {
+      setPops((prev) => ({ ...prev, ...newPops }));
+      for (const [pid, pop] of Object.entries(newPops)) {
+        const popId = pop.id;
+        setTimeout(
+          () => setPops((prev) => (prev[pid]?.id === popId ? Object.fromEntries(Object.entries(prev).filter(([k]) => k !== pid)) : prev)),
+          1300,
+        );
+      }
+    }
+  }, [game, nameOf, you]);
+
+  return { toasts, pops };
+}
+
+/** Bandeau d'événements, en haut de la scène, non bloquant (pointer-events off). */
+function EventToasts({ toasts }: { toasts: DrawToast[] }) {
+  if (!toasts.length) return null;
+  return (
+    <div style={{ position: "absolute", top: 14, left: 0, right: 0, zIndex: 5, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, pointerEvents: "none" }}>
+      {toasts.map((t) => (
+        <div
+          key={t.id}
+          data-lb-anim=""
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 10,
+            padding: "9px 16px 9px 13px", borderRadius: 999,
+            background: "rgba(20,16,42,.92)",
+            boxShadow: `0 0 0 1px ${hexA(t.accent, 0.55)}, 0 10px 30px -12px ${hexA(t.accent, 0.9)}`,
+            animation: "lbToastIn .22s ease-out",
+            maxWidth: "90%",
+          }}
+        >
+          <span style={{ fontSize: 15, lineHeight: 1 }}>{t.icon}</span>
+          <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 15, color: t.mine ? t.accent : LB.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.title}</span>
+          {t.points && (
+            <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 15, color: t.accent, background: hexA(t.accent, 0.14), boxShadow: `inset 0 0 0 1px ${hexA(t.accent, 0.5)}`, borderRadius: 8, padding: "2px 9px", lineHeight: 1 }}>{t.points}</span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function DrawGameView({ room }: { room: UseRoom }) {
   const game = room.game as DrawPublic;
   const you = room.you;
@@ -1007,6 +1182,7 @@ export function DrawGameView({ room }: { room: UseRoom }) {
   const secs = useCountdown(game.deadline, room.serverNow);
   const drawerName = game.drawerId ? name(game.drawerId) : "";
   const turnKey = `${game.round}-${game.turnInRound}-${game.drawerId ?? ""}`;
+  const { toasts, pops } = useDrawFeedback(game, name, you, turnKey);
   const isCoop = game.mode === "coop";
   const teamScore = Object.values(game.scores).reduce((a, b) => a + b, 0);
   const revealResult = game.result;
@@ -1103,7 +1279,7 @@ export function DrawGameView({ room }: { room: UseRoom }) {
 
   const rail = (
     <DrawRail kicker={`Boum Dessin · manche ${game.round}/${game.totalRounds}`} heading={railHeading} sub={railSub} rows={railRows}
-      chat={withChat ? <ChatPanel room={room} /> : undefined} />
+      chat={withChat ? <ChatPanel room={room} /> : undefined} pops={pops} />
   );
 
   const soundBtn = <SoundToggle />;
@@ -1118,6 +1294,7 @@ export function DrawGameView({ room }: { room: UseRoom }) {
 
         <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflowY: "auto" }}>
           <div style={topBar(accent, P)} />
+          <EventToasts toasts={toasts} />
 
           {/* ═══ CHOOSING (7a) ═══ */}
           {game.phase === "choosing" && (
@@ -1155,7 +1332,7 @@ export function DrawGameView({ room }: { room: UseRoom }) {
                 <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
                   <AvatarRing name={name(you)} color={color(you)} avatar={avatarOf(you)} size={40} ring={LB.gold} p={pRemain} />
                   <span className="dv-word" style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 26, letterSpacing: ".02em" }}>{game.word}</span>
-                  {secs != null && <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: LB.gold }}>{secs}s</span>}
+                  <CountdownPill secs={secs} accent={LB.gold} />
                   {game.constraint && (
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 8, padding: "5px 10px", background: hexA(LB.pink, 0.12), boxShadow: `inset 0 0 0 1px ${hexA(LB.pink, 0.4)}`, fontSize: 12, fontWeight: 600, color: LB.pink }}>{game.constraint}</span>
                   )}
@@ -1192,7 +1369,7 @@ export function DrawGameView({ room }: { room: UseRoom }) {
                   {game.themeRevealed && game.theme && (
                     <span style={{ padding: "5px 10px", borderRadius: 8, background: hexA(LB.violet, 0.14), boxShadow: `inset 0 0 0 1px ${hexA(LB.violet, 0.45)}`, fontFamily: DISPLAY, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".12em", color: LB.violet }}>{game.theme}</span>
                   )}
-                  {secs != null && <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: LB.mint }}>{secs}s</span>}
+                  <CountdownPill secs={secs} accent={LB.mint} />
                   {soundBtn}{skipBtn}
                 </div>
               </div>
