@@ -267,6 +267,26 @@ test("end_drawing signale seulement que le dessin est fini (la manche continue)"
   s = reduceDraw(s, { type: "client", playerId: drawer, msg: { kind: "end_drawing" } }, ctx(2000)).state;
   eq(s.finished, true, "le dessinateur a signalé qu'il a terminé");
   eq(s.phase, "drawing", "la manche continue : les autres peuvent encore deviner");
+  // bascule : un second clic revient sur « terminé » (corrige un clic accidentel)
+  s = reduceDraw(s, { type: "client", playerId: drawer, msg: { kind: "end_drawing" } }, ctx(2100)).state;
+  eq(s.finished, false, "« J'ai fini » est réversible (bascule)");
+});
+
+test("révélation : points du tour + prochain dessinateur exposés", () => {
+  let s = createDrawGame(players, { totalRounds: 2, mode: "classic" }, ctx(1000));
+  const drawer = s.drawerId!;
+  s = reduceDraw(s, choose(drawer, s.wordChoices[0]), ctx(1000)).state;
+  const word = s.word!;
+  const g0 = guessers(s)[0];
+  s = reduceDraw(s, guess(g0, word), ctx(1500)).state; // g0 trouve
+  s = reduceDraw(s, { type: "advance" }, ctx(2000)).state; // temps écoulé → reveal
+  eq(s.phase, "reveal", "en révélation");
+  assert(s.result != null, "un résultat de tour est présent");
+  assert((s.result!.roundScores[g0] ?? 0) > 0, "le trouveur a des points de tour");
+  eq(s.result!.roundScores[drawer], s.config.pointsDrawerPerGuess, "le dessinateur : points × 1 trouveur");
+  const other = guessers(s)[1];
+  eq(s.result!.roundScores[other] ?? 0, 0, "celui qui n'a pas trouvé : 0 point ce tour");
+  eq(s.result!.nextDrawerId, s.order[1], "le prochain dessinateur est exposé");
 });
 
 test("un joueur qui rejoint en cours de manche devient un vrai joueur (pas un fantôme)", () => {

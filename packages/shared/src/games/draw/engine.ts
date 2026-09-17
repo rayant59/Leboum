@@ -107,6 +107,7 @@ export function createDrawGame(
     constraintRule: null,
     guessedAt: {},
     scores,
+    roundStartScores: { ...scores },
     deadline: ctx.now + config.chooseMs,
     result: null,
     config,
@@ -154,10 +155,11 @@ function reduceClient(
     return ok({ ...state, themeRevealed: true });
   }
 
-  // The drawer decides their drawing is done → end the round early.
+  // Le dessinateur signale « terminé » — informatif (la manche continue, il peut
+  // reprendre). Bascule : un clic accidentel se corrige d'un second clic.
   if (msg.kind === "end_drawing") {
     if (state.phase !== "drawing" || playerId !== state.drawerId) return ok(state);
-    return ok({ ...state, finished: true }); // informational only — round keeps going
+    return ok({ ...state, finished: !state.finished });
   }
 
   // guess
@@ -210,12 +212,17 @@ function applyPresence(state: DrawState, connectedIds: PlayerId[], ctx: GameCont
     const toAdd = roster.filter((p) => !known.has(p.id));
     if (toAdd.length) {
       const scores = { ...state.scores };
-      for (const p of toAdd) if (scores[p.id] == null) scores[p.id] = 0;
+      const roundStartScores = { ...state.roundStartScores };
+      for (const p of toAdd) {
+        if (scores[p.id] == null) scores[p.id] = 0;
+        if (roundStartScores[p.id] == null) roundStartScores[p.id] = scores[p.id] ?? 0;
+      }
       state = {
         ...state,
         players: [...state.players, ...toAdd],
         order: [...state.order, ...toAdd.map((p) => p.id)],
         scores,
+        roundStartScores,
       };
     }
   }
@@ -247,11 +254,26 @@ function startDrawing(state: DrawState, entry: WordEntry, ctx: GameContext): Dra
     constraint: c ? c.label : null,
     constraintRule: c ? c.rule : null,
     guessedAt: {},
+    // Scores figés au début du tour → base pour les points du tour à la révélation.
+    roundStartScores: { ...state.scores },
     deadline: ctx.now + state.config.drawMs,
   };
 }
 
+/** Qui dessinera au tour suivant (null si la partie se termine juste après). */
+function nextDrawerOf(state: DrawState): PlayerId | null {
+  let round = state.round;
+  let turnInRound = state.turnInRound + 1;
+  if (turnInRound >= state.order.length) { turnInRound = 0; round += 1; }
+  if (round > state.totalRounds) return null;
+  return state.order[turnInRound] ?? null;
+}
+
 function toReveal(state: DrawState, ctx: GameContext): DrawState {
+  const roundScores: Record<PlayerId, number> = {};
+  for (const p of state.players) {
+    roundScores[p.id] = (state.scores[p.id] ?? 0) - (state.roundStartScores[p.id] ?? 0);
+  }
   return {
     ...state,
     phase: "reveal",
@@ -260,6 +282,8 @@ function toReveal(state: DrawState, ctx: GameContext): DrawState {
       word: state.word ?? "",
       drawerId: state.drawerId ?? "",
       guesserIds: Object.keys(state.guessedAt),
+      roundScores,
+      nextDrawerId: nextDrawerOf(state),
     },
   };
 }
@@ -292,6 +316,7 @@ function nextTurn(state: DrawState, ctx: GameContext): DrawState {
     constraint: null,
     constraintRule: null,
     guessedAt: {},
+    roundStartScores: { ...state.scores },
     result: null,
     deadline: ctx.now + state.config.chooseMs,
   };

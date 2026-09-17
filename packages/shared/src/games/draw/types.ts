@@ -30,6 +30,11 @@ export interface DrawTurnResult {
   word: string;
   drawerId: PlayerId;
   guesserIds: PlayerId[];
+  /** Points gagnés CE TOUR par joueur (devineurs selon leur vitesse + le
+   *  dessinateur selon le nombre de trouveurs). Pour l'écran de fin de manche. */
+  roundScores: Record<PlayerId, number>;
+  /** Qui dessine au tour suivant (null si la partie se termine après). */
+  nextDrawerId: PlayerId | null;
 }
 
 /** Authoritative state (server-held, reduced). Never sent as-is to clients. */
@@ -52,6 +57,8 @@ export interface DrawState {
   constraintRule: string | null; // enforceable rule id (null = voluntary)
   guessedAt: Record<PlayerId, number>; // guesser -> when they found it
   scores: Record<PlayerId, number>;
+  /** Scores au DÉBUT du tour courant → sert à calculer les points du tour. */
+  roundStartScores: Record<PlayerId, number>;
   deadline: number | null;
   result: DrawTurnResult | null; // set during `reveal`
   config: DrawConfig;

@@ -64,14 +64,47 @@ function ToolGlyph({ id }: { id: Tool | "clear" | "undo" }) {
   return imgOk ? <img src={src} alt="" className="h-full w-full object-contain" draggable={false} /> : <ToolSvg id={id} />;
 }
 
-/** Bouton d'outil neon : 44px, sans bordure, l'actif porte le double anneau doré. */
+/** Bouton d'outil neon : 44px, sans bordure. L'actif porte le double anneau
+ *  doré ET un fond doré discret → immédiatement identifiable d'un coup d'œil. */
 function toolBtnStyle(active: boolean): CSSProperties {
   return {
-    width: 44, height: 44, padding: 0, border: "none", background: "transparent", borderRadius: 13,
+    width: 44, height: 44, padding: 0, border: "none",
+    background: active ? "rgba(255,194,75,.14)" : "transparent", borderRadius: 13,
     cursor: "pointer", display: "grid", placeItems: "center", flex: "none",
     boxShadow: active ? "0 0 0 2px #FFC24B, 0 0 0 5px rgba(255,194,75,.22)" : "none",
-    transition: "transform .06s ease, box-shadow .12s ease",
+    transition: "transform .06s ease, box-shadow .12s ease, background .12s ease",
   };
+}
+
+/** « Tout effacer » — action destructrice non annulable, donc protégée par une
+ *  confirmation à deux clics (anneau rose pulsé, se désarme seul après 3 s).
+ *  Léger : un clic de plus, aucune fenêtre modale. */
+function ClearButton({ onClear }: { onClear: () => void }) {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!armed) return;
+    const id = window.setTimeout(() => setArmed(false), 3000);
+    return () => window.clearTimeout(id);
+  }, [armed]);
+  return (
+    <button
+      onClick={() => { if (armed) { onClear(); setArmed(false); } else setArmed(true); }}
+      title={armed ? "Clique encore pour tout effacer" : "Tout effacer"}
+      aria-label={armed ? "Confirmer : tout effacer" : "Tout effacer"}
+      className="dc-toolbtn"
+      data-lb-anim={armed ? "" : undefined}
+      style={{
+        width: 44, height: 44, padding: 0, border: "none", borderRadius: 13,
+        cursor: "pointer", display: "grid", placeItems: "center", flex: "none",
+        background: armed ? hexA(LB.pink, 0.16) : "transparent",
+        boxShadow: armed ? `0 0 0 2px ${LB.pink}, 0 0 0 5px ${hexA(LB.pink, 0.22)}` : "none",
+        transition: "transform .06s ease, box-shadow .12s ease, background .12s ease",
+        animation: armed ? "lbCountdownPulse .6s ease-in-out infinite" : undefined,
+      }}
+    >
+      <ToolGlyph id="clear" />
+    </button>
+  );
 }
 
 // §1 — colours grouped into families. Each family shows ONE primary swatch;
@@ -711,9 +744,7 @@ export function DrawCanvas({
             <button onClick={undo} disabled={!canUndo} title="Annuler le dernier trait" aria-label="Annuler le dernier trait" className="dc-toolbtn" style={{ ...toolBtnStyle(false), opacity: canUndo ? 1 : 0.3, cursor: canUndo ? "pointer" : "default", marginTop: 4 }}>
               <ToolGlyph id="undo" />
             </button>
-            <button onClick={() => { historyRef.current = []; curTraitRef.current = []; setCanUndo(false); setColorLocked(false); setTraits(0); room.clearCanvas(); }} title="Tout effacer" aria-label="Tout effacer" className="dc-toolbtn" style={toolBtnStyle(false)}>
-              <ToolGlyph id="clear" />
-            </button>
+            <ClearButton onClear={() => { historyRef.current = []; curTraitRef.current = []; setCanUndo(false); setColorLocked(false); setTraits(0); room.clearCanvas(); }} />
           </div>
         )}
 
@@ -1348,7 +1379,7 @@ export function DrawGameView({ room }: { room: UseRoom }) {
                 <DrawCanvas
                   room={room} drawable blind={game.mode === "blind"} constraintRule={game.constraintRule} turnKey={turnKey} fit
                   ctaSlot={game.finished
-                    ? <span style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 12, padding: "12px 18px", fontFamily: DISPLAY, fontWeight: 700, fontSize: 14, color: LB.mint, background: hexA(LB.mint, 0.12), boxShadow: `inset 0 0 0 1px ${hexA(LB.mint, 0.45)}`, flex: "none" }}>Dessin terminé ✓</span>
+                    ? <button onClick={() => room.endDrawing()} title="Reprendre le dessin" style={{ display: "inline-flex", alignItems: "center", gap: 8, borderRadius: 12, padding: "11px 16px", fontFamily: DISPLAY, fontWeight: 700, fontSize: 14, color: LB.mint, background: hexA(LB.mint, 0.12), boxShadow: `inset 0 0 0 1px ${hexA(LB.mint, 0.45)}`, border: "none", cursor: "pointer", flex: "none" }}><span>Terminé ✓</span><span style={{ color: LB.faint, fontWeight: 600, fontSize: 12 }}>· reprendre ↩</span></button>
                     : <button onClick={() => room.endDrawing()} className="lb-gold" style={{ ...lbGoldBtn, flex: "none" }}>J'ai fini</button>}
                 />
               </div>
@@ -1398,38 +1429,65 @@ export function DrawGameView({ room }: { room: UseRoom }) {
           )}
 
           {/* ═══ REVEAL — fin du tour (7d) ═══ */}
-          {game.phase === "reveal" && (
+          {game.phase === "reveal" && (() => {
+            const roundPt = (id: string) => revealResult?.roundScores?.[id] ?? 0;
+            const nextName = revealResult?.nextDrawerId ? name(revealResult.nextDrawerId) : null;
+            const noneFound = game.foundOrder.length === 0;
+            return (
             <div className="dv-stage" style={{ padding: "14px 32px 22px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
-                <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: LB.mint }}>Le mot était</span>
-                <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".14em", color: LB.faint }}>Prochain tour dans un instant…</span>
+                <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: LB.mint }}>Le mot était…</span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 12 }}>
+                  {secs != null && <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".14em", color: LB.faint }}>Prochain tour · {secs}s</span>}
+                  {isHost && <button onClick={() => room.skipPhase()} className="lb-gold" style={{ ...lbGoldBtn, padding: "8px 16px", fontSize: 13, flex: "none" }}>Suivant →</button>}
+                </span>
               </div>
               <div className="dv-canvasfill" style={{ display: "flex", justifyContent: "center", minHeight: 0 }}>
                 <div style={{ position: "relative", height: "100%", aspectRatio: "3 / 2", maxWidth: "100%", borderRadius: 20, overflow: "hidden", boxShadow: `0 0 0 1px ${hexA(LB.mint, 0.45)}` }}>
                   <TurnDrawing room={room} />
-                  <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "52px 26px 22px", background: "linear-gradient(180deg,transparent,rgba(14,11,26,.94))" }}>
-                    <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 46, letterSpacing: "-.02em", lineHeight: 1, color: LB.mint }}>{revealResult?.word}</span>
+                  <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "60px 26px 22px", background: "linear-gradient(180deg,transparent,rgba(14,11,26,.96))" }}>
+                    <span key={revealResult?.word} data-lb-anim="" style={{ display: "block", fontFamily: DISPLAY, fontWeight: 800, fontSize: 52, letterSpacing: "-.02em", lineHeight: 1, color: LB.mint, textShadow: `0 4px 28px ${hexA(LB.mint, 0.55)}`, animation: "lbWordReveal .4s cubic-bezier(.2,.8,.2,1)" }}>{revealResult?.word}</span>
+                    {noneFound && <span style={{ display: "block", marginTop: 8, fontSize: 13, color: LB.faint }}>Personne n'a trouvé ce tour-ci 🙈</span>}
                   </div>
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14, flexWrap: "wrap" }}>
+              {/* Trouveurs + points du tour + dessinateur */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
                 {game.foundOrder.map((id, i) => (
-                  <span key={id} style={{ display: "inline-flex", alignItems: "center", gap: 10, borderRadius: 14, padding: "10px 14px", background: i === 0 ? hexA(LB.mint, 0.1) : "transparent", boxShadow: i === 0 ? `0 0 0 1px ${hexA(LB.mint, 0.5)}` : `0 0 0 1px ${LB.line}` }}>
+                  <span key={id} style={{ display: "inline-flex", alignItems: "center", gap: 9, borderRadius: 14, padding: "9px 13px", background: i === 0 ? hexA(LB.mint, 0.1) : "transparent", boxShadow: i === 0 ? `0 0 0 1px ${hexA(LB.mint, 0.5)}` : `0 0 0 1px ${LB.line}` }}>
                     <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".14em", color: i === 0 ? LB.mint : LB.faint }}>{i + 1}{i === 0 ? "er" : "e"}</span>
                     <Avatar name={name(id)} color={color(id)} avatar={avatarOf(id)} size={26} />
                     <span style={{ fontSize: 15, fontWeight: 600 }}>{name(id)}</span>
+                    <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 13, color: LB.mint }}>+{roundPt(id)}</span>
                   </span>
                 ))}
                 {game.drawerId && (
-                  <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 10, borderRadius: 14, padding: "10px 14px", boxShadow: `0 0 0 1px ${hexA(LB.gold, 0.5)}`, background: hexA(LB.gold, 0.08) }}>
+                  <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 9, borderRadius: 14, padding: "9px 13px", boxShadow: `0 0 0 1px ${hexA(LB.gold, 0.5)}`, background: hexA(LB.gold, 0.08) }}>
                     <Avatar name={name(game.drawerId)} color={color(game.drawerId)} avatar={avatarOf(game.drawerId)} size={26} />
                     <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".14em", color: LB.gold }}>dessinateur</span>
+                    <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 13, color: LB.gold }}>+{roundPt(game.drawerId)}</span>
                   </span>
+                )}
+              </div>
+              {/* Qui dessine ensuite */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12, fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".14em", color: LB.faint }}>
+                {nextName ? (
+                  <>
+                    <span>Au tour de</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: LB.violet }}>
+                      <Avatar name={nextName} color={color(revealResult!.nextDrawerId!)} avatar={avatarOf(revealResult!.nextDrawerId!)} size={22} />
+                      {nextName}
+                    </span>
+                    <span>ensuite</span>
+                  </>
+                ) : (
+                  <span style={{ color: LB.gold }}>Dernier tour joué — place au classement 🏆</span>
                 )}
               </div>
               {game.mode === "blind" && game.youAreDrawer && <BlindReveal room={room} />}
             </div>
-          )}
+            );
+          })()}
         </div>
       </div>
     </main>
