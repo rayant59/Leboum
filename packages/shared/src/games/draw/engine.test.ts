@@ -289,6 +289,51 @@ test("révélation : points du tour + prochain dessinateur exposés", () => {
   eq(s.result!.nextDrawerId, s.order[1], "le prochain dessinateur est exposé");
 });
 
+test("1 joueur : la manche se déroule et la partie s'enchaîne sans planter", () => {
+  const solo: GamePlayer[] = [{ id: "solo", name: "Solo", color: "#fff" }];
+  let s = createDrawGame(solo, { totalRounds: 2, mode: "classic" }, ctx(1000));
+  eq(s.drawerId, "solo", "le solo est le dessinateur");
+  s = reduceDraw(s, choose("solo", s.wordChoices[0]), ctx(1000)).state;
+  eq(s.phase, "drawing", "en dessin");
+  s = reduceDraw(s, { type: "advance" }, ctx(2000)).state; // temps écoulé, personne ne devine
+  eq(s.phase, "reveal", "→ révélation même sans trouveur");
+  eq(s.result!.roundScores["solo"], 0, "aucun point (personne n'a deviné)");
+  // On enchaîne jusqu'au bout sans planter → scoreboard.
+  let guard = 0;
+  while (s.phase !== "scoreboard" && guard++ < 50) {
+    s = reduceDraw(s, { type: "advance" }, ctx(3000 + guard * 1000)).state;
+  }
+  eq(s.phase, "scoreboard", "la partie se termine proprement");
+});
+
+test("plusieurs trouveurs : ordre respecté, le plus rapide marque plus, fin anticipée", () => {
+  let s = createDrawGame(players, { totalRounds: 2, mode: "classic" }, ctx(1000));
+  const drawer = s.drawerId!;
+  s = reduceDraw(s, choose(drawer, s.wordChoices[0]), ctx(1000)).state;
+  const word = s.word!;
+  const [g0, g1] = guessers(s);
+  s = reduceDraw(s, guess(g0, word), ctx(1200)).state; // trouve tôt
+  eq(s.phase, "drawing", "un seul a trouvé : la manche continue");
+  s = reduceDraw(s, guess(g1, word), ctx(41000)).state; // trouve tard → tous ont trouvé
+  eq(s.phase, "reveal", "tous ont trouvé → fin anticipée immédiate");
+  eq(s.result!.guesserIds.length, 2, "deux trouveurs");
+  eq(s.result!.guesserIds[0], g0, "l'ordre des trouveurs est respecté (g0 premier)");
+  eq(s.result!.guesserIds[1], g1, "g1 second");
+  eq(projectDraw(s, g0).foundOrder[0], g0, "la projection expose aussi le bon ordre");
+  assert(s.scores[g0] > s.scores[g1], "le plus rapide marque strictement plus");
+  eq(s.result!.roundScores[drawer], s.config.pointsDrawerPerGuess * 2, "dessinateur : points × 2 trouveurs");
+});
+
+test("le dessinateur quitte en pleine manche → la manche se termine", () => {
+  let s = createDrawGame(players, { totalRounds: 2, mode: "classic" }, ctx(1000));
+  const drawer = s.drawerId!;
+  s = reduceDraw(s, choose(drawer, s.wordChoices[0]), ctx(1000)).state;
+  eq(s.phase, "drawing", "en dessin");
+  const remaining = players.map((p) => p.id).filter((id) => id !== drawer);
+  s = reduceDraw(s, { type: "presence", connectedIds: remaining, players: s.players }, ctx(1500)).state;
+  eq(s.phase, "reveal", "le départ du dessinateur clôt la manche");
+});
+
 test("un joueur qui rejoint en cours de manche devient un vrai joueur (pas un fantôme)", () => {
   let s = createDrawGame(players, { totalRounds: 2, mode: "classic" }, ctx(1000));
   const drawer = s.drawerId!;

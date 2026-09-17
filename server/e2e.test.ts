@@ -425,6 +425,48 @@ async function main() {
   await sleep(100);
   check("fin anticipée dès que tous les connectés ont trouvé (pas d'attente du chrono)", deDrawer.drawGame()?.phase === "reveal");
 
+  // Cycle de vie complet (V1.1) : 2 joueurs, retour salon, relance, reconnexion,
+  // rejouer. Salon dédié.
+  console.log("\nServeur générique — Dessin : 2 joueurs, retour salon, reconnexion, rejouer\n");
+  const dfa = new Client("DFULL", "dfa");
+  await dfa.open();
+  dfa.send({ type: "join", name: "DFA" });
+  const dfb = new Client("DFULL", "dfb");
+  await dfb.open();
+  dfb.send({ type: "join", name: "DFB" });
+  await sleep(90);
+  dfa.send({ type: "set_ready", ready: true });
+  dfb.send({ type: "set_ready", ready: true });
+  await sleep(90);
+  dfa.send({ type: "start_game", gameId: "draw" });
+  await sleep(120);
+  check("2 joueurs : le jeu de dessin démarre", dfa.last()?.gameId === "draw" && dfa.last()?.state.phase === "in_game");
+  check("2 joueurs : un dessinateur est désigné", !!dfa.drawGame()?.drawerId);
+  // Retour au salon (hôte)
+  dfa.send({ type: "return_lobby" });
+  await sleep(100);
+  check("retour au salon : phase lobby, plus de jeu", dfa.last()?.state.phase === "lobby" && dfa.last()?.gameId === null);
+  // Relance depuis le salon
+  dfa.send({ type: "set_ready", ready: true });
+  dfb.send({ type: "set_ready", ready: true });
+  await sleep(90);
+  dfa.send({ type: "start_game", gameId: "draw" });
+  await sleep(120);
+  check("relance depuis le salon : de nouveau en jeu", dfa.last()?.state.phase === "in_game" && dfa.drawGame()?.phase === "choosing");
+  // Reconnexion d'un joueur en pleine partie
+  dfb.ws.close();
+  await sleep(120);
+  check("après déconnexion : le joueur est marqué hors ligne", dfa.last()?.state.players["dfb"]?.isConnected === false);
+  const dfbR = new Client("DFULL", "dfb");
+  await dfbR.open();
+  await sleep(150);
+  check("reconnexion : le joueur reçoit l'état du jeu en cours", dfbR.last()?.gameId === "draw");
+  check("reconnexion : le joueur est de nouveau en ligne", dfa.last()?.state.players["dfb"]?.isConnected === true);
+  // Rejouer (hôte) → nouvelle partie immédiate
+  dfa.send({ type: "play_again" });
+  await sleep(120);
+  check("rejouer : une nouvelle partie démarre (manche 1)", dfa.drawGame()?.phase === "choosing" && dfa.drawGame()?.round === 1);
+
   console.log("\nServeur générique — Faux-artiste\n");
   const fa = new Client("FAKE", "fa");
   await fa.open();
