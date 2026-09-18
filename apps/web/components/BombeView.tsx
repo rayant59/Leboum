@@ -530,7 +530,7 @@ export function BombeView({ room }: { room: UseRoom }) {
                     <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: C.gold }}>Ton mot</span>
                   </span>
                 </div>
-                <div onClick={() => inputRef.current?.focus()} style={{ position: "relative", display: "flex", alignItems: "center", gap: 20, padding: "clamp(16px,3vw,24px) clamp(16px,3vw,28px)", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 2px ${C.gold}80, inset 0 1px 0 rgba(243,238,255,.04), 0 20px 44px -28px rgba(0,0,0,.9)`, cursor: "text" }}>
+                <div onClick={() => inputRef.current?.focus()} style={{ position: "relative", display: "flex", alignItems: "center", gap: 20, padding: "clamp(16px,3vw,24px) clamp(16px,3vw,28px)", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 1px #332A5A, inset 0 1px 0 rgba(243,238,255,.04), 0 20px 44px -28px rgba(0,0,0,.9)`, cursor: "text" }}>
                   <span style={{ flex: 1, minWidth: 0, fontFamily: DISPLAY, fontSize: "clamp(30px,6vw,52px)", fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", padding: "4px 8px 4px 0" }}>
                     {text ? <Highlighted text={text} syllable={game.syllable} tint={C.gold} /> : <span style={{ color: C.faint }}>un mot avec {game.syllable.toLowerCase()}…</span>}
                     <Caret tint={C.gold} />

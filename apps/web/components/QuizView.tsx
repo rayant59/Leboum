@@ -473,7 +473,7 @@ export function QuizView({ room }: { room: UseRoom }) {
                     </div>
                   ) : (
                     <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-                      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "18px 28px", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 2px ${hexA(C.gold, 0.5)}, inset 0 1px 0 rgba(243,238,255,.04), 0 20px 44px -28px rgba(0,0,0,.9)` }}>
+                      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "18px 28px", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 1px #332A5A, inset 0 1px 0 rgba(243,238,255,.04), 0 20px 44px -28px rgba(0,0,0,.9)` }}>
                         <input
                           className="qz-input"
                           value={freeText}

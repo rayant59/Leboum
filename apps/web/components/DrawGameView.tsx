@@ -495,7 +495,8 @@ export function DrawCanvas({
   const fogOpacity = fog ? Math.min(0.85, 0.12 + (fxElapsed / 22000) * 0.75) : 0;
   // Rétrécit plus vite : atteint ~40 % en ~35 s.
   const shrinkScale = shrink ? Math.max(0.4, 1 - (fxElapsed / 35000) * 0.6) : 1;
-  // Curseur fantôme : totalement invisible en permanence.
+  // Pinceau fantôme : pas d'indicateur de pinceau (le décalage du trait fait
+  // toute la difficulté, à la souris comme au doigt).
   const cursorVisible = !ghostCursor;
   // Toile baladeuse : se déplace vite un peu partout.
   const roamX = roam ? Math.round(Math.sin(fxElapsed / 190) * 26 + Math.sin(fxElapsed / 70) * 10) : 0;
@@ -571,8 +572,15 @@ export function DrawCanvas({
   function norm(e: React.PointerEvent) {
     const r = measure();
     let x = (e.clientX - r.left) / r.width;
-    const y = (e.clientY - r.top) / r.height;
+    let y = (e.clientY - r.top) / r.height;
     if (inverted) x = 1 - x;
+    if (ghostCursor) {
+      // Pinceau « fantôme » : le trait apparaît DÉCALÉ de là où on pointe/touche
+      // (contrainte de coordonnées → marche à la souris ET au doigt), avec un
+      // léger flottement pour l'effet hanté.
+      x += 0.09 + Math.sin(fxElapsed / 600) * 0.03;
+      y += -0.07 + Math.cos(fxElapsed / 520) * 0.03;
+    }
     return { x, y };
   }
   function cssPos(e: React.PointerEvent) {
@@ -727,7 +735,7 @@ export function DrawCanvas({
           {colorShift && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Couleur qui change 🌈</span>}
           {fog && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Brouillard 🌫️</span>}
           {shrink && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Toile qui rétrécit 🔻</span>}
-          {ghostCursor && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Curseur fantôme 👻</span>}
+          {ghostCursor && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Pinceau fantôme 👻</span>}
           {roam && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Toile baladeuse 🏃</span>}
         </div>
       )}

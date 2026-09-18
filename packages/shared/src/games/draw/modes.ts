@@ -50,7 +50,7 @@ const CONSTRAINTS: { label: string; rule: string | null }[] = [
   { label: "Couleur qui change 🌈", rule: "color_shift" },
   { label: "Brouillard 🌫️", rule: "fog" },
   { label: "Toile qui rétrécit 🔻", rule: "shrink" },
-  { label: "Curseur fantôme 👻", rule: "ghost_cursor" },
+  { label: "Pinceau fantôme 👻", rule: "ghost_cursor" },
   { label: "Toile baladeuse 🏃", rule: "roam" },
 ];
 
