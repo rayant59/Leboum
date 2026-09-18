@@ -213,6 +213,9 @@ export function BombeView({ room }: { room: UseRoom }) {
     const t = text.trim();
     if (!t) return;
     room.bombeSubmit(t);
+    // Vide le champ après chaque tentative : sur un mot faux (le tour ne
+    // change pas) on peut retaper aussitôt sans avoir à tout effacer.
+    setText("");
     if (typingTimer.current) clearTimeout(typingTimer.current);
     lastTypedRef.current = Date.now();
     room.sendBombeTyping("");

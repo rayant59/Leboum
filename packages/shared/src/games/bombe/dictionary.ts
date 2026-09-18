@@ -45,8 +45,11 @@ let POOL2: string[] = [];
 let POOL3: string[] = [];
 
 // Bandes de fréquence (nombre de mots contenant la syllabe).
-const BAND2_MIN = 120,  BAND2_MAX = 12000; // 2 lettres : ~230 combis jouables
-const BAND3_MIN = 30,   BAND3_MAX = 4000;  // 3 lettres : plus dur
+// Réglé « plus facile » : on remonte le plancher (syllabes plus courantes,
+// donc plus faciles) et le plafond (on autorise aussi les syllabes très
+// courantes, les plus simples à compléter).
+const BAND2_MIN = 220,  BAND2_MAX = 40000; // 2 lettres : plus courantes = plus faciles
+const BAND3_MIN = 90,   BAND3_MAX = 18000; // 3 lettres : uniquement les plus courantes
 
 function buildIndex(): void {
   SYLL2 = new Map();
@@ -123,11 +126,12 @@ export function pickBombeSyllable(
   const max = Math.max(min, Math.min(3, opts?.maxLetters ?? 3));
   const recent = new Set((opts?.exclude ?? []).map(bombeNormalize));
 
-  // Choix de la longueur : si les deux sont permises, 70% de 2-lettres.
+  // Choix de la longueur : si les deux sont permises, ~88% de 2-lettres.
+  // (Les 3-lettres sont les plus dures : on les tire rarement pour alléger.)
   let useThree: boolean;
   if (min === 3) useThree = true;
   else if (max === 2) useThree = false;
-  else useThree = rng() < 0.3;
+  else useThree = rng() < 0.12;
 
   const primary = useThree ? POOL3 : POOL2;
   const secondary = useThree ? POOL2 : POOL3;
