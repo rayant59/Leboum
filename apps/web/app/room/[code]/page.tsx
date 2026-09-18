@@ -17,6 +17,7 @@ import { QuizView } from "@/components/QuizView";
 import { RecoView } from "@/components/RecoView";
 import { BombeView } from "@/components/BombeView";
 import { MimicView } from "@/components/MimicView";
+import { GameIntro } from "@/components/GameIntro";
 import { Avatar } from "@/components/Avatar";
 import { ProfileModal } from "@/components/ProfileModal";
 import { SubtitleStrip } from "@/components/SubtitleStrip";
@@ -185,6 +186,26 @@ export default function LobbyPage() {
     prevPending.current = pending;
   }, [room, room.pendingGame, room.state, room.you]);
 
+  // --- écran d'annonce « prochain jeu » entre les jeux ----------------------
+  // Affiché brièvement à chaque démarrage de jeu (changement de gameId), côté
+  // client uniquement : aucune modification du moteur/serveur.
+  const [introGame, setIntroGame] = useState<string | null>(null);
+  const prevIntroGameId = useRef<string | null>(null);
+  useEffect(() => {
+    const st = room.state;
+    if (st?.phase === "in_game" && room.gameId) {
+      if (prevIntroGameId.current !== room.gameId) {
+        prevIntroGameId.current = room.gameId;
+        setIntroGame(room.gameId);
+        const t = window.setTimeout(() => setIntroGame(null), 4200);
+        return () => window.clearTimeout(t);
+      }
+    } else {
+      prevIntroGameId.current = null;
+      setIntroGame(null);
+    }
+  }, [room.gameId, room.state?.phase]);
+
   // --- name gate (direct link without a stored pseudo) ----------------------
   if (!name) {
     return (
@@ -286,25 +307,50 @@ export default function LobbyPage() {
   if (state?.phase === "in_game") {
     if (!room.game) {
       return (
-        <main className="grid min-h-dvh place-items-center px-5 text-center">
-          <div className="animate-pop">
-            <div className="mb-4 flex justify-center">
-              <SubtitleStrip>silence, ça tourne…</SubtitleStrip>
+        <>
+          <BoumBackdrop />
+          <main className="relative z-[1] grid min-h-dvh place-items-center px-5 text-center">
+            <style>{`@keyframes lb-dot{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-7px);opacity:1}}@keyframes lb-clap{0%,72%,100%{transform:rotate(0)}82%{transform:rotate(-22deg)}92%{transform:rotate(0)}}@keyframes lb-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}`}</style>
+            <div className="animate-pop" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 24 }}>
+              <div style={{ position: "relative", width: 120, height: 108, animation: "lb-float 4s ease-in-out infinite" }}>
+                <div style={{ position: "absolute", bottom: 0, width: 120, height: 80, borderRadius: 10, background: "linear-gradient(180deg, #251C45, #1C1636)", border: "1px solid #332A5A", boxShadow: "0 18px 40px -18px rgba(0,0,0,.9)" }} />
+                <div style={{ position: "absolute", bottom: 26, left: 14, fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 800, fontSize: 14, color: "#FFC24B" }}>BOUM</div>
+                <div style={{ position: "absolute", top: 0, left: 0, width: 120, height: 26, transformOrigin: "6px 22px", animation: "lb-clap 2.6s ease-in-out infinite" }}>
+                  <div style={{ width: 120, height: 22, borderRadius: 8, background: "#0E0B1A", border: "1px solid #332A5A", overflow: "hidden" }}>
+                    <span style={{ display: "block", width: "100%", height: "100%", background: "repeating-linear-gradient(115deg,#F3EEFF 0 13px,#0E0B1A 13px 26px)" }} />
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-center"><SubtitleStrip>silence, ça tourne…</SubtitleStrip></div>
+              <div style={{ display: "flex", gap: 9 }}>
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#FFC24B", animation: "lb-dot 1.2s ease-in-out infinite" }} />
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#FFC24B", animation: "lb-dot 1.2s ease-in-out .16s infinite" }} />
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#FFC24B", animation: "lb-dot 1.2s ease-in-out .32s infinite" }} />
+              </div>
             </div>
-            <p className="text-text-muted">La partie démarre…</p>
-          </div>
-        </main>
+          </main>
+        </>
       );
     }
-    if (room.gameId === "fakeartist") return <FakeArtistView room={room} />;
-    if (room.gameId === "relay") return <RelayView room={room} />;
-    if (room.gameId === "doublage") return <DoublageView room={room} />;
-    if (room.gameId === "mimic") return <MimicView room={room} />;
-    if (room.gameId === "quiz") return <QuizView room={room} />;
-    if (room.gameId === "reco") return <RecoView room={room} />;
-    if (room.gameId === "pixel") return <RecoView room={room} pixel />;
-    if (room.gameId === "bombe") return <BombeView room={room} />;
-    return room.gameId === "draw" ? <DrawGameView room={room} /> : <GameView room={room} />;
+    const gameEl =
+      room.gameId === "fakeartist" ? <FakeArtistView room={room} /> :
+      room.gameId === "relay" ? <RelayView room={room} /> :
+      room.gameId === "doublage" ? <DoublageView room={room} /> :
+      room.gameId === "mimic" ? <MimicView room={room} /> :
+      room.gameId === "quiz" ? <QuizView room={room} /> :
+      room.gameId === "reco" ? <RecoView room={room} /> :
+      room.gameId === "pixel" ? <RecoView room={room} pixel /> :
+      room.gameId === "bombe" ? <BombeView room={room} /> :
+      room.gameId === "draw" ? <DrawGameView room={room} /> :
+      <GameView room={room} />;
+    return (
+      <>
+        {gameEl}
+        {introGame && (
+          <GameIntro gameId={introGame} players={players} onDone={() => setIntroGame(null)} />
+        )}
+      </>
+    );
   }
 
   const online = room.status === "open";
