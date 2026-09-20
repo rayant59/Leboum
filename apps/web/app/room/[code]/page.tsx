@@ -81,6 +81,19 @@ const TIMES: Record<GameId, { title: string; sub: string; opts: number[]; def: n
   bombe: { title: "Temps par joueur", sub: "Mèche avant l'explosion", opts: [5, 7, 10, 15], def: 7 },
 };
 
+/** Réglage « nombre de tours » exposé dans la salle d'attente. Selon le jeu on
+ *  compte en MANCHES (dessin, mimic, bombe) ou en QUESTIONS/IMAGES (quiz, reco,
+ *  pixel). Chaque jeu garde son propre défaut et ses propres bornes — le quiz,
+ *  par exemple, va jusqu'à 20 questions (le moteur borne totalQuestions à 3–20). */
+const ROUNDS: Record<GameId, { headTitle: string; rowTitle: string; rowSub: string; unit: string; min: number; max: number; def: number }> = {
+  draw:  { headTitle: "Manches",   rowTitle: "Nombre de manches",   rowSub: "La partie s'arrête au bout du compte", unit: "manches",   min: 2, max: 8,  def: 3 },
+  mimic: { headTitle: "Manches",   rowTitle: "Nombre de manches",   rowSub: "La partie s'arrête au bout du compte", unit: "manches",   min: 2, max: 8,  def: 3 },
+  quiz:  { headTitle: "Questions", rowTitle: "Nombre de questions", rowSub: "Autant de questions posées dans la partie", unit: "questions", min: 5, max: 20, def: 10 },
+  reco:  { headTitle: "Images",    rowTitle: "Nombre d'images",     rowSub: "Autant d'images à reconnaître dans la partie", unit: "images", min: 5, max: 20, def: 10 },
+  pixel: { headTitle: "Images",    rowTitle: "Nombre d'images",     rowSub: "Autant d'images à deviner dans la partie", unit: "images", min: 5, max: 20, def: 10 },
+  bombe: { headTitle: "Manches",   rowTitle: "Nombre de manches",   rowSub: "La partie s'arrête au bout du compte", unit: "manches",   min: 2, max: 8,  def: 3 },
+};
+
 const GAME_META: Record<string, { label: string; img: string; tint: string }> = {
   subtitles: { label: "Sous-titres", img: "/games/subtitles.png", tint: "#FFC24B" },
   draw: { label: "Boum Dessin", img: "/games/draw.png", tint: "#FF4D8D" },
@@ -105,7 +118,7 @@ export default function LobbyPage() {
   // Modèle unifié (SPEC §1) : nombre de manches partagé + mémoire du mode et du
   // temps CHOISIS PAR JEU. Changer de jeu restaure ses réglages, jamais ceux des
   // autres. Le moteur retombe sur « classique » pour un mode qu'il ne joue pas.
-  const [rounds, setRounds] = useState(3);
+  const [roundsByGame, setRoundsByGame] = useState<Partial<Record<GameId, number>>>({});
   const [modeByGame, setModeByGame] = useState<Partial<Record<GameId, string>>>({});
   const [timeByGame, setTimeByGame] = useState<Partial<Record<GameId, number>>>({});
   const [drawThemes, setDrawThemes] = useState<string[]>([]);
@@ -117,10 +130,23 @@ export default function LobbyPage() {
     return set.some((m) => m.id === picked) ? (picked as string) : set[0].id;
   };
   const timeOf = (g: GameId) => timeByGame[g] ?? TIMES[g].def;
+  // Nombre de tours effectif (borné aux limites du jeu), avec repli sur son défaut.
+  const roundsOf = (g: GameId) => {
+    const cfg = ROUNDS[g];
+    const v = roundsByGame[g] ?? cfg.def;
+    return Math.max(cfg.min, Math.min(cfg.max, v));
+  };
   const curMode = modeOf(selectedGame);
   const turnSeconds = timeOf(selectedGame);
+  const curRounds = roundsOf(selectedGame);
   const setMode = (g: GameId, id: string) => setModeByGame((p) => ({ ...p, [g]: id }));
   const setTime = (g: GameId, v: number) => setTimeByGame((p) => ({ ...p, [g]: v }));
+  const bumpRounds = (g: GameId, delta: number) =>
+    setRoundsByGame((p) => {
+      const cfg = ROUNDS[g];
+      const cur = p[g] ?? cfg.def;
+      return { ...p, [g]: Math.max(cfg.min, Math.min(cfg.max, cur + delta)) };
+    });
   /** Jeu réellement lancé : les modes Faux-artiste / Relais de Boum Dessin
    *  routent vers leur propre moteur ; les autres modes gardent leur jeu. */
   const launchId = selectedGame === "draw" && (curMode === "fakeartist" || curMode === "relay") ? curMode : selectedGame;
@@ -287,17 +313,17 @@ export default function LobbyPage() {
     const t = turnSeconds;
     switch (selectedGame) {
       case "draw":
-        if (mode === "fakeartist") return room.startGame("fakeartist", { totalRounds: rounds });
-        if (mode === "relay") return room.startGame("relay", { totalRounds: rounds });
-        return room.startGame("draw", { totalRounds: rounds, mode, themes: drawThemes, seconds: t });
+        if (mode === "fakeartist") return room.startGame("fakeartist", { totalRounds: curRounds });
+        if (mode === "relay") return room.startGame("relay", { totalRounds: curRounds });
+        return room.startGame("draw", { totalRounds: curRounds, mode, themes: drawThemes, seconds: t });
       case "mimic":
-        return room.startGame("mimic", { totalRounds: rounds, recordSeconds: t, mode });
+        return room.startGame("mimic", { totalRounds: curRounds, recordSeconds: t, mode });
       case "quiz":
-        return room.startGame("quiz", { totalQuestions: rounds, secondsPerQuestion: t, types: "all", mode });
+        return room.startGame("quiz", { totalQuestions: curRounds, secondsPerQuestion: t, types: "all", mode });
       case "reco":
-        return room.startGame("reco", { totalQuestions: rounds, secondsPerQuestion: t, category: "all", mode });
+        return room.startGame("reco", { totalQuestions: curRounds, secondsPerQuestion: t, category: "all", mode });
       case "pixel":
-        return room.startGame("pixel", { totalQuestions: rounds, secondsPerQuestion: t, category: "all", mode });
+        return room.startGame("pixel", { totalQuestions: curRounds, secondsPerQuestion: t, category: "all", mode });
       case "bombe":
         return room.startGame("bombe", { lives: 3, minSeconds: t, maxSeconds: t + 3, minLetters: 2, maxLetters: 3, mode });
     }
@@ -598,18 +624,18 @@ export default function LobbyPage() {
             </div>
           </div>
 
-          {/* MANCHES — nombre partagé, jamais modifié par un mode (SPEC §1) */}
+          {/* NOMBRE DE TOURS — libellé et bornes propres à chaque jeu (manches, questions, images) */}
           <div className="cfg-grp">
             <div className="cfg-head">
               <span className="cfg-ic-img"><img src="/ui/manche.png" alt="" draggable={false} /></span>
-              <div><h2 className="cfg-tt">Manches</h2><span className="cfg-sub">Réglage de la partie</span></div>
+              <div><h2 className="cfg-tt">{ROUNDS[selectedGame].headTitle}</h2><span className="cfg-sub">Réglage de la partie</span></div>
             </div>
             <div className="cfg-rounds">
-              <div className="cfg-rlab"><b>Nombre de manches</b>La partie s'arrête au bout du compte</div>
+              <div className="cfg-rlab"><b>{ROUNDS[selectedGame].rowTitle}</b>{ROUNDS[selectedGame].rowSub}</div>
               <div className="cfg-stepper">
-                <button className="cfg-sbtn" onClick={() => setRounds((r) => Math.max(2, r - 1))} disabled={!isHost} aria-label="Moins"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M5 12h14" /></svg></button>
-                <div className="cfg-sval"><div className="cfg-svaln">{rounds}</div><div className="cfg-svalu">manches</div></div>
-                <button className="cfg-sbtn" onClick={() => setRounds((r) => Math.min(8, r + 1))} disabled={!isHost} aria-label="Plus"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg></button>
+                <button className="cfg-sbtn" onClick={() => bumpRounds(selectedGame, -1)} disabled={!isHost || curRounds <= ROUNDS[selectedGame].min} aria-label="Moins"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M5 12h14" /></svg></button>
+                <div className="cfg-sval"><div className="cfg-svaln">{curRounds}</div><div className="cfg-svalu">{ROUNDS[selectedGame].unit}</div></div>
+                <button className="cfg-sbtn" onClick={() => bumpRounds(selectedGame, 1)} disabled={!isHost || curRounds >= ROUNDS[selectedGame].max} aria-label="Plus"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg></button>
               </div>
             </div>
           </div>
