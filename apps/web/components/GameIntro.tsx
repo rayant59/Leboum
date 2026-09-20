@@ -102,7 +102,7 @@ export function GameIntro({
         </div>
 
         <div style={{ position: "relative", width: 108, height: 108, display: "grid", placeItems: "center" }}>
-          <div aria-hidden style={{ position: "absolute", inset: -50, borderRadius: "50%", background: `radial-gradient(circle, ${a}80, ${a}28 40%, ${a}00 70%)`, animation: "gi-pulse 1s ease-in-out infinite" }} />
+          <div aria-hidden style={{ position: "absolute", inset: -46, borderRadius: "50%", background: `radial-gradient(circle closest-side, ${a}55, ${a}1c 52%, transparent 76%)`, filter: "blur(10px)", pointerEvents: "none", animation: "gi-pulse 1s ease-in-out infinite" }} />
           <svg width="108" height="108" viewBox="0 0 108 108" style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
             <circle cx="54" cy="54" r="48" fill="none" stroke="#332A5A" strokeWidth="6" />
             <circle cx="54" cy="54" r="48" fill="none" stroke={a} strokeWidth="6" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C - (count / 3) * C} style={{ transition: "stroke-dashoffset .4s ease", filter: `drop-shadow(0 0 8px ${a}b3)` }} />

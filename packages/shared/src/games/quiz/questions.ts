@@ -49,11 +49,67 @@ export function normalizeAnswer(s: string): string {
     .trim();
 }
 
+// Articles/déterminants en tête qu'on ignore : « La mer » accepte « mer ».
+const LEADING_ARTICLES = new Set([
+  "le", "la", "les", "l", "un", "une", "des", "du", "de", "d", "au", "aux",
+]);
+
+/** Convertit un chiffre romain 1–40 (i, v, x uniquement, plus « xl » = 40) en
+ *  nombre. Renvoie null si le jeton n'est pas un romain propre dans cette plage.
+ *  Volontairement limité à i/v/x : ça exclut d'office les vrais mots contenant
+ *  d, c, m ou l (« dix », « midi », « civil »…), qui ne seront jamais convertis. */
+function romanToArabic(tok: string): number | null {
+  if (tok === "xl") return 40;
+  if (!/^(x{0,3})(ix|iv|v?i{0,3})$/.test(tok) || !tok) return null;
+  const val: Record<string, number> = { i: 1, v: 5, x: 10 };
+  let total = 0;
+  let prev = 0;
+  for (let i = tok.length - 1; i >= 0; i--) {
+    const v = val[tok[i]];
+    if (v < prev) total -= v;
+    else {
+      total += v;
+      prev = v;
+    }
+  }
+  return total > 0 ? total : null;
+}
+
+/**
+ * Forme « canonique » d'une réponse, plus tolérante que la simple normalisation :
+ *   - on retire un article/déterminant en tête (« la mer » → « mer ») ;
+ *   - on convertit les chiffres romains d'un nom en chiffres arabes
+ *     (« louis xiv » → « louis 14 »), pour qu'on puisse répondre « louis 14 ».
+ * Appliquée des deux côtés (réponse attendue ET saisie du joueur), elle rend la
+ * comparaison symétrique : peu importe la forme tapée, on tombe sur la même clé.
+ */
+export function canonicalAnswer(s: string): string {
+  const norm = normalizeAnswer(s);
+  if (!norm) return "";
+  let toks = norm.split(" ").filter(Boolean);
+  // Retire un seul article en tête, à condition qu'il reste un mot après.
+  if (toks.length > 1 && LEADING_ARTICLES.has(toks[0])) toks = toks.slice(1);
+  // Convertit les jetons romains (seulement si plusieurs mots : un mot seul
+  // comme « dix » ou « mix » n'est jamais transformé).
+  if (toks.length > 1) {
+    toks = toks.map((t) => {
+      const n = romanToArabic(t);
+      return n != null ? String(n) : t;
+    });
+  }
+  return toks.join(" ");
+}
+
 export function freeAnswerMatches(given: string, q: FreeQuestion): boolean {
   const g = normalizeAnswer(given);
   if (!g) return false;
-  const targets = [q.answer, ...(q.aliases ?? [])].map(normalizeAnswer);
-  return targets.includes(g);
+  const gc = canonicalAnswer(given);
+  const targets = [q.answer, ...(q.aliases ?? [])];
+  for (const t of targets) {
+    if (normalizeAnswer(t) === g) return true; // correspondance exacte
+    if (canonicalAnswer(t) === gc) return true; // article ignoré + romain↔chiffre
+  }
+  return false;
 }
 
 // Custom questions provided by the host via questionquizz/questions.txt (loaded
