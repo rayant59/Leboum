@@ -216,21 +216,22 @@ export default function LobbyPage() {
   // Affiché brièvement à chaque démarrage de jeu (changement de gameId), côté
   // client uniquement : aucune modification du moteur/serveur.
   const [introGame, setIntroGame] = useState<string | null>(null);
-  const prevIntroGameId = useRef<string | null>(null);
+  const [introKey, setIntroKey] = useState<string | null>(null);
+  // Clé du jeu en cours (null hors partie). On la compare PENDANT le rendu —
+  // pas dans un useEffect — pour armer l'intro dès la toute première frame :
+  // un effet ne s'exécute qu'après le premier paint, ce qui laissait apparaître
+  // le jeu ~1 s avant que l'overlay du décompte ne le recouvre.
+  const gameKey = room.state?.phase === "in_game" && room.gameId ? room.gameId : null;
+  if (gameKey !== introKey) {
+    setIntroKey(gameKey);
+    setIntroGame(gameKey); // nouveau jeu → on montre l'intro ; retour au lobby → on la cache
+  }
+  // Auto-disparition après 4,2 s (le clic sur l'overlay la ferme aussi).
   useEffect(() => {
-    const st = room.state;
-    if (st?.phase === "in_game" && room.gameId) {
-      if (prevIntroGameId.current !== room.gameId) {
-        prevIntroGameId.current = room.gameId;
-        setIntroGame(room.gameId);
-        const t = window.setTimeout(() => setIntroGame(null), 4200);
-        return () => window.clearTimeout(t);
-      }
-    } else {
-      prevIntroGameId.current = null;
-      setIntroGame(null);
-    }
-  }, [room.gameId, room.state?.phase]);
+    if (!introGame) return;
+    const t = window.setTimeout(() => setIntroGame(null), 4200);
+    return () => window.clearTimeout(t);
+  }, [introGame]);
 
   // --- name gate (direct link without a stored pseudo) ----------------------
   if (!name) {
