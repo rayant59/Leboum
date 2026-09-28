@@ -39,7 +39,7 @@ export interface MimicConfig {
 export type MimicClientAction =
   | { kind: "ready"; ready: boolean }              // prep
   | { kind: "start" }                              // hôte : prep -> manche 1
-  | { kind: "take_done"; empty?: boolean }         // « j'ai fini » (l'audio part en éphémère)
+  | { kind: "take_done"; empty?: boolean; closeness?: number } // « j'ai fini » (closeness 0–100 : ressemblance au son d'origine, calculée côté client)
   | { kind: "vote"; targetId: PlayerId }           // voting
   | { kind: "next" };                              // hôte : scoreboard -> manche suivante
 
@@ -53,6 +53,8 @@ export interface MimicState {
   ready: Record<PlayerId, boolean>;    // prep
   submitted: Record<PlayerId, boolean>;// qui a rendu sa prise (remis à zéro chaque manche)
   emptyTake: Record<PlayerId, boolean>;// prise vide (rien enregistré)
+  closeness: Record<PlayerId, number>; // ressemblance 0–100 de la prise au son d'origine (manche courante)
+  autoBonusId: PlayerId | null;        // joueur le plus proche du son ce tour (bonus auto / vainqueur 2 joueurs)
   playbackOrder: PlayerId[];           // ordre de lecture des prises
   playbackIndex: number;               // prise en cours de lecture
   votes: Record<PlayerId, PlayerId>;   // voterId -> targetId (manche courante)
@@ -84,6 +86,8 @@ export interface MimicRankRow {
   score: number;
   roundVotes: number;    // votes reçus la manche affichée
   isBest: boolean;       // meilleure imitation de la manche
+  closeness: number;     // ressemblance 0–100 au son d'origine (manche affichée)
+  autoBonus: boolean;    // a reçu le bonus « le plus proche du son »
 }
 
 export interface MimicPublic {
@@ -119,6 +123,9 @@ export interface MimicPublic {
   votedIds: PlayerId[];                // qui a voté (pas pour qui)
   yourVote: PlayerId | null;
   ranking: MimicRankRow[];             // trié par score décroissant
+  // Score automatique (proximité au son d'origine)
+  autoOnly: boolean;                   // 2 joueurs : pas de vote, le score vient de la ressemblance
+  autoBonusId: PlayerId | null;        // joueur le plus proche du son ce tour
   deadline: number | null;
   winnerId: PlayerId | null;
   stats: { topVotes: string | null; bestImitator: string | null } | null;

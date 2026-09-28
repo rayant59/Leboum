@@ -15,6 +15,7 @@ import type { GamePlayer } from "../../game/types";
 import type { PlayerId } from "../../room/types";
 import type { GameAction, GameContext, GameReduceResult } from "../../platform/types";
 import { getMimicSound, pickMimicSound } from "./sounds";
+import { clampCloseness } from "./similarity";
 import type { MimicClientAction, MimicConfig, MimicMode, MimicPublic, MimicRankRow, MimicSettings, MimicState } from "./types";
 
 export const MIMIC_ROUNDS_MIN = 2;
@@ -25,6 +26,30 @@ const BEST_BONUS = 50;
 // Points de participation : récompense pour avoir réellement imité (prise non vide),
 // pour que le mode donne des points en autonomie même sans recevoir de vote.
 const PARTICIPATION_POINTS = 25;
+// Bonus « le plus proche du son d'origine » (score auto), ajouté au vote à ≥3 joueurs.
+const CLOSENESS_BONUS = 60;
+// À 2 joueurs le vote n'a aucun sens → le score vient UNIQUEMENT de la ressemblance :
+// le plus proche gagne ces points (les deux touchent la participation s'ils ont joué).
+const AUTO_WIN_POINTS = 100;
+
+/** 2 joueurs : pas de vote possible, on classe par ressemblance au son d'origine. */
+function isAutoOnly(state: MimicState): boolean {
+  return state.players.length <= 2;
+}
+
+/** Joueur ayant la ressemblance la plus élevée (>0) parmi ceux qui ont joué une
+ *  prise non vide. `null` si personne n'a de prise exploitable. */
+function closestPlayer(state: MimicState, among?: PlayerId[]): PlayerId | null {
+  const ids = among ?? state.players.map((p) => p.id);
+  let best: PlayerId | null = null;
+  let bestC = 0;
+  for (const id of ids) {
+    const performed = !!state.submitted[id] && !state.emptyTake[id];
+    const c = state.closeness[id] ?? 0;
+    if (performed && c > bestC) { bestC = c; best = id; }
+  }
+  return best;
+}
 
 export function resolveMimicMode(mode: string | undefined): MimicMode {
   return mode === "chain" || mode === "duel" ? mode : "classic";
@@ -80,6 +105,8 @@ export function createMimic(players: GamePlayer[], settings: MimicSettings, ctx:
     ready: recFalse(players),
     submitted: recFalse(players),
     emptyTake: recFalse(players),
+    closeness: rec0(players),
+    autoBonusId: null,
     playbackOrder: [],
     playbackIndex: 0,
     votes: {},
@@ -142,6 +169,8 @@ function startRound(state: MimicState, round: number, ctx: GameContext): MimicSt
     round,
     submitted: recFalse(state.players),
     emptyTake: recFalse(state.players),
+    closeness: rec0(state.players),
+    autoBonusId: null,
     playbackOrder: [],
     playbackIndex: 0,
     votes: {},
@@ -177,6 +206,8 @@ function startDuel(state: MimicState, ctx: GameContext): MimicState {
     ...state, ...freshSound(state, ctx),
     submitted: recFalse(state.players),
     emptyTake: recFalse(state.players),
+    closeness: rec0(state.players),
+    autoBonusId: null,
     playbackOrder: [], playbackIndex: 0, votes: {},
     activeIds: pair,
     phase: "reference",
@@ -214,6 +245,7 @@ export function reduceMimic(
             ...state,
             submitted: { ...state.submitted, [playerId]: true },
             emptyTake: { ...state.emptyTake, [playerId]: !!msg.empty },
+            closeness: { ...state.closeness, [playerId]: msg.empty ? 0 : clampCloseness(msg.closeness) },
           };
           // Tous les ACTIFS connectés ont rendu → on avance (mode-aware).
           const activeConn = next.activeIds.filter((id) => next.connectedIds.includes(id));
@@ -276,7 +308,7 @@ function advance(state: MimicState, ctx: GameContext): MimicState {
       if (nextIdx < state.playbackOrder.length) {
         return { ...state, playbackIndex: nextIdx, deadline: ctx.now + state.config.recordMs + state.config.playbackPadMs };
       }
-      return toVoting(state, ctx);
+      return isAutoOnly(state) ? tallyAuto(state, ctx) : toVoting(state, ctx);
     }
     case "voting":
       return tally(state, ctx); // sécurité : le temps est écoulé
@@ -308,7 +340,10 @@ function toPlayback(state: MimicState, ctx: GameContext): MimicState {
     state.config.mode === "duel" ? state.activeIds.filter((id) => state.connectedIds.includes(id))
     : state.config.mode === "chain" ? state.chainOrder
     : connected(state);
-  if (order.length === 0) return toVoting({ ...state, playbackOrder: [], playbackIndex: 0 }, ctx);
+  if (order.length === 0) {
+    const empty = { ...state, playbackOrder: [], playbackIndex: 0 };
+    return isAutoOnly(state) ? tallyAuto(empty, ctx) : toVoting(empty, ctx);
+  }
   return {
     ...state,
     phase: "playback",
@@ -396,7 +431,30 @@ function tally(state: MimicState, ctx: GameContext): MimicState {
       if ((roundVotes[p.id] ?? 0) === maxV) { scores[p.id] += BEST_BONUS; bestCount[p.id] = (bestCount[p.id] ?? 0) + 1; }
     }
   }
-  return { ...state, phase: "scoreboard", roundVotes, scores, votesReceivedTotal, bestCount, deadline: ctx.now + state.config.scoreboardMs };
+  // Bonus auto : le plus proche acoustiquement du son d'origine (≥3 joueurs, en
+  // plus du vote). null si personne n'a de prise exploitable.
+  const auto = closestPlayer(state);
+  if (auto) scores[auto] = (scores[auto] ?? 0) + CLOSENESS_BONUS;
+  return { ...state, phase: "scoreboard", roundVotes, scores, votesReceivedTotal, bestCount, autoBonusId: auto, deadline: ctx.now + state.config.scoreboardMs };
+}
+
+/** 2 joueurs : le vote n'a pas de sens, le score est 100 % automatique. Le plus
+ *  proche du son d'origine gagne AUTO_WIN_POINTS ; chaque joueur ayant réellement
+ *  imité touche les points de participation. */
+function tallyAuto(state: MimicState, ctx: GameContext): MimicState {
+  const scores = { ...state.scores };
+  const bestCount = { ...state.bestCount };
+  const roundVotes = rec0(state.players); // pas de vote à 2 joueurs
+  for (const p of state.players) {
+    const performed = !!state.submitted[p.id] && !state.emptyTake[p.id];
+    if (performed) scores[p.id] = (scores[p.id] ?? 0) + PARTICIPATION_POINTS;
+  }
+  const winner = closestPlayer(state);
+  if (winner) {
+    scores[winner] = (scores[winner] ?? 0) + AUTO_WIN_POINTS;
+    bestCount[winner] = (bestCount[winner] ?? 0) + 1;
+  }
+  return { ...state, phase: "scoreboard", roundVotes, scores, bestCount, autoBonusId: winner, deadline: ctx.now + state.config.scoreboardMs };
 }
 
 function afterScoreboard(state: MimicState, ctx: GameContext): MimicState {
@@ -437,6 +495,8 @@ export function projectMimic(state: MimicState, viewerId: PlayerId): MimicPublic
       score: state.scores[p.id] ?? 0,
       roundVotes: state.roundVotes[p.id] ?? 0,
       isBest: maxRoundVotes > 0 && (state.roundVotes[p.id] ?? 0) === maxRoundVotes,
+      closeness: state.closeness[p.id] ?? 0,
+      autoBonus: state.autoBonusId === p.id,
     }))
     .sort((a, b) => b.score - a.score);
 
@@ -486,6 +546,8 @@ export function projectMimic(state: MimicState, viewerId: PlayerId): MimicPublic
     votedIds: Object.keys(state.votes),
     yourVote: state.votes[viewerId] ?? null,
     ranking,
+    autoOnly: isAutoOnly(state),
+    autoBonusId: state.autoBonusId,
     deadline: state.deadline,
     winnerId: state.winnerId,
     stats,

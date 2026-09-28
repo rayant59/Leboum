@@ -1,13 +1,126 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type MouseEvent as ReactMouseEvent } from "react";
 import type { MimicPublic } from "@subtitles-party/shared";
-import { mimicCategoryLabel } from "@subtitles-party/shared";
+import { mimicCategoryLabel, envelopeSimilarity } from "@subtitles-party/shared";
 import type { UseRoom } from "@/lib/useRoom";
 import { Avatar } from "@/components/Avatar";
 import { SoundToggle, playSound } from "@/lib/sound";
 import { ChatPanel } from "@/components/DrawGameView";
 import { LB, DISPLAY, MONO, hexA, Aurora, type RailRow, lbShell, lbCard, lbGoldBtn, lbGhostBtn, topBar, LB_SCOPED_CSS } from "@/components/leboum";
+
+// ═══════════════ Audio réel : décodage, pics (waveform) & enveloppe (score) ══
+// On décode VRAIMENT le son (Web Audio) pour : (1) dessiner la vraie forme
+// d'onde et caler la tête de lecture sur le temps réel de l'audio, (2) extraire
+// une enveloppe d'énergie servant à mesurer la ressemblance au son d'origine.
+export interface DecodedAudio { peaks: number[]; envelope: number[]; duration: number }
+
+let sharedAC: AudioContext | null = null;
+function getAC(): AudioContext | null {
+  if (typeof window === "undefined") return null;
+  const AC = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!AC) return null;
+  if (!sharedAC) sharedAC = new AC();
+  return sharedAC;
+}
+
+/** Réduit un buffer PCM mono en `n` pics (max absolu par tranche), normalisés 0–1. */
+function computePeaks(data: Float32Array, n: number): number[] {
+  const out = new Array<number>(n).fill(0);
+  if (data.length === 0) return out;
+  const per = data.length / n;
+  let globalMax = 1e-6;
+  for (let i = 0; i < n; i++) {
+    const start = Math.floor(i * per);
+    const end = Math.min(data.length, Math.floor((i + 1) * per));
+    let m = 0;
+    for (let j = start; j < end; j++) { const a = Math.abs(data[j]); if (a > m) m = a; }
+    out[i] = m;
+    if (m > globalMax) globalMax = m;
+  }
+  for (let i = 0; i < n; i++) out[i] = out[i] / globalMax;
+  return out;
+}
+
+/** Enveloppe d'énergie (RMS) en `n` points — sert au calcul de ressemblance. */
+function computeEnvelope(data: Float32Array, n: number): number[] {
+  const out = new Array<number>(n).fill(0);
+  if (data.length === 0) return out;
+  const per = data.length / n;
+  for (let i = 0; i < n; i++) {
+    const start = Math.floor(i * per);
+    const end = Math.min(data.length, Math.floor((i + 1) * per));
+    let sum = 0;
+    for (let j = start; j < end; j++) sum += data[j] * data[j];
+    const len = Math.max(1, end - start);
+    out[i] = Math.sqrt(sum / len);
+  }
+  return out;
+}
+
+const audioCache = new Map<string, DecodedAudio>();
+
+/** Décode un son (URL ou data-URL) → pics + enveloppe + durée. Résultat mis en
+ *  cache par src. `null` si le décodage échoue (format non supporté, etc.). */
+async function decodeAudio(src: string, peakCount = 96): Promise<DecodedAudio | null> {
+  if (!src) return null;
+  const cached = audioCache.get(src);
+  if (cached) return cached;
+  const ac = getAC();
+  if (!ac) return null;
+  try {
+    const res = await fetch(src);
+    const buf = await res.arrayBuffer();
+    const audioBuf = await ac.decodeAudioData(buf.slice(0));
+    // Mixe les canaux en mono.
+    const ch = audioBuf.numberOfChannels;
+    const len = audioBuf.length;
+    const mono = new Float32Array(len);
+    for (let c = 0; c < ch; c++) {
+      const d = audioBuf.getChannelData(c);
+      for (let i = 0; i < len; i++) mono[i] += d[i] / ch;
+    }
+    const decoded: DecodedAudio = {
+      peaks: computePeaks(mono, peakCount),
+      envelope: computeEnvelope(mono, 64),
+      duration: audioBuf.duration,
+    };
+    audioCache.set(src, decoded);
+    return decoded;
+  } catch {
+    return null;
+  }
+}
+
+/** Hook : décode `src` (une fois, caché) et renvoie les pics/enveloppe/durée. */
+function useDecodedAudio(src: string | null | undefined): DecodedAudio | null {
+  const [dec, setDec] = useState<DecodedAudio | null>(() => (src ? audioCache.get(src) ?? null : null));
+  useEffect(() => {
+    let alive = true;
+    if (!src) { setDec(null); return; }
+    const cached = audioCache.get(src);
+    if (cached) { setDec(cached); return; }
+    setDec(null);
+    decodeAudio(src).then((d) => { if (alive) setDec(d); });
+    return () => { alive = false; };
+  }, [src]);
+  return dec;
+}
+
+/** Calcule la ressemblance (0–100) d'une prise (blob) au son d'origine (src),
+ *  sur le rythme + l'énergie. 0 si l'un des deux est indécodable. */
+async function computeCloseness(takeBlob: Blob, originalSrc: string | null | undefined): Promise<number> {
+  if (!originalSrc) return 0;
+  try {
+    const takeUrl = URL.createObjectURL(takeBlob);
+    const [orig, take] = await Promise.all([decodeAudio(originalSrc), decodeAudio(takeUrl)]);
+    URL.revokeObjectURL(takeUrl);
+    if (!orig || !take) return 0;
+    return envelopeSimilarity(take.envelope, orig.envelope);
+  } catch {
+    return 0;
+  }
+}
 
 // ═══════════════ Micro : permission, VU-mètre, prise unique (MediaRecorder) ══
 function useMic() {
@@ -18,6 +131,10 @@ function useMic() {
   const chunksRef = useRef<Blob[]>([]);
   const rafRef = useRef<number | null>(null);
   const mutedRef = useRef(false);
+  // Historique réel des niveaux du micro (échantillonné ~70 ms) : sert à dessiner
+  // la vraie forme d'onde de TA voix pendant l'enregistrement (pas de l'aléatoire).
+  const levelsRef = useRef<number[]>([]);
+  const lastSampleRef = useRef(0);
 
   const request = useCallback(async () => {
     if (status === "on" || status === "asking") return;
@@ -37,7 +154,15 @@ function useMic() {
         analyser.getByteTimeDomainData(data);
         let peak = 0;
         for (let i = 0; i < data.length; i++) peak = Math.max(peak, Math.abs(data[i] - 128));
-        setLevel(mutedRef.current ? 0 : Math.min(1, peak / 90));
+        const lv = mutedRef.current ? 0 : Math.min(1, peak / 90);
+        setLevel(lv);
+        const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+        if (now - lastSampleRef.current > 70) {
+          lastSampleRef.current = now;
+          const arr = levelsRef.current;
+          arr.push(lv);
+          if (arr.length > 260) arr.shift();
+        }
         rafRef.current = requestAnimationFrame(tick);
       };
       tick();
@@ -49,6 +174,7 @@ function useMic() {
     if (!streamRef.current || recRef.current) return;
     try {
       chunksRef.current = [];
+      levelsRef.current = []; // repart d'une forme d'onde vierge pour cette prise
       const rec = new MediaRecorder(streamRef.current);
       rec.ondataavailable = (e) => e.data.size && chunksRef.current.push(e.data);
       rec.start();
@@ -73,7 +199,7 @@ function useMic() {
     streamRef.current?.getTracks().forEach((t) => t.stop());
   }, []);
 
-  return { status, level, request, startRecording, stopRecording };
+  return { status, level, request, startRecording, stopRecording, levelsRef };
 }
 
 function blobToDataUrl(blob: Blob): Promise<string> {
@@ -96,54 +222,6 @@ function useCountdown(deadline: number | null, serverNow: () => number) {
   return Math.max(0, (deadline - serverNow()) / 1000);
 }
 
-// ═══════════════ Forme d'onde (générateur du spec) ══════════════════════════
-function genBars(n: number, played: number, seed = 1.4) {
-  const head = Math.round(n * played);
-  const bars: { h: number; on: boolean; near: boolean; near4: boolean }[] = [];
-  for (let i = 0; i < n; i++) {
-    const t = i / (n - 1);
-    const env = 0.34 + 0.66 * Math.sin(Math.PI * Math.min(1, t / 0.94));
-    const v = Math.abs(Math.sin(i * 1.71 + seed) * 0.54 + Math.sin(i * 0.47 + seed * 2.3) * 0.34 + Math.sin(i * 3.1 + seed) * 0.12);
-    const h = Math.max(7, Math.round((0.16 + 0.84 * v) * env * 100));
-    bars.push({ h, on: i < head, near: i > head - 5, near4: i > head - 4 });
-  }
-  return bars;
-}
-
-function Waveform({ mode, played, n, height, seed = 1.4 }: { mode: "listen" | "record"; played: number; n: number; height: number; seed?: number }) {
-  const bars = genBars(n, played, seed);
-  return (
-    <div style={{ position: "relative", height }}>
-      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", gap: 3 }}>
-        {bars.map((b, i) => {
-          if (mode === "listen") {
-            const col = b.on ? (b.near ? "#FFE0A0" : LB.gold) : "#2E2652";
-            const glow = b.on && b.near4 ? "0 0 16px 1px rgba(255,194,75,.9)" : "none";
-            return <span key={i} style={{ flex: 1, minWidth: 0, height: `${b.h}%`, borderRadius: 3, background: col, boxShadow: glow }} />;
-          }
-          // record : fantôme gris + voix mint plus courte par-dessus
-          const voiceH = b.on ? Math.round(b.h * (0.62 + 0.3 * Math.abs(Math.sin(i * 0.9 + seed * 3)))) : 0;
-          const vcol = b.near4 ? "#9BF3D8" : LB.mint;
-          const vglow = b.on && b.near4 ? "0 0 16px 1px rgba(70,224,176,.9)" : "none";
-          return (
-            <span key={i} style={{ flex: 1, minWidth: 0, position: "relative", display: "grid", placeItems: "center", height: "100%" }}>
-              <span style={{ position: "absolute", height: `${b.h}%`, width: "100%", borderRadius: 3, background: "#3A3266" }} />
-              {voiceH > 0 && <span style={{ position: "absolute", height: `${voiceH}%`, width: "100%", borderRadius: 3, background: vcol, boxShadow: vglow }} />}
-            </span>
-          );
-        })}
-      </div>
-      {/* Tête de lecture */}
-      <div style={{ position: "absolute", left: `${Math.round(played * 100)}%`, top: -14, bottom: -14, width: 2, background: mode === "listen"
-          ? "linear-gradient(180deg,rgba(255,224,160,0),#FFE0A0 18%,#FFE0A0 82%,rgba(255,224,160,0))"
-          : "linear-gradient(180deg,rgba(155,243,216,0),#9BF3D8 18%,#9BF3D8 82%,rgba(155,243,216,0))",
-        boxShadow: mode === "listen" ? "0 0 18px 2px rgba(255,194,75,.55)" : "0 0 18px 2px rgba(70,224,176,.55)" }}>
-        <span style={{ position: "absolute", top: -6, left: -3, width: 8, height: 8, borderRadius: "50%", background: mode === "listen" ? "#FFE0A0" : "#9BF3D8", boxShadow: mode === "listen" ? "0 0 10px 1px rgba(255,194,75,.8)" : "0 0 10px 1px rgba(70,224,176,.8)" }} />
-      </div>
-    </div>
-  );
-}
-
 // Carte-plaque qui entoure l'onde.
 function WavePlate({ mode, children }: { mode: "listen" | "record"; children: ReactNode }) {
   const glow = mode === "listen" ? "rgba(255,194,75,.22)" : "rgba(70,224,176,.2)";
@@ -153,6 +231,152 @@ function WavePlate({ mode, children }: { mode: "listen" | "record"; children: Re
       boxShadow: `0 0 0 1px ${mode === "listen" ? "#3A2F66" : "#2F4A5E"}, inset 0 1px 0 rgba(243,238,255,.07), 0 34px 70px -44px rgba(0,0,0,.95)` }}>
       <div aria-hidden style={{ position: "absolute", left: mode === "listen" ? "46%" : "44%", top: "50%", width: 620, height: 300, transform: "translate(-50%,-50%)", borderRadius: "50%", filter: "blur(72px)", background: `radial-gradient(ellipse, ${glow}, transparent 66%)`, pointerEvents: "none" }} />
       <div style={{ position: "relative" }}>{children}</div>
+    </div>
+  );
+}
+
+// ── Ré-échantillonne un tableau à `n` points (interpolation linéaire). ────────
+function resampleTo(arr: number[], n: number): number[] {
+  if (!arr || arr.length === 0) return new Array(n).fill(0);
+  if (arr.length === n) return arr.slice();
+  if (arr.length === 1) return new Array(n).fill(arr[0]);
+  const out = new Array<number>(n);
+  for (let i = 0; i < n; i++) {
+    const t = (i / (n - 1)) * (arr.length - 1);
+    const lo = Math.floor(t);
+    const hi = Math.min(arr.length - 1, lo + 1);
+    const f = t - lo;
+    out[i] = arr[lo] * (1 - f) + arr[hi] * f;
+  }
+  return out;
+}
+
+// ── Construit une forme d'onde qui se REMPLIT en direct : les `levels` (niveaux
+//    micro échantillonnés) couvrent [0, played] de la timeline, le reste est vide.
+function buildLivePeaks(levels: number[], played: number, n: number): number[] {
+  const out = new Array<number>(n).fill(0);
+  const L = levels.length;
+  const p = Math.max(0, Math.min(1, played));
+  if (L === 0 || p <= 0) return out;
+  for (let i = 0; i < n; i++) {
+    const frac = i / (n - 1);
+    if (frac > p) { out[i] = 0; continue; }
+    const src = (frac / p) * (L - 1);
+    const lo = Math.floor(src);
+    const hi = Math.min(L - 1, lo + 1);
+    const f = src - lo;
+    out[i] = levels[lo] * (1 - f) + levels[hi] * f;
+  }
+  return out;
+}
+
+// ── Vraie forme d'onde : barres = pics réels, tête de lecture = `played` (0–1),
+//    remplie jusqu'au temps réel de l'audio. `ghostPeaks` = fantôme (son cible).
+function RealWave({ peaks, played, accent, height = 200, n = 76, ghostPeaks, onSeek }: {
+  peaks: number[]; played: number; accent: string; height?: number; n?: number;
+  ghostPeaks?: number[] | null; onSeek?: (frac: number) => void;
+}) {
+  const bars = useMemo(() => resampleTo(peaks && peaks.length ? peaks : new Array(n).fill(0.05), n), [peaks, n]);
+  const gbars = useMemo(() => (ghostPeaks && ghostPeaks.length ? resampleTo(ghostPeaks, n) : null), [ghostPeaks, n]);
+  const p = Math.max(0, Math.min(1, played));
+  const head = Math.round(n * p);
+  const seek = (e: ReactMouseEvent<HTMLDivElement>) => {
+    if (!onSeek) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    onSeek(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)));
+  };
+  return (
+    <div onClick={seek} style={{ position: "relative", height, cursor: onSeek ? "pointer" : "default" }}>
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", gap: 3 }}>
+        {bars.map((v, i) => {
+          const h = Math.max(6, Math.round((0.1 + 0.9 * v) * 100));
+          const on = i < head;
+          const glow = on && i > head - 4 ? `0 0 14px 1px ${hexA(accent, 0.8)}` : "none";
+          if (gbars) {
+            const gh = Math.max(6, Math.round((0.1 + 0.9 * gbars[i]) * 100));
+            return (
+              <span key={i} style={{ flex: 1, minWidth: 0, position: "relative", display: "grid", placeItems: "center", height: "100%" }}>
+                <span style={{ position: "absolute", height: `${gh}%`, width: "100%", borderRadius: 3, background: "#3A3266" }} />
+                <span style={{ position: "absolute", height: `${h}%`, width: "100%", borderRadius: 3, background: on ? accent : "transparent", boxShadow: glow }} />
+              </span>
+            );
+          }
+          return <span key={i} style={{ flex: 1, minWidth: 0, height: `${h}%`, borderRadius: 3, background: on ? accent : "#2E2652", boxShadow: glow }} />;
+        })}
+      </div>
+      <div style={{ position: "absolute", left: `${Math.round(p * 100)}%`, top: -12, bottom: -12, width: 2, background: `linear-gradient(180deg,${hexA(accent, 0)},${accent} 18%,${accent} 82%,${hexA(accent, 0)})`, boxShadow: `0 0 16px 2px ${hexA(accent, 0.5)}` }}>
+        <span style={{ position: "absolute", top: -5, left: -3, width: 8, height: 8, borderRadius: "50%", background: accent, boxShadow: `0 0 10px 1px ${hexA(accent, 0.8)}` }} />
+      </div>
+    </div>
+  );
+}
+
+function PauseIcon({ size = 20 }: { size?: number }) {
+  return <svg width={size} height={size} viewBox="0 0 256 256" fill="currentColor"><path d="M200 32h-40a16 16 0 0 0-16 16v160a16 16 0 0 0 16 16h40a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16Zm0 176h-40V48h40ZM96 32H56a16 16 0 0 0-16 16v160a16 16 0 0 0 16 16h40a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16Zm0 176H56V48h40Z" /></svg>;
+}
+
+// ── Lecteur audio maison (thème du site) : bouton play/pause + vraie forme
+//    d'onde cliquable, tête de lecture calée sur le temps réel de l'audio.
+function SoundPlayer({ src, accent = LB.mint, autoPlay = false, compact = false }: {
+  src: string; accent?: string; autoPlay?: boolean; compact?: boolean;
+}) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const dec = useDecodedAudio(src);
+  const [playing, setPlaying] = useState(false);
+  const [frac, setFrac] = useState(0);
+  const [dur, setDur] = useState(0);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    const onMeta = () => setDur(a.duration || 0);
+    const onEnd = () => { setPlaying(false); setFrac(1); };
+    const onPlay = () => setPlaying(true);
+    const onPause = () => setPlaying(false);
+    a.addEventListener("loadedmetadata", onMeta);
+    a.addEventListener("ended", onEnd);
+    a.addEventListener("play", onPlay);
+    a.addEventListener("pause", onPause);
+    return () => {
+      a.removeEventListener("loadedmetadata", onMeta);
+      a.removeEventListener("ended", onEnd);
+      a.removeEventListener("play", onPlay);
+      a.removeEventListener("pause", onPause);
+    };
+  }, []);
+
+  useEffect(() => {
+    const loop = () => {
+      const a = audioRef.current;
+      if (a && a.duration > 0) setFrac(Math.max(0, Math.min(1, a.currentTime / a.duration)));
+      rafRef.current = requestAnimationFrame(loop);
+    };
+    if (playing) rafRef.current = requestAnimationFrame(loop);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [playing]);
+
+  useEffect(() => {
+    setFrac(0);
+    const a = audioRef.current;
+    if (a && autoPlay) { try { a.currentTime = 0; } catch { /* noop */ } a.play().catch(() => {}); }
+  }, [src]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const toggle = () => { const a = audioRef.current; if (!a) return; if (a.paused) a.play().catch(() => {}); else a.pause(); };
+  const seek = (f: number) => { const a = audioRef.current; if (!a || !a.duration) return; a.currentTime = f * a.duration; setFrac(f); };
+  const dd = dur || dec?.duration || 0;
+  const mm = (s: number) => `0:${String(Math.max(0, Math.floor(s))).padStart(2, "0")}`;
+
+  return (
+    <div style={{ width: "100%", display: "flex", alignItems: "center", gap: 14 }}>
+      <button onClick={toggle} aria-label={playing ? "Pause" : "Lecture"} style={{ flex: "none", width: compact ? 44 : 52, height: compact ? 44 : 52, borderRadius: "50%", border: "none", background: accent, color: LB.ink, cursor: "pointer", display: "grid", placeItems: "center", boxShadow: `0 4px 0 ${hexA(accent, 0.45)}, 0 0 26px -8px ${hexA(accent, 0.9)}` }}>
+        {playing ? <PauseIcon size={compact ? 18 : 20} /> : <Icon id="play" size={compact ? 18 : 20} />}
+      </button>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <RealWave peaks={dec?.peaks ?? []} played={frac} accent={accent} height={compact ? 54 : 72} n={compact ? 60 : 84} onSeek={seek} />
+      </div>
+      <span style={{ flex: "none", fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: hexA(accent, 0.9), minWidth: 62, textAlign: "right" }}>{mm(frac * dd)} / {mm(dd)}</span>
+      <audio ref={audioRef} src={src} preload="auto" />
     </div>
   );
 }
@@ -327,14 +551,26 @@ function Countdown({ room, game, isHost }: { room: UseRoom; game: MimicPublic; i
 function Listening({ room, game, isHost }: { room: UseRoom; game: MimicPublic; isHost: boolean }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [blocked, setBlocked] = useState(false);
-  const totalRef = useRef<number>(0);
   const skippedRef = useRef(false);
-  const secs = useCountdown(game.deadline, room.serverNow);
+  const dec = useDecodedAudio(game.sound?.src);
+  const [played, setPlayed] = useState(0);
+  const [dur, setDur] = useState(0);
+  const rafRef = useRef<number | null>(null);
   useEffect(() => {
-    if (totalRef.current === 0 && secs != null) totalRef.current = Math.max(0.5, secs);
+    setPlayed(0);
     const a = audioRef.current;
     if (a && game.sound?.src) { a.currentTime = 0; a.play().then(() => setBlocked(false)).catch(() => setBlocked(true)); }
   }, [game.sound?.src]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Tête de lecture calée sur le VRAI temps de l'audio (rAF).
+  useEffect(() => {
+    const loop = () => {
+      const a = audioRef.current;
+      if (a && a.duration > 0) { setPlayed(Math.max(0, Math.min(1, a.currentTime / a.duration))); setDur(a.duration); }
+      rafRef.current = requestAnimationFrame(loop);
+    };
+    rafRef.current = requestAnimationFrame(loop);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, []);
   // Dès que le son de référence est terminé, on passe à l'imitation sans attendre
   // la deadline (l'hôte fait autorité : il déclenche le skip une seule fois).
   useEffect(() => {
@@ -346,9 +582,8 @@ function Listening({ room, game, isHost }: { room: UseRoom; game: MimicPublic; i
     a.addEventListener("ended", onEnded);
     return () => a.removeEventListener("ended", onEnded);
   }, [isHost, room, game.sound?.src]);
-  const total = totalRef.current || 4;
-  const played = secs == null ? 0.46 : Math.max(0, Math.min(1, 1 - secs / total));
-  const cur = Math.max(0, Math.round(total - (secs ?? 0)));
+  const total = dur || dec?.duration || 4;
+  const mm = (s: number) => `0:${String(Math.max(0, Math.floor(s))).padStart(2, "0")}`;
   return (
     <>
       <div className="dv-head" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "18px 34px 12px", flexWrap: "wrap" }}>
@@ -357,13 +592,13 @@ function Listening({ room, game, isHost }: { room: UseRoom; game: MimicPublic; i
           <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 26 }}>Écoute bien</span>
         </span>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 17, color: LB.gold }}>0:0{cur} / 0:0{Math.round(total)}</span>
+          <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 17, color: LB.gold }}>{mm(played * total)} / {mm(total)}</span>
           {skipBtn(room, isHost, game.phase)}
         </span>
       </div>
       <div style={{ flex: 1, display: "flex", alignItems: "center", padding: "0 34px" }}>
         <WavePlate mode="listen">
-          <Waveform mode="listen" played={played} n={72} height={224} />
+          <RealWave peaks={dec?.peaks ?? []} played={played} accent={LB.gold} height={224} />
           <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 28 }}>
             <span style={{ flex: 1, height: 4, borderRadius: 2, background: "#2A2350", overflow: "hidden" }}>
               <span style={{ display: "block", height: "100%", width: `${Math.round(played * 100)}%`, borderRadius: 2, background: "linear-gradient(90deg,rgba(255,194,75,.3),#FFC24B)" }} />
@@ -400,16 +635,31 @@ function Recording({ room, game, mic, isHost }: { room: UseRoom; game: MimicPubl
   // regardent (le serveur ignore de toute façon leurs prises).
   const active = game.youActive;
 
+  // Son d'origine décodé (fantôme de la forme d'onde) + niveaux réels du micro
+  // (rafraîchis ~90 ms) pour dessiner la vraie voix qui se remplit en direct.
+  const dec = useDecodedAudio(game.sound?.src);
+  const [liveLevels, setLiveLevels] = useState<number[]>([]);
+  useEffect(() => {
+    const id = setInterval(() => setLiveLevels(mic.levelsRef.current.slice()), 90);
+    return () => clearInterval(id);
+  }, [mic]);
+
   const finish = useCallback(async (empty = false) => {
     if (sentRef.current) return;
     sentRef.current = true;
     let hasAudio = false;
+    let closeness = 0;
     try {
       const blob = await mic.stopRecording();
-      if (blob && !empty) { const url = await blobToDataUrl(blob); if (url.length < 260_000) { room.sendVoiceTake(game.round, url); hasAudio = true; } }
+      if (blob && !empty) {
+        const url = await blobToDataUrl(blob);
+        if (url.length < 260_000) { room.sendVoiceTake(game.round, url); hasAudio = true; }
+        // Ressemblance (rythme + énergie) au son d'origine → bonus/score auto.
+        try { closeness = await computeCloseness(blob, game.sound?.src); } catch { closeness = 0; }
+      }
     } catch { /* ignore */ }
-    room.mimicAction({ kind: "take_done", empty: !hasAudio });
-  }, [mic, room, game.round]);
+    room.mimicAction({ kind: "take_done", empty: !hasAudio, closeness: hasAudio ? closeness : 0 });
+  }, [mic, room, game.round, game.sound?.src]);
 
   // `finish` change d'identité à chaque frame (le micro re-render via son niveau).
   // On garde une réf pour que l'envoi au démontage ne dépende PAS de `finish`
@@ -479,7 +729,7 @@ function Recording({ room, game, mic, isHost }: { room: UseRoom; game: MimicPubl
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".14em", color: LB.faint }}><span style={{ width: 14, height: 8, borderRadius: 2, background: "#3A3266" }} />son d'origine</span>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".14em", color: LB.mint }}><span style={{ width: 14, height: 8, borderRadius: 2, background: LB.mint }} />ta voix</span>
             </div>
-            <Waveform mode="record" played={played} n={72} height={196} />
+            <RealWave peaks={buildLivePeaks(liveLevels, played, 76)} played={played} accent={LB.mint} height={196} n={76} ghostPeaks={dec?.peaks ?? null} />
             <div style={{ marginTop: 24, height: 4, borderRadius: 2, background: "#232C46", overflow: "hidden" }}>
               <span style={{ display: "block", height: "100%", width: `${Math.round(played * 100)}%`, borderRadius: 2, background: "linear-gradient(90deg,rgba(70,224,176,.3),#46E0B0)" }} />
             </div>
@@ -519,12 +769,10 @@ function Processing() {
 
 // ═══════ PLAYBACK — lecture des prises une par une ═══════════════════════════
 function Playback({ room, game, you, name, color, avatarOf, isHost }: { room: UseRoom; game: MimicPublic; you: string; name: (id: string) => string; color: (id: string) => string; avatarOf: (id: string) => string | null | undefined; isHost: boolean }) {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const pid = game.currentTakeId;
   const take = pid ? room.voiceTakes.get(`${game.round}:${pid}`) : null;
   const idx = game.playbackIndex;
   const total = game.playbackOrder.length;
-  useEffect(() => { const a = audioRef.current; if (a && take) { a.currentTime = 0; a.play().catch(() => {}); } }, [take, idx]);
   return (
     <>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "18px 34px 8px" }}>
@@ -540,7 +788,7 @@ function Playback({ room, game, you, name, color, avatarOf, isHost }: { room: Us
             <span style={{ boxShadow: `0 0 40px -12px ${hexA(LB.mint, 0.9)}`, borderRadius: 22 }}><Avatar name={name(pid)} color={color(pid)} avatar={avatarOf(pid)} size={84} /></span>
             <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 30 }}>{name(pid)}{pid === you && <span style={{ color: LB.faint, fontWeight: 600, fontSize: 18 }}> · toi</span>}</span>
             {take
-              ? <audio ref={audioRef} src={take} controls style={{ width: 280 }} />
+              ? <div style={{ width: "min(440px, 78vw)" }}><SoundPlayer key={`${game.round}:${pid}`} src={take} accent={LB.mint} autoPlay /></div>
               : <span style={{ fontSize: 13, color: LB.faint }}>(pas de prise / son indisponible)</span>}
           </div>
         )}
@@ -608,7 +856,9 @@ function Verdict({ room, game, you, isHost }: { room: UseRoom; game: MimicPublic
   const [playSrc, setPlaySrc] = useState<string | null>(null);
   const play = (src?: string | null) => { if (!src) return; setPlaySrc(src); setTimeout(() => audioRef.current?.play().catch(() => {}), 30); };
   const maxVotes = Math.max(1, ...game.ranking.map((r) => r.roundVotes));
-  const winner = game.ranking.find((r) => r.isBest) ?? game.ranking[0];
+  const auto = game.autoOnly; // 2 joueurs : score 100 % basé sur la proximité du son
+  const winner = (auto ? game.ranking.find((r) => r.autoBonus) : game.ranking.find((r) => r.isBest)) ?? game.ranking[0];
+  const autoName = game.ranking.find((r) => r.autoBonus)?.name ?? null;
   const barColor = (frac: number) => frac >= 0.8 ? LB.mint : frac >= 0.6 ? LB.gold : frac >= 0.4 ? LB.muted : LB.pink;
   return (
     <>
@@ -618,27 +868,33 @@ function Verdict({ room, game, you, isHost }: { room: UseRoom; game: MimicPublic
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: 12, padding: "0 34px" }}>
         {game.ranking.map((r) => {
-          const frac = r.roundVotes / maxVotes;
+          const frac = auto ? Math.max(0, Math.min(1, r.closeness / 100)) : r.roundVotes / maxVotes;
           const col = barColor(frac);
-          const best = r.isBest;
+          const highlight = auto ? r.autoBonus : r.isBest;
           const take = room.voiceTakes.get(`${game.round}:${r.id}`);
           return (
-            <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 16, padding: "16px 20px", borderRadius: 18, background: best ? hexA(LB.mint, 0.09) : "transparent", boxShadow: best ? `0 0 0 2px ${hexA(LB.mint, 0.5)}` : `0 0 0 1px ${LB.line}` }}>
-              <button onClick={() => play(take)} disabled={!take} aria-label={`Réécouter ${r.name}`} style={{ display: "grid", placeItems: "center", width: 44, height: 44, flex: "none", borderRadius: 14, border: "none", background: best ? LB.mint : "transparent", color: best ? LB.ink : (take ? LB.muted : LB.dim), boxShadow: best ? "none" : `inset 0 0 0 1px ${LB.line}`, cursor: take ? "pointer" : "default" }}><Icon id="play" size={18} /></button>
+            <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 16, padding: "16px 20px", borderRadius: 18, background: highlight ? hexA(LB.mint, 0.09) : "transparent", boxShadow: highlight ? `0 0 0 2px ${hexA(LB.mint, 0.5)}` : `0 0 0 1px ${LB.line}` }}>
+              <button onClick={() => play(take)} disabled={!take} aria-label={`Réécouter ${r.name}`} style={{ display: "grid", placeItems: "center", width: 44, height: 44, flex: "none", borderRadius: 14, border: "none", background: highlight ? LB.mint : "transparent", color: highlight ? LB.ink : (take ? LB.muted : LB.dim), boxShadow: highlight ? "none" : `inset 0 0 0 1px ${LB.line}`, cursor: take ? "pointer" : "default" }}><Icon id="play" size={18} /></button>
               <Avatar name={r.name} color={r.color} avatar={r.avatar} size={34} />
-              <span style={{ width: 104, flex: "none", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 16, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}{r.id === you && <span style={{ color: LB.faint }}> · toi</span>}</span>
+              <span style={{ width: 104, flex: "none", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 16, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}{r.id === you && <span style={{ color: LB.faint }}> · toi</span>}{r.autoBonus && <span title="Le plus proche du son d'origine"> 🎯</span>}</span>
               <span style={{ flex: 1, height: 12, borderRadius: 6, background: LB.lineFaint, overflow: "hidden" }}>
                 <span style={{ display: "block", height: "100%", width: `${Math.round(frac * 100)}%`, borderRadius: 6, background: col, transition: "width .4s ease" }} />
               </span>
-              <span style={{ width: 64, textAlign: "right", flex: "none", fontFamily: DISPLAY, fontWeight: 800, fontSize: 22, color: col }}>{r.roundVotes}<span style={{ fontSize: 13 }}> ⭐</span></span>
-              <span style={{ width: 46, textAlign: "right", flex: "none", fontFamily: DISPLAY, fontWeight: 800, fontSize: 18, color: r.roundVotes > 0 ? LB.gold : LB.faint }}>{r.roundVotes > 0 ? `+${r.roundVotes}` : "0"}</span>
+              {auto ? (
+                <span style={{ width: 92, textAlign: "right", flex: "none", fontFamily: DISPLAY, fontWeight: 800, fontSize: 22, color: col }}>{r.closeness}<span style={{ fontSize: 13 }}> % proche</span></span>
+              ) : (
+                <>
+                  <span style={{ width: 74, textAlign: "right", flex: "none", fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: r.autoBonus ? LB.mint : LB.faint }} title="Ressemblance au son d'origine">🎯 {r.closeness}%</span>
+                  <span style={{ width: 60, textAlign: "right", flex: "none", fontFamily: DISPLAY, fontWeight: 800, fontSize: 22, color: col }}>{r.roundVotes}<span style={{ fontSize: 13 }}> ⭐</span></span>
+                </>
+              )}
             </div>
           );
         })}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 34px 24px", flexWrap: "wrap" }}>
         {game.sound?.src && <button onClick={() => play(game.sound?.src)} className="lb-ghost" style={{ display: "inline-flex", alignItems: "center", gap: 8, border: `1px solid ${LB.line}`, background: "transparent", color: LB.muted, fontSize: 14, padding: "13px 20px", borderRadius: 12, cursor: "pointer" }}><Icon id="play" size={17} />Réécouter l'original</button>}
-        <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 8, fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".14em", color: LB.mint }}>🏆 {winner?.name} remporte le tour</span>
+        <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 8, fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".14em", color: LB.mint }}>{auto ? `🎯 ${winner?.name} — le plus proche du son` : `🏆 ${winner?.name} remporte le tour${autoName ? ` · 🎯 ${autoName} le plus proche` : ""}`}</span>
         {isHost && <button onClick={() => room.mimicAction({ kind: "next" })} className="lb-gold" style={lbGoldBtn}>{game.round >= game.totalRounds ? "Podium 🏆" : "Suivant →"}</button>}
       </div>
       <audio ref={audioRef} src={playSrc ?? undefined} preload="auto" />

@@ -42,6 +42,7 @@ export * from "./games/bombe/types";
 export * from "./games/bombe/engine";
 export * from "./games/bombe/module";
 export * from "./games/mimic/sounds";
+export * from "./games/mimic/similarity";
 export * from "./games/mimic/types";
 export * from "./games/mimic/engine";
 export * from "./games/mimic/module";
