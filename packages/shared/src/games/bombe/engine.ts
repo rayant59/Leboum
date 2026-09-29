@@ -137,7 +137,7 @@ export function createBombe(players: GamePlayer[], settings: BombeSettings, ctx:
     // Petit décompte avant le vrai départ : la bombe n'est pas encore armée.
     deadline: ctx.now + BOMBE_COUNTDOWN_MS,
     usedWords: [],
-    usedLetters: [],
+    usedLetters: {},
     letterEvent: null,
     exampleWords: [],
     exampleSyllable: "",
@@ -217,20 +217,24 @@ export function reduceBombe(
         return fail(state, { code: "bombe_used", message: "Ce mot a déjà été utilisé." });
       }
       // Bon mot ! Lettres A-V nouvellement découvertes.
+      // Coop = mode « hardcore » : PAS de vies ni de collecte de lettres.
+      // Sinon la grille est INDIVIDUELLE : chacun remplit la sienne, et compléter
+      // SA PROPRE grille A-V (les 21 lettres) donne +1 vie (objectif répétable).
+      const isCoop = state.config.mode === "coop";
       const maxLives = state.config.lives;
       const curLives = state.lives[playerId] ?? 0;
-      const wordLetters = bombeWordLetters(w);
-      const newLetters = wordLetters.filter((l) => !state.usedLetters.includes(l));
-      // +1 vie UNIQUEMENT quand ce mot COMPLÈTE l'alphabet A-V (les 21 lettres),
-      // jamais à chaque nouvelle lettre. Une fois complété, la grille est remise à
-      // zéro pour pouvoir la re-remplir (objectif répétable).
-      const willComplete = newLetters.length > 0 && state.usedLetters.length + newLetters.length >= BOMBE_ALPHABET.length;
+      const myLetters = state.usedLetters[playerId] ?? [];
+      const wordLetters = isCoop ? [] : bombeWordLetters(w);
+      const newLetters = wordLetters.filter((l) => !myLetters.includes(l));
+      const willComplete = !isCoop && newLetters.length > 0 && myLetters.length + newLetters.length >= BOMBE_ALPHABET.length;
       const gainedLife = willComplete && curLives < maxLives;
       const atMax = willComplete && curLives >= maxLives;
       const lives = gainedLife ? { ...state.lives, [playerId]: Math.min(maxLives, curLives + 1) } : state.lives;
-      const usedLetters = willComplete
-        ? []
-        : (newLetters.length ? [...state.usedLetters, ...newLetters] : state.usedLetters);
+      const usedLetters = isCoop
+        ? state.usedLetters
+        : willComplete
+          ? { ...state.usedLetters, [playerId]: [] }
+          : (newLetters.length ? { ...state.usedLetters, [playerId]: [...myLetters, ...newLetters] } : state.usedLetters);
       const letterEvent = willComplete
         ? { playerId, newLetters, gainedLife, atMax, completed: true, at: ctx.now }
         : null;
@@ -427,7 +431,7 @@ export function projectBombe(state: BombeState, viewerId: PlayerId): BombePublic
     justExploded: state.justExploded,
     usedCount: state.usedWords.length,
     aliveCount: alive.length,
-    usedLetters: state.usedLetters,
+    usedLetters: state.usedLetters[viewerId] ?? [], // grille INDIVIDUELLE du spectateur
     letterEvent: state.letterEvent,
     exampleWords: state.exampleWords,
     exampleSyllable: state.exampleSyllable,

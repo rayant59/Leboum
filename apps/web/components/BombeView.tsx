@@ -345,21 +345,24 @@ export function BombeView({ room }: { room: UseRoom }) {
               </div>
             </div>
           )}
-          {/* Lettres A-V collectées. */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-              <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".16em", color: C.faint }}>Lettres</span>
-              <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, color: C.faint }}>{game.usedLetters.length} / {BOMBE_ALPHABET.length}</span>
+          {/* Lettres A-V collectées — grille INDIVIDUELLE (tes lettres). Pas de
+              collecte en Coopératif (mode « hardcore »). */}
+          {game.mode !== "coop" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+                <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".16em", color: C.faint }}>Tes lettres</span>
+                <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, color: C.faint }}>{game.usedLetters.length} / {BOMBE_ALPHABET.length}</span>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                {BOMBE_ALPHABET.map((l) => {
+                  const on = game.usedLetters.includes(l);
+                  return (
+                    <span key={l} style={{ display: "grid", placeItems: "center", width: 23, height: 23, borderRadius: 6, fontFamily: DISPLAY, fontSize: 11, fontWeight: 700, color: on ? C.mint : C.dim, background: on ? "rgba(70,224,176,.14)" : "transparent", boxShadow: on ? "inset 0 0 0 1px rgba(70,224,176,.5)" : "none" }}>{l}</span>
+                  );
+                })}
+              </div>
             </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-              {BOMBE_ALPHABET.map((l) => {
-                const on = game.usedLetters.includes(l);
-                return (
-                  <span key={l} style={{ display: "grid", placeItems: "center", width: 23, height: 23, borderRadius: 6, fontFamily: DISPLAY, fontSize: 11, fontWeight: 700, color: on ? C.mint : C.dim, background: on ? "rgba(70,224,176,.14)" : "transparent", boxShadow: on ? "inset 0 0 0 1px rgba(70,224,176,.5)" : "none" }}>{l}</span>
-                );
-              })}
-            </div>
-          </div>
+          )}
         </div>
       )}
     </aside>
@@ -379,6 +382,9 @@ export function BombeView({ room }: { room: UseRoom }) {
           </span>
           {row.eliminated ? (
             <span style={{ fontSize: 11, color: C.faint }}>éliminé · {row.wordsFound} mots</span>
+          ) : game.mode === "coop" ? (
+            // Coop : pas de vies — on affiche juste la contribution (mots trouvés).
+            <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, color: C.faint }}>{row.wordsFound} mots</span>
           ) : (
             <span style={{ display: "flex", gap: 3, alignItems: "center" }}>
               <Hearts lives={row.lives} max={game.maxLives} />

@@ -243,37 +243,53 @@ const AV = "ABCDEFGHIJKLMNOPQRSTUV".split("");
 const missingA = AV.filter((l) => l !== "A"); // 20 lettres, il manque A
 
 test("nouvelle lettre mais alphabet incomplet → AUCUNE vie (lettres enregistrées)", () => {
-  const s = { ...baseFor("a", 3), lives: { a: 2, b: 3, c: 3, d: 3 }, usedLetters: [] };
+  const s = { ...baseFor("a", 3), lives: { a: 2, b: 3, c: 3, d: 3 }, usedLetters: { a: [] } };
   const r = reduceBombe(s, submit("a", "arbre"), ctx(2000)); // A R B E
   assert(!r.error, "mot accepté");
   eq(r.state.lives["a"], 2, "pas de vie tant que l'alphabet n'est pas complet");
   eq(r.state.letterEvent, null, "aucun event (pas de complétion)");
-  assert(["A", "R", "B", "E"].every((l) => r.state.usedLetters.includes(l)), "A R B E enregistrées");
+  assert(["A", "R", "B", "E"].every((l) => (r.state.usedLetters.a ?? []).includes(l)), "A R B E enregistrées sur la grille de a");
 });
 
-test("compléter l'alphabet A-V → +1 vie + grille réinitialisée", () => {
-  const s = { ...baseFor("a", 3), lives: { a: 2, b: 3, c: 3, d: 3 }, usedLetters: missingA };
+test("lettres INDIVIDUELLES : le mot d'un joueur ne remplit QUE sa grille", () => {
+  const s = { ...baseFor("a", 3), usedLetters: { a: [], b: ["C"] } };
+  const r = reduceBombe(s, submit("a", "arbre"), ctx(2000)); // a joue → seule la grille de a bouge
+  assert(["A", "R", "B", "E"].every((l) => (r.state.usedLetters.a ?? []).includes(l)), "grille de a remplie");
+  eq((r.state.usedLetters.b ?? []).join(""), "C", "grille de b intacte (pas de partage)");
+});
+
+test("compléter SA PROPRE grille A-V → +1 vie + grille réinitialisée", () => {
+  const s = { ...baseFor("a", 3), lives: { a: 2, b: 3, c: 3, d: 3 }, usedLetters: { a: missingA } };
   const r = reduceBombe(s, submit("a", "arbre"), ctx(2000)); // apporte A → complète les 21
   eq(r.state.lives["a"], 3, "+1 vie à la complétion (2 → 3)");
   assert(r.state.letterEvent?.completed === true, "event de complétion");
   assert(r.state.letterEvent?.gainedLife === true, "vie gagnée");
-  eq(r.state.usedLetters.length, 0, "grille réinitialisée après complétion");
+  eq((r.state.usedLetters.a ?? []).length, 0, "grille de a réinitialisée après complétion");
 });
 
 test("compléter l'alphabet au max de vies → aucune vie mais grille réinitialisée (atMax)", () => {
-  const s = { ...baseFor("a", 3), usedLetters: missingA }; // a est à 3/3 (max)
+  const s = { ...baseFor("a", 3), usedLetters: { a: missingA } }; // a est à 3/3 (max)
   const r = reduceBombe(s, submit("a", "arbre"), ctx(2000));
   eq(r.state.lives["a"], 3, "toujours 3 (pas de dépassement)");
   assert(r.state.letterEvent?.atMax === true, "atMax signalé");
   assert(r.state.letterEvent?.completed === true, "complétion signalée");
-  eq(r.state.usedLetters.length, 0, "grille réinitialisée");
+  eq((r.state.usedLetters.a ?? []).length, 0, "grille réinitialisée");
 });
 
 test("lettre déjà utilisée → aucune récompense", () => {
-  const s = { ...baseFor("a", 3), lives: { a: 2, b: 3, c: 3, d: 3 }, usedLetters: ["A", "R", "B", "E"] };
+  const s = { ...baseFor("a", 3), lives: { a: 2, b: 3, c: 3, d: 3 }, usedLetters: { a: ["A", "R", "B", "E"] } };
   const r = reduceBombe(s, submit("a", "arbre"), ctx(2000));
   eq(r.state.lives["a"], 2, "pas de +1 vie");
   eq(r.state.letterEvent, null, "aucun event lettre");
+});
+
+test("coop : aucune collecte de lettres ni gain de vie", () => {
+  const s = { ...baseFor("a", 3), lives: { a: 2, b: 3, c: 3, d: 3 }, usedLetters: { a: missingA }, config: { ...baseFor("a", 3).config, mode: "coop" as const } };
+  const r = reduceBombe(s, submit("a", "arbre"), ctx(2000));
+  assert(!r.error, "mot accepté");
+  eq(r.state.lives["a"], 2, "coop : pas de +1 vie même si l'alphabet aurait été complété");
+  eq(r.state.letterEvent, null, "coop : aucun event lettre");
+  eq((r.state.usedLetters.a ?? []).join(""), missingA.join(""), "coop : la grille n'a pas changé");
 });
 
 test("timer expiré → soumission ignorée (l'explosion suivra)", () => {
@@ -297,10 +313,10 @@ test("config : jusqu'à 10 vies autorisées", () => {
 });
 
 test("projection : usedLetters et letterEvent (complétion) exposés", () => {
-  const s = { ...baseFor("a", 3), lives: { a: 2, b: 3, c: 3, d: 3 }, usedLetters: missingA };
+  const s = { ...baseFor("a", 3), lives: { a: 2, b: 3, c: 3, d: 3 }, usedLetters: { a: missingA } };
   const r = reduceBombe(s, submit("a", "arbre"), ctx(2000));
-  const pub = projectBombe(r.state, "b");
-  eq(pub.usedLetters.length, 0, "grille réinitialisée exposée");
+  const pub = projectBombe(r.state, "a"); // le spectateur 'a' voit SA grille (réinitialisée)
+  eq(pub.usedLetters.length, 0, "grille individuelle réinitialisée exposée");
   assert(pub.letterEvent?.completed === true, "letterEvent de complétion exposé");
   assert(pub.letterEvent?.gainedLife === true, "gain de vie exposé");
 });

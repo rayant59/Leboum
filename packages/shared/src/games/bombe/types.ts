@@ -56,7 +56,7 @@ export interface BombeState {
   turnStartedAt: number;                   // début du tour (horloge serveur)
   deadline: number | null;                 // instant EXACT d'explosion (secret)
   usedWords: string[];                     // mots déjà joués (normalisés) — interdits
-  usedLetters: string[];                   // lettres A-V déjà découvertes (majuscules)
+  usedLetters: Record<PlayerId, string[]>; // lettres A-V découvertes PAR JOUEUR (grille individuelle ; vide en coop)
   letterEvent: BombeLetterEvent | null;    // dernière découverte de lettre (animation)
   recentSyllables: string[];               // anti-répétition
   wordsFound: Record<PlayerId, number>;    // stats
