@@ -31,6 +31,21 @@ const CLOSENESS_BONUS = 60;
 // À 2 joueurs le vote n'a aucun sens → le score vient UNIQUEMENT de la ressemblance :
 // le plus proche gagne ces points (les deux touchent la participation s'ils ont joué).
 const AUTO_WIN_POINTS = 100;
+// Le temps d'enregistrement colle à la DURÉE RÉELLE du son (mesurée par le client)
+// + un léger délai au début pour se préparer à parler. Bornes de sécurité.
+const PREP_DELAY_MS = 1000;      // petit temps de préparation ajouté au début
+const MIN_RECORD_MS = 2500;      // plancher (sons très courts restent jouables)
+const MAX_SOUND_MS = 25000;      // garde-fou (durée aberrante ignorée)
+
+/** Temps d'enregistrement effectif d'une manche : durée réelle du son (si un
+ *  client l'a annoncée) + préparation ; sinon repli sur le réglage de l'hôte. */
+function effectiveRecordMs(state: MimicState): number {
+  if (state.soundDurMs != null && Number.isFinite(state.soundDurMs) && state.soundDurMs > 0) {
+    const dur = Math.min(MAX_SOUND_MS, Math.max(0, state.soundDurMs));
+    return Math.max(MIN_RECORD_MS, Math.round(PREP_DELAY_MS + dur));
+  }
+  return state.config.recordMs;
+}
 
 /** 2 joueurs : pas de vote possible, on classe par ressemblance au son d'origine. */
 function isAutoOnly(state: MimicState): boolean {
@@ -107,6 +122,8 @@ export function createMimic(players: GamePlayer[], settings: MimicSettings, ctx:
     emptyTake: recFalse(players),
     closeness: rec0(players),
     autoBonusId: null,
+    soundDurMs: null,
+    roundRecordMs: null,
     playbackOrder: [],
     playbackIndex: 0,
     votes: {},
@@ -171,6 +188,8 @@ function startRound(state: MimicState, round: number, ctx: GameContext): MimicSt
     emptyTake: recFalse(state.players),
     closeness: rec0(state.players),
     autoBonusId: null,
+    soundDurMs: null,
+    roundRecordMs: null,
     playbackOrder: [],
     playbackIndex: 0,
     votes: {},
@@ -208,6 +227,8 @@ function startDuel(state: MimicState, ctx: GameContext): MimicState {
     emptyTake: recFalse(state.players),
     closeness: rec0(state.players),
     autoBonusId: null,
+    soundDurMs: null,
+    roundRecordMs: null,
     playbackOrder: [], playbackIndex: 0, votes: {},
     activeIds: pair,
     phase: "reference",
@@ -235,6 +256,16 @@ export function reduceMimic(
         case "start": {
           if (state.phase !== "prep") return ok(state);
           return ok(startRound(state, 1, ctx));
+        }
+
+        case "sound_dur": {
+          // La durée réelle du son n'est utile qu'AVANT l'enregistrement, et une
+          // fois suffit (premier client qui l'a mesurée fait foi).
+          if (state.phase !== "reference" && state.phase !== "countdown") return ok(state);
+          if (state.soundDurMs != null) return ok(state);
+          const ms = typeof msg.ms === "number" && Number.isFinite(msg.ms) ? Math.max(0, Math.round(msg.ms)) : 0;
+          if (ms <= 0) return ok(state);
+          return ok({ ...state, soundDurMs: Math.min(MAX_SOUND_MS, ms) });
         }
 
         case "take_done": {
@@ -290,8 +321,11 @@ function advance(state: MimicState, ctx: GameContext): MimicState {
       return state; // attend l'hôte
     case "reference":
       return { ...state, phase: "countdown", deadline: ctx.now + state.config.countdownMs };
-    case "countdown":
-      return { ...state, phase: "recording", deadline: ctx.now + state.config.recordMs };
+    case "countdown": {
+      // Temps d'enregistrement = durée réelle du son + préparation (repli config).
+      const recMs = effectiveRecordMs(state);
+      return { ...state, phase: "recording", roundRecordMs: recMs, deadline: ctx.now + recMs };
+    }
     case "recording": {
       // Fin du temps : les ACTIFS qui n'ont rien rendu → prise vide.
       const submitted = { ...state.submitted };
@@ -306,7 +340,7 @@ function advance(state: MimicState, ctx: GameContext): MimicState {
     case "playback": {
       const nextIdx = state.playbackIndex + 1;
       if (nextIdx < state.playbackOrder.length) {
-        return { ...state, playbackIndex: nextIdx, deadline: ctx.now + state.config.recordMs + state.config.playbackPadMs };
+        return { ...state, playbackIndex: nextIdx, deadline: ctx.now + (state.roundRecordMs ?? state.config.recordMs) + state.config.playbackPadMs };
       }
       return isAutoOnly(state) ? tallyAuto(state, ctx) : toVoting(state, ctx);
     }
@@ -324,7 +358,8 @@ function advance(state: MimicState, ctx: GameContext): MimicState {
 function afterRecording(state: MimicState, ctx: GameContext): MimicState {
   if (state.config.mode === "chain" && state.chainPos + 1 < state.chainOrder.length) {
     const nextPos = state.chainPos + 1;
-    return { ...state, chainPos: nextPos, activeIds: [state.chainOrder[nextPos]], phase: "reference", deadline: ctx.now + state.config.referenceMs };
+    // Nouveau maillon : il écoutera une AUTRE prise → on redemande sa durée.
+    return { ...state, chainPos: nextPos, activeIds: [state.chainOrder[nextPos]], phase: "reference", soundDurMs: null, roundRecordMs: null, deadline: ctx.now + state.config.referenceMs };
   }
   return toProcessing(state, ctx);
 }
@@ -349,7 +384,7 @@ function toPlayback(state: MimicState, ctx: GameContext): MimicState {
     phase: "playback",
     playbackOrder: order,
     playbackIndex: 0,
-    deadline: ctx.now + state.config.recordMs + state.config.playbackPadMs,
+    deadline: ctx.now + (state.roundRecordMs ?? state.config.recordMs) + state.config.playbackPadMs,
   };
 }
 
@@ -539,7 +574,7 @@ export function projectMimic(state: MimicState, viewerId: PlayerId): MimicPublic
     allReady: state.players.length > 0 && state.players.every((p) => state.ready[p.id]),
     submittedIds: Object.keys(state.submitted).filter((id) => state.submitted[id]),
     youSubmitted: !!state.submitted[viewerId],
-    recordMs: state.config.recordMs,
+    recordMs: state.roundRecordMs ?? state.config.recordMs,
     playbackOrder: state.playbackOrder,
     playbackIndex: state.playbackIndex,
     currentTakeId: state.phase === "playback" ? state.playbackOrder[state.playbackIndex] ?? null : null,

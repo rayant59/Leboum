@@ -107,8 +107,25 @@ function useDecodedAudio(src: string | null | undefined): DecodedAudio | null {
   return dec;
 }
 
+/** Rogne le silence de début/fin d'une enveloppe (sous un seuil relatif au max).
+ *  Indispensable : avec le délai de préparation, la prise commence par ~1 s de
+ *  silence — sans rognage, le rythme serait décalé et la ressemblance faussée. */
+function trimEnvelope(env: number[], thr = 0.08): number[] {
+  let max = 0;
+  for (const v of env) max = Math.max(max, v);
+  if (max <= 1e-6) return env;
+  const t = max * thr;
+  let lo = 0;
+  while (lo < env.length && env[lo] < t) lo++;
+  let hi = env.length - 1;
+  while (hi > lo && env[hi] < t) hi--;
+  const cut = env.slice(lo, hi + 1);
+  return cut.length >= 2 ? cut : env;
+}
+
 /** Calcule la ressemblance (0–100) d'une prise (blob) au son d'origine (src),
- *  sur le rythme + l'énergie. 0 si l'un des deux est indécodable. */
+ *  sur le rythme + l'énergie, après rognage du silence de part et d'autre.
+ *  0 si l'un des deux est indécodable. */
 async function computeCloseness(takeBlob: Blob, originalSrc: string | null | undefined): Promise<number> {
   if (!originalSrc) return 0;
   try {
@@ -116,7 +133,7 @@ async function computeCloseness(takeBlob: Blob, originalSrc: string | null | und
     const [orig, take] = await Promise.all([decodeAudio(originalSrc), decodeAudio(takeUrl)]);
     URL.revokeObjectURL(takeUrl);
     if (!orig || !take) return 0;
-    return envelopeSimilarity(take.envelope, orig.envelope);
+    return envelopeSimilarity(trimEnvelope(take.envelope), trimEnvelope(orig.envelope));
   } catch {
     return 0;
   }
@@ -556,11 +573,21 @@ function Listening({ room, game, isHost }: { room: UseRoom; game: MimicPublic; i
   const [played, setPlayed] = useState(0);
   const [dur, setDur] = useState(0);
   const rafRef = useRef<number | null>(null);
+  const sentDurRef = useRef<string | null>(null);
   useEffect(() => {
     setPlayed(0);
     const a = audioRef.current;
     if (a && game.sound?.src) { a.currentTime = 0; a.play().then(() => setBlocked(false)).catch(() => setBlocked(true)); }
   }, [game.sound?.src]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Annonce au serveur la durée RÉELLE du son (mesurée en le décodant) une fois
+  // par son : le serveur cale le temps d'enregistrement dessus (+ préparation).
+  useEffect(() => {
+    const src = game.sound?.src;
+    const d = dec?.duration ?? 0;
+    if (!src || d <= 0 || sentDurRef.current === src) return;
+    sentDurRef.current = src;
+    room.mimicAction({ kind: "sound_dur", ms: Math.round(d * 1000) });
+  }, [dec, game.sound?.src, room]);
   // Tête de lecture calée sur le VRAI temps de l'audio (rAF).
   useEffect(() => {
     const loop = () => {

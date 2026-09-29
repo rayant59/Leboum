@@ -40,6 +40,7 @@ export type MimicClientAction =
   | { kind: "ready"; ready: boolean }              // prep
   | { kind: "start" }                              // hôte : prep -> manche 1
   | { kind: "take_done"; empty?: boolean; closeness?: number } // « j'ai fini » (closeness 0–100 : ressemblance au son d'origine, calculée côté client)
+  | { kind: "sound_dur"; ms: number }              // le client annonce la durée réelle du son (mesurée en décodant) → cadre le temps d'enregistrement
   | { kind: "vote"; targetId: PlayerId }           // voting
   | { kind: "next" };                              // hôte : scoreboard -> manche suivante
 
@@ -55,6 +56,8 @@ export interface MimicState {
   emptyTake: Record<PlayerId, boolean>;// prise vide (rien enregistré)
   closeness: Record<PlayerId, number>; // ressemblance 0–100 de la prise au son d'origine (manche courante)
   autoBonusId: PlayerId | null;        // joueur le plus proche du son ce tour (bonus auto / vainqueur 2 joueurs)
+  soundDurMs: number | null;           // durée réelle du son mesurée par un client (manche courante, null tant qu'inconnue)
+  roundRecordMs: number | null;        // temps d'enregistrement effectif de la manche (= prep + durée du son ; null → repli sur config.recordMs)
   playbackOrder: PlayerId[];           // ordre de lecture des prises
   playbackIndex: number;               // prise en cours de lecture
   votes: Record<PlayerId, PlayerId>;   // voterId -> targetId (manche courante)
