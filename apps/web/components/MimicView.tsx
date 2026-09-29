@@ -334,8 +334,8 @@ function PauseIcon({ size = 20 }: { size?: number }) {
 
 // ── Lecteur audio maison (thème du site) : bouton play/pause + vraie forme
 //    d'onde cliquable, tête de lecture calée sur le temps réel de l'audio.
-function SoundPlayer({ src, accent = LB.mint, autoPlay = false, compact = false }: {
-  src: string; accent?: string; autoPlay?: boolean; compact?: boolean;
+function SoundPlayer({ src, accent = LB.mint, autoPlay = false, compact = false, onEnded }: {
+  src: string; accent?: string; autoPlay?: boolean; compact?: boolean; onEnded?: () => void;
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const dec = useDecodedAudio(src);
@@ -343,12 +343,14 @@ function SoundPlayer({ src, accent = LB.mint, autoPlay = false, compact = false 
   const [frac, setFrac] = useState(0);
   const [dur, setDur] = useState(0);
   const rafRef = useRef<number | null>(null);
+  const onEndedRef = useRef(onEnded);
+  onEndedRef.current = onEnded;
 
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
     const onMeta = () => setDur(a.duration || 0);
-    const onEnd = () => { setPlaying(false); setFrac(1); };
+    const onEnd = () => { setPlaying(false); setFrac(1); onEndedRef.current?.(); };
     const onPlay = () => setPlaying(true);
     const onPause = () => setPlaying(false);
     a.addEventListener("loadedmetadata", onMeta);
@@ -800,6 +802,29 @@ function Playback({ room, game, you, name, color, avatarOf, isHost }: { room: Us
   const take = pid ? room.voiceTakes.get(`${game.round}:${pid}`) : null;
   const idx = game.playbackIndex;
   const total = game.playbackOrder.length;
+
+  // Enchaînement serré : l'hôte passe à la prise suivante juste après la fin de
+  // l'audio (petit délai de respiration), plutôt que d'attendre le temps mort
+  // du serveur. Le deadline serveur reste le filet de sécurité.
+  const advancedRef = useRef(-1);
+  const timerRef = useRef<number | null>(null);
+  useEffect(() => {
+    advancedRef.current = -1;
+    return () => { if (timerRef.current) { window.clearTimeout(timerRef.current); timerRef.current = null; } };
+  }, [idx]);
+  const advanceNext = useCallback(() => {
+    if (!isHost || advancedRef.current === idx) return;
+    advancedRef.current = idx;
+    timerRef.current = window.setTimeout(() => room.skipPhase(), 450);
+  }, [isHost, idx, room]);
+  // Prise vide / audio indisponible : pas d'événement « ended » → on avance
+  // après un court instant pour ne pas rester bloqué sur un écran vide.
+  useEffect(() => {
+    if (!isHost || !pid || take) return;
+    const t = window.setTimeout(advanceNext, 1500);
+    return () => window.clearTimeout(t);
+  }, [isHost, pid, take, advanceNext]);
+
   return (
     <>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "18px 34px 8px" }}>
@@ -815,7 +840,7 @@ function Playback({ room, game, you, name, color, avatarOf, isHost }: { room: Us
             <span style={{ boxShadow: `0 0 40px -12px ${hexA(LB.mint, 0.9)}`, borderRadius: 22 }}><Avatar name={name(pid)} color={color(pid)} avatar={avatarOf(pid)} size={84} /></span>
             <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 30 }}>{name(pid)}{pid === you && <span style={{ color: LB.faint, fontWeight: 600, fontSize: 18 }}> · toi</span>}</span>
             {take
-              ? <div style={{ width: "min(440px, 78vw)" }}><SoundPlayer key={`${game.round}:${pid}`} src={take} accent={LB.mint} autoPlay /></div>
+              ? <div style={{ width: "min(440px, 78vw)" }}><SoundPlayer key={`${game.round}:${pid}`} src={take} accent={LB.mint} autoPlay onEnded={advanceNext} /></div>
               : <span style={{ fontSize: 13, color: LB.faint }}>(pas de prise / son indisponible)</span>}
           </div>
         )}
