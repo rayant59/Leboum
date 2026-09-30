@@ -430,8 +430,8 @@ export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boole
             <span style={{ display: "inline-flex", alignItems: "center", gap: 12 }}>
               {game.phase === "question" && pixel && secs != null && (
                 <span style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}>
-                  <span style={{ fontFamily: DISPLAY, fontSize: 22, fontWeight: 800, color: C.mint }}>{secs}</span>
-                  <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: C.faint }}>restantes</span>
+                  <span style={{ fontFamily: DISPLAY, fontSize: 22, fontWeight: 800, color: C.mint, fontVariantNumeric: "tabular-nums" }}>{secs >= 60 ? `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}` : `${secs}s`}</span>
+                  <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: C.faint }}>{game.mode === "coop" ? "chrono commun" : "restantes"}</span>
                 </span>
               )}
               <SoundToggle />

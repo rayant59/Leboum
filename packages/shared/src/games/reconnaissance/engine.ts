@@ -30,8 +30,13 @@ export function createReco(players: GamePlayer[], settings: RecoSettings, ctx: G
   // et on s'y tient toute la partie.
   let category = settings.category ?? "all";
   if (mode === "theme" && (category === "all" || !category)) {
-    const cats = recoCategories();
-    if (cats.length) category = cats[Math.floor(ctx.rng() * cats.length)];
+    // On ne tire qu'une catégorie assez fournie : avec peu d'images perso, une
+    // catégorie à 1 image donnait une partie « Image 1 / 1 ».
+    const cats = recoCategories().map((c) => ({ c, n: pickItems(1000, () => 0.5, c).length }));
+    const need = Math.min(total, 5);
+    const rich = cats.filter((x) => x.n >= need);
+    const pool = rich.length ? rich : [...cats].sort((x, y) => y.n - x.n).slice(0, 1);
+    if (pool.length) category = pool[Math.floor(ctx.rng() * pool.length)].c;
   }
   const items = pickItems(total, ctx.rng, category);
   // Coop : un seul chrono GLOBAL = manches × temps par image ; on enchaîne les

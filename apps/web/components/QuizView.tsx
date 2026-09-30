@@ -208,12 +208,15 @@ export function QuizView({ room }: { room: UseRoom }) {
       </div>
       {game.teamScores && (
         <div style={{ display: "flex", gap: 8 }}>
-          {([["A", C.pink, game.teamScores[0]], ["B", C.cyan, game.teamScores[1]]] as const).map(([nm, col, sc]) => (
-            <div key={nm} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "9px 12px", borderRadius: 12, boxShadow: `0 0 0 1px ${hexA(col, 0.5)}`, background: hexA(col, 0.08) }}>
-              <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 12, color: col }}>Équipe {nm}</span>
+          {([["A", C.pink, game.teamScores[0], 0], ["B", C.cyan, game.teamScores[1], 1]] as const).map(([nm, col, sc, idx]) => {
+            const mine = game.ranking.find((r) => r.id === you)?.team === idx;
+            return (
+            <div key={nm} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "9px 12px", borderRadius: 12, boxShadow: `0 0 0 ${mine ? 2 : 1}px ${hexA(col, mine ? 0.9 : 0.5)}`, background: hexA(col, mine ? 0.16 : 0.08) }}>
+              <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 12, color: col }}>Équipe {nm}{mine && <span style={{ color: C.text, fontWeight: 600 }}> · la tienne</span>}</span>
               <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 18, color: C.text }}>{sc}</span>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
       {game.mode === "survival" && game.yourLives != null && !game.yourEliminated && (
@@ -237,7 +240,12 @@ export function QuizView({ room }: { room: UseRoom }) {
 
   // ══════════════════ CLASSEMENT FINAL (4f) ══════════════════
   if (game.phase === "final") {
-    const winner = game.ranking[0];
+    const ranked = game.ranking;
+    const winner = ranked[0];
+    // Égalité ou partie blanche : pas de faux « gagnant » à 0 point.
+    const topScore = (ranked[0]?.score ?? 0);
+    const tied = ranked.filter((r) => (r?.score ?? 0) === topScore);
+    const winnerLabel = topScore === 0 ? "Personne n'a marqué" : tied.length > 1 ? `${tied.map((r) => r.name).join(" & ")} · ex æquo` : winner?.name ?? "—";
     const stats = game.stats;
     const statCols = stats
       ? [
@@ -259,11 +267,13 @@ export function QuizView({ room }: { room: UseRoom }) {
                 <span style={{ fontSize: 18, lineHeight: 1 }}>🏆</span>Meilleur score
               </span>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-                <span style={{ boxShadow: `0 0 60px -18px ${winner?.color ?? C.violet}` }}>
+                {topScore > 0 && tied.length === 1 && (
+                  <span style={{ boxShadow: `0 0 60px -18px ${winner?.color ?? C.violet}` }}>
                   <Avatar name={winner?.name ?? "?"} color={winner?.color ?? C.violet} avatar={winner?.avatar} size={92} />
-                </span>
-                <span style={{ fontFamily: DISPLAY, fontSize: 58, fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1 }}>{winner?.name ?? "—"}</span>
-                <span style={{ fontFamily: DISPLAY, fontSize: 26, fontWeight: 800, color: C.gold }}>{(winner?.score ?? 0).toLocaleString("fr-FR")} pts</span>
+                  </span>
+                )}
+                <span style={{ fontFamily: DISPLAY, fontSize: "clamp(28px, 5vw, 58px)", fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1.05, textAlign: "center" }}>{winnerLabel}</span>
+                {topScore > 0 && <span style={{ fontFamily: DISPLAY, fontSize: 26, fontWeight: 800, color: C.gold }}>{(winner?.score ?? 0).toLocaleString("fr-FR")} pts</span>}
               </div>
               {statCols.length > 0 && (
                 <div style={{ display: "flex", alignItems: "stretch" }}>

@@ -1246,6 +1246,10 @@ export function DrawGameView({ room }: { room: UseRoom }) {
   if (game.phase === "scoreboard") {
     const ranked = [...game.players].sort((a, b) => (game.scores[b.id] ?? 0) - (game.scores[a.id] ?? 0));
     const winner = ranked[0];
+    // Égalité ou partie blanche : pas de faux « gagnant » à 0 point.
+    const topScore = (game.scores[ranked[0]?.id ?? ""] ?? 0);
+    const tied = ranked.filter((r) => (game.scores[r?.id ?? ""] ?? 0) === topScore);
+    const winnerLabel = topScore === 0 ? "Personne n'a marqué" : tied.length > 1 ? `${tied.map((r) => r.name).join(" & ")} · ex æquo` : winner?.name ?? "—";
     const finalRows: RailRow[] = ranked.map((p, i) => ({
       id: p.id, name: p.name, color: p.color, avatar: p.avatar, you: p.id === you,
       rank: i + 1, accent: i === 0 ? LB.gold : p.id === you ? LB.violet : undefined,
@@ -1265,11 +1269,13 @@ export function DrawGameView({ room }: { room: UseRoom }) {
                   <img src="/tools/palette.png" alt="" width={22} height={22} style={{ display: "block" }} />
                   {isCoop ? "Score collectif" : "Meilleur crayon"}
                 </span>
+                {(isCoop || (topScore > 0 && tied.length === 1)) && (
                 <span style={{ boxShadow: `0 0 60px -18px ${hexA(LB.gold, 1)}`, borderRadius: 22, width: 92, height: 92 }}>
                   <Avatar name={winner?.name ?? "?"} color={winner?.color ?? LB.violet} avatar={winner?.avatar} size={92} />
                 </span>
-                <span style={{ fontFamily: DISPLAY, fontSize: 54, fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1 }}>{isCoop ? "" : winner?.name ?? "—"}</span>
-                <span style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 800, color: LB.gold }}>{(isCoop ? teamScore : (game.scores[winner?.id ?? ""] ?? 0)).toLocaleString("fr-FR")} points</span>
+                )}
+                <span style={{ fontFamily: DISPLAY, fontSize: "clamp(28px, 5vw, 54px)", fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1.05 }}>{isCoop ? "" : winnerLabel}</span>
+                {(isCoop || topScore > 0) && <span style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 800, color: LB.gold }}>{(isCoop ? teamScore : (game.scores[winner?.id ?? ""] ?? 0)).toLocaleString("fr-FR")} points</span>}
               </div>
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, padding: "0 34px 30px" }}>

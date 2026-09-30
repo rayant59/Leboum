@@ -958,6 +958,10 @@ function Verdict({ room, game, you, isHost }: { room: UseRoom; game: MimicPublic
 function Final({ room, game, you, isHost }: { room: UseRoom; game: MimicPublic; you: string; isHost: boolean }) {
   const ranked = [...game.ranking];
   const winner = ranked[0];
+    // Égalité ou partie blanche : pas de faux « gagnant » à 0 point.
+    const topScore = (ranked[0]?.score ?? 0);
+    const tied = ranked.filter((r) => (r?.score ?? 0) === topScore);
+    const winnerLabel = topScore === 0 ? "Personne n'a marqué" : tied.length > 1 ? `${tied.map((r) => r.name).join(" & ")} · ex æquo` : winner?.name ?? "—";
   const rows: RailRow[] = ranked.map((p, i) => ({
     id: p.id, name: p.name, color: p.color, avatar: p.avatar, you: p.id === you,
     rank: i + 1, accent: i === 0 ? LB.gold : p.id === you ? LB.violet : undefined,
@@ -974,9 +978,9 @@ function Final({ room, game, you, isHost }: { room: UseRoom; game: MimicPublic; 
           <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 34 }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 22, textAlign: "center" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 9, fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: LB.faint }}>🎧 Meilleure oreille</span>
-              <span style={{ boxShadow: `0 0 60px -18px ${hexA(LB.gold, 1)}`, borderRadius: 22 }}><Avatar name={winner?.name ?? "?"} color={winner?.color ?? LB.violet} avatar={winner?.avatar} size={92} /></span>
-              <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 58, letterSpacing: "-.02em", lineHeight: 1 }}>{winner?.name ?? "—"}</span>
-              <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 26, color: LB.gold }}>{(winner?.score ?? 0).toLocaleString("fr-FR")} points</span>
+              {topScore > 0 && tied.length === 1 && <span style={{ boxShadow: `0 0 60px -18px ${hexA(LB.gold, 1)}`, borderRadius: 22 }}><Avatar name={winner?.name ?? "?"} color={winner?.color ?? LB.violet} avatar={winner?.avatar} size={92} /></span>}
+              <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(28px, 5vw, 58px)", letterSpacing: "-.02em", lineHeight: 1.05 }}>{winnerLabel}</span>
+              {topScore > 0 && <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 26, color: LB.gold }}>{(winner?.score ?? 0).toLocaleString("fr-FR")} points</span>}
               <div style={{ display: "flex", alignItems: "stretch", marginTop: 4 }}>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "0 26px" }}>
                   <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 28 }}>{(winner?.score ?? 0)}</span>
@@ -1018,7 +1022,13 @@ function Prep({ room, game, mic, you, isHost }: { room: UseRoom; game: MimicPubl
             <div style={{ width: "100%", maxWidth: 460, display: "flex", flexDirection: "column", gap: 16 }}>
               <div style={{ textAlign: "center" }}>
                 <p style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 26 }}>🎧 Prépare-toi à imiter</p>
-                <p style={{ fontSize: 14, color: LB.muted, marginTop: 6 }}>Un son sera joué une seule fois pour tout le monde. Imite-le à la voix en une prise — les autres votent pour la meilleure.</p>
+                <p style={{ fontSize: 14, color: LB.muted, marginTop: 6 }}>{
+                  game.mode === "chain"
+                    ? "Téléphone arabe : seul le premier entend le vrai son. Chacun imite ensuite l'imitation du précédent — on compare au final."
+                    : game.mode === "duel"
+                      ? "Duel : deux joueurs imitent le même son en une prise, le reste du salon vote pour le meilleur."
+                      : "Un son sera joué une seule fois pour tout le monde. Imite-le à la voix en une prise — les autres votent pour la meilleure."
+                }</p>
               </div>
               <div style={{ padding: 18, borderRadius: 18, background: LB.surface, boxShadow: `0 0 0 1px ${LB.line}` }}>
                 <p style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: LB.gold, marginBottom: 12 }}>Ton microphone</p>

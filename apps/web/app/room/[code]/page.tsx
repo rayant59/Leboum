@@ -39,7 +39,7 @@ const MODE_SETS: Record<GameId, ModeDef[]> = {
     { id: "blind", c: "#4CC9F0", nm: "Aveugle", ds: "Tu dessines sans voir ton trait 😅. Plus de temps pour compenser.", img: MODE_ICONS.aveugle },
     { id: "constraints", c: "#8B7DF6", nm: "Contraintes", ds: "Chaque dessin impose une règle absurde (une couleur, sans lever le crayon…).", img: MODE_ICONS.contraintes },
     { id: "coop", c: "#46E0B0", nm: "Coopératif", ds: "En équipe : tous vos points sont mis en commun pour un score collectif.", img: MODE_ICONS.coop },
-    { id: "fakeartist", c: "#FF6B6B", nm: "Faux-artiste", ds: "Un imposteur ignore le mot ; démasquez-le au vote.", img: MODE_ICONS.fakeartist, min: 3 },
+    { id: "fakeartist", c: "#FF6B6B", nm: "Faux-artiste", ds: "Un imposteur reçoit un mot voisin sans le savoir ; démasquez-le au vote.", img: MODE_ICONS.fakeartist, min: 3 },
     { id: "relay", c: "#4CC9F0", nm: "Relais", ds: "Deux joueurs se relaient au crayon, rotation auto.", img: MODE_ICONS.relais, min: 3 },
   ],
   mimic: [
@@ -74,7 +74,7 @@ const MODE_SETS: Record<GameId, ModeDef[]> = {
  *  et défaut par jeu (saisie libre 5–300 s via « Perso »). */
 const TIMES: Record<GameId, { title: string; sub: string; opts: number[]; def: number }> = {
   draw: { title: "Temps de dessin", sub: "Durée de chaque tour de dessin", opts: [45, 60, 80, 120], def: 80 },
-  mimic: { title: "Temps d'imitation", sub: "Durée d'enregistrement par joueur", opts: [10, 15, 20, 30], def: 15 },
+  mimic: { title: "Temps d'imitation", sub: "Durée d'enregistrement par joueur", opts: [10, 15, 20, 25], def: 15 }, // le moteur plafonne à 25 s
   quiz: { title: "Temps par question", sub: "Délai pour répondre", opts: [10, 15, 20, 30], def: 15 },
   reco: { title: "Temps par image", sub: "Délai pour trouver la bonne réponse", opts: [15, 20, 30, 45], def: 20 },
   pixel: { title: "Temps de révélation", sub: "Durée avant l'image complète", opts: [20, 30, 45, 60], def: 30 },
