@@ -115,7 +115,7 @@ export function QuizView({ room }: { room: UseRoom }) {
 
   // ── Barre latérale (rail joueurs) ─────────────────────────────────────────
   const answeredCount = game.answeredIds.length;
-  const railKicker = game.phase === "final" ? "Classement" : "Quiz";
+  const railKicker = game.phase === "final" ? "Classement" : "Ça te parle ?";
   const railHeading = game.phase === "final" ? "Partie terminée" : `Question ${game.index + 1} / ${game.total}`;
   const railSub =
     game.phase === "final" ? `${game.total} questions`
@@ -222,8 +222,8 @@ export function QuizView({ room }: { room: UseRoom }) {
           <span style={{ marginLeft: "auto", letterSpacing: 2 }}>{Array.from({ length: 3 }).map((_, k) => <span key={k} style={{ color: k < (game.yourLives ?? 0) ? C.pink : C.dim }}>♥</span>)}</span>
         </div>
       )}
-      <div style={{ height: 1, flex: "none", background: "linear-gradient(90deg,transparent,rgba(243,238,255,.14) 18%,rgba(243,238,255,.14) 82%,transparent)" }} />
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{RailRows}</div>
+      <div className="bmb-sep" style={{ height: 1, flex: "none", background: "linear-gradient(90deg,transparent,rgba(243,238,255,.14) 18%,rgba(243,238,255,.14) 82%,transparent)" }} />
+      <div className="bmb-rows" style={{ display: "flex", flexDirection: "column", gap: 8 }}>{RailRows}</div>
     </aside>
   );
 
@@ -347,12 +347,12 @@ export function QuizView({ room }: { room: UseRoom }) {
             /* ── 4e — Révélation ── */
             <>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: 30, padding: "0 40px" }}>
-                {q && <span style={{ fontFamily: DISPLAY, fontSize: 34, fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1.15, color: C.muted, textWrap: "pretty" as CSSProperties["textWrap"] }}>{q.prompt}</span>}
+                {q && <span style={{ fontFamily: DISPLAY, fontSize: "clamp(20px, 3vw, 34px)", fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1.15, color: C.muted, textWrap: "pretty" as CSSProperties["textWrap"] }}>{q.prompt}</span>}
                 <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
                   <span style={{ display: "grid", placeItems: "center", width: 54, height: 54, flex: "none", borderRadius: 16, background: C.mint, color: C.ink }}>
                     <svg width="28" height="28" viewBox="0 0 256 256" fill="currentColor" aria-hidden><path d="M229.66 77.66l-128 128a8 8 0 0 1-11.32 0l-56-56a8 8 0 0 1 11.32-11.32L96 188.69L218.34 66.34a8 8 0 0 1 11.32 11.32" /></svg>
                   </span>
-                  <span style={{ fontFamily: DISPLAY, fontSize: 62, fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1, color: C.mint }}>{correctLabel ?? "—"}</span>
+                  <span style={{ fontFamily: DISPLAY, fontSize: "clamp(32px, 6vw, 62px)", fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1.05, overflowWrap: "anywhere", color: C.mint }}>{correctLabel ?? "—"}</span>
                 </div>
               </div>
               <div style={{ padding: "0 40px 40px", display: "flex", alignItems: "stretch", gap: 16, flexWrap: "wrap" }}>
@@ -383,8 +383,8 @@ export function QuizView({ room }: { room: UseRoom }) {
           ) : (
             /* ── 4a/4b/4c/4d — Question ── */
             <>
-              <div style={{ flex: q?.type === "truefalse" ? 1 : "none", display: "flex", flexDirection: "column", justifyContent: "center", gap: 26, padding: "8px 40px 0" }}>
-                <span style={{ fontFamily: DISPLAY, fontSize: q?.type === "truefalse" ? 48 : 44, fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1.1, color: answered ? C.muted : C.text, textWrap: "pretty" as CSSProperties["textWrap"] }}>
+              <div style={{ flex: q?.type === "truefalse" ? 1 : "none", display: "flex", flexDirection: "column", justifyContent: "center", gap: 26, padding: "8px clamp(16px, 4vw, 40px) 0" }}>
+                <span style={{ fontFamily: DISPLAY, fontSize: q?.type === "truefalse" ? "clamp(26px, 4.4vw, 48px)" : "clamp(24px, 4vw, 44px)", fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1.1, color: answered ? C.muted : C.text, textWrap: "pretty" as CSSProperties["textWrap"] }}>
                   {q?.prompt}
                 </span>
                 {/* Chrono en barre sous la question */}
@@ -399,7 +399,7 @@ export function QuizView({ room }: { room: UseRoom }) {
               </div>
 
               {/* Zone de réponse */}
-              <div style={{ flex: q?.type === "truefalse" ? "none" : 1, display: "flex", flexDirection: "column", justifyContent: q?.type === "truefalse" ? "flex-end" : "center", padding: "26px 40px 40px" }}>
+              <div style={{ flex: q?.type === "truefalse" ? "none" : 1, display: "flex", flexDirection: "column", justifyContent: q?.type === "truefalse" ? "flex-end" : "center", padding: "clamp(16px, 3vw, 26px) clamp(16px, 4vw, 40px) clamp(20px, 4vw, 40px)" }}>
                 {/* Survie : éliminé → spectateur, plus de réponse possible */}
                 {game.yourEliminated && (
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: "36px 24px", borderRadius: 18, background: C.surface, boxShadow: `0 0 0 1px ${C.line}` }}>
@@ -472,8 +472,8 @@ export function QuizView({ room }: { room: UseRoom }) {
                       <span style={{ fontFamily: DISPLAY, fontSize: 22, fontWeight: 700, color: C.mint }}>Réponse envoyée</span>
                     </div>
                   ) : (
-                    <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-                      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "18px 28px", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 1px #332A5A, inset 0 1px 0 rgba(243,238,255,.04), 0 20px 44px -28px rgba(0,0,0,.9)` }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "clamp(10px, 2vw, 20px)" }}>
+                      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "clamp(10px, 1.8vw, 18px) clamp(14px, 2.4vw, 28px)", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 1px #332A5A, inset 0 1px 0 rgba(243,238,255,.04), 0 20px 44px -28px rgba(0,0,0,.9)` }}>
                         <input
                           className="qz-input"
                           value={freeText}
@@ -482,7 +482,7 @@ export function QuizView({ room }: { room: UseRoom }) {
                           autoFocus
                           autoComplete="off"
                           placeholder="Ta réponse…"
-                          style={{ flex: 1, minWidth: 0, border: "none", outline: "none", background: "transparent", color: C.text, fontFamily: DISPLAY, fontSize: 40, fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.2, caretColor: C.gold }}
+                          style={{ flex: 1, minWidth: 0, border: "none", outline: "none", background: "transparent", color: C.text, fontFamily: DISPLAY, fontSize: "clamp(20px, 3.4vw, 40px)", fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.2, caretColor: C.gold }}
                         />
                       </div>
                       <button

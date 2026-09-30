@@ -8,6 +8,8 @@
 // une question de n'importe quelle catégorie peut être jouée dans n'importe
 // quel format (à condition d'avoir une image pour les formats visuels).
 
+import { typoDistance } from "../../room/util";
+
 export type QuizType = "mcq" | "truefalse" | "free";
 /** Facile → connaissance de niche → question improbable mais avec une vraie réponse. */
 export type QuizDifficulty = "easy" | "medium" | "hard" | "expert" | "wtf";
@@ -51,7 +53,7 @@ export function normalizeAnswer(s: string): string {
 
 // Articles/déterminants en tête qu'on ignore : « La mer » accepte « mer ».
 const LEADING_ARTICLES = new Set([
-  "le", "la", "les", "l", "un", "une", "des", "du", "de", "d", "au", "aux",
+  "le", "la", "les", "l", "un", "une", "des", "du", "de", "d", "au", "aux", "the",
 ]);
 
 /** Convertit un chiffre romain 1–40 (i, v, x uniquement, plus « xl » = 40) en
@@ -108,6 +110,15 @@ export function freeAnswerMatches(given: string, q: FreeQuestion): boolean {
   for (const t of targets) {
     if (normalizeAnswer(t) === g) return true; // correspondance exacte
     if (canonicalAnswer(t) === gc) return true; // article ignoré + romain↔chiffre
+  }
+  // Tolérance aux fautes de frappe : 1 faute dès 5 lettres, 2 dès 10.
+  // Jamais sur les réponses courtes ni sur les nombres (« 1789 » ≠ « 1788 »).
+  if (gc.length >= 5 && !/\d/.test(gc)) {
+    for (const t of targets) {
+      const tc = canonicalAnswer(t);
+      if (tc.length < 5 || /\d/.test(tc)) continue;
+      if (typoDistance(gc, tc) <= (tc.length >= 10 ? 2 : 1)) return true;
+    }
   }
   return false;
 }

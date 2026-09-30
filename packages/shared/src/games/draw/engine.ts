@@ -13,6 +13,7 @@ import type { DrawClientAction, DrawPublic, DrawState } from "./types";
 import { pickWordEntries } from "./words";
 import type { WordEntry } from "./words";
 import type { DrawSettings } from "./types";
+import { typoDistance } from "../../room/util";
 
 /** Normalise for guess comparison: lowercase, no accents, hyphens/apostrophes
  *  treated as spaces, single-spaced — so compound words match loosely
@@ -25,6 +26,16 @@ export function normalize(s: string): string {
     .replace(/[-'’]/g, " ")
     .trim()
     .replace(/\s+/g, " ");
+}
+
+/** Proposition « presque » juste : 1 faute (mots de 4+ lettres) ou 2 fautes
+ *  (mots de 9+ lettres). Jamais vrai pour la bonne réponse elle-même. */
+export function isCloseGuess(guess: string, word: string): boolean {
+  const g = normalize(guess);
+  const w = normalize(word);
+  if (!g || g === w || w.length < 4) return false;
+  const d = typoDistance(g, w);
+  return d <= (w.length >= 9 ? 2 : 1);
 }
 
 function maskWord(word: string): string {

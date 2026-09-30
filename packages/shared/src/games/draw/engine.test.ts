@@ -1,7 +1,7 @@
 // Run: npx tsx engine.test.ts
 import type { GamePlayer } from "../../game/types";
 import type { GameContext } from "../../platform/types";
-import { createDrawGame, projectDraw, reduceDraw } from "./engine";
+import { createDrawGame, isCloseGuess, projectDraw, reduceDraw } from "./engine";
 import { resolveDrawConfig } from "./modes";
 import { pickWordEntries } from "./words";
 import type { DrawClientAction, DrawState } from "./types";
@@ -396,3 +396,11 @@ test("coop : score d'équipe = somme des points, exposé via coopScore", () => {
 
 console.log(`\n${passed} réussis, ${failed} échoués\n`);
 if (failed > 0) process.exit(1);
+
+test("isCloseGuess : une faute = « tu chauffes », pas la bonne réponse ni un mot éloigné", () => {
+  assert(isCloseGuess("deconexion", "déconnexion"), "1 lettre manquante");
+  assert(isCloseGuess("chein", "chien"), "1 lettre changée");
+  assert(!isCloseGuess("chien", "chien"), "la bonne réponse n'est pas « proche »");
+  assert(!isCloseGuess("chat", "chien"), "trop éloigné");
+  assert(!isCloseGuess("ail", "api"), "mot trop court : pas d'indice");
+});

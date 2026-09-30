@@ -166,7 +166,16 @@
 /* Bombe — passage colonne sur mobile (la barre latérale passe en haut). */
 @media (max-width: 860px) {
   .bmb-wrap { flex-direction: column !important; }
-  .bmb-aside { width: 100% !important; border-right: none !important; border-bottom: 1px solid #332A5A; }
+  .bmb-aside { width: 100% !important; border-right: none !important; border-bottom: 1px solid #332A5A; padding: 14px 16px !important; gap: 10px !important; }
+  /* Joueurs en bandeau horizontal défilant : la question reste visible même à 8. */
+  .bmb-sep { display: none; }
+  .bmb-rows { flex-direction: row !important; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .bmb-rows::-webkit-scrollbar { display: none; }
+  .bmb-rows > * { flex: 0 0 auto; min-width: 150px; }
+  /* « À apprendre » : secondaire — sur téléphone il repoussait la bombe et
+     le champ de saisie hors de l'écran. « Tes lettres » reste (règle du jeu). */
+  .bmb-learn { display: none !important; }
+  .bmb-extras { gap: 8px !important; }
 }
 
 /* Icône image néon (Mode de jeu / Manches) — pas de fond, léger flottement + halo. */

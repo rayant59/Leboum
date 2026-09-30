@@ -42,6 +42,9 @@ export interface RoomState {
   code: string;
   phase: RoomPhase;
   hostId: PlayerId | null;
+  /** Créateur du salon : s'il se reconnecte (rechargement, réseau), il
+   *  récupère la couronne passée à un autre pendant son absence. */
+  ownerId?: PlayerId | null;
   players: Record<PlayerId, Player>;
   /** Stable join order — the source of truth for host succession and rendering. */
   playerOrder: PlayerId[];

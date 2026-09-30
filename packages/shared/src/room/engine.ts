@@ -103,6 +103,7 @@ export function reduce(state: RoomState, action: RoomAction): ReduceResult {
       return ok({
         ...state,
         hostId: isFirst ? action.playerId : state.hostId,
+        ownerId: state.ownerId ?? (isFirst ? action.playerId : null),
         players: { ...state.players, [action.playerId]: player },
         playerOrder: [...state.playerOrder, action.playerId],
       });
@@ -124,7 +125,16 @@ export function reduce(state: RoomState, action: RoomAction): ReduceResult {
     case "reconnect": {
       const p = state.players[action.playerId];
       if (!p) return ok(state);
-      return ok(patchPlayer(state, action.playerId, { isConnected: true }));
+      let next = patchPlayer(state, action.playerId, { isConnected: true });
+      // Le créateur revient : il reprend la couronne (un simple rechargement
+      // de page ne doit pas lui faire perdre définitivement la main).
+      if (state.ownerId === action.playerId && state.hostId !== action.playerId) {
+        const players = { ...next.players };
+        if (next.hostId && players[next.hostId]) players[next.hostId] = { ...players[next.hostId], isHost: false };
+        players[action.playerId] = { ...players[action.playerId], isHost: true };
+        next = { ...next, hostId: action.playerId, players };
+      }
+      return ok(next);
     }
 
     case "leave": {

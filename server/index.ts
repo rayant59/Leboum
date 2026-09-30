@@ -32,6 +32,8 @@ import {
   DEFAULT_GAME_SETTINGS,
   // platform + draw game
   drawModule,
+  isCloseGuess,
+  BOMBE_COUNTDOWN_MS,
   fakeArtistModule,
   relayModule,
   doublageModule,
@@ -303,6 +305,13 @@ const GAME_REGISTRY: Record<string, AnyGameModule> = {
   mimic: mimicModule,
 };
 const gameCtx = (): GameContext => ({ now: Date.now(), rng: Math.random });
+/** Durée de l'écran d'annonce « prochain jeu » côté client (GameIntro, 4,2 s).
+ *  Le premier chrono de chaque jeu démarre APRÈS cette annonce : sinon la
+ *  1re question / le 1er tour perdait ~4 s caché sous l'overlay. */
+const INTRO_MS = 4200;
+/** Boum Rush a déjà son propre décompte 3-2-1 : on le cale pour qu'il se
+ *  termine pile à la fin de l'annonce, sans enchaîner deux décomptes. */
+const introOffsetFor = (id: string) => (id === "bombe" ? Math.max(0, INTRO_MS - BOMBE_COUNTDOWN_MS) : INTRO_MS);
 
 const rooms = new Map<string, Room>();
 
@@ -517,6 +526,10 @@ function handleDrawGuess(room: Room, playerId: string, text: string, ws: WebSock
     relay(room, { type: "chat", from: playerId, name, text: "a trouvé le mot !", kind: "correct" });
   } else if (wasDrawing && !isDrawer && !wasGuessed) {
     relay(room, { type: "chat", from: playerId, name, text, kind: "guess" });
+    // Indice privé : seul l'auteur de la proposition apprend qu'il chauffe.
+    if (after.word && isCloseGuess(text, after.word) && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: "chat", from: playerId, name, text: `🔥 « ${text} » : tu chauffes !`, kind: "system" }));
+    }
   }
   // Dernier devineur connecté à trouver → on révèle sans attendre le chrono.
   if (!wasGuessed && after.guessedAt[playerId] != null) maybeAdvanceDrawForPresence(room);
@@ -535,6 +548,10 @@ function handleRelayGuess(room: Room, playerId: string, text: string, ws: WebSoc
     relay(room, { type: "chat", from: playerId, name, text: "a trouvé le mot !", kind: "correct" });
   } else if (wasDrawing && !isDrawer && !wasGuessed) {
     relay(room, { type: "chat", from: playerId, name, text, kind: "guess" });
+    // Indice privé : seul l'auteur de la proposition apprend qu'il chauffe.
+    if (after.word && isCloseGuess(text, after.word) && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: "chat", from: playerId, name, text: `🔥 « ${text} » : tu chauffes !`, kind: "system" }));
+    }
   }
 }
 
@@ -601,7 +618,7 @@ function startGame(room: Room) {
     room.strokes = [];
     room.mimicTakes.clear();
     const settings = mod.sanitizeSettings(room.pendingSettings ?? undefined);
-    room.mod = { module: mod, state: mod.createState(players, settings, gameCtx()) };
+    room.mod = { module: mod, state: mod.createState(players, settings, { now: Date.now() + introOffsetFor(mod.id), rng: Math.random }) };
     scheduleGameTick(room);
     return;
   }

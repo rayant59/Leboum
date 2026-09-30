@@ -826,7 +826,7 @@ export function GuessBar({ room }: { room: UseRoom }) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
-          placeholder="Tape le mot que tu devines…"
+          placeholder="Ta réponse…"
           maxLength={40}
           autoFocus
           className={`flex-1 rounded-xl border bg-ink-deep px-4 py-3 text-base outline-none transition-colors ${wrong ? "border-magenta" : "border-gold/40 focus:border-gold"}`}
@@ -857,7 +857,7 @@ export function ChatPanel({ room }: { room: UseRoom }) {
         ref={listRef}
         className="mb-2 min-h-[8rem] min-w-0 flex-1 space-y-1.5 overflow-y-auto break-words rounded-xl border border-ink-border bg-ink-surface p-3.5 text-sm leading-relaxed"
       >
-        {room.chat.length === 0 && <p className="text-text-faint">Discussion et propositions apparaissent ici. Écris ta réponse sous le dessin, discute ici.</p>}
+        {room.chat.length === 0 && <p className="text-text-faint">Les messages et les propositions s'affichent ici.</p>}
         {room.chat.map((m) => {
           if (m.kind === "correct")
             return (
@@ -986,28 +986,38 @@ function WordStencil({ segments, separators, color = LB.mint }: { segments: stri
 function GuessPlate({ room }: { room: UseRoom }) {
   const [text, setText] = useState("");
   const [wrong, setWrong] = useState(false);
+  const [hint, setHint] = useState<string | null>(null);
+  const hintTimer = useRef<number | undefined>(undefined);
   const lastId = useRef(-1);
   useEffect(() => {
     for (const m of room.chat) {
       if (m.id <= lastId.current) continue;
       if (m.from === room.you && m.kind === "guess") { setWrong(true); window.setTimeout(() => setWrong(false), 450); }
+      if (m.from === room.you && m.kind === "system" && m.text.startsWith("🔥")) {
+        setHint(m.text);
+        window.clearTimeout(hintTimer.current);
+        hintTimer.current = window.setTimeout(() => setHint(null), 3000);
+      }
     }
     if (room.chat.length) lastId.current = Math.max(lastId.current, room.chat[room.chat.length - 1].id);
   }, [room.chat, room.you]);
   const submit = () => { const t = text.trim(); if (!t) return; room.guess(t); setText(""); };
   return (
-    <div className={wrong ? "animate-shake" : ""} style={{ display: "flex", alignItems: "stretch", gap: 14 }}>
-      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "16px 22px", borderRadius: 18, background: LB.bg, boxShadow: `0 0 0 2px ${hexA(wrong ? LB.pink : LB.gold, 0.5)}, inset 0 1px 0 rgba(243,238,255,.04)` }}>
+    <div className={wrong ? "animate-shake" : ""} style={{ position: "relative", display: "flex", alignItems: "stretch", gap: 14 }}>
+      {hint && (
+        <span role="status" style={{ position: "absolute", left: 12, bottom: "calc(100% + 8px)", zIndex: 5, padding: "6px 12px", borderRadius: 10, background: hexA(LB.gold, 0.16), boxShadow: `0 0 0 1px ${hexA(LB.gold, 0.55)}`, color: LB.gold, fontFamily: DISPLAY, fontWeight: 700, fontSize: 14, whiteSpace: "nowrap" }}>{hint}</span>
+      )}
+      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "clamp(10px, 1.6vw, 16px) clamp(14px, 2vw, 22px)", borderRadius: 18, background: LB.bg, boxShadow: `0 0 0 2px ${hexA(wrong ? LB.pink : LB.gold, 0.5)}, inset 0 1px 0 rgba(243,238,255,.04)` }}>
         <input
           className="lb-input"
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
-          placeholder="Tape le mot que tu devines…"
+          placeholder="Ta réponse…"
           maxLength={40}
           autoFocus
           autoComplete="off"
-          style={{ flex: 1, minWidth: 0, border: "none", outline: "none", background: "transparent", color: LB.text, fontFamily: DISPLAY, fontWeight: 800, fontSize: 34, letterSpacing: "-.01em", lineHeight: 1.15, caretColor: LB.gold }}
+          style={{ flex: 1, minWidth: 0, border: "none", outline: "none", background: "transparent", color: LB.text, fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(20px, 3.2vw, 34px)", letterSpacing: "-.01em", lineHeight: 1.15, caretColor: LB.gold }}
         />
       </div>
       <button onClick={submit} className="lb-gold" style={{ ...lbGoldBtn, alignSelf: "stretch", padding: "0 30px" }}>Proposer</button>
@@ -1349,16 +1359,16 @@ export function DrawGameView({ room }: { room: UseRoom }) {
                 {soundBtn}
               </div>
               {game.youAreDrawer ? (
-                <div className="dv-choicecards" style={{ flex: 1, display: "flex", alignItems: "center", gap: 18, padding: "20px 0" }}>
+                <div className="dv-choicecards" style={{ flex: 1, display: "flex", flexWrap: "wrap", alignContent: "center", alignItems: "stretch", gap: 18, padding: "20px 0" }}>
                   {(game.wordChoices ?? []).map((w) => (
-                    <button key={w} onClick={() => room.chooseWord(w)} className="lb-card3d" style={{ flex: "1 1 0", minWidth: 0, textAlign: "left", border: "none", borderRadius: 20, padding: "34px 28px", background: LB.raised, cursor: "pointer", boxShadow: `0 0 0 1px ${LB.line}, 0 6px 0 ${LB.lineFaint}` }}>
-                      <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: w.length > 12 ? 26 : 34, lineHeight: 1, color: LB.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>{w}</span>
+                    <button key={w} onClick={() => room.chooseWord(w)} className="lb-card3d" style={{ flex: "1 1 170px", minWidth: 0, textAlign: "center", border: "none", borderRadius: 20, padding: "30px 18px", background: LB.raised, cursor: "pointer", boxShadow: `0 0 0 1px ${LB.line}, 0 6px 0 ${LB.lineFaint}` }}>
+                      <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: w.length > 10 ? 24 : 30, lineHeight: 1.15, color: LB.text, overflowWrap: "anywhere", hyphens: "auto", display: "block" }}>{w}</span>
                     </button>
                   ))}
                 </div>
               ) : (
                 <div style={{ flex: 1, display: "grid", placeItems: "center" }}>
-                  <p style={{ color: LB.muted, fontSize: 16 }}><span style={{ fontWeight: 700, color: LB.text }}>{drawerName}</span> choisit un mot…</p>
+                  <p style={{ color: LB.muted, fontSize: 16, textAlign: "center" }}>Prépare-toi à deviner ✏️</p>
                 </div>
               )}
             </div>
@@ -1413,10 +1423,13 @@ export function DrawGameView({ room }: { room: UseRoom }) {
                 </div>
               </div>
 
-              {proposals.length > 0 && (
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
-                  {proposals.map((m) => (
-                    <span key={m.id} style={{ display: "inline-flex", alignItems: "center", gap: 8, borderRadius: 12, padding: "8px 12px", background: m.kind === "correct" ? hexA(LB.mint, 0.1) : LB.surface, boxShadow: m.kind === "correct" ? `0 0 0 1px ${hexA(LB.mint, 0.45)}` : `0 0 0 1px ${LB.line}` }}>
+              {/* Hauteur réservée : l'arrivée d'une proposition ne doit pas faire
+                  sauter la toile. Les plus récentes d'abord, sur une seule ligne. */}
+              {(
+                <div style={{ display: "flex", gap: 8, flexWrap: "nowrap", overflow: "hidden", height: 38, marginBottom: 10, maskImage: "linear-gradient(90deg,#000 85%,transparent)" }}>
+                  {proposals.length === 0 && <span style={{ alignSelf: "center", fontSize: 13, color: LB.faint }}>Les propositions s'afficheront ici</span>}
+                  {proposals.slice(-8).reverse().map((m) => (
+                    <span key={m.id} style={{ display: "inline-flex", flex: "none", whiteSpace: "nowrap", alignItems: "center", gap: 8, borderRadius: 12, padding: "8px 12px", background: m.kind === "correct" ? hexA(LB.mint, 0.1) : LB.surface, boxShadow: m.kind === "correct" ? `0 0 0 1px ${hexA(LB.mint, 0.45)}` : `0 0 0 1px ${LB.line}` }}>
                       <Avatar name={m.name} color={color(m.from)} avatar={avatarOf(m.from)} size={22} />
                       <span style={{ fontSize: 13, color: m.kind === "correct" ? LB.mint : LB.muted, fontWeight: m.kind === "correct" ? 700 : 400, fontStyle: m.kind === "guess" ? "italic" : "normal" }}>{m.kind === "correct" ? "a trouvé" : m.text}</span>
                     </span>
@@ -1453,8 +1466,8 @@ export function DrawGameView({ room }: { room: UseRoom }) {
               <div className="dv-canvasfill" style={{ display: "flex", justifyContent: "center", minHeight: 0 }}>
                 <div style={{ position: "relative", height: "100%", aspectRatio: "3 / 2", maxWidth: "100%", borderRadius: 20, overflow: "hidden", boxShadow: `0 0 0 1px ${hexA(LB.mint, 0.45)}` }}>
                   <TurnDrawing room={room} />
-                  <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "60px 26px 22px", background: "linear-gradient(180deg,transparent,rgba(14,11,26,.96))" }}>
-                    <span key={revealResult?.word} data-lb-anim="" style={{ display: "block", fontFamily: DISPLAY, fontWeight: 800, fontSize: 52, letterSpacing: "-.02em", lineHeight: 1, color: LB.mint, textShadow: `0 4px 28px ${hexA(LB.mint, 0.55)}`, animation: "lbWordReveal .4s cubic-bezier(.2,.8,.2,1)" }}>{revealResult?.word}</span>
+                  <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "clamp(28px, 6vw, 60px) clamp(14px, 3vw, 26px) clamp(12px, 2.4vw, 22px)", background: "linear-gradient(180deg,transparent,rgba(14,11,26,.96))" }}>
+                    <span key={revealResult?.word} data-lb-anim="" style={{ display: "block", fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(28px, 6vw, 52px)", letterSpacing: "-.02em", lineHeight: 1.05, overflowWrap: "anywhere", color: LB.mint, textShadow: `0 4px 28px ${hexA(LB.mint, 0.55)}`, animation: "lbWordReveal .4s cubic-bezier(.2,.8,.2,1)" }}>{revealResult?.word}</span>
                     {noneFound && <span style={{ display: "block", marginTop: 8, fontSize: 13, color: LB.faint }}>Personne n'a trouvé ce tour-ci 🙈</span>}
                   </div>
                 </div>

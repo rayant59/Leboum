@@ -171,7 +171,7 @@ export const LB_SCOPED_CSS = `
   .lb-scope .dv-stencil span{font-size:20px !important;letter-spacing:.3em !important}
   .lb-scope .dv-choicecards{flex-direction:column !important;align-items:stretch !important}
   .lb-scope .dv-choicecards button{flex:none !important}
-  .lb-scope input.lb-input{font-size:24px !important}
+  .lb-scope input.lb-input{font-size:19px !important}
 }
 .lb-scope .dc-fit .dc-panel{flex:none}
 @media (min-width:900px){

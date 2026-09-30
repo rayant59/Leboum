@@ -128,7 +128,7 @@ function RecoImage({ wiki, wikiEn, localImg, accent, overlay, timeFrac, zoom }: 
   const retry = wikiState.retry;
   const url = localImg || wikiState.img?.url;
   return (
-    <ImageFrame accent={accent} maxW={660} overlay={overlay} credit={url ? (localImg ? "Locale" : "Wikimedia") : null}>
+    <ImageFrame accent={accent} maxW={660} overlay={overlay} credit={url && !localImg ? "Wikimedia" : null}>
       {loading && <span style={{ fontSize: 13, color: C.faint, animation: "pulseSoft 1.3s ease-in-out infinite" }}>Chargement de l'image…</span>}
       {error && (
         <div style={{ textAlign: "center" }}>
@@ -219,7 +219,7 @@ function PixelImage({
   }, [ready, revealed, deadline, totalMs, serverNow]);
 
   return (
-    <ImageFrame accent={C.mint} maxW={830} overlay={overlay} credit={url && !error ? (localImg ? "Locale" : "Wikimedia") : null}>
+    <ImageFrame accent={C.mint} maxW={830} overlay={overlay} credit={url && !error && !localImg ? "Wikimedia" : null}>
       {loading && <span style={{ fontSize: 13, color: C.faint, animation: "pulseSoft 1.3s ease-in-out infinite" }}>Chargement de l'image…</span>}
       {error && <p style={{ padding: "0 16px", fontSize: 13, color: C.muted }}>Image indisponible.</p>}
       {url && !error && (
@@ -292,8 +292,8 @@ const SCOPED_CSS = `
 .rc-scope input.rc-input::placeholder{color:${C.dim};opacity:1}
 .rc-scope .rc-caret{display:inline-block;width:4px;height:.7em;margin-left:7px;vertical-align:-.08em;background:${C.gold};animation:caretBlink 1.05s step-end infinite}
 @media (max-width:899px){
-  .rc-scope .rc-rail{display:none}
-  .rc-scope .rc-mobilehead{display:flex}
+  .rc-scope .rc-rail{display:none !important}
+  .rc-scope .rc-mobilehead{display:flex !important}
   .rc-scope .rc-pad{padding-left:18px !important;padding-right:18px !important}
 }
 @media (min-width:900px){ .rc-scope .rc-mobilehead{display:none} }
@@ -380,7 +380,7 @@ export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boole
       score: r.score.toLocaleString("fr-FR"),
     };
   });
-  const railKicker = pixel ? "Pixel incoming" : "Reconnaissance";
+  const railKicker = pixel ? "Pixel Panic" : "Œil de Boum";
   const railHeading = isCoop ? `Score : ${game.coopScore ?? 0}` : `Image ${game.index + 1} / ${game.total}`;
   const railSub = isCoop
     ? "images trouvées ensemble · chrono commun"
@@ -407,7 +407,7 @@ export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boole
           <div className="rc-pad" style={{ flex: "none", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "16px 40px" }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 10, minWidth: 0 }}>
               <span className="rc-mobilehead" style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: game.phase === "reveal" ? C.mint : C.faint }}>
-                {(pixel ? "Pixel" : "Reco") + ` · ${game.index + 1} / ${game.total}`}
+                {(pixel ? "Pixel Panic" : "Œil de Boum") + ` · ${game.index + 1} / ${game.total}`}
               </span>
               {game.phase === "reveal" ? (
                 <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: C.mint }}>C'était</span>

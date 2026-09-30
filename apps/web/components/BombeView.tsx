@@ -310,8 +310,8 @@ export function BombeView({ room }: { room: UseRoom }) {
         <span style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 800, letterSpacing: "-.01em" }}>{game.phase === "gameover" ? "Partie terminée" : `${alive} en jeu`}</span>
         <span style={{ fontSize: 12, color: C.faint }}>{game.usedCount} mots joués{game.phase !== "gameover" && game.usedLetters.length ? "" : ""}</span>
       </div>
-      <div style={{ height: 1, background: `linear-gradient(90deg,transparent,rgba(243,238,255,.14) 18%,rgba(243,238,255,.14) 82%,transparent)` }} />
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div className="bmb-sep" style={{ height: 1, background: `linear-gradient(90deg,transparent,rgba(243,238,255,.14) 18%,rgba(243,238,255,.14) 82%,transparent)` }} />
+      <div className="bmb-rows" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {game.ranking.map((row, i) => (
           game.phase === "gameover" ? (
             <div key={row.id} style={{ position: "relative", display: "flex", alignItems: "center", gap: 12, padding: i === 0 ? "12px 14px 12px 16px" : "12px 14px", borderRadius: 14, ...(i === 0 ? { background: `${C.gold}1a`, boxShadow: `0 0 0 1px ${C.gold}8c` } : row.eliminated ? { boxShadow: `0 0 0 1px ${C.lineFaint}`, opacity: 0.5 } : { boxShadow: `0 0 0 1px ${C.line}` }) }}>
@@ -327,10 +327,10 @@ export function BombeView({ room }: { room: UseRoom }) {
         ))}
       </div>
       {game.phase !== "gameover" && (
-        <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="bmb-extras" style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Mots à apprendre — persistants jusqu'à la prochaine explosion. */}
           {game.exampleWords.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "12px 13px", borderRadius: 12, background: "rgba(255,77,141,.07)", boxShadow: "inset 0 0 0 1px rgba(255,77,141,.28)" }}>
+            <div className="bmb-learn" style={{ display: "flex", flexDirection: "column", gap: 8, padding: "12px 13px", borderRadius: 12, background: "rgba(255,77,141,.07)", boxShadow: "inset 0 0 0 1px rgba(255,77,141,.28)" }}>
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
                 <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".18em", color: C.pink }}>À apprendre</span>
                 <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, color: C.faint }}>{game.exampleSyllable.toUpperCase()}</span>
@@ -522,7 +522,7 @@ export function BombeView({ room }: { room: UseRoom }) {
                 </div>
                 {/* Plaque « temps écoulé » — les mots à apprendre sont dans la barre latérale. */}
                 <div style={{ display: "flex", alignItems: "center", gap: 20, padding: "clamp(16px,3vw,24px) clamp(16px,3vw,28px)", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 2px rgba(255,77,141,.6), 0 0 50px -26px rgba(255,77,141,.9)` }}>
-                  <span style={{ flex: 1, minWidth: 0, fontFamily: DISPLAY, fontSize: "clamp(26px,6vw,52px)", fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.2, color: C.faint }}>
+                  <span style={{ flex: 1, minWidth: 0, fontFamily: DISPLAY, fontSize: "clamp(20px,6vw,52px)", fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.2, color: C.faint }}>
                     Temps écoulé pour <span style={{ color: C.pink }}>{game.syllable.toLowerCase()}</span>
                   </span>
                   <span style={{ flex: "none", fontSize: 13, color: C.muted }}>mot incomplet</span>
@@ -537,7 +537,7 @@ export function BombeView({ room }: { room: UseRoom }) {
                   </span>
                 </div>
                 <div onClick={() => inputRef.current?.focus()} style={{ position: "relative", display: "flex", alignItems: "center", gap: 20, padding: "clamp(16px,3vw,24px) clamp(16px,3vw,28px)", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 1px #332A5A, inset 0 1px 0 rgba(243,238,255,.04), 0 20px 44px -28px rgba(0,0,0,.9)`, cursor: "text" }}>
-                  <span style={{ flex: 1, minWidth: 0, fontFamily: DISPLAY, fontSize: "clamp(30px,6vw,52px)", fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", padding: "4px 8px 4px 0" }}>
+                  <span style={{ flex: 1, minWidth: 0, fontFamily: DISPLAY, fontSize: "clamp(22px,6vw,52px)", fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", padding: "4px 8px 4px 0" }}>
                     {text ? <Highlighted text={text} syllable={game.syllable} tint={C.gold} /> : <span style={{ color: C.faint }}>un mot avec {game.syllable.toLowerCase()}…</span>}
                     <Caret tint={C.gold} />
                   </span>
@@ -564,7 +564,7 @@ export function BombeView({ room }: { room: UseRoom }) {
                   </span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 20, padding: "clamp(16px,3vw,24px) clamp(16px,3vw,28px)", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 2px ${C.mint}73, inset 0 1px 0 rgba(243,238,255,.04)` }}>
-                  <span style={{ flex: 1, minWidth: 0, fontFamily: DISPLAY, fontSize: "clamp(28px,6vw,52px)", fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", padding: "4px 8px 4px 0", color: C.text }}>
+                  <span style={{ flex: 1, minWidth: 0, fontFamily: DISPLAY, fontSize: "clamp(22px,6vw,52px)", fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", padding: "4px 8px 4px 0", color: C.text }}>
                     {liveTyping ? <><Highlighted text={liveTyping} syllable={game.syllable} tint={C.mint} /><Caret tint={C.mint} /></> : <span style={{ color: C.faint }}>…</span>}
                   </span>
                   <span style={{ flex: "none", fontFamily: MONO, fontWeight: 700, fontSize: 12, color: C.faint }}>en direct</span>

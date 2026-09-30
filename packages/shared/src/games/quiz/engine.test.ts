@@ -222,3 +222,14 @@ test("teams < 4 joueurs → retombe sur classic", () => {
 
 console.log(`\n${passed} réussis, ${failed} échoués\n`);
 if (failed > 0) process.exit(1);
+
+test("réponse libre : tolère une faute de frappe, pas sur les nombres ni les mots courts", () => {
+  const q = { id: "t", type: "free", prompt: "?", answer: "The Legend of Zelda", cat: "jeux" } as any;
+  assert(freeAnswerMatches("legend of zelda", q), "« the » ignoré en tête");
+  assert(freeAnswerMatches("the legend of zelad", q), "inversion tolérée");
+  const r = { id: "r", type: "free", prompt: "?", answer: "Raiponce", cat: "disney" } as any;
+  assert(freeAnswerMatches("raiponse", r), "1 faute tolérée");
+  assert(!freeAnswerMatches("rapunzel", r), "mot différent refusé");
+  const n = { id: "n", type: "free", prompt: "?", answer: "1789", cat: "histoire" } as any;
+  assert(!freeAnswerMatches("1788", n), "pas de tolérance sur les nombres");
+});

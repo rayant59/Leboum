@@ -48,8 +48,11 @@ let POOL3: string[] = [];
 // Réglé « plus facile » : on remonte le plancher (syllabes plus courantes,
 // donc plus faciles) et le plafond (on autorise aussi les syllabes très
 // courantes, les plus simples à compléter).
-const BAND2_MIN = 220,  BAND2_MAX = 40000; // 2 lettres : plus courantes = plus faciles
-const BAND3_MIN = 90,   BAND3_MAX = 18000; // 3 lettres : uniquement les plus courantes
+// Le dico contient toutes les formes conjuguées : un seuil bas laissait passer
+// des paires très dures à l'oral (« XC », « LM », « SF »…) portées par une
+// seule famille de verbes. 1500 garde ~195 syllabes à 2 lettres, toutes jouables.
+const BAND2_MIN = 1500, BAND2_MAX = 40000; // 2 lettres : plus courantes = plus faciles
+const BAND3_MIN = 600,  BAND3_MAX = 18000; // 3 lettres : uniquement les plus courantes
 
 function buildIndex(): void {
   SYLL2 = new Map();

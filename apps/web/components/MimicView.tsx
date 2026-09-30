@@ -510,7 +510,7 @@ export function MimicView({ room }: { room: UseRoom }) {
     };
   });
 
-  const rail = <MimicRail kicker="Mimic" heading={railHeading} sub={railSub} rows={railRows} chat={<ChatPanel room={room} />} />;
+  const rail = <MimicRail kicker="Mimic Boum" heading={railHeading} sub={railSub} rows={railRows} chat={<ChatPanel room={room} />} />;
 
   return (
     <main style={lbShell} className="lb-scope">

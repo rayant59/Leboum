@@ -222,9 +222,13 @@ export default function LobbyPage() {
   // un effet ne s'exécute qu'après le premier paint, ce qui laissait apparaître
   // le jeu ~1 s avant que l'overlay du décompte ne le recouvre.
   const gameKey = room.state?.phase === "in_game" && room.gameId ? room.gameId : null;
+  // On n'annonce un jeu que si on l'a vu démarrer depuis le salon : après un
+  // rechargement en pleine partie, l'annonce masquerait le jeu déjà en cours.
+  const sawLobby = useRef(false);
+  if (room.state?.phase === "lobby") sawLobby.current = true;
   if (gameKey !== introKey) {
     setIntroKey(gameKey);
-    setIntroGame(gameKey); // nouveau jeu → on montre l'intro ; retour au lobby → on la cache
+    setIntroGame(gameKey && sawLobby.current ? gameKey : null); // nouveau jeu → intro ; retour au lobby → on la cache
   }
   // Auto-disparition après 4,2 s (le clic sur l'overlay la ferme aussi).
   useEffect(() => {

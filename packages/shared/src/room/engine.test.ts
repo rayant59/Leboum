@@ -168,6 +168,22 @@ test("l'hôte compte comme prêt sans cliquer « Je suis prêt »", () => {
   eq(r.state.phase, "in_game", "partie solo lancée");
 });
 
+test("le créateur du salon récupère la couronne en se reconnectant", () => {
+  let s = run(
+    base(),
+    { type: "join", playerId: "p1", name: "Alice", now: 1 },
+    { type: "join", playerId: "p2", name: "Bob", now: 2 },
+    { type: "disconnect", playerId: "p1", now: 3 },
+  );
+  eq(s.hostId, "p2", "Bob hérite pendant l'absence");
+  s = reduce(s, { type: "reconnect", playerId: "p1", now: 4 }).state;
+  eq(s.hostId, "p1", "Alice reprend la couronne");
+  assert(s.players["p1"].isHost && !s.players["p2"].isHost, "drapeaux isHost cohérents");
+  s = reduce(s, { type: "disconnect", playerId: "p2", now: 5 }).state;
+  s = reduce(s, { type: "reconnect", playerId: "p2", now: 6 }).state;
+  eq(s.hostId, "p1", "un invité qui revient ne vole pas la couronne");
+});
+
 test("la déconnexion de l'hôte transfère la couronne au suivant connecté", () => {
   let s = run(
     base(),
