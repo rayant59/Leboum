@@ -152,6 +152,22 @@ test("l'hôte lance la partie quand tout est prêt", () => {
   eq(r.state.gameId, "subtitles", "gameId posé");
 });
 
+test("l'hôte compte comme prêt sans cliquer « Je suis prêt »", () => {
+  const duo = run(
+    base(),
+    { type: "join", playerId: "p1", name: "Alice", now: 1 },
+    { type: "join", playerId: "p2", name: "Bob", now: 2 },
+    { type: "set_ready", playerId: "p2", ready: true, now: 3 },
+  );
+  assert(canStart(duo, "draw"), "hôte + 1 invité prêt → lançable");
+  const solo = run(base(), { type: "join", playerId: "p1", name: "Alice", now: 1 });
+  assert(canStart(solo, "quiz"), "hôte seul → jeu solo lançable");
+  assert(!canStart(solo, "draw"), "hôte seul → jeu à 2 non lançable");
+  const r = reduce(solo, { type: "start_game", playerId: "p1", gameId: "quiz", now: 5 });
+  assert(!r.error, "pas d'erreur en solo");
+  eq(r.state.phase, "in_game", "partie solo lancée");
+});
+
 test("la déconnexion de l'hôte transfère la couronne au suivant connecté", () => {
   let s = run(
     base(),

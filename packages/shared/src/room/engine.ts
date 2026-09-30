@@ -173,9 +173,7 @@ export function reduce(state: RoomState, action: RoomAction): ReduceResult {
       if (state.phase !== "lobby") {
         return reject(state, { code: "wrong_phase", message: "La partie a déjà commencé." });
       }
-      const readyConnected = state.playerOrder.filter(
-        (id) => state.players[id]?.isConnected && state.players[id]?.isReady,
-      );
+      const readyConnected = state.playerOrder.filter((id) => isEffectivelyReady(state, id));
       const needed = minReadyFor(state, action.gameId);
       if (readyConnected.length < needed) {
         return reject(state, {
@@ -233,10 +231,16 @@ export function minReadyFor(state: RoomState, gameId?: string | null): number {
   return state.config.minReadyToStart;
 }
 
+/** Un joueur compte comme « prêt » s'il est connecté et prêt — l'hôte, lui,
+ *  est toujours considéré prêt : c'est lui qui appuie sur « Lancer ». */
+export function isEffectivelyReady(state: RoomState, id: string): boolean {
+  const p = state.players[id];
+  if (!p || !p.isConnected) return false;
+  return p.isReady || id === state.hostId;
+}
+
 export function canStart(state: RoomState, gameId?: string | null): boolean {
-  const readyConnected = state.playerOrder.filter(
-    (id) => state.players[id]?.isConnected && state.players[id]?.isReady,
-  ).length;
+  const readyConnected = state.playerOrder.filter((id) => isEffectivelyReady(state, id)).length;
   return state.phase === "lobby" && readyConnected >= minReadyFor(state, gameId);
 }
 

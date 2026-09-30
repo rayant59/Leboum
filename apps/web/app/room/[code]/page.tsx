@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { canStart, sanitizeName, DRAW_THEMES } from "@subtitles-party/shared";
+import { canStart, isEffectivelyReady, minReadyFor, sanitizeName, DRAW_THEMES } from "@subtitles-party/shared";
 import { getPlayerName, setPlayerName } from "@/lib/identity";
 import { useRoom } from "@/lib/useRoom";
 import { BoumBackdrop } from "@/components/BoumBackdrop";
@@ -39,8 +39,8 @@ const MODE_SETS: Record<GameId, ModeDef[]> = {
     { id: "blind", c: "#4CC9F0", nm: "Aveugle", ds: "Tu dessines sans voir ton trait 😅. Plus de temps pour compenser.", img: MODE_ICONS.aveugle },
     { id: "constraints", c: "#8B7DF6", nm: "Contraintes", ds: "Chaque dessin impose une règle absurde (une couleur, sans lever le crayon…).", img: MODE_ICONS.contraintes },
     { id: "coop", c: "#46E0B0", nm: "Coopératif", ds: "En équipe : tous vos points sont mis en commun pour un score collectif.", img: MODE_ICONS.coop },
-    { id: "fakeartist", c: "#FF6B6B", nm: "Faux-artiste", ds: "Un imposteur ignore le mot ; démasquez-le au vote.", img: MODE_ICONS.fakeartist },
-    { id: "relay", c: "#4CC9F0", nm: "Relais", ds: "Deux joueurs se relaient au crayon, rotation auto.", img: MODE_ICONS.relais },
+    { id: "fakeartist", c: "#FF6B6B", nm: "Faux-artiste", ds: "Un imposteur ignore le mot ; démasquez-le au vote.", img: MODE_ICONS.fakeartist, min: 3 },
+    { id: "relay", c: "#4CC9F0", nm: "Relais", ds: "Deux joueurs se relaient au crayon, rotation auto.", img: MODE_ICONS.relais, min: 3 },
   ],
   mimic: [
     { id: "classic", c: "#46E0B0", nm: "Classique", ds: "Chacun imite le son, puis tout le monde vote pour la meilleure prise." },
@@ -278,7 +278,10 @@ export default function LobbyPage() {
   const isHost = me?.isHost ?? false;
 
   const players = state ? state.playerOrder.map((id) => state.players[id]).filter(Boolean) : [];
-  const readyCount = players.filter((p) => p.isConnected && p.isReady).length;
+  const readyCount = state ? players.filter((p) => isEffectivelyReady(state, p.id)).length : 0;
+  const connectedCount = players.filter((p) => p.isConnected).length;
+  const neededReady = state ? minReadyFor(state, launchId) : 2;
+  const missingReady = Math.max(0, neededReady - readyCount);
   const maxPlayers = state?.config.maxPlayers ?? 8;
   const startable = !!state && canStart(state, launchId);
 
@@ -304,6 +307,20 @@ export default function LobbyPage() {
     } catch {
       // Couldn't copy automatically — the link stays visible for a manual copy.
     }
+  }
+
+  /** « Inviter » : feuille de partage native (mobile), sinon copie du lien. */
+  async function inviteFriends() {
+    const url = window.location.href;
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title: "Boum", text: `Rejoins ma partie Boum ! Code : ${code}`, url });
+        return;
+      } catch (e) {
+        if ((e as Error)?.name === "AbortError") return; // partage annulé
+      }
+    }
+    await copyLink();
   }
 
   /** Traduit le modèle unifié (jeu + mode + manches + temps) en payload de
@@ -457,7 +474,7 @@ export default function LobbyPage() {
             <h2 className="cfg-tt">Joueurs <span style={{ fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 14, color: "#6E6796" }}>{players.length}/{maxPlayers}</span></h2>
             <span className="cfg-sub">En attente dans le salon</span>
           </div>
-          <span className={`pl-readypill${readyCount > 0 ? " some" : ""}`}><span className="d" />{readyCount} prêt{readyCount > 1 ? "s" : ""}</span>
+          <span className={`pl-readypill${readyCount > 0 ? " some" : ""}`}><span className="d" />{readyCount}/{connectedCount} prêt{readyCount > 1 ? "s" : ""}</span>
         </div>
 
         <div className="pl-list">
@@ -494,19 +511,21 @@ export default function LobbyPage() {
                   </div>
                   <span className="pl-pstatus">
                     <svg className="s-ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
-                    {p.isConnected ? (p.isReady ? "Prêt" : "En attente") : "Déconnecté"}
+                    {!p.isConnected ? "Déconnecté" : p.isHost ? "Choisit le jeu" : p.isReady ? "Prêt" : "En attente"}
                   </span>
                 </div>
-                <span className={`pl-badge ${p.isReady && p.isConnected ? "ok" : "wait"}`}>
-                  {p.isReady && p.isConnected ? "Prêt" : "Pas prêt"}
-                </span>
+                {!p.isHost && (
+                  <span className={`pl-badge ${p.isReady && p.isConnected ? "ok" : "wait"}`}>
+                    {p.isReady && p.isConnected ? "Prêt" : "Pas prêt"}
+                  </span>
+                )}
               </div>
             );
           })}
         </div>
 
         {maxPlayers - players.length > 0 && (
-          <button className="pl-invite" onClick={copyLink} title="Copier le lien d'invitation">
+          <button className="pl-invite" onClick={inviteFriends} title="Inviter des amis">
             <span className="pl-seats">
               {Array.from({ length: Math.min(maxPlayers - players.length, 7) }).map((_, i) => (
                 <span key={i} className="pl-seat" style={{ animationDelay: `${(i * 0.18).toFixed(2)}s` }}><span className="d" /></span>
@@ -514,7 +533,7 @@ export default function LobbyPage() {
             </span>
             <span className="pl-invite-txt">
               <span className="t">{maxPlayers - players.length} place{maxPlayers - players.length > 1 ? "s" : ""} libre{maxPlayers - players.length > 1 ? "s" : ""}</span>
-              <span className="s">Partage le code pour les remplir</span>
+              <span className="s">Envoie le lien à tes amis pour les remplir</span>
             </span>
             <span className="pl-invite-cta"><img src={UI.addPlayer} alt="" width={15} height={15} className="select-none" draggable={false} aria-hidden />{copied ? "Lien copié ✓" : "Inviter"}</span>
           </button>
@@ -548,10 +567,10 @@ export default function LobbyPage() {
               [
                 { id: "draw", img: "/games/draw.png", label: "Boum Dessin", players: "2–8", desc: "Dessine le mot secret, les autres devinent — avec ses variantes.", tint: "#FF4D8D", tintBg: "rgba(255,77,141,0.12)", tintBorder: "rgba(255,77,141,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 5.6l3.9 3.9" /><path d="M4 20l1.3-4.4L15.7 5.2a1.9 1.9 0 0 1 2.7 0l.4.4a1.9 1.9 0 0 1 0 2.7L8.4 18.7 4 20Z" /></svg> },
                 { id: "mimic", img: "/games/mimic.png", label: "Mimic Boum", players: "2–8", desc: "Imite un son avec ta voix — une seule prise. Les autres votent pour la meilleure imitation !", tint: "#46E0B0", tintBg: "rgba(70,224,176,0.12)", tintBorder: "rgba(70,224,176,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M6 11a6 6 0 0 0 12 0" /><path d="M12 17v3.2" /><path d="M9 20.2h6" /></svg> },
-                { id: "quiz", img: "/games/quiz.png", label: "Ça te parle ?", players: "2–8", desc: "Répondez à des questions et montrez votre culture !", tint: "#8B7DF6", tintBg: "rgba(139,125,246,0.14)", tintBorder: "rgba(139,125,246,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4" /><circle cx="12" cy="17.5" r="0.6" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="9" /></svg> },
-                { id: "reco", img: "/games/reco.png", label: "Œil de Boum", players: "1–12", desc: "Devinez le personnage, le film, le lieu et bien plus.", tint: "#4CC9F0", tintBg: "rgba(76,201,240,0.14)", tintBorder: "rgba(76,201,240,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="14" rx="2.5" /><circle cx="9" cy="10" r="2" /><path d="M4 17l4.5-4 3 2.5L15 12l5 4.5" /></svg> },
-                { id: "pixel", img: "/games/pixel.png", label: "Pixel Panic", players: "1–12", desc: "Une image se dévoile pixel par pixel — devine le plus vite possible !", tint: "#46E0B0", tintBg: "rgba(70,224,176,0.12)", tintBorder: "rgba(70,224,176,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="6" height="6"/><rect x="15" y="3" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/><rect x="3" y="15" width="6" height="6"/><rect x="15" y="15" width="6" height="6"/></svg> },
-                { id: "bombe", img: "/games/bombe.png", label: "Boum Rush", players: "2–12", desc: "Trouve vite un mot avec la syllabe avant que la bombe explose !", tint: "#FF6B4D", tintBg: "rgba(255,107,77,0.14)", tintBorder: "rgba(255,107,77,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="14" r="7" /><path d="M16 9l2-2" /><path d="M18 7l1 .3M19 5.5l.3-1M20.5 6.8l1-.3" /></svg> },
+                { id: "quiz", img: "/games/quiz.png", label: "Ça te parle ?", players: "1–8", desc: "Réponds aux questions et montre ta culture !", tint: "#8B7DF6", tintBg: "rgba(139,125,246,0.14)", tintBorder: "rgba(139,125,246,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4" /><circle cx="12" cy="17.5" r="0.6" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="9" /></svg> },
+                { id: "reco", img: "/games/reco.png", label: "Œil de Boum", players: "1–8", desc: "Devine le personnage, le film, le lieu et bien plus.", tint: "#4CC9F0", tintBg: "rgba(76,201,240,0.14)", tintBorder: "rgba(76,201,240,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="14" rx="2.5" /><circle cx="9" cy="10" r="2" /><path d="M4 17l4.5-4 3 2.5L15 12l5 4.5" /></svg> },
+                { id: "pixel", img: "/games/pixel.png", label: "Pixel Panic", players: "1–8", desc: "Une image se dévoile pixel par pixel — devine le plus vite possible !", tint: "#46E0B0", tintBg: "rgba(70,224,176,0.12)", tintBorder: "rgba(70,224,176,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="6" height="6"/><rect x="15" y="3" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/><rect x="3" y="15" width="6" height="6"/><rect x="15" y="15" width="6" height="6"/></svg> },
+                { id: "bombe", img: "/games/bombe.png", label: "Boum Rush", players: "2–8", desc: "Trouve vite un mot avec la syllabe avant que la bombe explose !", tint: "#FF6B4D", tintBg: "rgba(255,107,77,0.14)", tintBorder: "rgba(255,107,77,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="14" r="7" /><path d="M16 9l2-2" /><path d="M18 7l1 .3M19 5.5l.3-1M20.5 6.8l1-.3" /></svg> },
               ] as const
             ).map((c) => {
               const sel = selectedGame === c.id;
@@ -569,8 +588,8 @@ export default function LobbyPage() {
                   }}
                 >
                   {/* decorative sparkles */}
-                  <svg aria-hidden width="12" height="12" viewBox="0 0 24 24" className="pointer-events-none absolute" style={{ top: "26%", left: "58%", color: sel ? c.tint : "#6E6796", opacity: sel ? 0.55 : 0.3 }}><path fill="currentColor" d="M12 2l1.5 8.5L22 12l-8.5 1.5L12 22l-1.5-8.5L2 12l8.5-1.5z" /></svg>
-                  <svg aria-hidden width="9" height="9" viewBox="0 0 24 24" className="pointer-events-none absolute" style={{ top: "62%", left: "84%", color: sel ? c.tint : "#6E6796", opacity: sel ? 0.5 : 0.25 }}><path fill="currentColor" d="M12 2l1.5 8.5L22 12l-8.5 1.5L12 22l-1.5-8.5L2 12l8.5-1.5z" /></svg>
+                  <svg aria-hidden width="12" height="12" viewBox="0 0 24 24" className="pointer-events-none absolute" style={{ top: 30, left: 92, color: sel ? c.tint : "#6E6796", opacity: sel ? 0.55 : 0.3 }}><path fill="currentColor" d="M12 2l1.5 8.5L22 12l-8.5 1.5L12 22l-1.5-8.5L2 12l8.5-1.5z" /></svg>
+                  <svg aria-hidden width="9" height="9" viewBox="0 0 24 24" className="pointer-events-none absolute" style={{ top: 56, right: 22, color: sel ? c.tint : "#6E6796", opacity: sel ? 0.5 : 0.25 }}><path fill="currentColor" d="M12 2l1.5 8.5L22 12l-8.5 1.5L12 22l-1.5-8.5L2 12l8.5-1.5z" /></svg>
                   <div className="mb-2.5 flex items-start justify-between">
                     <span
                       className="inline-flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl transition-transform group-hover:scale-105"
@@ -755,36 +774,38 @@ export default function LobbyPage() {
         </p>
       )}
 
-      {/* action dock */}
-      <div className="sticky bottom-[max(1rem,env(safe-area-inset-bottom))] flex gap-3 rounded-2xl border border-ink-border/80 bg-[rgba(20,16,42,0.85)] p-3 backdrop-blur-md">
-        <button
-          onClick={() => me && room.setReady(!me.isReady)}
-          disabled={!me}
-          className={`arc arc-block ${me?.isReady ? "arc-sec" : "arc-ready"} disabled:opacity-40`}
-        >
-          {me?.isReady ? (
-            "Pas prêt"
-          ) : (
-            <>
-              <img src={UI.flagReady} alt="" width={20} height={20} className="select-none" draggable={false} aria-hidden />
-              Je suis prêt
-            </>
-          )}
-        </button>
-        {isHost &&
-          (startable ? (
-            <button
-              onClick={() => startSelectedGame()}
-              className="arc arc-p arc-block"
-            >
+      {/* action dock — l'hôte lance directement (il compte comme prêt),
+          les invités basculent « prêt / pas prêt ». z-20 : au-dessus des cartes. */}
+      <div className="sticky bottom-[max(1rem,env(safe-area-inset-bottom))] z-20 mt-2 flex gap-3 rounded-2xl border border-ink-border/80 bg-[rgba(20,16,42,0.92)] p-3 backdrop-blur-md">
+        {isHost ? (
+          startable ? (
+            <button onClick={() => startSelectedGame()} className="arc arc-p arc-block">
               Lancer la partie
             </button>
           ) : (
             <button disabled className="arc arc-dis arc-block">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
-              En attente des joueurs
+              {missingReady > 0
+                ? `Encore ${missingReady} joueur${missingReady > 1 ? "s" : ""} prêt${missingReady > 1 ? "s" : ""}`
+                : "En attente des joueurs"}
             </button>
-          ))}
+          )
+        ) : (
+          <button
+            onClick={() => me && room.setReady(!me.isReady)}
+            disabled={!me}
+            className={`arc arc-block ${me?.isReady ? "arc-sec" : "arc-ready"} disabled:opacity-40`}
+          >
+            {me?.isReady ? (
+              "Pas prêt finalement"
+            ) : (
+              <>
+                <img src={UI.flagReady} alt="" width={20} height={20} className="select-none" draggable={false} aria-hidden />
+                Je suis prêt
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {profileOpen && me && (
