@@ -381,3 +381,39 @@
 
 /* Téléphone : 2 jeux par ligne (déclaré après .game-picker-grid pour primer). */
 @media (max-width: 520px) { .game-picker-grid { gap: 12px; } .game-picker-grid > * { flex: 0 1 calc(50% - 6px); min-width: 0; } }
+
+/* ── Salon en 2 colonnes (hôte, grand écran uniquement) ──────────────────
+   En dessous de 1100px, les enveloppes .lobby-left / .lobby-right sont en
+   display: contents : le salon téléphone/tablette reste exactement le même. */
+.lobby-left, .lobby-right, .cfg-pair { display: contents; }
+.cfg-pair > * { margin-top: 2rem; } /* remplace le space-y-8 du parent (display: contents) */
+@media (min-width: 1100px) {
+  main.lobby-split {
+    max-width: 1180px;
+    display: grid;
+    grid-template-columns: 400px minmax(0, 1fr);
+    grid-template-areas: "left right" "dock right";
+    grid-template-rows: auto 1fr;
+    column-gap: 36px;
+    align-items: start;
+  }
+  main.lobby-split .lobby-left {
+    grid-area: left;
+    display: block;
+    position: sticky;
+    top: 24px;
+    max-height: calc(100dvh - 130px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    padding: 2px 4px 2px 2px;
+  }
+  main.lobby-split .lobby-left .pl-list { grid-template-columns: 1fr; gap: 10px; }
+  main.lobby-split .lobby-left .pl-card { padding: 11px 14px; }
+  main.lobby-split .lobby-left .pl-seats { display: none; }
+  main.lobby-split .lobby-left > section { margin-bottom: 1.5rem; }
+  main.lobby-split .lobby-right { grid-area: right; display: block; }
+  main.lobby-split .lobby-right > section:first-child { margin-top: 0; }
+
+  main.lobby-split > .sticky { grid-area: dock; align-self: end; margin-top: 0; }
+  main.lobby-split > p { grid-column: 1; }
+}

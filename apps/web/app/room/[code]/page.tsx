@@ -406,7 +406,10 @@ export default function LobbyPage() {
   return (
     <>
       <BoumBackdrop />
-      <main className="relative z-[1] mx-auto max-w-2xl px-5 py-7" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <main className={`relative z-[1] mx-auto max-w-2xl px-5 py-7${isHost ? " lobby-split" : ""}`} style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+      {/* Colonne gauche (écran large, hôte) : code, joueurs. Sur téléphone ces
+          enveloppes sont neutres (display: contents) : rien ne bouge. */}
+      <div className="lobby-left">
       {/* brand + connection */}
       <header className="mb-6 flex items-center justify-end">
         <span className="flex items-center gap-2 text-xs text-text-muted">
@@ -562,6 +565,10 @@ export default function LobbyPage() {
         </section>
       )}
 
+      </div>
+
+      {/* Colonne droite (écran large, hôte) : choix du jeu + réglages */}
+      <div className="lobby-right">
       {/* game picker (host) */}
       {isHost && (
         <section className="mb-8">
@@ -648,6 +655,8 @@ export default function LobbyPage() {
             </div>
           </div>
 
+          {/* Manches + temps : empilés sur téléphone, côte à côte en 2 colonnes */}
+          <div className="cfg-pair">
           {/* NOMBRE DE TOURS — libellé et bornes propres à chaque jeu (manches, questions, images) */}
           <div className="cfg-grp">
             <div className="cfg-head">
@@ -714,6 +723,7 @@ export default function LobbyPage() {
             );
           })()}
 
+          </div>
           {/* THÈMES — Boum Dessin uniquement, hors Faux-artiste / Relais */}
           {selectedGame === "draw" && curMode !== "fakeartist" && curMode !== "relay" && (() => {
             const selCount = drawThemes.length === 0 ? DRAW_THEMES.length : drawThemes.length;
@@ -772,6 +782,7 @@ export default function LobbyPage() {
       </section>
       )}
 
+      </div>
       {room.error && (
         <p className="mb-4 rounded-xl border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
           {room.error.message}
