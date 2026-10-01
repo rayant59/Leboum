@@ -186,8 +186,14 @@ export function pickItems(count: number, rng: () => number = Math.random, catego
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
 
-  const want = Math.max(1, Math.min(count, shuffled.length));
-  const remaining = [...shuffled];
+  // Une même image peut porter plusieurs questions (ex. le personnage, puis
+  // la série) : on n'en garde qu'une par partie, tirée au hasard, sinon la
+  // 2e question serait déjà résolue par la 1re.
+  const seenImg = new Set<string>();
+  const unique = shuffled.filter((q) => { const k = q.img ?? q.id; if (seenImg.has(k)) return false; seenImg.add(k); return true; });
+
+  const want = Math.max(1, Math.min(count, unique.length));
+  const remaining = [...unique];
   const out: RecoItem[] = [];
   const span = Math.max(2, Math.min(4, Math.floor(want / 3)));
 

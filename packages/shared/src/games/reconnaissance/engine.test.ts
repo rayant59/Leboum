@@ -215,3 +215,13 @@ test("coop : plus d'images → fin même s'il reste du temps", () => {
 
 console.log(`\n${passed} réussis, ${failed} échoués\n`);
 if (failed > 0) process.exit(1);
+
+test("une image à deux questions n'apparaît qu'une fois par partie", () => {
+  addCustomRecoItems(parseCustomRecoItems("== Test ==\nmeme.jpg | Qui ? = Alice | alice\nmeme.jpg | Quelle série ? = Serie | serie\nautre.jpg = Bob | bob\n"));
+  for (let k = 0; k < 20; k++) {
+    const items = pickItems(10, Math.random, "Test");
+    const imgs = items.map((i) => i.img);
+    assert(new Set(imgs).size === imgs.length, "pas de doublon d'image");
+    assert(imgs.includes("/reco/meme.jpg"), "l'image partagée reste jouable");
+  }
+});

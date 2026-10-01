@@ -37,6 +37,7 @@ Le_Titan_Cuirasse.webp | De quel anime vient ce titan ? = L'Attaque des Titans |
 
 == Jeux vidéo ==
 Prince_of_Persia__Dastan_.webp | De quel jeu vidéo vient ce héros ? = Prince of Persia | prince of persia | prince de perse
+Risk_of_Rain_2.jpg | De quel jeu vidéo vient cette capture ? = Risk of Rain 2 | risk of rain 2 | risk of rain | ror2 | ror 2
 
 == Rap FR ==
 Booba.jpg | Quel rappeur français, surnommé « le Duc de Boulogne », est-ce ? = Booba | booba | b2o | kopp | elie yaffa
@@ -64,3 +65,7 @@ L.webp | Comment s'appelle ce détective de « Death Note » ? = L | l | lawliet
 Dumb_et_Dumber.webp | De quel film comique culte vient ce duo ? = Dumb et Dumber | dumb et dumber | dumb and dumber | dumb & dumber
 Ace_Ventura.png | Quel détective spécialiste des animaux, joué par Jim Carrey, est-ce ? = Ace Ventura | ace ventura | ace
 Maman_jai_rate_lavion.jpg | De quel film de Noël vient ce petit garçon laissé seul à la maison ? = Maman, j'ai raté l'avion | maman j ai rate l avion | maman jai rate lavion | home alone | kevin
+
+== Séries ==
+Patrick_Jane.jpg | Comment s'appelle ce personnage de série ? = Patrick Jane | patrick jane | jane | patrick
+Patrick_Jane.jpg | De quelle série vient ce personnage ? = Mentalist | the mentalist | le mentalist | mentalist
