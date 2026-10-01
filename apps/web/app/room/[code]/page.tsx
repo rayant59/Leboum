@@ -277,6 +277,26 @@ export default function LobbyPage() {
     setName(clean);
   }
 
+  // Lien vers un salon qui n'existe plus (fermé, code mal tapé) : écran dédié
+  // plutôt qu'un faux salon vide bloqué sur « Connexion… ».
+  if (room.error?.code === "room_not_found" && !room.state) {
+    return (
+      <>
+        <BoumBackdrop />
+        <main className="relative z-[1] mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-5">
+          <div className="panel animate-pop p-6 text-center">
+            <p className="eyebrow mb-2">Salle {code}</p>
+            <h1 className="mb-2 font-display text-2xl font-bold">Ce salon n'existe pas</h1>
+            <p className="mb-5 text-sm text-text-muted">Il a peut-être été fermé, ou le code est mal tapé. Demande un nouveau lien à tes amis, ou crée ton propre salon.</p>
+            <a href="/" className="block w-full rounded-xl bg-gold px-4 py-3 font-display font-bold text-ink-deep transition-transform hover:-translate-y-0.5">
+              Retour à l'accueil
+            </a>
+          </div>
+        </main>
+      </>
+    );
+  }
+
   const state = room.state;
   const me = state && room.you ? state.players[room.you] : undefined;
   const isHost = me?.isHost ?? false;
@@ -655,8 +675,6 @@ export default function LobbyPage() {
             </div>
           </div>
 
-          {/* Manches + temps : empilés sur téléphone, côte à côte en 2 colonnes */}
-          <div className="cfg-pair">
           {/* NOMBRE DE TOURS — libellé et bornes propres à chaque jeu (manches, questions, images) */}
           <div className="cfg-grp">
             <div className="cfg-head">
@@ -723,7 +741,6 @@ export default function LobbyPage() {
             );
           })()}
 
-          </div>
           {/* THÈMES — Boum Dessin uniquement, hors Faux-artiste / Relais */}
           {selectedGame === "draw" && curMode !== "fakeartist" && curMode !== "relay" && (() => {
             const selCount = drawThemes.length === 0 ? DRAW_THEMES.length : drawThemes.length;

@@ -1,304 +1,856 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { BoumTrailer } from "@/components/BoumTrailer";
-import { generateRoomCode, isValidRoomCode, sanitizeName } from "@subtitles-party/shared";
+import { useParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { canStart, isEffectivelyReady, minReadyFor, sanitizeName, DRAW_THEMES } from "@subtitles-party/shared";
 import { getPlayerName, setPlayerName } from "@/lib/identity";
+import { useRoom } from "@/lib/useRoom";
+import { BoumBackdrop } from "@/components/BoumBackdrop";
+import { useGameSounds } from "@/lib/sound";
+import { GameView } from "@/components/GameView";
+import { DrawGameView } from "@/components/DrawGameView";
+import { FakeArtistView } from "@/components/FakeArtistView";
+import { RelayView } from "@/components/RelayView";
+import { DoublageView } from "@/components/DoublageView";
+import { UI } from "./uiAssets";
+import { QuizView } from "@/components/QuizView";
+import { RecoView } from "@/components/RecoView";
+import { BombeView } from "@/components/BombeView";
+import { MimicView } from "@/components/MimicView";
+import { GameIntro } from "@/components/GameIntro";
+import { Avatar } from "@/components/Avatar";
+import { ProfileModal } from "@/components/ProfileModal";
+import { SubtitleStrip } from "@/components/SubtitleStrip";
+import { MODE_ICONS } from "./modeIcons";
 
-const TAGLINES = [
-  "...trouve le mot avant que ça explose",
-  "...devine l'image pixel par pixel",
-  "...devine ce que je dessine",
-  "...démasque l'imposteur",
-  "...imite le son le plus drôle",
-];
+type GameId = "draw" | "mimic" | "quiz" | "reco" | "pixel" | "bombe";
 
-const ACCENTS = {
-  gold: "#FFC24B",
-  magenta: "#FF4D8D",
-  mint: "#46E0B0",
-  violet: "#8B7DF6",
-  cyan: "#4CC9F0",
-  orange: "#FF6B4D",
-} as const;
+/** Un mode de jeu tel qu'exposé dans la salle d'attente.
+ *  `img` : illustration dédiée (modes de Dessin) ; sinon on retombe sur la
+ *  vignette du jeu. `min` : nombre de joueurs requis (mode grisé en dessous). */
+interface ModeDef { id: string; c: string; nm: string; ds: string; img?: string; min?: number }
 
-const BORDERS = {
-  gold: "rgba(255,194,75,0.32)",
-  magenta: "rgba(255,77,141,0.32)",
-  mint: "rgba(70,224,176,0.32)",
-  violet: "rgba(139,125,246,0.4)",
-  cyan: "rgba(76,201,240,0.4)",
-  orange: "rgba(255,107,77,0.4)",
-} as const;
+/** Catalogue des modes par jeu — seule source de vérité de la grille de modes.
+ *  Défaut = premier de la liste (`classic` partout). Le moteur retombe sur le
+ *  mode classique pour tout mode qu'il ne sait pas encore jouer. */
+const MODE_SETS: Record<GameId, ModeDef[]> = {
+  draw: [
+    { id: "classic", c: "#FFC24B", nm: "Classique", ds: "Un dessine, les autres devinent. Le plus rapide marque le plus.", img: MODE_ICONS.classique },
+    { id: "blind", c: "#4CC9F0", nm: "Aveugle", ds: "Tu dessines sans voir ton trait 😅. Plus de temps pour compenser.", img: MODE_ICONS.aveugle },
+    { id: "constraints", c: "#8B7DF6", nm: "Contraintes", ds: "Chaque dessin impose une règle absurde (une couleur, sans lever le crayon…).", img: MODE_ICONS.contraintes },
+    { id: "coop", c: "#46E0B0", nm: "Coopératif", ds: "En équipe : tous vos points sont mis en commun pour un score collectif.", img: MODE_ICONS.coop },
+    { id: "fakeartist", c: "#FF6B6B", nm: "Faux-artiste", ds: "Un imposteur reçoit un mot voisin sans le savoir ; démasquez-le au vote.", img: MODE_ICONS.fakeartist, min: 3 },
+    { id: "relay", c: "#4CC9F0", nm: "Relais", ds: "Deux joueurs se relaient au crayon, rotation auto.", img: MODE_ICONS.relais, min: 3 },
+  ],
+  mimic: [
+    { id: "classic", c: "#46E0B0", nm: "Classique", ds: "Chacun imite le son, puis tout le monde vote pour la meilleure prise." },
+    { id: "chain", c: "#FFC24B", nm: "Téléphone arabe", ds: "Chaque joueur imite l'imitation du précédent. Le résultat final vaut le détour.", min: 3 },
+    { id: "duel", c: "#FF6B6B", nm: "Duel", ds: "Deux joueurs s'affrontent sur le même son, le reste du salon tranche.", min: 3 },
+  ],
+  quiz: [
+    { id: "classic", c: "#8B7DF6", nm: "Classique", ds: "Une question, quatre réponses, les points au bout." },
+    { id: "speed", c: "#FFC24B", nm: "Vitesse", ds: "Plus tu réponds vite, plus tu marques. Une erreur coûte cher." },
+    { id: "survival", c: "#FF6B6B", nm: "Survie", ds: "Trois vies chacun : une mauvaise réponse et tu en perds une." },
+    { id: "teams", c: "#46E0B0", nm: "Équipes", ds: "Deux camps, une seule réponse par équipe : mettez-vous d'accord.", min: 4 },
+  ],
+  reco: [
+    { id: "classic", c: "#4CC9F0", nm: "Classique", ds: "Une image, tout le monde cherche la bonne réponse en même temps." },
+    { id: "zoom", c: "#FFC24B", nm: "Zoom arrière", ds: "On part d'un détail : l'image se dézoome jusqu'à ce que quelqu'un trouve." },
+    { id: "theme", c: "#8B7DF6", nm: "Thème imposé", ds: "Toute la manche sur une seule catégorie : cinéma, lieux, personnalités…" },
+  ],
+  pixel: [
+    { id: "classic", c: "#46E0B0", nm: "Classique", ds: "L'image se dévoile pixel par pixel, premier trouvé premier servi." },
+    { id: "rush", c: "#FF6B4D", nm: "Rush", ds: "Révélation deux fois plus rapide, mais les points doublent." },
+    { id: "coop", c: "#4CC9F0", nm: "Coopératif", ds: "Score commun : trouvez un maximum d'images avant la fin du chrono." },
+  ],
+  bombe: [
+    { id: "classic", c: "#FF6B4D", nm: "Classique", ds: "Une syllabe, un mot, la bombe tourne jusqu'à l'explosion." },
+    { id: "hardcore", c: "#FF6B6B", nm: "Hardcore", ds: "Chrono partagé de 15 s : chaque bonne réponse rend 2 s, jamais moins de 5 s." },
+    { id: "coop", c: "#46E0B0", nm: "Coopératif", ds: "Tenez ensemble le plus longtemps possible face à la bombe." },
+  ],
+};
 
-type Accent = keyof typeof ACCENTS;
+/** Réglage « Temps par tour » exposé dans la salle d'attente : libellé, presets
+ *  et défaut par jeu (saisie libre 5–300 s via « Perso »). */
+const TIMES: Record<GameId, { title: string; sub: string; opts: number[]; def: number }> = {
+  draw: { title: "Temps de dessin", sub: "Durée de chaque tour de dessin", opts: [45, 60, 80, 120], def: 80 },
+  mimic: { title: "Temps d'imitation", sub: "Durée d'enregistrement par joueur", opts: [10, 15, 20, 25], def: 15 }, // le moteur plafonne à 25 s
+  quiz: { title: "Temps par question", sub: "Délai pour répondre", opts: [10, 15, 20, 30], def: 15 },
+  reco: { title: "Temps par image", sub: "Délai pour trouver la bonne réponse", opts: [15, 20, 30, 45], def: 20 },
+  pixel: { title: "Temps de révélation", sub: "Durée avant l'image complète", opts: [20, 30, 45, 60], def: 30 },
+  bombe: { title: "Temps par joueur", sub: "Mèche avant l'explosion", opts: [5, 7, 10, 15], def: 7 },
+};
 
-const GAMES: { img: string; accent: Accent; name: string; desc: string; players: string; variants: string[] }[] = [
-  { img: "/games/draw.png", accent: "magenta", name: "Boum Dessin", desc: "Dessine le mot secret, les autres devinent — avec ses variantes.", players: "2–8", variants: [] },
-  { img: "/games/mimic.png", accent: "mint", name: "Mimic Boum", desc: "Imite un son avec ta voix — une seule prise, puis on vote pour la meilleure imitation !", players: "2–8", variants: [] },
-  { img: "/games/quiz.png", accent: "violet", name: "Ça te parle ?", desc: "Répondez à des questions et montrez votre culture !", players: "1–12", variants: [] },
-  { img: "/games/reco.png", accent: "cyan", name: "Œil de Boum", desc: "Devinez le personnage, le lieu, l'œuvre… sur une vraie image.", players: "1–12", variants: [] },
-  { img: "/games/pixel.png", accent: "mint", name: "Pixel Panic", desc: "Une image se dévoile pixel par pixel : devine le plus vite possible !", players: "1–12", variants: [] },
-  { img: "/games/bombe.png", accent: "orange", name: "Boum Rush", desc: "Trouve vite un mot avec la syllabe avant que la bombe explose !", players: "2–12", variants: [] },
-];
+/** Réglage « nombre de tours » exposé dans la salle d'attente. Selon le jeu on
+ *  compte en MANCHES (dessin, mimic, bombe) ou en QUESTIONS/IMAGES (quiz, reco,
+ *  pixel). Chaque jeu garde son propre défaut et ses propres bornes — le quiz,
+ *  par exemple, va jusqu'à 20 questions (le moteur borne totalQuestions à 3–20). */
+const ROUNDS: Record<GameId, { headTitle: string; rowTitle: string; rowSub: string; unit: string; min: number; max: number; def: number }> = {
+  draw:  { headTitle: "Manches",   rowTitle: "Nombre de manches",   rowSub: "La partie s'arrête au bout du compte", unit: "manches",   min: 2, max: 8,  def: 3 },
+  mimic: { headTitle: "Manches",   rowTitle: "Nombre de manches",   rowSub: "La partie s'arrête au bout du compte", unit: "manches",   min: 2, max: 8,  def: 3 },
+  quiz:  { headTitle: "Questions", rowTitle: "Nombre de questions", rowSub: "Autant de questions posées dans la partie", unit: "questions", min: 5, max: 20, def: 10 },
+  reco:  { headTitle: "Images",    rowTitle: "Nombre d'images",     rowSub: "Autant d'images à reconnaître dans la partie", unit: "images", min: 5, max: 20, def: 10 },
+  pixel: { headTitle: "Images",    rowTitle: "Nombre d'images",     rowSub: "Autant d'images à deviner dans la partie", unit: "images", min: 5, max: 20, def: 10 },
+  bombe: { headTitle: "Manches",   rowTitle: "Nombre de manches",   rowSub: "La partie s'arrête au bout du compte", unit: "manches",   min: 2, max: 8,  def: 3 },
+};
 
-const DOT_COLORS = ["rgba(255,194,75,0.7)", "rgba(255,77,141,0.6)", "rgba(70,224,176,0.6)", "rgba(243,238,255,0.5)"];
-const DOTS = Array.from({ length: 14 }, (_, i) => ({
-  left: ((i * 67) % 100) + "%",
-  size: (3 + (i % 3) * 2) + "px",
-  color: DOT_COLORS[i % DOT_COLORS.length],
-  opacity: (0.35 + (i % 3) * 0.12).toFixed(2),
-  dx: (i % 2 ? 1 : -1) * (10 + (i % 4) * 8) + "px",
-  dur: (11 + (i % 5) * 3) + "s",
-  delay: (i * 0.9).toFixed(1) + "s",
-}));
+const GAME_META: Record<string, { label: string; img: string; tint: string }> = {
+  subtitles: { label: "Sous-titres", img: "/games/subtitles.png", tint: "#FFC24B" },
+  draw: { label: "Boum Dessin", img: "/games/draw.png", tint: "#FF4D8D" },
+  mimic: { label: "Mimic Boum", img: "/games/mimic.png", tint: "#46E0B0" },
+  quiz: { label: "Ça te parle ?", img: "/games/quiz.png", tint: "#8B7DF6" },
+  reco: { label: "Œil de Boum", img: "/games/reco.png", tint: "#4CC9F0" },
+  pixel: { label: "Pixel Panic", img: "/games/pixel.png", tint: "#46E0B0" },
+  bombe: { label: "Boum Rush", img: "/games/bombe.png", tint: "#FF6B4D" },
+};
 
-type Confetto = { id: string; left: string; color: string; size: string; h: string; delay: string; dur: string };
+export default function LobbyPage() {
+  const params = useParams<{ code: string }>();
+  const code = (params.code ?? "").toUpperCase();
 
-export default function HomePage() {
-  const router = useRouter();
   const [name, setName] = useState("");
-  const [code, setCode] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [typed, setTyped] = useState(" ");
-  const [confetti, setConfetti] = useState<Confetto[]>([]);
-  const [trailerOpen, setTrailerOpen] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [themesOpen, setThemesOpen] = useState(false);
+  const [selectedGame, setSelectedGame] = useState<GameId>("draw");
+  // Modèle unifié (SPEC §1) : nombre de manches partagé + mémoire du mode et du
+  // temps CHOISIS PAR JEU. Changer de jeu restaure ses réglages, jamais ceux des
+  // autres. Le moteur retombe sur « classique » pour un mode qu'il ne joue pas.
+  const [roundsByGame, setRoundsByGame] = useState<Partial<Record<GameId, number>>>({});
+  const [modeByGame, setModeByGame] = useState<Partial<Record<GameId, string>>>({});
+  const [timeByGame, setTimeByGame] = useState<Partial<Record<GameId, number>>>({});
+  const [drawThemes, setDrawThemes] = useState<string[]>([]);
 
-  const machine = useRef<{ ti: number; chars: number; phase: "type" | "hold" | "erase" }>({ ti: 0, chars: 0, phase: "type" });
-  const holdT = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const ct = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+  // Mode/temps effectifs pour le jeu sélectionné (avec repli sur le défaut).
+  const modeOf = (g: GameId) => {
+    const set = MODE_SETS[g];
+    const picked = modeByGame[g];
+    return set.some((m) => m.id === picked) ? (picked as string) : set[0].id;
+  };
+  const timeOf = (g: GameId) => timeByGame[g] ?? TIMES[g].def;
+  // Nombre de tours effectif (borné aux limites du jeu), avec repli sur son défaut.
+  const roundsOf = (g: GameId) => {
+    const cfg = ROUNDS[g];
+    const v = roundsByGame[g] ?? cfg.def;
+    return Math.max(cfg.min, Math.min(cfg.max, v));
+  };
+  const curMode = modeOf(selectedGame);
+  const turnSeconds = timeOf(selectedGame);
+  const curRounds = roundsOf(selectedGame);
+  const setMode = (g: GameId, id: string) => setModeByGame((p) => ({ ...p, [g]: id }));
+  const setTime = (g: GameId, v: number) => setTimeByGame((p) => ({ ...p, [g]: v }));
+  const bumpRounds = (g: GameId, delta: number) =>
+    setRoundsByGame((p) => {
+      const cfg = ROUNDS[g];
+      const cur = p[g] ?? cfg.def;
+      return { ...p, [g]: Math.max(cfg.min, Math.min(cfg.max, cur + delta)) };
+    });
+  /** Jeu réellement lancé : les modes Faux-artiste / Relais de Boum Dessin
+   *  routent vers leur propre moteur ; les autres modes gardent leur jeu. */
+  const launchId = selectedGame === "draw" && (curMode === "fakeartist" || curMode === "relay") ? curMode : selectedGame;
   useEffect(() => setName(getPlayerName()), []);
+  useEffect(() => setShareUrl(window.location.href), []);
 
-  // Typewriter : tape la punchline, la tient, l'efface, passe à la suivante.
-  useEffect(() => {
-    const tick = setInterval(() => {
-      const m = machine.current;
-      const full = TAGLINES[m.ti];
-      if (m.phase === "hold") return;
-      if (m.phase === "type") {
-        if (m.chars < full.length) { m.chars += 1; setTyped(full.slice(0, m.chars)); return; }
-        m.phase = "hold";
-        holdT.current = setTimeout(() => { m.phase = "erase"; }, 1900);
-        return;
-      }
-      if (m.chars > 0) { m.chars -= 1; setTyped(full.slice(0, m.chars) || " "); return; }
-      m.ti = (m.ti + 1) % TAGLINES.length; m.phase = "type";
-    }, 55);
-    return () => { clearInterval(tick); if (holdT.current) clearTimeout(holdT.current); };
-  }, []);
-
-  useEffect(() => () => { if (ct.current) clearTimeout(ct.current); }, []);
-
-  function burst() {
-    const colors = ["#FFC24B", "#FF4D8D", "#46E0B0", "#F3EEFF", "#9184d9"];
-    setConfetti(
-      Array.from({ length: 46 }, (_, i) => ({
-        id: Date.now() + "-" + i,
-        left: (Math.random() * 100).toFixed(1) + "%",
-        color: colors[i % colors.length],
-        size: (6 + Math.random() * 6).toFixed(0) + "px",
-        h: (9 + Math.random() * 8).toFixed(0) + "px",
-        delay: (Math.random() * 0.35).toFixed(2) + "s",
-        dur: (1.5 + Math.random() * 1.1).toFixed(2) + "s",
-      })),
-    );
-    if (ct.current) clearTimeout(ct.current);
-    ct.current = setTimeout(() => setConfetti([]), 3200);
-  }
-
-  function go(roomCode: string, creating = false) {
-    const clean = sanitizeName(name);
-    if (!clean) { setError("Choisis un pseudo pour continuer."); return; }
-    setPlayerName(clean);
-    burst();
-    if (creating) {
-      try { sessionStorage.setItem(`boum:create:${roomCode}`, "1"); } catch {}
+  // Autorisation de créer le salon, posée par l'accueil dans sessionStorage.
+  // On NE peut PAS se fier à window.location au montage : lors d'une navigation
+  // Next, le composant se rend avant que l'URL soit commitée.
+  const wantsCreate = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      if (sessionStorage.getItem(`boum:create:${code}`) === "1") return true;
+    } catch {
+      /* sessionStorage indisponible */
     }
-    const href = creating ? `/room/${roomCode}?create=1` : `/room/${roomCode}`;
-    setTimeout(() => router.push(href), 450);
+    return new URLSearchParams(window.location.search).get("create") === "1";
+  }, [code]);
+  const room = useRoom(code, wantsCreate);
+  useGameSounds(room);
+  // Message de connexion : ton doux et rassurant, jamais alarmant.
+  // On l'affiche après ~2,5 s tant que la socket n'est pas ouverte (un
+  // hébergement gratuit peut mettre quelques secondes à se réveiller).
+  const [connWaking, setConnWaking] = useState(false);
+  useEffect(() => {
+    if (room.status === "open") {
+      setConnWaking(false);
+      return;
+    }
+    const t1 = window.setTimeout(() => setConnWaking(true), 2500);
+    return () => window.clearTimeout(t1);
+  }, [room.status]);
+
+  // Join as soon as we're connected and have a name. Idempotent server-side:
+  // a repeat join with the same id is treated as a reconnect.
+  const prevStatus = useRef<string>("");
+  useEffect(() => {
+    if (room.status === "open" && name && prevStatus.current !== "open") {
+      room.join(name);
+    }
+    prevStatus.current = room.status;
+  }, [room.status, name, room]);
+
+  // Host broadcasts the currently-selected game so guests see what's coming.
+  // Kept above any early return so hook order stays stable every render.
+  useEffect(() => {
+    const st = room.state;
+    const meNow = st && room.you ? st.players[room.you] : undefined;
+    if (meNow?.isHost) room.selectGame(selectedGame);
+  }, [room, room.state, room.you, selectedGame]);
+
+  // SPEC §4 : un changement de jeu de l'hôte dé-« prête » automatiquement les
+  // invités (ils doivent reconfirmer sur la nouvelle partie).
+  const prevPending = useRef<string | null>(null);
+  useEffect(() => {
+    const st = room.state;
+    const meNow = st && room.you ? st.players[room.you] : undefined;
+    const host = meNow?.isHost ?? false;
+    const pending = room.pendingGame ?? null;
+    if (!host && meNow?.isReady && pending && prevPending.current !== null && pending !== prevPending.current) {
+      room.setReady(false);
+    }
+    prevPending.current = pending;
+  }, [room, room.pendingGame, room.state, room.you]);
+
+  // --- écran d'annonce « prochain jeu » entre les jeux ----------------------
+  // Affiché brièvement à chaque démarrage de jeu (changement de gameId), côté
+  // client uniquement : aucune modification du moteur/serveur.
+  const [introGame, setIntroGame] = useState<string | null>(null);
+  const [introKey, setIntroKey] = useState<string | null>(null);
+  // Clé du jeu en cours (null hors partie). On la compare PENDANT le rendu —
+  // pas dans un useEffect — pour armer l'intro dès la toute première frame :
+  // un effet ne s'exécute qu'après le premier paint, ce qui laissait apparaître
+  // le jeu ~1 s avant que l'overlay du décompte ne le recouvre.
+  const gameKey = room.state?.phase === "in_game" && room.gameId ? room.gameId : null;
+  // On n'annonce un jeu que si on l'a vu démarrer depuis le salon : après un
+  // rechargement en pleine partie, l'annonce masquerait le jeu déjà en cours.
+  const sawLobby = useRef(false);
+  if (room.state?.phase === "lobby") sawLobby.current = true;
+  if (gameKey !== introKey) {
+    setIntroKey(gameKey);
+    setIntroGame(gameKey && sawLobby.current ? gameKey : null); // nouveau jeu → intro ; retour au lobby → on la cache
   }
-  const onCreate = () => go(generateRoomCode(), true);
-  function onJoin() {
-    const clean = sanitizeName(name);
-    if (!clean) { setError("Choisis un pseudo pour continuer."); return; }
-    const c = code.trim().toUpperCase();
-    if (!isValidRoomCode(c)) { setError("Ce code de partie n'existe pas (4 lettres/chiffres)."); return; }
-    go(c);
+  // Auto-disparition après 4,2 s (le clic sur l'overlay la ferme aussi).
+  useEffect(() => {
+    if (!introGame) return;
+    const t = window.setTimeout(() => setIntroGame(null), 4200);
+    return () => window.clearTimeout(t);
+  }, [introGame]);
+
+  // --- name gate (direct link without a stored pseudo) ----------------------
+  if (!name) {
+    return (
+      <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-5">
+        <div className="panel animate-pop p-6">
+          <div className="mb-5 flex justify-center">
+            <SubtitleStrip>Boum</SubtitleStrip>
+          </div>
+          <p className="eyebrow mb-2 text-center">Salle {code}</p>
+          <h1 className="mb-1 text-center font-display text-2xl font-bold">Rejoins la partie</h1>
+          <p className="mb-5 text-center text-sm text-text-muted">Choisis un pseudo pour entrer.</p>
+          <input
+            autoFocus
+            value={nameDraft}
+            onChange={(e) => setNameDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") enter();
+            }}
+            maxLength={20}
+            placeholder="Ton pseudo"
+            className="mb-3 w-full rounded-xl border border-ink-border bg-ink-deep px-4 py-3 text-center text-lg focus:border-gold"
+          />
+          <button
+            onClick={enter}
+            className="w-full rounded-xl bg-gold px-4 py-3 font-display font-bold text-ink-deep transition-transform hover:-translate-y-0.5"
+          >
+            Entrer
+          </button>
+        </div>
+      </main>
+    );
   }
+
+  function enter() {
+    const clean = sanitizeName(nameDraft);
+    if (!clean) return;
+    setPlayerName(clean);
+    setName(clean);
+  }
+
+  // Lien vers un salon qui n'existe plus (fermé, code mal tapé) : écran dédié
+  // plutôt qu'un faux salon vide bloqué sur « Connexion… ».
+  if (room.error?.code === "room_not_found" && !room.state) {
+    return (
+      <>
+        <BoumBackdrop />
+        <main className="relative z-[1] mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-5">
+          <div className="panel animate-pop p-6 text-center">
+            <p className="eyebrow mb-2">Salle {code}</p>
+            <h1 className="mb-2 font-display text-2xl font-bold">Ce salon n'existe pas</h1>
+            <p className="mb-5 text-sm text-text-muted">Il a peut-être été fermé, ou le code est mal tapé. Demande un nouveau lien à tes amis, ou crée ton propre salon.</p>
+            <a href="/" className="block w-full rounded-xl bg-gold px-4 py-3 font-display font-bold text-ink-deep transition-transform hover:-translate-y-0.5">
+              Retour à l'accueil
+            </a>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  const state = room.state;
+  const me = state && room.you ? state.players[room.you] : undefined;
+  const isHost = me?.isHost ?? false;
+
+  const players = state ? state.playerOrder.map((id) => state.players[id]).filter(Boolean) : [];
+  const readyCount = state ? players.filter((p) => isEffectivelyReady(state, p.id)).length : 0;
+  const connectedCount = players.filter((p) => p.isConnected).length;
+  const neededReady = state ? minReadyFor(state, launchId) : 2;
+  const missingReady = Math.max(0, neededReady - readyCount);
+  const maxPlayers = state?.config.maxPlayers ?? 8;
+  const startable = !!state && canStart(state, launchId);
+
+  async function copyLink() {
+    const url = window.location.href;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        // http on a LAN IP is not a secure context → Clipboard API is missing.
+        const ta = document.createElement("textarea");
+        ta.value = url;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      // Couldn't copy automatically — the link stays visible for a manual copy.
+    }
+  }
+
+  /** « Inviter » : feuille de partage native (mobile), sinon copie du lien. */
+  async function inviteFriends() {
+    const url = window.location.href;
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title: "Boum", text: `Rejoins ma partie Boum ! Code : ${code}`, url });
+        return;
+      } catch (e) {
+        if ((e as Error)?.name === "AbortError") return; // partage annulé
+      }
+    }
+    await copyLink();
+  }
+
+  /** Traduit le modèle unifié (jeu + mode + manches + temps) en payload de
+   *  démarrage propre à chaque moteur. Un mode que le back ne joue pas encore
+   *  est transmis tel quel : le moteur retombe alors sur « classique ». */
+  function startSelectedGame() {
+    const mode = curMode;
+    const t = turnSeconds;
+    switch (selectedGame) {
+      case "draw":
+        if (mode === "fakeartist") return room.startGame("fakeartist", { totalRounds: curRounds });
+        if (mode === "relay") return room.startGame("relay", { totalRounds: curRounds });
+        return room.startGame("draw", { totalRounds: curRounds, mode, themes: drawThemes, seconds: t });
+      case "mimic":
+        return room.startGame("mimic", { totalRounds: curRounds, recordSeconds: t, mode });
+      case "quiz":
+        return room.startGame("quiz", { totalQuestions: curRounds, secondsPerQuestion: t, types: "all", mode });
+      case "reco":
+        return room.startGame("reco", { totalQuestions: curRounds, secondsPerQuestion: t, category: "all", mode });
+      case "pixel":
+        return room.startGame("pixel", { totalQuestions: curRounds, secondsPerQuestion: t, category: "all", mode });
+      case "bombe":
+        return room.startGame("bombe", { lives: 3, minSeconds: t, maxSeconds: t + 3, minLetters: 2, maxLetters: 3, mode });
+    }
+  }
+
+  // --- game hand-off: render the game module once the room is in_game -------
+  if (state?.phase === "in_game") {
+    if (!room.game) {
+      return (
+        <>
+          <BoumBackdrop />
+          <main className="relative z-[1] grid min-h-dvh place-items-center px-5 text-center">
+            <style>{`@keyframes lb-dot{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-7px);opacity:1}}@keyframes lb-clap{0%,72%,100%{transform:rotate(0)}82%{transform:rotate(-22deg)}92%{transform:rotate(0)}}@keyframes lb-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}`}</style>
+            <div className="animate-pop" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 24 }}>
+              <div style={{ position: "relative", width: 120, height: 108, animation: "lb-float 4s ease-in-out infinite" }}>
+                <div style={{ position: "absolute", bottom: 0, width: 120, height: 80, borderRadius: 10, background: "linear-gradient(180deg, #251C45, #1C1636)", border: "1px solid #332A5A", boxShadow: "0 18px 40px -18px rgba(0,0,0,.9)" }} />
+                <div style={{ position: "absolute", bottom: 26, left: 14, fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 800, fontSize: 14, color: "#FFC24B" }}>BOUM</div>
+                <div style={{ position: "absolute", top: 0, left: 0, width: 120, height: 26, transformOrigin: "6px 22px", animation: "lb-clap 2.6s ease-in-out infinite" }}>
+                  <div style={{ width: 120, height: 22, borderRadius: 8, background: "#0E0B1A", border: "1px solid #332A5A", overflow: "hidden" }}>
+                    <span style={{ display: "block", width: "100%", height: "100%", background: "repeating-linear-gradient(115deg,#F3EEFF 0 13px,#0E0B1A 13px 26px)" }} />
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-center"><SubtitleStrip>silence, ça tourne…</SubtitleStrip></div>
+              <div style={{ display: "flex", gap: 9 }}>
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#FFC24B", animation: "lb-dot 1.2s ease-in-out infinite" }} />
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#FFC24B", animation: "lb-dot 1.2s ease-in-out .16s infinite" }} />
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#FFC24B", animation: "lb-dot 1.2s ease-in-out .32s infinite" }} />
+              </div>
+            </div>
+          </main>
+        </>
+      );
+    }
+    const gameEl =
+      room.gameId === "fakeartist" ? <FakeArtistView room={room} /> :
+      room.gameId === "relay" ? <RelayView room={room} /> :
+      room.gameId === "doublage" ? <DoublageView room={room} /> :
+      room.gameId === "mimic" ? <MimicView room={room} /> :
+      room.gameId === "quiz" ? <QuizView room={room} /> :
+      room.gameId === "reco" ? <RecoView room={room} /> :
+      room.gameId === "pixel" ? <RecoView room={room} pixel /> :
+      room.gameId === "bombe" ? <BombeView room={room} /> :
+      room.gameId === "draw" ? <DrawGameView room={room} /> :
+      <GameView room={room} />;
+    return (
+      <>
+        {gameEl}
+        {introGame && (
+          <GameIntro gameId={introGame} players={players} onDone={() => setIntroGame(null)} />
+        )}
+      </>
+    );
+  }
+
+  const online = room.status === "open";
 
   return (
-    <div style={{ position: "relative", minHeight: "100dvh", overflow: "hidden", backgroundColor: "#14102A", backgroundImage: "radial-gradient(130% 120% at 50% 38%, transparent 58%, rgba(6,4,14,0.5) 100%)", fontFamily: "'Inter', system-ui, sans-serif", color: "#F3EEFF" }}>
-      <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
-        @keyframes bm-caretBlink { 0%,49% { opacity: 1; } 50%,100% { opacity: 0; } }
-        @keyframes bm-fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-        @keyframes bm-letterPop { 0% { opacity: 0; transform: translateY(26px) scale(0.7) rotate(-8deg); } 60% { opacity: 1; transform: translateY(-6px) scale(1.08) rotate(2deg); } 100% { opacity: 1; transform: none; } }
-        @keyframes bm-goldGlow { 0%,100% { text-shadow: 0 0 18px rgba(255,194,75,0.55), 0 0 2px rgba(255,194,75,0.4); } 50% { text-shadow: 0 0 34px rgba(255,194,75,0.85), 0 0 6px rgba(255,194,75,0.6); } }
-        @keyframes bm-boumRing { 0% { opacity: 0; transform: scale(0.35); } 8% { opacity: 0.55; } 42% { opacity: 0; transform: scale(1.5); } 100% { opacity: 0; transform: scale(1.5); } }
-        @keyframes bm-boumKick { 0%, 84%, 100% { transform: none; } 88% { transform: scale(1.035); } 93% { transform: scale(0.99); } }
-        @keyframes bm-auroraA { 0% { transform: translate(-4%,-2%) scale(1); } 50% { transform: translate(6%,5%) scale(1.18); } 100% { transform: translate(-4%,-2%) scale(1); } }
-        @keyframes bm-auroraB { 0% { transform: translate(3%,4%) scale(1.1); } 50% { transform: translate(-6%,-4%) scale(1); } 100% { transform: translate(3%,4%) scale(1.1); } }
-        @keyframes bm-auroraC { 0% { transform: translate(0,0) scale(1); } 50% { transform: translate(-5%,6%) scale(1.22); } 100% { transform: translate(0,0) scale(1); } }
-        @keyframes bm-driftUp { 0% { transform: translateY(0) translateX(0); opacity: 0; } 12% { opacity: var(--o,0.5); } 88% { opacity: var(--o,0.5); } 100% { transform: translateY(-110px) translateX(var(--dx,0)); opacity: 0; } }
-        @keyframes bm-confettiFall { 0% { transform: translateY(-14vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(114vh) rotate(760deg); opacity: 0.85; } }
-        @keyframes bm-sheen { 0% { transform: translateX(-140%) skewX(-18deg); } 55%, 100% { transform: translateX(340%) skewX(-18deg); } }
-        @keyframes bm-playPulse { 0% { opacity: 0.5; transform: scale(1); } 70%, 100% { opacity: 0; transform: scale(1.9); } }
-        @keyframes bm-shimmerLine { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
-        .mn-desc { text-wrap: pretty; }
-        .mn-name:focus { outline: none; border-color: #FFC24B; box-shadow: 0 0 0 3px rgba(255,194,75,0.15); }
-        .mn-code:focus { outline: none; border-color: #FF4D8D; box-shadow: 0 0 0 3px rgba(255,77,141,0.15); }
-        .mn-create:hover { filter: brightness(1.05); transform: translateY(-1px); }
-        .mn-create:active { transform: translateY(4px); box-shadow: 0 1px 0 #B47F16; }
-        .mn-join:hover { filter: brightness(1.05); transform: translateY(-1px); }
-        .mn-join:active { transform: translateY(4px); box-shadow: 0 1px 0 #A1315F; }
-        .mn-trailer:hover { border-color: rgba(255,194,75,0.55); color: #FFC24B; transform: translateY(-1px); }
-        .mn-card:hover { transform: translateY(-5px); border-color: rgba(255,194,75,0.5); box-shadow: 0 18px 36px -22px rgba(0,0,0,0.95); }
-        .mn-card:hover .mn-card-img { transform: scale(1.07); }
-        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; } }
-      ` }} />
+    <>
+      <BoumBackdrop />
+      <main className={`relative z-[1] mx-auto max-w-2xl px-5 py-7${isHost ? " lobby-split" : ""}`} style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+      {/* Colonne gauche (écran large, hôte) : code, joueurs. Sur téléphone ces
+          enveloppes sont neutres (display: contents) : rien ne bouge. */}
+      <div className="lobby-left">
+      {/* brand + connection */}
+      <header className="mb-6 flex items-center justify-end">
+        <span className="flex items-center gap-2 text-xs text-text-muted">
+          <span className={`h-2 w-2 rounded-full ${online ? "bg-mint" : "bg-gold animate-bulb"}`} />
+          {online ? "Connecté" : "Connexion…"}
+        </span>
+      </header>
 
-      {/* aurora */}
-      <div aria-hidden style={{ position: "absolute", inset: "-10% -10% 0 -10%", pointerEvents: "none", zIndex: 0 }}>
-        <div style={{ position: "absolute", top: "-12%", left: "12%", width: 620, height: 620, borderRadius: "50%", filter: "blur(70px)", background: "radial-gradient(circle, rgba(255,194,75,0.16), transparent 62%)", animation: "bm-auroraA 17s ease-in-out infinite" }} />
-        <div style={{ position: "absolute", bottom: "-6%", right: "4%", width: 560, height: 560, borderRadius: "50%", filter: "blur(72px)", background: "radial-gradient(circle, rgba(255,77,141,0.14), transparent 62%)", animation: "bm-auroraB 21s ease-in-out infinite" }} />
-        <div style={{ position: "absolute", top: "34%", left: "46%", width: 480, height: 480, borderRadius: "50%", filter: "blur(78px)", background: "radial-gradient(circle, rgba(70,224,176,0.09), transparent 64%)", animation: "bm-auroraC 25s ease-in-out infinite" }} />
-      </div>
+      {!online && connWaking && (
+        <div className="mb-6 rounded-xl border border-gold/40 bg-gold/[0.06] p-4 text-sm">
+          <p className="mb-1 flex items-center gap-2 font-semibold text-gold">
+            <span className="h-2 w-2 shrink-0 rounded-full bg-gold animate-bulb" />
+            Connexion au serveur…
+          </p>
+          <p className="text-text-muted">
+            Le serveur peut mettre quelques secondes à se réveiller. La partie s'ouvre dès qu'il répond.
+          </p>
+        </div>
+      )}
 
-      {/* drifting dots */}
-      <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-        {DOTS.map((d, i) => (
-          <div key={i} style={{ position: "absolute", left: d.left, bottom: -12, width: d.size, height: d.size, borderRadius: "50%", background: d.color, ["--o" as string]: d.opacity, ["--dx" as string]: d.dx, animation: `bm-driftUp ${d.dur} linear ${d.delay} infinite` }} />
-        ))}
-      </div>
-
-      {/* confetti */}
-      <div aria-hidden style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 60 }}>
-        {confetti.map((c) => (
-          <div key={c.id} style={{ position: "absolute", top: 0, left: c.left, width: c.size, height: c.h, background: c.color, borderRadius: 2, animation: `bm-confettiFall ${c.dur} cubic-bezier(0.3,0.5,0.7,1) ${c.delay} forwards` }} />
-        ))}
-      </div>
-
-      <main style={{ position: "relative", zIndex: 1, maxWidth: 768, margin: "0 auto", padding: "40px 20px" }}>
-        {/* hero */}
-        <header style={{ marginBottom: 32, textAlign: "center" }}>
-          <div style={{ marginBottom: 20, display: "flex", justifyContent: "center", opacity: 0, animation: "bm-fadeUp 0.6s ease 0.05s both" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 8, borderRadius: 6, background: "rgba(0,0,0,0.85)", padding: "6px 12px", fontFamily: "'Space Mono', monospace", fontSize: 14, letterSpacing: "0.03em", boxShadow: "0 2px 0 rgba(0,0,0,0.4)", minHeight: 20 }}>
-              <span style={{ color: "#F3EEFF", display: "inline-block", whiteSpace: "pre" }}>{typed}</span>
-              <span style={{ display: "inline-block", height: 16, width: 2, background: "#FFC24B", animation: "bm-caretBlink 1.1s step-end infinite" }} />
-            </span>
-          </div>
-
-          <div style={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center" }}>
-            <div aria-hidden style={{ position: "absolute", width: 320, height: 320, borderRadius: "50%", border: "1px solid rgba(255,194,75,0.5)", opacity: 0, animation: "bm-boumRing 5.4s cubic-bezier(0.2,0.7,0.3,1) 1.1s infinite" }} />
-            <div aria-hidden style={{ position: "absolute", width: 320, height: 320, borderRadius: "50%", border: "1px solid rgba(255,77,141,0.4)", opacity: 0, animation: "bm-boumRing 5.4s cubic-bezier(0.2,0.7,0.3,1) 1.32s infinite" }} />
-            <div aria-hidden style={{ position: "absolute", width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,194,75,0.18), transparent 65%)", opacity: 0, animation: "bm-boumRing 5.4s ease-out 1.05s infinite" }} />
-            <h1 style={{ position: "relative", margin: 0, fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 76, fontWeight: 800, lineHeight: 0.9, letterSpacing: "-0.03em", animation: "bm-boumKick 5.4s ease-in-out 1s infinite" }}>
-              <span style={{ display: "inline-flex" }}>
-                <span style={{ display: "inline-block", opacity: 0, animation: "bm-letterPop 0.62s cubic-bezier(0.34,1.56,0.64,1) 0.18s both" }}>B</span>
-                <span style={{ display: "inline-block", color: "#FFC24B", opacity: 0, animation: "bm-letterPop 0.62s cubic-bezier(0.34,1.56,0.64,1) 0.27s both, bm-goldGlow 3s ease-in-out 1s infinite" }}>o</span>
-                <span style={{ display: "inline-block", color: "#FFC24B", opacity: 0, animation: "bm-letterPop 0.62s cubic-bezier(0.34,1.56,0.64,1) 0.36s both, bm-goldGlow 3s ease-in-out 1.15s infinite" }}>u</span>
-                <span style={{ display: "inline-block", opacity: 0, animation: "bm-letterPop 0.62s cubic-bezier(0.34,1.56,0.64,1) 0.45s both" }}>m</span>
+      {/* hero: the room code + invite — carte fidèle à la maquette */}
+      <section
+        className="mb-8 rounded-2xl border p-6 text-center"
+        style={{ borderColor: "#332A5A", backgroundImage: "linear-gradient(180deg, rgba(37,28,69,0.72), rgba(28,22,54,0.72))", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 0 rgba(255,255,255,0.02), 0 22px 44px -26px rgba(0,0,0,0.95)", backdropFilter: "blur(6px)" }}
+      >
+        <p style={{ margin: "0 0 12px", fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".16em", color: "#6E6796" }}>Code de la salle</p>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+          <div style={{ display: "inline-flex", gap: 6, padding: 10, borderRadius: 12, background: "rgba(14,11,26,0.8)", boxShadow: "inset 0 2px 10px rgba(0,0,0,0.55)" }}>
+            {[...code].map((c, i) => (
+              <span
+                key={i}
+                style={{ display: "grid", placeItems: "center", width: 44, height: 56, borderRadius: 8, border: "1px solid rgba(255,194,75,0.4)", background: "#0E0B1A", fontFamily: "'Space Mono', monospace", fontSize: 24, fontWeight: 700, color: "#FFC24B", boxShadow: "0 0 20px rgba(255,194,75,0.18), inset 0 1px 0 rgba(255,255,255,0.06)", animation: `tilePop 0.5s cubic-bezier(0.34,1.56,0.64,1) ${(0.12 + i * 0.09).toFixed(2)}s both` }}
+              >
+                {c}
               </span>
-            </h1>
+            ))}
           </div>
+        </div>
+        <button
+          onClick={copyLink}
+          title="Copier le lien d'invitation"
+          aria-label="Copier le lien d'invitation"
+          className="lb-copy"
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "12px 20px 12px 14px", borderRadius: 999,
+            fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 700, fontSize: 14.5, lineHeight: 1,
+            border: `1px solid ${copied ? "rgba(70,224,176,.6)" : "rgba(255,194,75,.55)"}`,
+            background: copied ? "linear-gradient(180deg, rgba(70,224,176,.22), rgba(70,224,176,.08))" : "linear-gradient(180deg, rgba(255,194,75,.20), rgba(255,194,75,.06))",
+            color: copied ? "#8BF0CE" : "#FFD98A",
+            boxShadow: copied ? "0 5px 0 #17624a, 0 12px 22px -12px rgba(70,224,176,.55), inset 0 1px 0 rgba(255,255,255,.18)" : "0 5px 0 #8f620c, 0 12px 22px -12px rgba(255,194,75,.55), inset 0 1px 0 rgba(255,255,255,.18)",
+          }}
+        >
+          <span style={{ display: "grid", placeItems: "center", width: 28, height: 28, flex: "none", borderRadius: "50%", background: copied ? "rgba(70,224,176,.18)" : "rgba(255,194,75,.16)" }}>
+            {copied ? (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round"><path d="M10.5 13.5a4.5 4.5 0 0 0 6.4 0l2.1-2.1a4.5 4.5 0 0 0-6.4-6.4l-1 1" /><path d="M13.5 10.5a4.5 4.5 0 0 0-6.4 0L5 12.6a4.5 4.5 0 0 0 6.4 6.4l1-1" /></svg>
+            )}
+          </span>
+          <span>{copied ? "Lien copié" : "Copier le lien d'invitation"}</span>
+        </button>
+      </section>
 
-        </header>
-
-        {/* create / join */}
-        <div style={{ maxWidth: 512, margin: "0 auto", borderRadius: 16, border: "1px solid #332A5A", background: "rgba(28,22,54,0.7)", padding: 20, backdropFilter: "blur(6px)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 34px -20px rgba(0,0,0,0.85)", opacity: 0, animation: "bm-fadeUp 0.6s ease 0.44s both" }}>
-          <label style={{ display: "block", opacity: 0, animation: "bm-fadeUp 0.5s ease 0.56s both" }}>
-            <span style={{ marginBottom: 6, display: "block", fontSize: 14, color: "#A79FC7" }}>Ton pseudo</span>
-            <input
-              className="mn-name"
-              value={name}
-              onChange={(e) => { setName(e.target.value); setError(null); }}
-              maxLength={20}
-              placeholder="ex. Camille"
-              style={{ width: "100%", boxSizing: "border-box", borderRadius: 8, border: "1px solid #332A5A", background: "#0E0B1A", padding: "10px 14px", fontFamily: "'Inter', sans-serif", fontWeight: 500, fontSize: 15, color: "#F3EEFF", outline: "none", transition: "border-color 0.15s, box-shadow 0.15s" }}
-            />
-          </label>
-
-          <button
-            className="mn-create"
-            onClick={onCreate}
-            style={{ position: "relative", overflow: "hidden", marginTop: 16, width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", fontFamily: "'Bricolage Grotesque', system-ui, sans-serif", fontWeight: 700, fontSize: 16, lineHeight: 1, border: "none", borderRadius: 14, padding: "13px 20px", background: "#FFC24B", color: "#0E0B1A", boxShadow: "0 5px 0 #B47F16, 0 10px 18px -8px rgba(0,0,0,.6)", transition: "transform .08s ease, filter .12s ease, box-shadow .12s ease", opacity: 0, animation: "bm-fadeUp 0.5s ease 0.62s both" }}
-          >
-            Créer une partie
-            <span aria-hidden style={{ position: "absolute", top: 0, bottom: 0, left: 0, width: 42, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent)", animation: "bm-sheen 4.2s ease-in-out 1.6s infinite", pointerEvents: "none" }} />
-          </button>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16, fontSize: 12, color: "#6E6796", opacity: 0, animation: "bm-fadeUp 0.5s ease 0.7s both" }}>
-            <span style={{ height: 1, flex: 1, background: "linear-gradient(90deg, transparent, #332A5A)", animation: "bm-shimmerLine 4s ease-in-out infinite" }} />
-            ou rejoins des amis
-            <span style={{ height: 1, flex: 1, background: "linear-gradient(90deg, #332A5A, transparent)", animation: "bm-shimmerLine 4s ease-in-out 2s infinite" }} />
+      {/* players */}
+      <section className="mb-8">
+        <div className="cfg-head">
+          <span className="cfg-ic"><img src={UI.groupViolet} alt="" width={22} height={22} className="select-none" draggable={false} aria-hidden /></span>
+          <div>
+            <h2 className="cfg-tt">Joueurs <span style={{ fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 14, color: "#6E6796" }}>{players.length}/{maxPlayers}</span></h2>
+            <span className="cfg-sub">En attente dans le salon</span>
           </div>
-
-          <div style={{ display: "flex", gap: 8, marginTop: 16, opacity: 0, animation: "bm-fadeUp 0.5s ease 0.78s both" }}>
-            <input
-              className="mn-code"
-              value={code}
-              onChange={(e) => { setCode(e.target.value.toUpperCase().slice(0, 4)); setError(null); }}
-              onKeyDown={(e) => e.key === "Enter" && onJoin()}
-              placeholder="CODE"
-              style={{ width: 128, boxSizing: "border-box", borderRadius: 8, border: "1px solid #332A5A", background: "#0E0B1A", padding: "10px 14px", textAlign: "center", fontFamily: "'Space Mono', monospace", fontSize: 18, letterSpacing: "0.3em", color: "#F3EEFF", outline: "none", transition: "border-color 0.15s, box-shadow 0.15s" }}
-            />
-            <button
-              className="mn-join"
-              onClick={onJoin}
-              style={{ position: "relative", overflow: "hidden", flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", fontFamily: "'Bricolage Grotesque', system-ui, sans-serif", fontWeight: 700, fontSize: 16, lineHeight: 1, border: "none", borderRadius: 14, padding: "13px 20px", background: "#FF4D8D", color: "#2a0716", boxShadow: "0 5px 0 #A1315F, 0 10px 18px -8px rgba(0,0,0,.6)", transition: "transform .08s ease, filter .12s ease, box-shadow .12s ease" }}
-            >
-              Rejoindre
-              <span aria-hidden style={{ position: "absolute", top: 0, bottom: 0, left: 0, width: 42, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)", animation: "bm-sheen 4.2s ease-in-out 3.1s infinite", pointerEvents: "none" }} />
-            </button>
-          </div>
-
-          {error && <p role="alert" style={{ margin: "12px 0 0", fontSize: 14, color: "#FF5C5C", animation: "bm-fadeUp 0.3s ease both" }}>{error}</p>}
-
-          <button
-            className="mn-trailer"
-            onClick={() => setTrailerOpen(true)}
-            style={{ margin: "14px auto 0", display: "flex", alignItems: "center", gap: 9, border: "1px solid #332A5A", background: "transparent", borderRadius: 999, padding: "9px 18px", fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 700, fontSize: 14, color: "#C9C2E6", cursor: "pointer", transition: "border-color .18s, color .18s, transform .18s", opacity: 0, animation: "bm-fadeUp 0.5s ease 0.88s both" }}
-          >
-            <span style={{ position: "relative", display: "grid", placeItems: "center", width: 20, height: 20, borderRadius: "50%", border: "1px solid currentColor" }}>
-              <span aria-hidden style={{ position: "absolute", inset: -1, borderRadius: "50%", border: "1px solid #FFC24B", animation: "bm-playPulse 2.8s ease-out infinite" }} />
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 1 }}><path d="M8 5v14l11-7z" /></svg>
-            </span>
-            Bande-annonce
-          </button>
-
+          <span className={`pl-readypill${readyCount > 0 ? " some" : ""}`}><span className="d" />{readyCount}/{connectedCount} prêt{readyCount > 1 ? "s" : ""}</span>
         </div>
 
-        {/* games showcase */}
-        <section style={{ marginTop: 48, width: "min(1100px, calc(100vw - 32px))", marginLeft: "50%", transform: "translateX(-50%)" }}>
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 12 }}>
-            {GAMES.map((g, i) => {
-              const delay = (1.05 + i * 0.08).toFixed(2) + "s";
-              return (
-                <div key={g.name} className="mn-card" style={{ flex: "0 1 205px", borderRadius: 16, border: `1px solid ${BORDERS[g.accent]}`, background: "rgba(28,22,54,0.6)", padding: 12, transition: "transform 0.24s cubic-bezier(0.3,1.2,0.5,1), border-color 0.24s, box-shadow 0.24s", opacity: 0, animation: `bm-fadeUp 0.55s ease ${delay} both` }}>
-                  <div style={{ position: "relative", marginBottom: 12, borderRadius: 12, overflow: "hidden", boxShadow: `0 8px 26px -14px ${ACCENTS[g.accent]}` }}>
-                    <img className="mn-card-img" src={g.img} alt={g.name} draggable={false} style={{ display: "block", width: "100%", aspectRatio: "1 / 1", objectFit: "cover", transition: "transform 0.5s cubic-bezier(0.2,0.8,0.2,1)" }} />
-                    <span style={{ position: "absolute", top: 8, right: 8, borderRadius: 999, background: "rgba(14,11,26,0.75)", backdropFilter: "blur(4px)", border: "1px solid rgba(255,255,255,0.12)", padding: "2px 8px", fontSize: 11, color: "#F3EEFF" }}>{g.players} joueurs</span>
+        <div className="pl-list">
+          {players.map((p) => {
+            const isYou = p.id === room.you;
+            return (
+              <div key={p.id} className={`pl-card${isYou ? " you" : ""}${p.isConnected ? "" : " off"}`}>
+                {isYou ? (
+                  <button
+                    onClick={() => setProfileOpen(true)}
+                    className="group relative rounded-[15px]"
+                    title="Modifier ton profil"
+                    aria-label="Modifier ton profil"
+                  >
+                    <Avatar name={p.name} color={p.color} avatar={p.avatar} size={48} />
+                    <span className={`pl-dot${p.isConnected ? "" : " off"}`} />
+                    <span className="absolute inset-0 grid place-items-center rounded-[15px] bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                    </span>
+                  </button>
+                ) : (
+                  <div className="relative">
+                    <Avatar name={p.name} color={p.color} avatar={p.avatar} size={48} />
+                    <span className={`pl-dot${p.isConnected ? "" : " off"}`} title={p.isConnected ? "En ligne" : "Hors ligne"} />
                   </div>
-                  <h3 style={{ margin: "0 4px", fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 17, fontWeight: 700, color: "#F3EEFF" }}>{g.name}</h3>
-                  <p style={{ margin: "4px 4px 0", fontSize: 13.5, color: "#A79FC7", lineHeight: 1.45 }}>{g.desc}</p>
-                  {g.variants.length > 0 && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, margin: "10px 4px 2px" }}>
-                      {g.variants.map((v) => (
-                        <span key={v} style={{ borderRadius: 999, border: "1px solid #332A5A", background: "#0E0B1A", padding: "2px 8px", fontSize: 11, color: "#A79FC7" }}>{v}</span>
-                      ))}
-                    </div>
-                  )}
+                )}
+                <div className="pl-info">
+                  <div className="pl-name">
+                    <span className="nm">{p.name}</span>
+                    {isYou && <span className="pl-youtag">(toi)</span>}
+                    {p.isHost && (
+                      <span className="pl-host"><img src={UI.crownGold} alt="" width={14} height={14} className="select-none" draggable={false} aria-hidden />Hôte</span>
+                    )}
+                  </div>
+                  <span className="pl-pstatus">
+                    <svg className="s-ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+                    {!p.isConnected ? "Déconnecté" : p.isHost ? "Choisit le jeu" : p.isReady ? "Prêt" : "En attente"}
+                  </span>
                 </div>
+                {!p.isHost && (
+                  <span className={`pl-badge ${p.isReady && p.isConnected ? "ok" : "wait"}`}>
+                    {p.isReady && p.isConnected ? "Prêt" : "Pas prêt"}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {maxPlayers - players.length > 0 && (
+          <button className="pl-invite" onClick={inviteFriends} title="Inviter des amis">
+            <span className="pl-seats">
+              {Array.from({ length: Math.min(maxPlayers - players.length, 7) }).map((_, i) => (
+                <span key={i} className="pl-seat" style={{ animationDelay: `${(i * 0.18).toFixed(2)}s` }}><span className="d" /></span>
+              ))}
+            </span>
+            <span className="pl-invite-txt">
+              <span className="t">{maxPlayers - players.length} place{maxPlayers - players.length > 1 ? "s" : ""} libre{maxPlayers - players.length > 1 ? "s" : ""}</span>
+              <span className="s">Envoie le lien à tes amis pour les remplir</span>
+            </span>
+            <span className="pl-invite-cta"><img src={UI.addPlayer} alt="" width={15} height={15} className="select-none" draggable={false} aria-hidden />{copied ? "Lien copié ✓" : "Inviter"}</span>
+          </button>
+        )}
+      </section>
+
+      {/* guests: read-only preview of the game the host will launch */}
+      {!isHost && (
+        <section className="mb-8">
+          <p className="eyebrow mb-2 px-1">Jeu choisi par l'hôte</p>
+          {room.pendingGame && GAME_META[room.pendingGame] ? (
+            <div className="flex items-center gap-3 rounded-2xl border p-3" style={{ borderColor: `${GAME_META[room.pendingGame].tint}55`, background: `${GAME_META[room.pendingGame].tint}0f` }}>
+              <img src={GAME_META[room.pendingGame].img} alt="" className="h-14 w-14 shrink-0 rounded-xl object-cover" draggable={false} />
+              <div className="min-w-0">
+                <p className="font-display text-lg font-bold">{GAME_META[room.pendingGame].label}</p>
+                <p className="text-xs text-text-faint">L'hôte lancera cette partie. Prépare-toi et mets-toi « prêt » !</p>
+              </div>
+            </div>
+          ) : (
+            <p className="rounded-2xl border border-ink-border p-3 text-sm text-text-faint">L'hôte n'a pas encore choisi de jeu…</p>
+          )}
+        </section>
+      )}
+
+      </div>
+
+      {/* Colonne droite (écran large, hôte) : choix du jeu + réglages */}
+      <div className="lobby-right">
+      {/* game picker (host) */}
+      {isHost && (
+        <section className="mb-8">
+          <p className="eyebrow mb-2 px-1">Jeu</p>
+          <div className="game-picker-grid">
+            {(
+              [
+                { id: "draw", img: "/games/draw.png", label: "Boum Dessin", players: "2–8", desc: "Dessine le mot secret, les autres devinent — avec ses variantes.", tint: "#FF4D8D", tintBg: "rgba(255,77,141,0.12)", tintBorder: "rgba(255,77,141,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 5.6l3.9 3.9" /><path d="M4 20l1.3-4.4L15.7 5.2a1.9 1.9 0 0 1 2.7 0l.4.4a1.9 1.9 0 0 1 0 2.7L8.4 18.7 4 20Z" /></svg> },
+                { id: "mimic", img: "/games/mimic.png", label: "Mimic Boum", players: "2–8", desc: "Imite un son avec ta voix — une seule prise. Les autres votent pour la meilleure imitation !", tint: "#46E0B0", tintBg: "rgba(70,224,176,0.12)", tintBorder: "rgba(70,224,176,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M6 11a6 6 0 0 0 12 0" /><path d="M12 17v3.2" /><path d="M9 20.2h6" /></svg> },
+                { id: "quiz", img: "/games/quiz.png", label: "Ça te parle ?", players: "1–8", desc: "Réponds aux questions et montre ta culture !", tint: "#8B7DF6", tintBg: "rgba(139,125,246,0.14)", tintBorder: "rgba(139,125,246,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4" /><circle cx="12" cy="17.5" r="0.6" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="9" /></svg> },
+                { id: "reco", img: "/games/reco.png", label: "Œil de Boum", players: "1–8", desc: "Devine le personnage, le film, le lieu et bien plus.", tint: "#4CC9F0", tintBg: "rgba(76,201,240,0.14)", tintBorder: "rgba(76,201,240,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="14" rx="2.5" /><circle cx="9" cy="10" r="2" /><path d="M4 17l4.5-4 3 2.5L15 12l5 4.5" /></svg> },
+                { id: "pixel", img: "/games/pixel.png", label: "Pixel Panic", players: "1–8", desc: "Une image se dévoile pixel par pixel — devine le plus vite possible !", tint: "#46E0B0", tintBg: "rgba(70,224,176,0.12)", tintBorder: "rgba(70,224,176,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="6" height="6"/><rect x="15" y="3" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/><rect x="3" y="15" width="6" height="6"/><rect x="15" y="15" width="6" height="6"/></svg> },
+                { id: "bombe", img: "/games/bombe.png", label: "Boum Rush", players: "2–8", desc: "Trouve vite un mot avec la syllabe avant que la bombe explose !", tint: "#FF6B4D", tintBg: "rgba(255,107,77,0.14)", tintBorder: "rgba(255,107,77,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="14" r="7" /><path d="M16 9l2-2" /><path d="M18 7l1 .3M19 5.5l.3-1M20.5 6.8l1-.3" /></svg> },
+              ] as const
+            ).map((c) => {
+              const sel = selectedGame === c.id;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setSelectedGame(c.id)}
+                  className="lb-gamecard group relative flex flex-col overflow-hidden rounded-2xl border p-4 text-left"
+                  style={{
+                    borderColor: sel ? c.tint : "#332A5A",
+                    background: sel ? `linear-gradient(160deg, ${c.tintBg}, rgba(28,22,54,0.6) 60%)` : "rgba(28,22,54,0.55)",
+                    boxShadow: sel
+                      ? `inset 0 1px 0 ${c.tint}59, 0 0 0 1px ${c.tint}66, 0 6px 0 -1px rgba(0,0,0,.4), 0 18px 34px -18px ${c.tint}aa`
+                      : "inset 0 1px 0 rgba(255,255,255,.05), 0 5px 0 -1px rgba(0,0,0,.35), 0 16px 28px -22px rgba(0,0,0,.9)",
+                  }}
+                >
+                  {/* decorative sparkles */}
+                  <svg aria-hidden width="12" height="12" viewBox="0 0 24 24" className="pointer-events-none absolute" style={{ top: 30, left: 92, color: sel ? c.tint : "#6E6796", opacity: sel ? 0.55 : 0.3 }}><path fill="currentColor" d="M12 2l1.5 8.5L22 12l-8.5 1.5L12 22l-1.5-8.5L2 12l8.5-1.5z" /></svg>
+                  <svg aria-hidden width="9" height="9" viewBox="0 0 24 24" className="pointer-events-none absolute" style={{ top: 56, right: 22, color: sel ? c.tint : "#6E6796", opacity: sel ? 0.5 : 0.25 }}><path fill="currentColor" d="M12 2l1.5 8.5L22 12l-8.5 1.5L12 22l-1.5-8.5L2 12l8.5-1.5z" /></svg>
+                  <div className="mb-2.5 flex items-start justify-between">
+                    <span
+                      className="inline-flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl transition-transform group-hover:scale-105"
+                      style={{ border: `1px solid ${sel ? c.tintBorder : "#332A5A"}`, boxShadow: sel ? `0 0 16px -4px ${c.tint}` : "none" }}
+                    >
+                      <img src={c.img} alt="" className="h-full w-full object-cover" draggable={false} />
+                    </span>
+                    <span className="rounded-full border px-2.5 py-0.5 text-[11px] tabular-nums" style={{ borderColor: sel ? `${c.tint}66` : "#332A5A", color: sel ? c.tint : "#8078a8" }}>
+                      {c.players}
+                    </span>
+                  </div>
+                  <div className="font-display text-base font-bold text-text">{c.label}</div>
+                  <p className="mt-1 text-sm leading-snug text-text-muted">{c.desc}</p>
+                </button>
               );
             })}
           </div>
         </section>
+      )}
 
+      {/* settings — réservé à l'hôte : les invités voient seulement la carte
+          « Jeu choisi par l'hôte » plus haut, jamais le choix des modes/réglages. */}
+      {isHost && (
+      <section className="mb-8">
+        <p className="eyebrow mb-2 px-1">Réglages</p>
+        <div className="space-y-8">
+          {/* MODE DE JEU — grille propre au jeu sélectionné (SPEC §4) */}
+          <div className="cfg-grp">
+            <div className="cfg-head">
+              <span className="cfg-ic-img"><img src="/ui/modejeu.png" alt="" draggable={false} /></span>
+              <div><h2 className="cfg-tt">Mode de jeu</h2><span className="cfg-sub">{`Pour « ${GAME_META[selectedGame].label} » — ${MODE_SETS[selectedGame].length} modes`}</span></div>
+            </div>
+            <div className="cfg-modes">
+              {MODE_SETS[selectedGame].map((m) => {
+                const on = curMode === m.id;
+                const locked = m.min != null && players.length < m.min;
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => !locked && setMode(selectedGame, m.id)}
+                    disabled={!isHost || locked}
+                    className={`cfg-mode${on ? " on" : ""}`}
+                    style={{ ["--c" as any]: m.c, opacity: locked ? 0.55 : undefined }}
+                    title={locked ? `${m.min} joueurs minimum` : undefined}
+                  >
+                    <span className="cfg-check"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg></span>
+                    <span className="cfg-mic" style={{ padding: 0, overflow: "hidden" }}><img src={m.img ?? GAME_META[selectedGame].img} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /></span>
+                    <span><span className="cfg-mnm">{m.nm}</span><p className="cfg-mds">{locked ? `${m.min} joueurs minimum` : m.ds}</p></span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* NOMBRE DE TOURS — libellé et bornes propres à chaque jeu (manches, questions, images) */}
+          <div className="cfg-grp">
+            <div className="cfg-head">
+              <span className="cfg-ic-img"><img src="/ui/manche.png" alt="" draggable={false} /></span>
+              <div><h2 className="cfg-tt">{ROUNDS[selectedGame].headTitle}</h2><span className="cfg-sub">Réglage de la partie</span></div>
+            </div>
+            <div className="cfg-rounds">
+              <div className="cfg-rlab"><b>{ROUNDS[selectedGame].rowTitle}</b>{ROUNDS[selectedGame].rowSub}</div>
+              <div className="cfg-stepper">
+                <button className="cfg-sbtn" onClick={() => bumpRounds(selectedGame, -1)} disabled={!isHost || curRounds <= ROUNDS[selectedGame].min} aria-label="Moins"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M5 12h14" /></svg></button>
+                <div className="cfg-sval"><div className="cfg-svaln">{curRounds}</div><div className="cfg-svalu">{ROUNDS[selectedGame].unit}</div></div>
+                <button className="cfg-sbtn" onClick={() => bumpRounds(selectedGame, 1)} disabled={!isHost || curRounds >= ROUNDS[selectedGame].max} aria-label="Plus"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg></button>
+              </div>
+            </div>
+          </div>
+
+          {/* TEMPS PAR TOUR — presets + saisie libre 5–300 s, mémoire par jeu (SPEC §3) */}
+          {(() => {
+            const tCfg = TIMES[selectedGame];
+            const custom = !tCfg.opts.includes(turnSeconds);
+            const hardcoreLocked = selectedGame === "bombe" && curMode === "hardcore";
+            const timeLocked = !isHost || hardcoreLocked;
+            const hint = hardcoreLocked
+              ? "Imposé en Hardcore : chrono partagé de 15 s, +2 s par bonne réponse."
+              : selectedGame === "draw" && curMode === "blind"
+                ? `Mode Aveugle : +25 % de temps automatiquement (${Math.round(turnSeconds * 1.25)}s).`
+                : selectedGame === "pixel" && curMode === "rush"
+                  ? `Mode Rush : révélation deux fois plus rapide (~${Math.round(turnSeconds / 2)}s réels).`
+                  : `S'applique à « ${GAME_META[selectedGame].label} ». Chaque jeu garde son propre réglage.`;
+            return (
+              <div className="cfg-grp">
+                <div className="cfg-time" style={{ opacity: hardcoreLocked ? 0.55 : undefined }}>
+                  <div className="cfg-time-head">
+                    <div className="cfg-rlab"><b>{tCfg.title}</b>{tCfg.sub}</div>
+                    <div className="cfg-time-val"><span className="n">{hardcoreLocked ? 15 : turnSeconds}</span><span className="u">sec</span></div>
+                  </div>
+                  <div className="cfg-time-opts">
+                    {tCfg.opts.map((v) => (
+                      <button
+                        key={v}
+                        onClick={() => setTime(selectedGame, v)}
+                        disabled={timeLocked}
+                        className={`cfg-timebtn${!hardcoreLocked && v === turnSeconds ? " on" : ""}`}
+                      >
+                        {v}s
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => {
+                        const raw = window.prompt("Temps par tour, en secondes (5 – 300)", String(turnSeconds));
+                        if (raw == null) return;
+                        const n = Math.max(5, Math.min(300, Math.round(Number(raw) || 0)));
+                        if (n) setTime(selectedGame, n);
+                      }}
+                      disabled={timeLocked}
+                      className={`cfg-timebtn perso${!hardcoreLocked && custom ? " on" : ""}`}
+                    >
+                      Perso
+                    </button>
+                  </div>
+                  <div className="cfg-time-hint">{hint}</div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* THÈMES — Boum Dessin uniquement, hors Faux-artiste / Relais */}
+          {selectedGame === "draw" && curMode !== "fakeartist" && curMode !== "relay" && (() => {
+            const selCount = drawThemes.length === 0 ? DRAW_THEMES.length : drawThemes.length;
+            const allOn = drawThemes.length === 0;
+            return (
+              <div className="cfg-grp">
+                <button
+                  onClick={() => setThemesOpen((o) => !o)}
+                  className="cfg-collapse"
+                  aria-expanded={themesOpen}
+                >
+                  <span className="cfg-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11.5V5a2 2 0 0 1 2-2h6.5a2 2 0 0 1 1.4.6l7.5 7.5a2 2 0 0 1 0 2.8l-6.6 6.6a2 2 0 0 1-2.8 0L3.6 12.9A2 2 0 0 1 3 11.5Z" /><circle cx="7.5" cy="7.5" r="1.3" fill="currentColor" /></svg></span>
+                  <div className="min-w-0 flex-1"><h2 className="cfg-tt">Thèmes</h2><span className="cfg-sub">{themesOpen ? "Ce qui peut tomber" : `${selCount} sur ${DRAW_THEMES.length} sélectionnés`}</span></div>
+                  <span className={`cfg-choose${themesOpen ? "" : " pulse"}`}>
+                    {themesOpen ? "Fermer" : "Choisir"}
+                    <svg className="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" style={{ transform: themesOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
+                  </span>
+                </button>
+                {themesOpen && (
+                  <div className="mt-3">
+                    <div className="cfg-themesbar">
+                      <button className="cfg-toggleall" onClick={() => setDrawThemes([])} disabled={!isHost}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>
+                        Tout sélectionner
+                      </button>
+                      <span className="cfg-selnote"><b>{selCount}</b> thèmes sur {DRAW_THEMES.length}</span>
+                    </div>
+                    <div className="cfg-tags">
+                      {DRAW_THEMES.map((t) => {
+                        const on = allOn || drawThemes.includes(t);
+                        return (
+                          <button
+                            key={t}
+                            disabled={!isHost}
+                            onClick={() =>
+                              setDrawThemes((prev) => {
+                                const base = prev.length === 0 ? [...DRAW_THEMES] : prev;
+                                const next = base.includes(t) ? base.filter((x) => x !== t) : [...base, t];
+                                return next.length === DRAW_THEMES.length ? [] : next;
+                              })
+                            }
+                            className={`cfg-tag${on ? " on" : ""}`}
+                          >
+                            {on && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>}
+                            {t}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </div>
+      </section>
+      )}
+
+      </div>
+      {room.error && (
+        <p className="mb-4 rounded-xl border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
+          {room.error.message}
+        </p>
+      )}
+
+      {/* action dock — l'hôte lance directement (il compte comme prêt),
+          les invités basculent « prêt / pas prêt ». z-20 : au-dessus des cartes. */}
+      <div className="sticky bottom-[max(1rem,env(safe-area-inset-bottom))] z-20 mt-2 flex gap-3 rounded-2xl border border-ink-border/80 bg-[rgba(20,16,42,0.92)] p-3 backdrop-blur-md">
+        {isHost ? (
+          startable ? (
+            <button onClick={() => startSelectedGame()} className="arc arc-p arc-block">
+              Lancer la partie
+            </button>
+          ) : (
+            <button disabled className="arc arc-dis arc-block">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
+              {missingReady > 0
+                ? `Encore ${missingReady} joueur${missingReady > 1 ? "s" : ""} prêt${missingReady > 1 ? "s" : ""}`
+                : "En attente des joueurs"}
+            </button>
+          )
+        ) : (
+          <button
+            onClick={() => me && room.setReady(!me.isReady)}
+            disabled={!me}
+            className={`arc arc-block ${me?.isReady ? "arc-sec" : "arc-ready"} disabled:opacity-40`}
+          >
+            {me?.isReady ? (
+              "Pas prêt finalement"
+            ) : (
+              <>
+                <img src={UI.flagReady} alt="" width={20} height={20} className="select-none" draggable={false} aria-hidden />
+                Je suis prêt
+              </>
+            )}
+          </button>
+        )}
+      </div>
+
+      {profileOpen && me && (
+        <ProfileModal
+          name={me.name}
+          color={me.color}
+          avatar={me.avatar}
+          onSetName={(n) => room.setName(n)}
+          onSetAvatar={(a) => room.setAvatar(a)}
+          onClose={() => setProfileOpen(false)}
+        />
+      )}
       </main>
-
-      {trailerOpen && <BoumTrailer onClose={() => setTrailerOpen(false)} onCreate={() => { setTrailerOpen(false); onCreate(); }} />}
-    </div>
+    </>
   );
 }
