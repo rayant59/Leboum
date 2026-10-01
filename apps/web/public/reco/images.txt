@@ -69,3 +69,4 @@ Maman_jai_rate_lavion.jpg | De quel film de Noël vient ce petit garçon laissé
 == Séries ==
 Patrick_Jane.jpg | Comment s'appelle ce personnage de série ? = Patrick Jane | patrick jane | jane | patrick
 Patrick_Jane.jpg | De quelle série vient ce personnage ? = Mentalist | the mentalist | le mentalist | mentalist
+Dr_House.png | Comment s'appelle ce médecin de série ? = Dr House | dr house | docteur house | house | gregory house | greg house | house md
