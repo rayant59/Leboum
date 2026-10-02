@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from "react";
 import { Avatar } from "@/components/Avatar";
-import { gameInfo } from "@subtitles-party/shared";
+import { GAME_CATEGORIES, gameInfo } from "@subtitles-party/shared";
 
 type IntroPlayer = {
   id: string;
@@ -72,7 +72,7 @@ export function GameIntro({
 
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 22, padding: "0 32px", textAlign: "center" }}>
         <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: ".28em", textTransform: "uppercase", color: "#A79FC7" }}>
-          Prochain jeu
+          Prochain jeu · <span style={{ color: GAME_CATEGORIES[meta.category].tint }}>{GAME_CATEGORIES[meta.category].label}</span>
         </span>
 
         <div style={{ position: "relative", width: 200, height: 200, display: "grid", placeItems: "center", animation: "gi-float 4.2s ease-in-out infinite" }}>

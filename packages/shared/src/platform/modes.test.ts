@@ -3,7 +3,7 @@
 // cycle de vie complet (création → fin) et résultat standard exploitable.
 import type { GamePlayer } from "../game/types";
 import type { AnyGameModule, GameContext } from "./types";
-import { GAME_CATALOG, gameInfo, listedGames } from "./catalog";
+import { GAME_CATALOG, gameInfo, gamesByCategory, listedGames } from "./catalog";
 import { rankResult, type GameResult } from "./result";
 import { bombeResults } from "./standard";
 import { addCustomQuestions, parseCustomQuestions } from "../games/quiz/questions";
@@ -50,6 +50,19 @@ test("joueurs min/max du catalogue = ceux du moteur", () => {
     assert(g.minPlayers === m.meta.minPlayers, `${m.id} min ${g.minPlayers} ≠ ${m.meta.minPlayers}`);
     assert(g.maxPlayers === m.meta.maxPlayers, `${m.id} max ${g.maxPlayers} ≠ ${m.meta.maxPlayers}`);
   }
+});
+
+test("familles de la phase 13 : chaque jeu du lobby est rangé au bon endroit", () => {
+  const fam = Object.fromEntries(gamesByCategory().map((f) => [f.category, f.games.map((g) => g.id)]));
+  const expect: Record<string, string[]> = {
+    creatif: ["draw", "reco", "phone"],
+    reflexion: ["quiz", "taboo", "ranking"],
+    social: ["whois", "funny", "imposter", "guesswho", "yesno"],
+    chaos: ["bombe", "pixel"],
+  };
+  for (const [cat, ids] of Object.entries(expect)) for (const id of ids) assert((fam[cat] ?? []).includes(id), `${id} devrait être en ${cat}`);
+  const all = gamesByCategory().flatMap((f) => f.games.map((g) => g.id));
+  assert(all.length === listedGames().length && new Set(all).size === all.length, "chaque jeu listé une seule fois");
 });
 
 test("gameInfo() a un repli pour un jeu inconnu", () => {

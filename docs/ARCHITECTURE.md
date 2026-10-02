@@ -118,6 +118,7 @@ une vue ; aucun autre jeu n'est touché.
 | 10 — Ni oui ni non | ✅ | `games/yesno/`, `YesNoView.tsx` |
 | 11 — Devine qui | ✅ | `games/guesswho/`, `GuessWhoView.tsx` |
 | 12 — Top / Classement | ✅ | `games/ranking/`, `RankingView.tsx` |
+| 13 — Enrichir LeBoum (familles) | ✅ | `platform/catalog.ts` (`gamesByCategory`), lobby |
 
 **Composants communs des jeux « social »** : `components/social/kit.tsx`
 (en-tête + chrono, carte de question, grille de vote, écran final avec
@@ -212,3 +213,18 @@ Le podium (`ResultsScreen`) partage les places en cas d'égalité (1, 1, 3).
   2 → +20, au-delà 0 ; ordre parfait : +100 de bonus (max 600 par manche).
 * Sécurité : l'ordre interne des éléments EST la réponse. Le client ne reçoit
   que les éléments mélangés et parle en positions affichées ; le serveur traduit.
+
+### Familles de jeux (phase 13)
+
+| Famille | Jeux |
+|---|---|
+| Créatif | Boum Dessin (+ Faux-artiste, Relais), Téléphone cassé, Œil de Boum |
+| Réflexion | Ça te parle ?, Mot interdit, Le Top |
+| Social | Qui de nous ?, La Plus Drôle, Imposteur, Devine qui, Ni oui ni non |
+| Chaos | Boum Rush, Pixel Panic |
+| Culture pop | Mimic Boum (Doublage et Sous-titres existent mais restent masqués) |
+
+La famille vient de la fiche catalogue (`category`) ; le lobby regroupe les jeux
+par famille avec des filtres, et l'écran d'annonce affiche la famille. Le test
+`platform/modes.test.ts` vérifie le rangement. Un nouveau jeu n'a qu'à déclarer
+sa famille dans sa fiche.

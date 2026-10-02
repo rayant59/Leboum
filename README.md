@@ -18,7 +18,7 @@ dans une **Soirée LeBoum** avec un classement commun.
 | **Qui de nous ?** | Social | 3+ | « Qui de nous… ? » : tout le monde vote pour un joueur. |
 | **La Plus Drôle** | Social | 3+ | Complète la phrase en secret, puis vote pour la meilleure réponse anonyme. |
 | **Imposteur** | Social | 3+ | Tout le monde a le même mot sauf un. Indices à tour de rôle, puis vote. Modes : classique, infiltré. |
-| **Ni oui ni non** | Chaos | 3+ | La cible ne doit jamais dire oui ni non ; les autres la piègent. Modes : à voix haute (buzz + vote éclair), par écrit (détection automatique). |
+| **Ni oui ni non** | Social | 3+ | La cible ne doit jamais dire oui ni non ; les autres la piègent. Modes : à voix haute (buzz + vote éclair), par écrit (détection automatique). |
 | **Boum Rush** | Chaos | 2+ | Trouve un mot avec la syllabe avant que la bombe explose. |
 | **Pixel Panic** | Chaos | 1+ | L'image se dévoile pixel par pixel. |
 | **Mimic Boum** | Culture pop | 2+ | Imite un son culte avec ta voix, puis votez. |

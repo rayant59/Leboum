@@ -115,7 +115,7 @@ export const GAME_CATALOG: Record<string, GameModeInfo> = {
   }),
   yesno: G({
     id: "yesno", name: "Ni oui ni non", tagline: "Bombarde la cible de questions jusqu'à ce qu'elle craque.",
-    img: "/games/yesno.svg", accent: "#FF6B4D", category: "chaos", minPlayers: 3, maxPlayers: 12, durationMin: 5,
+    img: "/games/yesno.svg", accent: "#FF6B4D", category: "social", minPlayers: 3, maxPlayers: 12, durationMin: 5,
     rules: ["Chacun son tour, un joueur est la cible.", "Les autres l'interrogent pour lui faire dire OUI ou NON.", "Elle marque à chaque seconde tenue ; celui qui la fait craquer : +150."],
     listed: true,
   }),
@@ -162,4 +162,12 @@ export function gameInfo(id: string | null | undefined): GameModeInfo {
 /** Jeux proposés dans le lobby, dans l'ordre d'affichage. */
 export function listedGames(): GameModeInfo[] {
   return Object.values(GAME_CATALOG).filter((g) => g.listed);
+}
+
+/** Ordre d'affichage des familles (feuille de route, phase 13). */
+export const CATEGORY_ORDER: GameCategory[] = ["creatif", "reflexion", "social", "chaos", "culture"];
+
+/** Jeux du lobby regroupés par famille, dans l'ordre d'affichage (familles vides omises). */
+export function gamesByCategory(games: GameModeInfo[] = listedGames()): { category: GameCategory; label: string; tint: string; blurb: string; games: GameModeInfo[] }[] {
+  return CATEGORY_ORDER.map((category) => ({ category, ...GAME_CATEGORIES[category], games: games.filter((g) => g.category === category) })).filter((f) => f.games.length > 0);
 }

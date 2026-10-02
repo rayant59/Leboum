@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { effectiveMaxPlayers, passActive, canStart, isEffectivelyReady, minReadyFor, sanitizeName, DRAW_THEMES, GAME_CATALOG, gameInfo, listedGames } from "@subtitles-party/shared";
+import { effectiveMaxPlayers, passActive, canStart, isEffectivelyReady, minReadyFor, sanitizeName, DRAW_THEMES, GAME_CATALOG, gameInfo, gamesByCategory, listedGames, type GameCategory } from "@subtitles-party/shared";
 import { getPlayerName, setPlayerName } from "@/lib/identity";
 import { useRoom } from "@/lib/useRoom";
 import { BoumBackdrop } from "@/components/BoumBackdrop";
@@ -175,6 +175,8 @@ export default function LobbyPage() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [themesOpen, setThemesOpen] = useState(false);
   const [selectedGame, setSelectedGame] = useState<GameId>("draw");
+  /** Filtre « famille » du choix de jeu (phase 13 : Créatif, Réflexion, Social, Chaos, Culture pop). */
+  const [familyFilter, setFamilyFilter] = useState<GameCategory | "all">("all");
   // Modèle unifié (SPEC §1) : nombre de manches partagé + mémoire du mode et du
   // temps CHOISIS PAR JEU. Changer de jeu restaure ses réglages, jamais ceux des
   // autres. Le moteur retombe sur « classique » pour un mode qu'il ne joue pas.
@@ -232,6 +234,8 @@ export default function LobbyPage() {
       const cur = p[g] ?? cfg.def;
       return { ...p, [g]: Math.max(cfg.min, Math.min(cfg.max, cur + delta)) };
     });
+  /** Jeux proposés dans le lobby (ceux que la salle d'attente sait régler). */
+  const pickerGames = listedGames().filter((g) => g.id in MODE_SETS);
   /** Jeu réellement lancé : les modes Faux-artiste / Relais de Boum Dessin
    *  routent vers leur propre moteur ; les autres modes gardent leur jeu. */
   const launchId = selectedGame === "draw" && (curMode === "fakeartist" || curMode === "relay") ? curMode : selectedGame;
@@ -779,12 +783,36 @@ export default function LobbyPage() {
       {/* game picker (host) */}
       {isHost && (
         <section className="mb-8">
-          <p className="eyebrow mb-2 px-1">Jeu</p>
-          <div className="game-picker-grid">
-            {listedGames()
-              .filter((g): g is typeof g & { id: GameId } => g.id in MODE_SETS)
-              .map((g) => ({ id: g.id, img: g.img, label: g.name, desc: g.tagline, tint: g.accent, tintBg: `${g.accent}1f`, tintBorder: `${g.accent}66`, min: g.minPlayers, max: g.maxPlayers }))
-              .map((c) => {
+          <div className="mb-3 flex flex-wrap items-center gap-2 px-1">
+            <p className="eyebrow mr-1">Jeu</p>
+            {([["all", "Tous", "#F3EEFF"]] as [string, string, string][]).concat(gamesByCategory(pickerGames).map((f) => [f.category, f.label, f.tint])).map(([id, label, tint]) => {
+              const on = familyFilter === id;
+              const count = id === "all" ? pickerGames.length : pickerGames.filter((g) => g.category === id).length;
+              return (
+                <button
+                  key={id}
+                  onClick={() => setFamilyFilter(id as GameCategory | "all")}
+                  aria-pressed={on}
+                  className="rounded-full border px-3 py-1 text-xs font-semibold transition-colors"
+                  style={{ borderColor: on ? tint : "#332A5A", background: on ? `${tint}22` : "transparent", color: on ? tint : "#A79FC7" }}
+                >
+                  {label} <span style={{ opacity: 0.6 }}>{count}</span>
+                </button>
+              );
+            })}
+          </div>
+          {gamesByCategory(pickerGames)
+            .filter((f) => familyFilter === "all" || f.category === familyFilter)
+            .map((f) => (
+              <div key={f.category} className="mb-6">
+                <div className="mb-3 flex items-baseline gap-2 px-1">
+                  <span className="font-display text-lg font-bold" style={{ color: f.tint }}>{f.label}</span>
+                  <span className="text-sm text-text-muted">{f.blurb}</span>
+                </div>
+                <div className="game-picker-grid">
+                  {f.games
+                    .map((g) => ({ id: g.id as GameId, img: g.img, label: g.name, desc: g.tagline, tint: g.accent, tintBg: `${g.accent}1f`, tintBorder: `${g.accent}66`, min: g.minPlayers, max: g.maxPlayers }))
+                    .map((c) => {
               const sel = selectedGame === c.id;
               return (
                 <button
@@ -817,8 +845,10 @@ export default function LobbyPage() {
                   <p className="mt-1 text-sm leading-snug text-text-muted">{c.desc}</p>
                 </button>
               );
-            })}
-          </div>
+                    })}
+                </div>
+              </div>
+            ))}
         </section>
       )}
 
