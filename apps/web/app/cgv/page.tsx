@@ -24,7 +24,7 @@ export default function CGV() {
       </p>
 
       <h2>Prix et paiement</h2>
-      <p>Le prix est affiché en euros, toutes taxes comprises, avant le paiement. Le paiement est traité par Stripe ; LeBoum n&apos;a jamais accès à tes données bancaires.</p>
+      <p>Le prix est affiché en euros avant le paiement. TVA non applicable, article 293 B du Code général des impôts. Le paiement est traité par Stripe ; LeBoum n&apos;a jamais accès à tes données bancaires.</p>
 
       <h2>Accès immédiat et rétractation</h2>
       <p>
