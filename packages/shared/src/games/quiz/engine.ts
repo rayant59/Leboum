@@ -4,6 +4,7 @@
 // question → reveal → next → final. Clients never decide timing.
 // ---------------------------------------------------------------------------
 
+import { latePlayers, withZeros } from "../../platform/presence";
 import type { GamePlayer } from "../../game/types";
 import type { PlayerId } from "../../room/types";
 import type { GameAction, GameContext, GameReduceResult } from "../../platform/types";
@@ -96,8 +97,33 @@ export function reduceQuiz(
   ctx: GameContext,
 ): GameReduceResult<QuizState> {
   switch (action.type) {
-    case "presence":
-      return ok({ ...state, connectedIds: action.connectedIds });
+    case "presence": {
+      const added = latePlayers(state.players, action.players);
+      if (added.length === 0) return ok({ ...state, connectedIds: action.connectedIds });
+      // Arrivée en cours de partie : le joueur rejoint à 0 point (et en survie
+      // avec ses vies, en équipes dans le camp le moins fourni).
+      const lives = { ...state.lives };
+      const teamOf = { ...state.teamOf };
+      for (const p of added) {
+        if (state.config.mode === "survival") lives[p.id] = SURVIVAL_LIVES;
+        if (state.config.mode === "teams") {
+          const n0 = Object.values(teamOf).filter((t) => t === 0).length;
+          teamOf[p.id] = n0 <= Object.keys(teamOf).length - n0 ? 0 : 1;
+        }
+      }
+      return ok({
+        ...state,
+        connectedIds: action.connectedIds,
+        players: [...state.players, ...added],
+        scores: withZeros(state.scores, added),
+        gained: withZeros(state.gained, added),
+        streak: withZeros(state.streak, added),
+        bestStreak: withZeros(state.bestStreak, added),
+        goodCount: withZeros(state.goodCount, added),
+        lives,
+        teamOf,
+      });
+    }
 
     case "client": {
       const { playerId, msg } = action;

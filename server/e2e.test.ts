@@ -374,6 +374,13 @@ async function main() {
   guesser.send({ type: "game", action: { kind: "guess", text: "pas le bon mot" } });
   await sleep(60);
   check("mauvaise devinette → relayée en chat", guesser.chats.some((m) => m.kind === "guess"));
+  // Proposition presque juste : jamais révélée aux autres joueurs.
+  const near = word.slice(0, -1) + (word.endsWith("z") ? "a" : "z");
+  const other = clients.find((c) => c !== guesser && c.last()?.you !== drawerId) ?? drawer;
+  guesser.send({ type: "game", action: { kind: "guess", text: near } });
+  await sleep(60);
+  check("presque juste : l'auteur voit « tu chauffes »", guesser.chats.some((m) => m.text.includes("tu chauffes")));
+  check("presque juste : le texte n'est pas montré aux autres", !other.chats.some((m) => m.text === near));
   guesser.send({ type: "game", action: { kind: "guess", text: word } });
   await sleep(80);
   check("bonne devinette annoncée en chat", da.chats.some((m) => m.kind === "correct"));

@@ -18,6 +18,7 @@ import { RecoView } from "@/components/RecoView";
 import { BombeView } from "@/components/BombeView";
 import { MimicView } from "@/components/MimicView";
 import { GameIntro } from "@/components/GameIntro";
+import { HostQuitButton } from "@/components/HostQuitButton";
 import { Avatar } from "@/components/Avatar";
 import { ProfileModal } from "@/components/ProfileModal";
 import { SubtitleStrip } from "@/components/SubtitleStrip";
@@ -48,7 +49,7 @@ const MODE_SETS: Record<GameId, ModeDef[]> = {
     { id: "duel", c: "#FF6B6B", nm: "Duel", ds: "Deux joueurs s'affrontent sur le même son, le reste du salon tranche.", min: 3 },
   ],
   quiz: [
-    { id: "classic", c: "#8B7DF6", nm: "Classique", ds: "Une question, quatre réponses, les points au bout." },
+    { id: "classic", c: "#8B7DF6", nm: "Classique", ds: "Une question, tu tapes ta réponse, les points au bout." },
     { id: "speed", c: "#FFC24B", nm: "Vitesse", ds: "Plus tu réponds vite, plus tu marques. Une erreur coûte cher." },
     { id: "survival", c: "#FF6B6B", nm: "Survie", ds: "Trois vies chacun : une mauvaise réponse et tu en perds une." },
     { id: "teams", c: "#46E0B0", nm: "Équipes", ds: "Deux camps, une seule réponse par équipe : mettez-vous d'accord.", min: 4 },
@@ -182,12 +183,19 @@ export default function LobbyPage() {
 
   // Join as soon as we're connected and have a name. Idempotent server-side:
   // a repeat join with the same id is treated as a reconnect.
-  const prevStatus = useRef<string>("");
+  // ⚠ Le pseudo peut arriver APRÈS l'ouverture de la socket (ami qui ouvre le
+  // lien d'invitation sans pseudo enregistré → écran « Rejoins la partie ») :
+  // on rejoint donc à chaque (re)connexion ET dès que le pseudo est saisi.
+  const joinedWith = useRef<string | null>(null);
   useEffect(() => {
-    if (room.status === "open" && name && prevStatus.current !== "open") {
+    if (room.status !== "open") {
+      joinedWith.current = null; // socket perdue → re-join à la reconnexion
+      return;
+    }
+    if (name && joinedWith.current !== name) {
+      joinedWith.current = name;
       room.join(name);
     }
-    prevStatus.current = room.status;
   }, [room.status, name, room]);
 
   // Host broadcasts the currently-selected game so guests see what's coming.
@@ -411,9 +419,14 @@ export default function LobbyPage() {
       room.gameId === "bombe" ? <BombeView room={room} /> :
       room.gameId === "draw" ? <DrawGameView room={room} /> :
       <GameView room={room} />;
+    // Phases de fin propres à chaque jeu : l'écran de résultats a déjà ses
+    // propres boutons « Salon / Rejouer ».
+    const gamePhase = (room.game as { phase?: string } | null)?.phase ?? "";
+    const gameOver = ["final", "scoreboard", "gameover", "result", "results", "podium"].includes(gamePhase);
     return (
       <>
         {gameEl}
+        {isHost && !gameOver && !introGame && <HostQuitButton onQuit={() => room.returnLobby()} />}
         {introGame && (
           <GameIntro gameId={introGame} players={players} onDone={() => setIntroGame(null)} />
         )}
@@ -817,7 +830,9 @@ export default function LobbyPage() {
           ) : (
             <button disabled className="arc arc-dis arc-block">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
-              {missingReady > 0
+              {connectedCount < neededReady
+                ? `Il faut au moins ${neededReady} joueurs — invite tes potes`
+                : missingReady > 0
                 ? `Encore ${missingReady} joueur${missingReady > 1 ? "s" : ""} prêt${missingReady > 1 ? "s" : ""}`
                 : "En attente des joueurs"}
             </button>

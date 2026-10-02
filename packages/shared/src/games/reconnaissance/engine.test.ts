@@ -213,6 +213,16 @@ test("coop : plus d'images → fin même s'il reste du temps", () => {
   eq(s.coopScore, n, `${n} images trouvées`);
 });
 
+test("arrivée en cours de partie : le nouveau joueur rejoint à 0 et peut répondre", () => {
+  let s = createReco(players, { totalQuestions: 3, secondsPerQuestion: 20 }, ctx(0));
+  const carol: GamePlayer = { id: "c", name: "Carol", color: "#00f" };
+  s = reduceReco(s, { type: "presence", connectedIds: ["a", "b", "c"], players: [...players, carol] }, ctx(100)).state;
+  assert(s.players.some((p) => p.id === "c"), "Carol ajoutée");
+  eq(s.scores.c, 0, "Carol à 0");
+  s = reduceReco(s, ans("c", "xyz"), ctx(200)).state;
+  assert(!!s.answers.c, "réponse de Carol enregistrée");
+});
+
 console.log(`\n${passed} réussis, ${failed} échoués\n`);
 if (failed > 0) process.exit(1);
 

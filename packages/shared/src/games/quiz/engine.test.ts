@@ -220,6 +220,16 @@ test("teams < 4 joueurs → retombe sur classic", () => {
   eq(createQuiz(players, { totalQuestions: 3, mode: "teams" }, ctx(0)).config.mode, "classic", "teams à 2 → classic");
 });
 
+test("arrivée en cours de partie : le nouveau joueur peut répondre et marquer", () => {
+  let s = createQuiz(players, { totalQuestions: 3, secondsPerQuestion: 10 }, ctx(0));
+  const carol: GamePlayer = { id: "c", name: "Carol", color: "#00f" };
+  s = reduceQuiz(s, { type: "presence", connectedIds: ["a", "b", "c"], players: [...players, carol] }, ctx(100)).state;
+  assert(s.players.some((p) => p.id === "c"), "Carol ajoutée à la partie");
+  eq(s.scores.c, 0, "Carol démarre à 0");
+  s = reduceQuiz(s, ans("c", "n'importe quoi"), ctx(200)).state;
+  assert(!!s.answers.c, "la réponse de Carol est prise en compte");
+});
+
 console.log(`\n${passed} réussis, ${failed} échoués\n`);
 if (failed > 0) process.exit(1);
 

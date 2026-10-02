@@ -125,7 +125,7 @@ export function GameIntro({
               )}
             </div>
             <span style={{ fontSize: 13, color: "#A79FC7" }}>
-              <b style={{ color: "#46E0B0" }}>{connected.length} joueur{connected.length > 1 ? "s" : ""}</b> · prêts
+              <b style={{ color: "#46E0B0" }}>{connected.length} joueur{connected.length > 1 ? "s" : ""}</b> · prêt{connected.length > 1 ? "s" : ""}
             </span>
           </div>
         )}

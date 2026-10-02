@@ -1,5 +1,6 @@
 // Reconnaissance — pure engine. Server-authoritative loop:
 // image+question → answers → reveal → score (accuracy + speed) → ranking → next → final.
+import { latePlayers, withZeros } from "../../platform/presence";
 import type { GamePlayer } from "../../game/types";
 import type { PlayerId } from "../../room/types";
 import type { GameAction, GameContext, GameReduceResult } from "../../platform/types";
@@ -61,8 +62,21 @@ const current = (s: RecoState): RecoItem | null => s.items[s.index] ?? null;
 
 export function reduceReco(state: RecoState, action: GameAction<RecoClientAction>, ctx: GameContext): GameReduceResult<RecoState> {
   switch (action.type) {
-    case "presence":
-      return ok({ ...state, connectedIds: action.connectedIds });
+    case "presence": {
+      const added = latePlayers(state.players, action.players);
+      if (added.length === 0) return ok({ ...state, connectedIds: action.connectedIds });
+      // Arrivée en cours de partie : le joueur rejoint à 0 point.
+      return ok({
+        ...state,
+        connectedIds: action.connectedIds,
+        players: [...state.players, ...added],
+        scores: withZeros(state.scores, added),
+        gained: withZeros(state.gained, added),
+        streak: withZeros(state.streak, added),
+        bestStreak: withZeros(state.bestStreak, added),
+        goodCount: withZeros(state.goodCount, added),
+      });
+    }
     case "client": {
       const { playerId, msg } = action;
       if (msg.kind !== "answer") return ok(state);

@@ -9,6 +9,7 @@ export * from "./game/clips";
 
 // --- platform + games ---
 export * from "./platform/types";
+export * from "./platform/presence";
 export * from "./games/draw/types";
 export * from "./games/draw/words";
 export * from "./games/draw/modes";

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useAutoSubmit } from "@/lib/useAutoSubmit";
 import type { QuizPublic } from "@subtitles-party/shared";
 import type { UseRoom } from "@/lib/useRoom";
 import { Avatar } from "@/components/Avatar";
@@ -97,6 +98,16 @@ export function QuizView({ room }: { room: UseRoom }) {
   useEffect(() => {
     if (idxRef.current !== game.index) { idxRef.current = game.index; setFreeText(""); }
   }, [game.index]);
+
+  // Réponse tapée mais pas validée → envoyée automatiquement à la fin du chrono.
+  useAutoSubmit({
+    key: game.index,
+    active: game.phase === "question" && !answered && !game.yourEliminated && q?.type === "free",
+    deadline: game.deadline,
+    now: room.serverNow,
+    text: freeText,
+    submit: room.quizAnswer,
+  });
 
   // Sound feedback
   const prevPhase = useRef(game.phase);
@@ -293,7 +304,7 @@ export function QuizView({ room }: { room: UseRoom }) {
               <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", padding: "22px 26px", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 1px ${C.line}, inset 0 1px 0 rgba(243,238,255,.04)` }}>
                 <span style={{ flex: 1, minWidth: 180, display: "flex", flexDirection: "column", gap: 3 }}>
                   <span style={{ fontFamily: DISPLAY, fontSize: 17, fontWeight: 700 }}>Partie terminée</span>
-                  <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 13, color: C.muted }}>{game.total} questions · {game.ranking.length} joueurs</span>
+                  <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 13, color: C.muted }}>{game.total} questions · {game.ranking.length} joueur{game.ranking.length > 1 ? "s" : ""}</span>
                 </span>
                 {isHost && <button onClick={() => room.returnLobby()} className="qz-ghost" style={btnGhost}>Salon</button>}
                 {isHost && <button onClick={() => room.playAgain()} className="qz-gold" style={btnGold}>Rejouer</button>}

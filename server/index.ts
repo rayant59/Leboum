@@ -511,6 +511,26 @@ function maybeAdvanceDrawForPresence(room: Room) {
   if (pending.length === 0) advanceGame(room, Date.now());
 }
 
+/** Mauvaise proposition au dessin : diffusée en chat… sauf si elle est presque
+ *  juste (« rugbi » pour « rugby ») — elle donnerait alors le mot aux autres.
+ *  Dans ce cas, seul l'auteur voit son texte + « tu chauffes » ; les autres
+ *  voient juste que ce joueur chauffe. */
+function relayWrongGuess(room: Room, playerId: string, name: string, text: string, word: string | null | undefined, ws: WebSocket) {
+  if (!word || !isCloseGuess(text, word)) {
+    relay(room, { type: "chat", from: playerId, name, text, kind: "guess" });
+    return;
+  }
+  const others = JSON.stringify({ type: "chat", from: playerId, name, text: `🔥 ${name} chauffe…`, kind: "system" } satisfies ServerMessage);
+  for (const [pid, sock] of room.sockets) {
+    if (sock.readyState !== WebSocket.OPEN) continue;
+    if (pid === playerId) {
+      sock.send(JSON.stringify({ type: "chat", from: playerId, name, text, kind: "guess" } satisfies ServerMessage));
+      sock.send(JSON.stringify({ type: "chat", from: playerId, name, text: `🔥 « ${text} » : tu chauffes !`, kind: "system" } satisfies ServerMessage));
+    } else sock.send(others);
+  }
+  void ws;
+}
+
 /** A guess: the engine scores correct ones; the server relays chat. Correct →
  *  "a trouvé !" to all (never the word); wrong → the guess text as chat. */
 function handleDrawGuess(room: Room, playerId: string, text: string, ws: WebSocket) {
@@ -525,11 +545,7 @@ function handleDrawGuess(room: Room, playerId: string, text: string, ws: WebSock
   if (!wasGuessed && after.guessedAt[playerId] != null) {
     relay(room, { type: "chat", from: playerId, name, text: "a trouvé le mot !", kind: "correct" });
   } else if (wasDrawing && !isDrawer && !wasGuessed) {
-    relay(room, { type: "chat", from: playerId, name, text, kind: "guess" });
-    // Indice privé : seul l'auteur de la proposition apprend qu'il chauffe.
-    if (after.word && isCloseGuess(text, after.word) && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: "chat", from: playerId, name, text: `🔥 « ${text} » : tu chauffes !`, kind: "system" }));
-    }
+    relayWrongGuess(room, playerId, name, text, after.word, ws);
   }
   // Dernier devineur connecté à trouver → on révèle sans attendre le chrono.
   if (!wasGuessed && after.guessedAt[playerId] != null) maybeAdvanceDrawForPresence(room);
@@ -547,11 +563,7 @@ function handleRelayGuess(room: Room, playerId: string, text: string, ws: WebSoc
   if (!wasGuessed && after.guessedAt[playerId] != null) {
     relay(room, { type: "chat", from: playerId, name, text: "a trouvé le mot !", kind: "correct" });
   } else if (wasDrawing && !isDrawer && !wasGuessed) {
-    relay(room, { type: "chat", from: playerId, name, text, kind: "guess" });
-    // Indice privé : seul l'auteur de la proposition apprend qu'il chauffe.
-    if (after.word && isCloseGuess(text, after.word) && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: "chat", from: playerId, name, text: `🔥 « ${text} » : tu chauffes !`, kind: "system" }));
-    }
+    relayWrongGuess(room, playerId, name, text, after.word, ws);
   }
 }
 

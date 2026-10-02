@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { RecoPublic } from "@subtitles-party/shared";
 import type { UseRoom } from "@/lib/useRoom";
+import { useAutoSubmit } from "@/lib/useAutoSubmit";
 import { Avatar } from "@/components/Avatar";
 import { BoumBackdrop } from "@/components/BoumBackdrop";
 import { ResultsScreen } from "@/components/ResultsScreen";
@@ -340,6 +341,16 @@ export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boole
 
   const submit = () => { if (text.trim()) room.quizAnswer(text.trim()); };
 
+  // Réponse tapée mais pas validée → envoyée automatiquement à la fin du chrono.
+  useAutoSubmit({
+    key: game.index,
+    active: game.phase === "question" && !answered,
+    deadline: game.deadline,
+    now: room.serverNow,
+    text,
+    submit: room.quizAnswer,
+  });
+
   // ── Final : écran de résultats partagé (câblage inchangé) ─────────────────
   if (game.phase === "final") return <FinalScreen game={game} you={you} room={room} />;
 
@@ -351,6 +362,10 @@ export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boole
   const remaining = game.deadline != null ? Math.max(0, game.deadline - room.serverNow()) : 0;
   const frac = game.phase !== "question" ? 1 : totalMs > 0 ? Math.min(1, Math.max(0, 1 - remaining / totalMs)) : 0;
   const chip = pixel ? C.mint : C.violet;
+  // Pixel Panic : la question trahit souvent la réponse (« élevé par des
+  // gorilles » → Tarzan). On la garde comme INDICE, dévoilé à mi-temps, pour
+  // que l'image pixelisée reste le cœur du jeu.
+  const hintHidden = pixel && !isCoop && game.phase === "question" && frac < 0.5;
 
   // Barre de progression du tour (3px sous le bord du cadre).
   const barAccent = game.phase === "reveal" ? C.mint : accent;
@@ -476,7 +491,14 @@ export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boole
 
                 {game.phase === "question" && (
                   <div style={{ display: "flex", alignItems: "baseline", gap: 18, justifyContent: "center", flexWrap: "wrap", textAlign: "center" }}>
-                    <span style={{ fontFamily: DISPLAY, fontSize: "clamp(22px,3.2vw,30px)", fontWeight: 800, letterSpacing: "-.01em" }}>{item.question}</span>
+                    {hintHidden ? (
+                      <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontFamily: DISPLAY, fontSize: "clamp(22px,3.2vw,30px)", fontWeight: 800, letterSpacing: "-.01em" }}>Qui ou quoi se cache là-dessous ?</span>
+                        <span style={{ fontSize: 14, color: C.muted }}>Indice à mi-temps…</span>
+                      </span>
+                    ) : (
+                      <span style={{ fontFamily: DISPLAY, fontSize: "clamp(22px,3.2vw,30px)", fontWeight: 800, letterSpacing: "-.01em" }}>{pixel && !isCoop && <span style={{ color: C.mint }}>Indice : </span>}{item.question}</span>
+                    )}
                     {!pixel && secs != null && (
                       <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 15, letterSpacing: ".06em", color: secs <= 5 ? C.pink : C.gold }}>{secs}s</span>
                     )}
@@ -503,7 +525,7 @@ export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boole
                           autoFocus
                           autoComplete="off"
                           spellCheck={false}
-                          placeholder="ta réponse…"
+                          placeholder="Ta réponse…"
                           style={{ flex: 1, minWidth: 0, border: "none", background: "transparent", outline: "none", fontFamily: DISPLAY, fontSize: "clamp(22px,3.2vw,30px)", fontWeight: 800, letterSpacing: "-.01em", color: C.text }}
                         />
                       </div>

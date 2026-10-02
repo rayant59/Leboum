@@ -77,7 +77,7 @@ export function ResultsScreen({
           <path d="M9.5 15.2 9 19h6l-.5-3.8" />
           <path d="M7.5 21h9" />
         </svg>
-        <h1 className="font-display" style={{ margin: 0, fontSize: 44, fontWeight: 800, letterSpacing: "-.02em", color: GOLD, animation: "rs-pop .7s cubic-bezier(.2,.9,.3,1.3) both, rs-glow 3s ease-in-out .7s infinite" }}>Victoire&#8202;!</h1>
+        <h1 className="font-display" style={{ margin: 0, fontSize: 44, fontWeight: 800, letterSpacing: "-.02em", color: GOLD, animation: "rs-pop .7s cubic-bezier(.2,.9,.3,1.3) both, rs-glow 3s ease-in-out .7s infinite" }}>{winner && winner.id === you ? "Victoire\u202f!" : "Fin de partie\u202f!"}</h1>
         {winner && (
           <p style={{ margin: 0, fontSize: 15, color: "#A79FC7" }}>
             <b style={{ color: "#F3EEFF" }}>{winner.name}{winner.id === you ? " (toi)" : ""}</b> remporte la partie

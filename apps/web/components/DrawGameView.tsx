@@ -1232,6 +1232,13 @@ export function DrawGameView({ room }: { room: UseRoom }) {
   const drawerName = game.drawerId ? name(game.drawerId) : "";
   const turnKey = `${game.round}-${game.turnInRound}-${game.drawerId ?? ""}`;
   const { toasts, pops } = useDrawFeedback(game, name, you, turnKey);
+  // Repère du chat au début du tour : les propositions affichées ne
+  // concernent que le tour en cours.
+  const turnStartRef = useRef<{ key: string; id: number }>({ key: turnKey, id: -1 });
+  if (turnStartRef.current.key !== turnKey) {
+    turnStartRef.current = { key: turnKey, id: room.chat.length ? room.chat[room.chat.length - 1].id : -1 };
+  }
+  const turnChatStart = turnStartRef.current.id;
   const isCoop = game.mode === "coop";
   const teamScore = Object.values(game.scores).reduce((a, b) => a + b, 0);
   const revealResult = game.result;
@@ -1267,7 +1274,7 @@ export function DrawGameView({ room }: { room: UseRoom }) {
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 9, fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: LB.faint }}>
                   <img src="/tools/palette.png" alt="" width={22} height={22} style={{ display: "block" }} />
-                  {isCoop ? "Score collectif" : "Meilleur crayon"}
+                  {isCoop ? "Score collectif" : "Vainqueur"}
                 </span>
                 {(isCoop || (topScore > 0 && tied.length === 1)) && (
                 <span style={{ boxShadow: `0 0 60px -18px ${hexA(LB.gold, 1)}`, borderRadius: 22, width: 92, height: 92 }}>
@@ -1330,7 +1337,9 @@ export function DrawGameView({ room }: { room: UseRoom }) {
   const letters = game.wordSegments.reduce((n, s) => n + s.length, 0);
 
   // Propositions récentes (bandeau GUESSING).
-  const proposals = room.chat.filter((m) => m.kind === "guess" || m.kind === "correct").slice(-4);
+  // Uniquement celles du tour EN COURS (sinon « rugbi / a trouvé » du tour
+  // précédent restent affichées au tour suivant).
+  const proposals = room.chat.filter((m) => m.id > turnChatStart && (m.kind === "guess" || m.kind === "correct")).slice(-4);
 
   const rail = (
     <DrawRail kicker={`Boum Dessin · manche ${game.round}/${game.totalRounds}`} heading={railHeading} sub={railSub} rows={railRows}

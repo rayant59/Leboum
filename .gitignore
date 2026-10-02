@@ -8,3 +8,6 @@ dist
 
 # TypeScript incremental build artifact (regenerated on every build)
 *.tsbuildinfo
+
+# Fichier généré automatiquement par Next.js
+next-env.d.ts
