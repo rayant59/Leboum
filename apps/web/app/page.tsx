@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { BoumTrailer } from "@/components/BoumTrailer";
+import { SiteFooter } from "@/components/SiteFooter";
 import { generateRoomCode, isValidRoomCode, sanitizeName } from "@subtitles-party/shared";
 import { getPlayerName, setPlayerName } from "@/lib/identity";
 
@@ -296,6 +297,7 @@ export default function HomePage() {
           </div>
         </section>
 
+        <SiteFooter />
       </main>
 
       {trailerOpen && <BoumTrailer onClose={() => setTrailerOpen(false)} onCreate={() => { setTrailerOpen(false); onCreate(); }} />}

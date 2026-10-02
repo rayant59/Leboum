@@ -19,6 +19,7 @@ import { BombeView } from "@/components/BombeView";
 import { MimicView } from "@/components/MimicView";
 import { GameIntro } from "@/components/GameIntro";
 import { HostQuitButton } from "@/components/HostQuitButton";
+import { SupportButton } from "@/components/SupportButton";
 import { Avatar } from "@/components/Avatar";
 import { ProfileModal } from "@/components/ProfileModal";
 import { SubtitleStrip } from "@/components/SubtitleStrip";
@@ -422,11 +423,17 @@ export default function LobbyPage() {
     // Phases de fin propres à chaque jeu : l'écran de résultats a déjà ses
     // propres boutons « Salon / Rejouer ».
     const gamePhase = (room.game as { phase?: string } | null)?.phase ?? "";
-    const gameOver = ["final", "scoreboard", "gameover", "result", "results", "podium"].includes(gamePhase);
+    // Phase FINALE de chaque jeu (pas les classements intermédiaires entre manches).
+    const FINAL_PHASE: Record<string, string> = {
+      quiz: "final", reco: "final", pixel: "final", bombe: "gameover", mimic: "gameover",
+      draw: "scoreboard", relay: "scoreboard", fakeartist: "scoreboard", doublage: "result",
+    };
+    const gameOver = gamePhase === (FINAL_PHASE[room.gameId ?? ""] ?? "scoreboard");
     return (
       <>
         {gameEl}
         {isHost && !gameOver && !introGame && <HostQuitButton onQuit={() => room.returnLobby()} />}
+        {gameOver && <SupportButton floating />}
         {introGame && (
           <GameIntro gameId={introGame} players={players} onDone={() => setIntroGame(null)} />
         )}

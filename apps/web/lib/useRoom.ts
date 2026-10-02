@@ -27,12 +27,18 @@ const WS_PORT = process.env.NEXT_PUBLIC_WS_PORT ?? "1999";
  *  opened from, on the ws port — so opening the app via the PC's local IP
  *  (e.g. http://192.168.1.42:3000) lets phones on the same Wi-Fi play too.
  *  An explicit NEXT_PUBLIC_WS_HOST overrides this (e.g. for a deployed server). */
-function wsHost(): string {
+export function wsHost(): string {
   if (process.env.NEXT_PUBLIC_WS_HOST) return process.env.NEXT_PUBLIC_WS_HOST;
   if (typeof window !== "undefined" && window.location.hostname) {
     return `${window.location.hostname}:${WS_PORT}`;
   }
   return `localhost:${WS_PORT}`;
+}
+
+/** URL HTTP(S) du serveur de jeu (santé, statistiques…). */
+export function serverHttpUrl(path: string): string {
+  const proto = typeof location !== "undefined" && location.protocol === "https:" ? "https" : "http";
+  return `${proto}://${wsHost()}${path}`;
 }
 
 export interface RoomError {

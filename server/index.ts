@@ -12,7 +12,8 @@
 // ---------------------------------------------------------------------------
 
 import { WebSocketServer, WebSocket } from "ws";
-import type { IncomingMessage } from "node:http";
+import { createServer, type IncomingMessage } from "node:http";
+import { Stats } from "./stats";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import {
@@ -315,6 +316,10 @@ const introOffsetFor = (id: string) => (id === "bombe" ? Math.max(0, INTRO_MS - 
 
 const rooms = new Map<string, Room>();
 
+// Statistiques anonymes (voir server/stats.ts). Fichier optionnel : STATS_FILE.
+const stats = new Stats(process.env.STATS_FILE ?? resolve(process.cwd(), "data/stats.json"));
+setInterval(() => stats.flush(), 60_000).unref();
+
 /** Look up a room. Creation only happens when `allowCreate` is true, i.e. when
  *  the client came from the "Créer un salon" flow on the home page. Typing a
  *  random code in the URL must NOT conjure a new room out of thin air. */
@@ -339,6 +344,7 @@ function getRoom(code: string, allowCreate = false): Room | null {
       gameTimer: null,
     };
     rooms.set(code, room);
+    stats.roomCreated();
   }
   return room;
 }
@@ -623,6 +629,7 @@ function startGame(room: Room) {
 
   // Generic games (draw, …) are hosted through the platform contract.
   const gameId = room.state.gameId;
+  stats.gameStarted(gameId ?? "subtitles", players.length);
   const mod = gameId ? GAME_REGISTRY[gameId] : undefined;
   if (mod) {
     room.game = null;
@@ -732,7 +739,30 @@ function scheduleGameTick(room: Room) {
   }, delay);
 }
 
-const wss = new WebSocketServer({ port: PORT });
+// Serveur HTTP : santé + statistiques ; la même porte accueille le WebSocket.
+const httpServer = createServer((req, res) => {
+  const url = new URL(req.url ?? "/", "http://x");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  if (url.pathname === "/health") {
+    res.writeHead(200, { "Content-Type": "text/plain" }).end("ok");
+    return;
+  }
+  if (url.pathname === "/stats") {
+    const token = process.env.STATS_TOKEN;
+    if (!token || url.searchParams.get("token") !== token) {
+      res.writeHead(token ? 403 : 404, { "Content-Type": "application/json" }).end(JSON.stringify({ error: token ? "mauvais code" : "STATS_TOKEN non configuré" }));
+      return;
+    }
+    res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" }).end(JSON.stringify(stats.snapshot(rooms.size)));
+    return;
+  }
+  res.writeHead(426, { "Content-Type": "text/plain" }).end("Serveur de jeu LeBoum — connexion WebSocket attendue.");
+});
+const wss = new WebSocketServer({ server: httpServer });
+httpServer.listen(PORT);
+const flushAndExit = () => { stats.flush(); process.exit(0); };
+process.on("SIGTERM", flushAndExit);
+process.on("SIGINT", flushAndExit);
 
 wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
   const params = new URLSearchParams((req.url ?? "").split("?")[1] ?? "");
@@ -761,6 +791,8 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
   const previous = room.sockets.get(playerId);
   if (previous && previous !== ws) previous.close(4000, "remplacé");
   room.sockets.set(playerId, ws);
+  stats.connected();
+  ws.once("close", () => stats.disconnected());
 
   const now = Date.now();
   if (room.state.players[playerId]) {
@@ -803,6 +835,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
     switch (msg.type) {
       case "join": {
         applyRoom(room, { type: "join", playerId, name: msg.name, now: t }, ws);
+        stats.playerSeen(playerId);
         // A game is already running → fold the newcomer into its roster so they
         // can play immediately (no more "ghost player" whose guesses don't count).
         if (room.mod && room.state.phase !== "lobby") {

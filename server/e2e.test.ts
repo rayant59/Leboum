@@ -2,6 +2,8 @@
 // WebSocket clients. Clients vote by opaque token (they never receive authors
 // during voting), exactly like the browser. Run: npx tsx server/e2e.test.ts
 process.env.PORT = "3999";
+process.env.STATS_FILE = ""; // pas d'écriture disque pendant les tests
+process.env.STATS_TOKEN = "test-token";
 
 import { WebSocket } from "ws";
 import {
@@ -675,6 +677,17 @@ async function main() {
   await sleep(80);
   check("révélation dès que tous ont répondu", rcp()?.phase === "reveal");
   check("la bonne réponse est révélée", typeof rcp()?.correctText === "string");
+
+  console.log("\nServeur — santé & statistiques anonymes\n");
+  const health = await fetch("http://localhost:3999/health");
+  check("/health répond ok", health.status === 200 && (await health.text()) === "ok");
+  const denied = await fetch("http://localhost:3999/stats?token=faux");
+  check("/stats refuse un mauvais code", denied.status === 403);
+  const st = await fetch("http://localhost:3999/stats?token=test-token");
+  const body = (await st.json()) as { onlineNow: number; days: Record<string, { roomsCreated: number; uniquePlayers: number; gamesStarted: Record<string, number> }> };
+  const day = Object.values(body.days)[0];
+  check("/stats compte des salons, joueurs et parties", !!day && day.roomsCreated > 0 && day.uniquePlayers > 0 && Object.keys(day.gamesStarted).length > 0);
+  check("/stats ne contient aucun pseudo", !JSON.stringify(body).includes("Alice"));
 
   console.log(`\n${passed} réussis, ${failed} échoués\n`);
   process.exit(failed > 0 ? 1 : 0);

@@ -11,3 +11,4 @@ dist
 
 # Fichier généré automatiquement par Next.js
 next-env.d.ts
+data/
