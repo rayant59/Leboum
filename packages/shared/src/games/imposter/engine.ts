@@ -12,7 +12,7 @@ import type { PlayerId } from "../../room/types";
 import type { GameAction, GameContext, GameReduceResult } from "../../platform/types";
 import { latePlayers, withZeros } from "../../platform/presence";
 import { argmaxAll, clampInt, shuffle } from "../../platform/util";
-import { typoDistance } from "../../room/util";
+import { isWordGuess, normalizeWord } from "../../platform/text";
 import { imposterBank } from "./words";
 import type {
   ImposterClientAction,
@@ -44,28 +44,12 @@ export function resolveImposterConfig(s: ImposterSettings | undefined, playerCou
   };
 }
 
-/** Comparaison souple d'un mot : casse, accents, tirets, articles en tête. */
-export function normalizeWord(s: string): string {
-  return (s || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/œ/g, "oe")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim()
-    .replace(/^(le|la|les|l|un|une|des|du|de|d) /, "")
-    .replace(/\s+/g, " ");
-}
+/** Comparaison souple d'un mot (partagée : `platform/text.ts`). */
+export { normalizeWord };
 
-/** L'imposteur a-t-il trouvé le mot ? (1 faute tolérée sur 5+ lettres). */
+/** L'imposteur a-t-il trouvé le mot ? (accents, articles, pluriel, 1 faute). */
 export function isImposterGuessRight(guess: string, word: string): boolean {
-  const g = normalizeWord(guess);
-  const w = normalizeWord(word);
-  if (!g || !w) return false;
-  if (g === w) return true;
-  // Pluriel / singulier.
-  if (g.replace(/s$/, "") === w.replace(/s$/, "")) return true;
-  return w.length >= 5 && typoDistance(g, w) <= 1;
+  return isWordGuess(guess, word);
 }
 
 const zeros = (players: GamePlayer[]) => Object.fromEntries(players.map((p) => [p.id, 0]));

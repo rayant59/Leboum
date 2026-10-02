@@ -114,6 +114,7 @@ une vue ; aucun autre jeu n'est touché.
 | 6 — La Plus Drôle | ✅ | `games/funny/`, `FunnyView.tsx` |
 | 7 — Imposteur (mot) | ✅ | `games/imposter/`, `ImposterView.tsx` |
 | 8 — Téléphone cassé | ✅ | `games/phone/`, `PhoneView.tsx`, `DrawPad.tsx` |
+| 9 — Mot interdit | ✅ | `games/taboo/`, `TabooView.tsx`, `platform/text.ts` |
 
 **Composants communs des jeux « social »** : `components/social/kit.tsx`
 (en-tête + chrono, carte de question, grille de vote, écran final avec
@@ -153,3 +154,18 @@ Le podium (`ResultsScreen`) partage les places en cas d'égalité (1, 1, 3).
 * Révélation étape par étape (chrono auto, l'hôte peut accélérer), « J'adore »
   = +100 pour l'auteur → distinctions « Meilleur dessinateur » / « Plume d'or ».
 * Phrases perso : `telephone/*.txt`.
+
+### Mot interdit — règles du moteur
+
+* Chaque joueur fait deviner une fois par tour de table (1 à 3 tours). Passage :
+  « prêt » (le donneur lance, 12 s max) → chrono → récap. Les absents sont sautés,
+  les arrivants passent en fin de tour.
+* **Écrit** : le serveur refuse tout indice contenant le mot ou un mot interdit
+  (variantes comprises : pluriel, « danser » pour « danse ») — l'indice n'est
+  jamais diffusé, carte perdue, −50. Les réponses sont validées automatiquement.
+* **À voix haute** : le joueur suivant est le censeur (voit la carte, buzze) ;
+  le donneur désigne qui a trouvé.
+* Barème : carte trouvée +100 au donneur et +100 à celui qui trouve.
+* `platform/text.ts` regroupe la comparaison de mots (`normalizeWord`,
+  `isWordGuess`, `findForbidden`) — partagée avec l'Imposteur.
+* Cartes perso : `motinterdit/*.txt` (« mot | interdit, interdit… »).

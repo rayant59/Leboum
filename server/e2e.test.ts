@@ -977,6 +977,44 @@ async function main() {
     for (const c of cl) c.ws.close();
   }
 
+  console.log("\nServeur générique — Mot interdit\n");
+  {
+    const ids = ["ta", "tb", "tc"];
+    const cl: Client[] = [];
+    for (const [i, id] of ids.entries()) {
+      const c = new Client("TABU", id, i === 0);
+      await c.open();
+      c.send({ type: "join", name: id.toUpperCase() });
+      await sleep(30);
+      cl.push(c);
+    }
+    for (const c of cl.slice(1)) c.send({ type: "set_ready", ready: true });
+    await sleep(50);
+    cl[0].send({ type: "start_game", gameId: "taboo", settings: { seconds: 60, mode: "ecrit" } });
+    await sleep(80);
+    type M = { phase: string; giverId: string; card: { word: string; forbidden: string[] } | null; log: { kind: string; text: string }[]; scores: Record<string, number>; playedCount: number };
+    const g = (c: Client) => c.last()?.game as unknown as M;
+    check("Mot interdit démarre : un donneur désigné", cl[0].last()?.gameId === "taboo" && g(cl[0])?.phase === "ready" && ids.includes(g(cl[0]).giverId));
+    const giver = cl[ids.indexOf(g(cl[0]).giverId)];
+    const others = cl.filter((c) => c !== giver);
+    giver.send({ type: "game", action: { kind: "start" } });
+    await sleep(60);
+    const card = g(giver).card!;
+    check("seul le donneur voit la carte", !!card && others.every((c) => g(c).card === null) && !JSON.stringify(others[0].last()?.game).includes(card.word));
+    giver.send({ type: "game", action: { kind: "clue", text: `pense à ${card.forbidden[1]}` } });
+    await sleep(60);
+    check("indice interdit refusé et jamais diffusé", giver.errors.some((e) => e.code === "forbidden_word") && !JSON.stringify(others[0].last()?.game).includes(`pense à ${card.forbidden[1]}`));
+    const card2 = g(giver).card!;
+    giver.send({ type: "game", action: { kind: "clue", text: "zzz premier indice" } });
+    await sleep(40);
+    check("indice propre diffusé aux devineurs", g(others[0]).log.some((m) => m.kind === "clue" && m.text === "zzz premier indice"));
+    others[0].send({ type: "game", action: { kind: "guess", text: card2.word } });
+    await sleep(60);
+    const finderId = ids[cl.indexOf(others[0])];
+    check("bonne réponse validée par le serveur : +100 / +100", g(cl[0]).scores[finderId] === 100 && g(cl[0]).scores[g(cl[0]).giverId] === 50, JSON.stringify(g(cl[0]).scores));
+    for (const c of cl) c.ws.close();
+  }
+
   console.log("\nServeur — santé & statistiques anonymes\n");
   const health = await fetch("http://localhost:3999/health");
   check("/health répond ok", health.status === 200 && (await health.text()) === "ok");

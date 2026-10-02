@@ -21,6 +21,7 @@ import { WhoisView } from "@/components/WhoisView";
 import { FunnyView } from "@/components/FunnyView";
 import { ImposterView } from "@/components/ImposterView";
 import { PhoneView } from "@/components/PhoneView";
+import { TabooView } from "@/components/TabooView";
 import { GameIntro } from "@/components/GameIntro";
 import { HostQuitButton } from "@/components/HostQuitButton";
 import { SupportButton } from "@/components/SupportButton";
@@ -31,7 +32,7 @@ import { SubtitleStrip } from "@/components/SubtitleStrip";
 import { MODE_ICONS } from "./modeIcons";
 import { SoireeBuilder, SoireeFinal, SoireeHud, SoireeLobbyCard, type BuilderItem } from "@/components/Soiree";
 
-type GameId = "draw" | "mimic" | "quiz" | "reco" | "pixel" | "bombe" | "whois" | "funny" | "imposter" | "phone";
+type GameId = "draw" | "mimic" | "quiz" | "reco" | "pixel" | "bombe" | "whois" | "funny" | "imposter" | "phone" | "taboo";
 
 /** Un mode de jeu tel qu'exposé dans la salle d'attente.
  *  `img` : illustration dédiée (modes de Dessin) ; sinon on retombe sur la
@@ -84,6 +85,10 @@ const MODE_SETS: Record<GameId, ModeDef[]> = {
     { id: "classic", c: "#FF4D8D", nm: "Classique", ds: "Le temps de soigner sa vanne : une phrase, une réponse, un vote." },
     { id: "express", c: "#FFC24B", nm: "Express", ds: "30 secondes pour écrire : la première idée est souvent la meilleure." },
   ],
+  taboo: [
+    { id: "ecrit", c: "#8B7DF6", nm: "Écrit", ds: "Indices tapés au clavier : le jeu bloque les mots interdits et valide les réponses tout seul. Parfait à distance." },
+    { id: "oral", c: "#FF4D8D", nm: "À voix haute", ds: "On parle pour de vrai, dans la même pièce. Le joueur suivant surveille la carte et buzze au moindre écart.", min: 3 },
+  ],
   phone: [
     { id: "classique", c: "#46E0B0", nm: "Classique", ds: "Phrase → dessin → description → dessin → description. Cinq étapes, fou rire garanti." },
     { id: "complet", c: "#FFC24B", nm: "Tour complet", ds: "Chaque chaîne passe entre les mains de TOUS les joueurs avant la révélation." },
@@ -109,6 +114,7 @@ const TIMES: Record<GameId, { title: string; sub: string; opts: number[]; def: n
   pixel: { title: "Temps de révélation", sub: "Durée avant l'image complète", opts: [20, 30, 45, 60], def: 30 },
   whois: { title: "Temps de vote", sub: "Délai pour désigner quelqu'un", opts: [10, 15, 20, 30], def: 20 },
   funny: { title: "Temps d'écriture", sub: "Pour trouver ta meilleure réponse", opts: [30, 45, 60, 90], def: 60 },
+  taboo: { title: "Temps par passage", sub: "Pour faire deviner un maximum de mots", opts: [45, 60, 90, 120], def: 60 },
   phone: { title: "Temps de dessin", sub: "L'écriture dure un peu plus de la moitié", opts: [45, 60, 75, 90], def: 75 },
   imposter: { title: "Temps par indice", sub: "Pour donner ton indice quand c'est ton tour", opts: [20, 30, 45, 60], def: 30 },
   bombe: { title: "Temps par joueur", sub: "Mèche avant l'explosion", opts: [5, 7, 10, 15], def: 7 },
@@ -119,6 +125,7 @@ const TIMES: Record<GameId, { title: string; sub: string; opts: number[]; def: n
  *  pixel). Chaque jeu garde son propre défaut et ses propres bornes — le quiz,
  *  par exemple, va jusqu'à 20 questions (le moteur borne totalQuestions à 3–20). */
 const ROUNDS: Record<GameId, { headTitle: string; rowTitle: string; rowSub: string; unit: string; min: number; max: number; def: number } | null> = {
+  taboo: { headTitle: "Tours de table", rowTitle: "Nombre de tours", rowSub: "Chacun fait deviner une fois par tour", unit: "tours", min: 1, max: 3, def: 1 },
   phone: null, // la longueur d'une chaîne dépend du nombre de joueurs et du mode
   draw:  { headTitle: "Manches",   rowTitle: "Nombre de manches",   rowSub: "La partie s'arrête au bout du compte", unit: "manches",   min: 2, max: 8,  def: 3 },
   mimic: { headTitle: "Manches",   rowTitle: "Nombre de manches",   rowSub: "La partie s'arrête au bout du compte", unit: "manches",   min: 2, max: 8,  def: 3 },
@@ -461,6 +468,8 @@ export default function LobbyPage() {
         return { gameId: "whois", settings: { totalRounds: curRounds, seconds: t, mode }, detail };
       case "funny":
         return { gameId: "funny", settings: { totalRounds: curRounds, seconds: mode === "express" ? 30 : t }, detail: mode === "express" ? `Express · ${curRounds} manches · 30s` : detail };
+      case "taboo":
+        return { gameId: "taboo", settings: { totalRounds: curRounds, seconds: t, mode }, detail };
       case "phone":
         return { gameId: "phone", settings: { seconds: t, mode }, detail };
       case "imposter":
@@ -516,6 +525,7 @@ export default function LobbyPage() {
       room.gameId === "funny" ? <FunnyView room={room} /> :
       room.gameId === "imposter" ? <ImposterView room={room} /> :
       room.gameId === "phone" ? <PhoneView room={room} /> :
+      room.gameId === "taboo" ? <TabooView room={room} /> :
       room.gameId === "draw" ? <DrawGameView room={room} /> :
       <GameView room={room} />;
     // Fin de partie : fournie par le moteur (`isOver`), plus de table dupliquée.

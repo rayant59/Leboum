@@ -83,6 +83,9 @@ import {
   addCustomImposterPairs,
   imposterBankSize,
   addCustomPhonePhrases,
+  parseTabooCards,
+  addCustomTabooCards,
+  tabooBank,
   phonePhraseBank,
   setCustomWords,
   addCustomQuestions,
@@ -345,6 +348,25 @@ const PORT = Number(process.env.PORT ?? 1999);
       addCustomPhonePhrases(files.map((f) => readFileSync(resolve(dir, f), "utf8")).join("\n").split(/\r?\n/));
       const added = phonePhraseBank().length - before;
       if (added > 0) console.log(`[telephone] ${added} phrase(s) perso chargée(s) (${files.join(", ")})`);
+      return;
+    } catch {
+      /* ignore and try next */
+    }
+  }
+})();
+
+// Cartes perso du « Mot interdit » : motinterdit/*.txt, « mot | interdit, interdit… ».
+(() => {
+  const dirs = [resolve(process.cwd(), "motinterdit"), resolve(process.cwd(), "..", "motinterdit"), resolve(__dirname, "..", "motinterdit")];
+  for (const dir of dirs) {
+    try {
+      if (!existsSync(dir)) continue;
+      const files = readdirSync(dir).filter((f) => f.toLowerCase().endsWith(".txt") && f.toLowerCase() !== "readme.txt");
+      if (!files.length) continue;
+      const cards = parseTabooCards(files.map((f) => readFileSync(resolve(dir, f), "utf8")).join("\n"));
+      if (!cards.length) continue;
+      addCustomTabooCards(cards);
+      console.log(`[motinterdit] ${cards.length} carte(s) perso chargée(s) (${files.join(", ")}) — total : ${tabooBank().length}`);
       return;
     } catch {
       /* ignore and try next */

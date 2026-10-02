@@ -77,6 +77,12 @@ export const GAME_CATALOG: Record<string, GameModeInfo> = {
     rules: ["Une question, un chrono.", "Bonne réponse = points, rapidité = bonus."],
     listed: true,
   }),
+  taboo: G({
+    id: "taboo", name: "Mot interdit", tagline: "Fais deviner le mot… sans jamais dire les mots interdits.",
+    img: "/games/taboo.svg", accent: "#8B7DF6", category: "reflexion", minPlayers: 3, maxPlayers: 12, durationMin: 8,
+    rules: ["À ton tour, fais deviner un maximum de mots avant la fin du chrono.", "Les mots interdits de la carte sont… interdits (−50, carte perdue).", "Mot trouvé : +100 pour toi et +100 pour celui qui trouve."],
+    listed: true,
+  }),
   whois: G({
     id: "whois", name: "Qui de nous ?", tagline: "Qui est le plus susceptible de… ? Votez !",
     img: "/games/whois.svg", accent: "#FFC24B", category: "social", minPlayers: 3, maxPlayers: 12, durationMin: 6,
