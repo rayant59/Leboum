@@ -21,6 +21,8 @@ export interface DayStats {
   /** Somme des joueurs au lancement de chaque partie (→ moyenne par partie). */
   playersInGames: number;
   peakOnline: number;
+  /** Pass Soirée activés (achats confirmés). */
+  passes?: number;
 }
 
 export interface StatsSnapshot {
@@ -84,6 +86,11 @@ export class Stats {
     const day = this.today();
     day.gamesStarted[gameId] = (day.gamesStarted[gameId] ?? 0) + 1;
     day.playersInGames += players;
+  }
+
+  passActivated() {
+    const day = this.today();
+    day.passes = (day.passes ?? 0) + 1;
   }
 
   connected() {

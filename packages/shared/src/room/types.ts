@@ -52,6 +52,15 @@ export interface RoomState {
   createdAt: number;
   /** Set when a game starts; identifies which game module owns the session. */
   gameId: string | null;
+  /** « Pass Soirée » acheté pour ce salon (bonus pour toute la tablée). */
+  pass?: RoomPass | null;
+}
+
+/** Pass Soirée : actif jusqu'à `activeUntil` (ms epoch, horloge serveur). */
+export interface RoomPass {
+  activeUntil: number;
+  /** Pseudo de la personne qui a offert le pass (affiché « offert par … »). */
+  offeredBy: string | null;
 }
 
 /**
@@ -81,7 +90,9 @@ export type RoomAction =
   | { type: "set_ready"; playerId: PlayerId; ready: boolean; now: number }
   | { type: "set_name"; playerId: PlayerId; name: string; now: number }
   | { type: "set_avatar"; playerId: PlayerId; avatar: string | null; now: number }
-  | { type: "start_game"; playerId: PlayerId; gameId: string; now: number };
+  | { type: "start_game"; playerId: PlayerId; gameId: string; now: number }
+  /** Émis par le serveur UNIQUEMENT après vérification du paiement. */
+  | { type: "activate_pass"; until: number; offeredBy: string | null; now: number };
 
 export interface ReduceResult {
   state: RoomState;

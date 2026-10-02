@@ -3,7 +3,8 @@
 // informations légales est ici, au même endroit.
 //
 // Chaque valeur peut être remplie ICI, ou via une variable d'environnement
-// sur Vercel (Settings → Environment Variables), qui est prioritaire.
+// au BUILD du site (Northflank → service leboum-web → Build arguments),
+// qui est prioritaire (Next.js fige les NEXT_PUBLIC_* au moment du build).
 // Une valeur vide = la fonctionnalité correspondante reste cachée.
 // ---------------------------------------------------------------------------
 
@@ -28,9 +29,10 @@ export const SITE = {
       address: process.env.NEXT_PUBLIC_LEGAL_ADDRESS ?? "",
       siret: process.env.NEXT_PUBLIC_LEGAL_SIRET ?? "",
     },
+    /** Médiateur de la consommation (obligatoire dès qu'on vend aux particuliers). */
+    mediator: process.env.NEXT_PUBLIC_LEGAL_MEDIATOR ?? "",
     hosts: [
-      { role: "Site web", name: "Vercel Inc.", website: "https://vercel.com", address: "" },
-      { role: "Serveur de jeu", name: "Northflank Ltd.", website: "https://northflank.com", address: "" },
+      { role: "Site web et serveur de jeu", name: "Northflank Ltd.", website: "https://northflank.com", address: "" },
     ],
   },
 } as const;

@@ -20,6 +20,8 @@ export interface QuizSettings {
   secondsPerQuestion?: number;
   types?: "all" | QuizType;
   mode?: string;
+  /** Pass Soirée : questions écrites par l'hôte (« Question ? = réponse | variante »). */
+  roomQuestions?: string;
 }
 
 export interface QuizAnswer {

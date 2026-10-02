@@ -8,7 +8,7 @@ import { latePlayers, withZeros } from "../../platform/presence";
 import type { GamePlayer } from "../../game/types";
 import type { PlayerId } from "../../room/types";
 import type { GameAction, GameContext, GameReduceResult } from "../../platform/types";
-import { pickQuestions, freeAnswerMatches, type Question } from "./questions";
+import { pickQuestions, freeAnswerMatches, parseCustomQuestions, type Question } from "./questions";
 import type { PublicQuestion, QuizClientAction, QuizMode, QuizPublic, QuizRankRow, QuizSettings, QuizState } from "./types";
 
 const REVEAL_MS = 4500; // time spent on the reveal screen
@@ -41,11 +41,24 @@ function assignTeams(players: GamePlayer[], rng: () => number): Record<PlayerId,
   return teamOf;
 }
 
+/** Pass Soirée : les questions de l'hôte passent en priorité, la banque
+ *  complète s'il en manque ; le tout mélangé. */
+function withRoomQuestions(text: string | undefined, total: number, rng: () => number, types?: Question["type"][]): Question[] {
+  const own = text
+    ? parseCustomQuestions(text).slice(0, 50).map((q, i) => ({ ...q, id: `room${i}`, cat: "La soirée" }))
+    : [];
+  if (own.length === 0) return pickQuestions(total, rng, types);
+  const shuffle = <T,>(a: T[]) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const mine = shuffle([...own]).slice(0, total);
+  const rest = mine.length < total ? pickQuestions(total - mine.length, rng, types) : [];
+  return shuffle([...mine, ...rest]);
+}
+
 export function createQuiz(players: GamePlayer[], settings: QuizSettings, ctx: GameContext): QuizState {
   const total = clamp(settings.totalQuestions ?? 10, 3, 20);
   const secs = clamp(settings.secondsPerQuestion ?? 15, 5, 60);
   const types = settings.types && settings.types !== "all" ? [settings.types] : undefined;
-  const questions = pickQuestions(total, ctx.rng, types);
+  const questions = withRoomQuestions(settings.roomQuestions, total, ctx.rng, types);
   const mode = resolveQuizMode(settings.mode, players.length);
   const lives: Record<PlayerId, number> = {};
   if (mode === "survival") for (const p of players) lives[p.id] = SURVIVAL_LIVES;

@@ -14,6 +14,7 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { createServer, type IncomingMessage } from "node:http";
 import { Stats } from "./stats";
+import { passConfigFromEnv, isAllowedOrigin, PassRegistry } from "./pass";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import {
@@ -21,6 +22,7 @@ import {
   createInitialState,
   reduce,
   connectedPlayers,
+  passActive,
   // game
   createSubtitlesGame,
   reduceSubtitles,
@@ -319,6 +321,11 @@ const rooms = new Map<string, Room>();
 // Statistiques anonymes (voir server/stats.ts). Fichier optionnel : STATS_FILE.
 const stats = new Stats(process.env.STATS_FILE ?? resolve(process.cwd(), "data/stats.json"));
 setInterval(() => stats.flush(), 60_000).unref();
+
+// Pass Soirée (voir server/pass.ts). Désactivé tant que Stripe n'est pas configuré.
+const pass = passConfigFromEnv(process.env);
+const passRegistry = new PassRegistry(process.env.PASS_FILE ?? resolve(process.cwd(), "data/passes.json"));
+if (pass.config.mode === "fake") console.log("  [pass] ⚠ paiement SIMULÉ (PASS_DEV_FAKE=1) — jamais en production");
 
 /** Look up a room. Creation only happens when `allowCreate` is true, i.e. when
  *  the client came from the "Créer un salon" flow on the home page. Typing a
@@ -637,6 +644,10 @@ function startGame(room: Room) {
     room.strokes = [];
     room.mimicTakes.clear();
     const settings = mod.sanitizeSettings(room.pendingSettings ?? undefined);
+    // Bonus réservés au Pass Soirée : retirés si le salon n'a pas de pass actif.
+    if (!passActive(room.state, Date.now()) && settings && typeof settings === "object") {
+      delete (settings as { roomQuestions?: string }).roomQuestions;
+    }
     room.mod = { module: mod, state: mod.createState(players, settings, { now: Date.now() + introOffsetFor(mod.id), rng: Math.random }) };
     scheduleGameTick(room);
     return;
@@ -739,12 +750,70 @@ function scheduleGameTick(room: Room) {
   }, delay);
 }
 
+async function readBody(req: IncomingMessage, max = 4096): Promise<string> {
+  let data = "";
+  for await (const chunk of req) {
+    data += chunk;
+    if (data.length > max) throw new Error("trop gros");
+  }
+  return data;
+}
+
+async function handleCheckout(req: IncomingMessage, res: import("node:http").ServerResponse) {
+  const fail = (status: number, error: string) => res.writeHead(status, { "Content-Type": "application/json" }).end(JSON.stringify({ error }));
+  if (req.method !== "POST") return fail(405, "POST attendu");
+  if (!pass.provider) return fail(503, "Le Pass Soirée n'est pas encore disponible.");
+  try {
+    const { room, origin } = JSON.parse(await readBody(req)) as { room?: string; origin?: string };
+    const code = String(room ?? "").toUpperCase();
+    if (!rooms.has(code)) return fail(404, "Salon introuvable.");
+    const back = String(origin ?? "");
+    if (!isAllowedOrigin(back, process.env.PUBLIC_SITE_URL)) return fail(400, "Origine non autorisée.");
+    const { url } = await pass.provider.createCheckout(code, back);
+    res.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify({ url }));
+  } catch (e) {
+    console.warn("[pass] checkout :", (e as Error).message);
+    fail(502, "Impossible d'ouvrir le paiement pour le moment.");
+  }
+}
+
+/** Active un paiement vérifié sur le salon. */
+async function redeemPass(room: Room, playerId: string, sessionId: string, ws: WebSocket) {
+  if (!pass.provider || typeof sessionId !== "string" || sessionId.length > 300) return;
+  const code = room.state.code;
+  try {
+    const v = await pass.provider.verify(sessionId);
+    if (!v.paid) return sendError(ws, "pass_unpaid", "Paiement non confirmé. Si tu as été débité, écris-nous.");
+    if (v.room && v.room !== code && rooms.has(v.room)) return sendError(ws, "pass_other_room", "Ce Pass Soirée appartient à un autre salon.");
+    const r = passRegistry.redeem(sessionId, code, Date.now(), (c) => rooms.has(c));
+    if ("refused" in r) return sendError(ws, "pass_refused", r.refused);
+    const name = room.state.players[playerId]?.name ?? null;
+    applyRoom(room, { type: "activate_pass", until: r.until, offeredBy: name, now: Date.now() });
+    if (r.fresh) stats.passActivated();
+  } catch (e) {
+    console.warn("[pass] vérification :", (e as Error).message);
+    sendError(ws, "pass_error", "Vérification du paiement impossible pour le moment, réessaie dans un instant.");
+  }
+}
+
 // Serveur HTTP : santé + statistiques ; la même porte accueille le WebSocket.
 const httpServer = createServer((req, res) => {
   const url = new URL(req.url ?? "/", "http://x");
   res.setHeader("Access-Control-Allow-Origin", "*");
   if (url.pathname === "/health") {
     res.writeHead(200, { "Content-Type": "text/plain" }).end("ok");
+    return;
+  }
+  if (url.pathname === "/pass/config") {
+    res.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify({ enabled: pass.config.enabled, priceLabel: pass.config.priceLabel }));
+    return;
+  }
+  if (url.pathname === "/pass/checkout") {
+    if (req.method === "OPTIONS") {
+      res.writeHead(204, { "Access-Control-Allow-Methods": "POST", "Access-Control-Allow-Headers": "Content-Type" }).end();
+      return;
+    }
+    void handleCheckout(req, res);
     return;
   }
   if (url.pathname === "/stats") {
@@ -843,6 +912,9 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
         }
         return;
       }
+      case "redeem_pass":
+        void redeemPass(room, playerId, msg.sessionId, ws);
+        return;
       case "leave":
         return applyRoom(room, { type: "leave", playerId, now: t }, ws);
       case "set_ready":
@@ -866,9 +938,15 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
         room.pendingGame = typeof msg.gameId === "string" ? msg.gameId : null;
         return broadcast(room);
       }
-      case "start_game":
+      case "start_game": {
+        // Limite propre à un jeu (Mimic : 8 voix max), même avec le Pass Soirée.
+        const gameMax = GAME_REGISTRY[msg.gameId]?.meta.maxPlayers;
+        if (gameMax && connectedPlayers(room.state).length > gameMax) {
+          return sendError(ws, "too_many_players", `Ce jeu se joue à ${gameMax} joueurs maximum.`);
+        }
         room.pendingSettings = msg.settings ?? null;
         return applyRoom(room, { type: "start_game", playerId, gameId: msg.gameId, now: t }, ws);
+      }
 
       case "game": {
         if (room.mod) {

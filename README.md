@@ -111,3 +111,28 @@ npm run typecheck
   ils ne sont pas inclus dans les archives de livraison, pour ne jamais écraser
   tes extraits vidéo ni tes assets.
 - Jeu pensé pour du LAN (téléphones sur le même Wi-Fi que le PC hôte).
+
+## 💶 Monétisation & statistiques (réglages)
+
+Tout est désactivé par défaut ; chaque brique s'allume avec une variable d'environnement.
+
+**Site (Northflank → service `leboum-web` → Build arguments, puis rebuild)**
+
+| Variable | Effet |
+|---|---|
+| `NEXT_PUBLIC_SUPPORT_URL` | Lien Ko-fi/Tipeee → bouton « Paie ta tournée à LeBoum » (accueil + fin de partie) |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | Contact (page Entreprises, mentions légales, CGV) |
+| `NEXT_PUBLIC_LEGAL_NAME` / `_ADDRESS` / `_SIRET` | Éditeur du site (obligatoire dès qu'il y a une activité pro) |
+| `NEXT_PUBLIC_LEGAL_MEDIATOR` | Médiateur de la consommation (obligatoire pour vendre) |
+
+**Serveur de jeu (Northflank → service `leboum-server` → Environment variables)**
+
+| Variable | Effet |
+|---|---|
+| `STATS_TOKEN` | Code d'accès de la page `/stats` (fréquentation anonyme) |
+| `STRIPE_SECRET_KEY` + `STRIPE_PASS_PRICE` | Active le **Pass Soirée** (Stripe Checkout) |
+| `PASS_PRICE_LABEL` | Prix affiché, ex. `2,99 €` (doit correspondre au prix Stripe) |
+| `PUBLIC_SITE_URL` | `https://leboum.fr` (retour après paiement) |
+| `STATS_FILE` / `PASS_FILE` | Fichiers de sauvegarde (à placer sur un disque persistant) |
+
+En local, `PASS_DEV_FAKE=1 npm run dev:server` simule le paiement (jamais en production).

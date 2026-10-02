@@ -6,6 +6,8 @@ import {
   canStart,
   createInitialState,
   DEFAULT_CONFIG,
+  PASS_MAX_PLAYERS,
+  passActive,
   reduce,
 } from "./engine";
 import type { RoomAction, RoomState } from "./types";
@@ -247,6 +249,25 @@ test("les codes de room sont valides et sans caractères ambigus", () => {
 
 test("sanitizeName borne la longueur à 20", () => {
   eq(sanitizeName("x".repeat(50)).length, 20, "longueur max");
+});
+
+test("Pass Soirée : 12 joueurs pendant la soirée, puis retour à 8", () => {
+  let s = base();
+  s = reduce(s, { type: "activate_pass", until: 10_000, offeredBy: "Rayan", now: 0 }).state;
+  assert(passActive(s, 5_000), "pass actif");
+  for (let i = 0; i < PASS_MAX_PLAYERS; i++) s = reduce(s, { type: "join", playerId: `p${i}`, name: `J${i}`, now: 100 + i }).state;
+  eq(s.playerOrder.length, PASS_MAX_PLAYERS, "12 joueurs acceptés");
+  eq(reduce(s, { type: "join", playerId: "x", name: "X", now: 200 }).error?.code, "room_full", "13e refusé");
+  let t = base();
+  t = reduce(t, { type: "activate_pass", until: 10_000, offeredBy: null, now: 0 }).state;
+  for (let i = 0; i < DEFAULT_CONFIG.maxPlayers; i++) t = reduce(t, { type: "join", playerId: `q${i}`, name: `Q${i}`, now: 20_000 + i }).state;
+  eq(reduce(t, { type: "join", playerId: "y", name: "Y", now: 20_100 }).error?.code, "room_full", "pass expiré → 8 max");
+});
+
+test("Pass Soirée : un 2e achat ne raccourcit jamais le pass", () => {
+  let s = reduce(base(), { type: "activate_pass", until: 50_000, offeredBy: "A", now: 0 }).state;
+  s = reduce(s, { type: "activate_pass", until: 20_000, offeredBy: "B", now: 1 }).state;
+  eq(s.pass?.activeUntil, 50_000, "échéance gardée");
 });
 
 console.log(`\n${passed} réussis, ${failed} échoués\n`);

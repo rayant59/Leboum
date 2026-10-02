@@ -34,7 +34,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr" className={`${display.variable} ${body.variable} ${mono.variable}`}>
       <body>
         {children}
-        <Analytics />
+        {/* Mesure d'audience Vercel : seulement si le site est hébergé sur Vercel. */}
+        {process.env.VERCEL ? <Analytics /> : null}
       </body>
     </html>
   );

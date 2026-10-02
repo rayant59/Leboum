@@ -5,6 +5,8 @@ import type { QuizClientAction, QuizPublic, QuizSettings, QuizState } from "./ty
 export const QUIZ_GAME_ID = "quiz" as const;
 
 const QUIZ_MODES = ["classic", "speed", "survival", "teams"];
+/** Garde-fou : taille max du texte des questions perso (≈ 50 questions). */
+export const ROOM_QUESTIONS_MAX_CHARS = 6000;
 
 function sanitize(input: unknown): QuizSettings {
   const v = input as QuizSettings | undefined;
@@ -15,6 +17,7 @@ function sanitize(input: unknown): QuizSettings {
     secondsPerQuestion: typeof v?.secondsPerQuestion === "number" ? v.secondsPerQuestion : 15,
     types: okTypes,
     mode: typeof v?.mode === "string" && QUIZ_MODES.includes(v.mode) ? v.mode : "classic",
+    ...(typeof v?.roomQuestions === "string" && v.roomQuestions.trim() ? { roomQuestions: v.roomQuestions.slice(0, ROOM_QUESTIONS_MAX_CHARS) } : {}),
   };
 }
 

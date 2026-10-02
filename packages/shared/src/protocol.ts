@@ -44,7 +44,8 @@ export type ClientMessage =
   | { type: "chat"; text: string } // ephemeral discussion message (not a guess)
   | { type: "draw_stroke"; stroke: DrawStroke } // ephemeral: drawer's stroke
   | { type: "draw_fill"; x: number; y: number; color: string } // ephemeral: bucket fill
-  | { type: "draw_clear" }; // ephemeral: drawer cleared the canvas
+  | { type: "draw_clear" } // ephemeral: drawer cleared the canvas
+  | { type: "redeem_pass"; sessionId: string }; // Pass Soirée : activer un paiement sur ce salon
 
 // --- Server -> client -------------------------------------------------------
 

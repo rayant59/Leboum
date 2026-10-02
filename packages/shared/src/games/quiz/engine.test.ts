@@ -230,6 +230,14 @@ test("arrivée en cours de partie : le nouveau joueur peut répondre et marquer"
   assert(!!s.answers.c, "la réponse de Carol est prise en compte");
 });
 
+test("Pass Soirée : les questions de l'hôte sont jouées en priorité", () => {
+  const s = createQuiz(players, { totalQuestions: 5, secondsPerQuestion: 10, roomQuestions: "Prénom du chat de Léa ? = Moustache\nVille du séminaire ? = Lille | lil" }, ctx(0));
+  eq(s.questions.length, 5, "5 questions au total");
+  const mine = s.questions.filter((q) => q.cat === "La soirée");
+  eq(mine.length, 2, "les 2 questions perso sont dedans");
+  assert(freeAnswerMatches("moustache", mine.find((q) => q.prompt.includes("chat")) as any), "réponse perso reconnue");
+});
+
 console.log(`\n${passed} réussis, ${failed} échoués\n`);
 if (failed > 0) process.exit(1);
 

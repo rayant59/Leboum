@@ -34,8 +34,9 @@ export default function MentionsLegales() {
       <ul>
         <li>Ton <b>pseudo</b> et un identifiant aléatoire sont gardés <b>dans ton navigateur</b> pour te reconnecter à ton salon. Ils ne sont pas revendus ni utilisés pour de la pub.</li>
         <li>Les salons, dessins, réponses et enregistrements de voix (Mimic Boum) n&apos;existent que <b>le temps de la partie</b>, en mémoire sur le serveur de jeu, puis disparaissent.</li>
-        <li>Nous comptons la fréquentation de façon <b>anonyme et sans cookie</b> : nombre de salons, de joueurs et de parties par jour. Aucun pseudo n&apos;est conservé dans ces statistiques. Les visites du site sont mesurées avec Vercel Web Analytics, également sans cookie.</li>
+        <li>Nous comptons la fréquentation de façon <b>anonyme et sans cookie</b> : nombre de salons, de joueurs et de parties par jour. Aucun pseudo n&apos;est conservé dans ces statistiques.</li>
         <li>Aucun cookie publicitaire n&apos;est utilisé.</li>
+        <li>Les paiements du Pass Soirée sont traités par <b>Stripe</b> : LeBoum ne voit jamais tes données bancaires et ne garde que l&apos;identifiant du paiement et le salon concerné.</li>
         <li>Certaines images des jeux sont chargées depuis Wikipédia (Wikimedia) au moment de la partie.</li>
       </ul>
 

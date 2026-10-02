@@ -4,6 +4,8 @@
 process.env.PORT = "3999";
 process.env.STATS_FILE = ""; // pas d'écriture disque pendant les tests
 process.env.STATS_TOKEN = "test-token";
+process.env.PASS_DEV_FAKE = "1"; // paiement simulé pour tester le Pass Soirée
+process.env.PASS_FILE = "";
 
 import { WebSocket } from "ws";
 import {
@@ -678,6 +680,39 @@ async function main() {
   check("révélation dès que tous ont répondu", rcp()?.phase === "reveal");
   check("la bonne réponse est révélée", typeof rcp()?.correctText === "string");
 
+  console.log("\nServeur — Pass Soirée (paiement simulé)\n");
+  const pv = new Client("PASS", "pv");
+  await pv.open();
+  pv.send({ type: "join", name: "Rayan" });
+  await sleep(60);
+  const own = "Chat de Léa ? = Moustache\nVille du séminaire ? = Lille\nCouleur du logo ? = Orange";
+  const ownPrompts = ["Chat de Léa ?", "Ville du séminaire ?", "Couleur du logo ?"];
+  const prompt = () => ((pv.last()?.game as any)?.question?.prompt as string | undefined) ?? "";
+  pv.send({ type: "start_game", gameId: "quiz", settings: { totalQuestions: 3, secondsPerQuestion: 20, roomQuestions: own } });
+  await sleep(100);
+  check("sans pass : les questions perso sont ignorées", !!prompt() && !ownPrompts.includes(prompt()));
+  pv.send({ type: "return_lobby" });
+  await sleep(60);
+  const cfg = await (await fetch("http://localhost:3999/pass/config")).json() as { enabled: boolean };
+  check("le pass est proposé quand le paiement est configuré", cfg.enabled === true);
+  const bad = await fetch("http://localhost:3999/pass/checkout", { method: "POST", body: JSON.stringify({ room: "PASS", origin: "https://evil.example" }) });
+  check("paiement refusé vers un site tiers", bad.status === 400);
+  const co = await (await fetch("http://localhost:3999/pass/checkout", { method: "POST", body: JSON.stringify({ room: "PASS", origin: "http://localhost:3000" }) })).json() as { url: string };
+  const sessionId = new URL(co.url).searchParams.get("pass") ?? "";
+  check("le paiement renvoie vers le salon", co.url.startsWith("http://localhost:3000/room/PASS?pass="));
+  pv.send({ type: "redeem_pass", sessionId: "fake_QUIZ_abc123" }); // salon QUIZ toujours ouvert
+  await sleep(60);
+  check("un faux pass pour un autre salon ne fait rien", !pv.last()?.state.pass);
+  pv.send({ type: "redeem_pass", sessionId });
+  await sleep(80);
+  check("pass activé pour tout le salon (12 h)", (pv.last()?.state.pass?.activeUntil ?? 0) > Date.now() + 11 * 3600_000);
+  check("« offert par » l'acheteur", pv.last()?.state.pass?.offeredBy === "Rayan");
+  pv.send({ type: "start_game", gameId: "quiz", settings: { totalQuestions: 3, secondsPerQuestion: 20, roomQuestions: own } });
+  await sleep(100);
+  check("avec pass : les questions de l'hôte sont jouées", ownPrompts.includes(prompt()));
+  pv.send({ type: "return_lobby" });
+  await sleep(40);
+
   console.log("\nServeur — santé & statistiques anonymes\n");
   const health = await fetch("http://localhost:3999/health");
   check("/health répond ok", health.status === 200 && (await health.text()) === "ok");
@@ -688,6 +723,7 @@ async function main() {
   const day = Object.values(body.days)[0];
   check("/stats compte des salons, joueurs et parties", !!day && day.roomsCreated > 0 && day.uniquePlayers > 0 && Object.keys(day.gamesStarted).length > 0);
   check("/stats ne contient aucun pseudo", !JSON.stringify(body).includes("Alice"));
+  check("/stats compte les Pass Soirée", (day as { passes?: number }).passes === 1);
 
   console.log(`\n${passed} réussis, ${failed} échoués\n`);
   process.exit(failed > 0 ? 1 : 0);

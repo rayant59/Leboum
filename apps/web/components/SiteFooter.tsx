@@ -10,6 +10,7 @@ export function SiteFooter() {
       <nav style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "8px 20px" }}>
         <Link href="/entreprise" style={link}>LeBoum pour les entreprises</Link>
         <Link href="/mentions-legales" style={link}>Mentions légales & confidentialité</Link>
+        <Link href="/cgv" style={link}>Conditions de vente</Link>
       </nav>
       <span>LeBoum · le party-game français entre potes</span>
     </footer>

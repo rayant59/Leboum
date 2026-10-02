@@ -95,6 +95,8 @@ export interface UseRoom {
   speakingIds: Set<string>;
   sendSpeaking: (speaking: boolean) => void;
   quizAnswer: (value: number | boolean | string) => void;
+  /** Pass Soirée : active un paiement Stripe (vérifié par le serveur). */
+  redeemPass: (sessionId: string) => void;
   bombeSubmit: (text: string) => void;
   // mimic game
   mimicAction: (action: MimicClientAction) => void;
@@ -272,6 +274,7 @@ export function useRoom(code: string, create = false): UseRoom {
     [send],
   );
   const sendSpeaking = useCallback((speaking: boolean) => send.current?.send({ type: "speaking", speaking }), [send]);
+  const redeemPass = useCallback((sessionId: string) => send.current?.send({ type: "redeem_pass", sessionId }), [send]);
   const quizAnswer = useCallback((value: number | boolean | string) => send.current?.send({ type: "game", action: { kind: "answer", value } }), [send]);
   const bombeSubmit = useCallback((text: string) => send.current?.send({ type: "game", action: { kind: "submit", text } }), [send]);
   const mimicAction = useCallback((action: MimicClientAction) => send.current?.send({ type: "game", action }), [send]);
@@ -306,7 +309,7 @@ export function useRoom(code: string, create = false): UseRoom {
   return {
     state, gameId, game, settings, you, status, error, clearError,
     join, setReady, setName, setAvatar, setSettings, selectGame, startGame, leave, pendingGame,
-    submitLines, vote, skipPhase, debugFill, returnLobby, playAgain, react, reactions, speakingIds, sendSpeaking, quizAnswer, bombeSubmit,
+    submitLines, vote, skipPhase, debugFill, returnLobby, playAgain, react, reactions, speakingIds, sendSpeaking, quizAnswer, redeemPass, bombeSubmit,
     mimicAction, sendVoiceTake, voiceTakes, sendBombeTyping, bombeTyping,
     chooseWord, guess, sendTalk, castVote, doublageAction, revealTheme, endDrawing, sendStroke, sendFill, clearCanvas, chat, strokeQueueRef, strokeResetRef, serverNow,
   };

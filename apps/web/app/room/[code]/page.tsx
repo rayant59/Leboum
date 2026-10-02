@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { canStart, isEffectivelyReady, minReadyFor, sanitizeName, DRAW_THEMES } from "@subtitles-party/shared";
+import { effectiveMaxPlayers, passActive, canStart, isEffectivelyReady, minReadyFor, sanitizeName, DRAW_THEMES } from "@subtitles-party/shared";
 import { getPlayerName, setPlayerName } from "@/lib/identity";
 import { useRoom } from "@/lib/useRoom";
 import { BoumBackdrop } from "@/components/BoumBackdrop";
@@ -20,6 +20,7 @@ import { MimicView } from "@/components/MimicView";
 import { GameIntro } from "@/components/GameIntro";
 import { HostQuitButton } from "@/components/HostQuitButton";
 import { SupportButton } from "@/components/SupportButton";
+import { PassCard, usePassConfig } from "@/components/PassCard";
 import { Avatar } from "@/components/Avatar";
 import { ProfileModal } from "@/components/ProfileModal";
 import { SubtitleStrip } from "@/components/SubtitleStrip";
@@ -124,6 +125,15 @@ export default function LobbyPage() {
   const [modeByGame, setModeByGame] = useState<Partial<Record<GameId, string>>>({});
   const [timeByGame, setTimeByGame] = useState<Partial<Record<GameId, number>>>({});
   const [drawThemes, setDrawThemes] = useState<string[]>([]);
+  // Pass Soirée : questions perso du quiz (gardées dans le navigateur de l'hôte).
+  const [roomQuestions, setRoomQuestions] = useState("");
+  useEffect(() => {
+    try { setRoomQuestions(localStorage.getItem("lb:roomQuestions") ?? ""); } catch { /* ignore */ }
+  }, []);
+  const saveRoomQuestions = (v: string) => {
+    setRoomQuestions(v);
+    try { localStorage.setItem("lb:roomQuestions", v); } catch { /* ignore */ }
+  };
 
   // Mode/temps effectifs pour le jeu sélectionné (avec repli sur le défaut).
   const modeOf = (g: GameId) => {
@@ -198,6 +208,21 @@ export default function LobbyPage() {
       room.join(name);
     }
   }, [room.status, name, room]);
+
+  // Pass Soirée : retour de la page de paiement (?pass=…) → on demande au
+  // serveur de vérifier le paiement et d'activer le pass, une seule fois.
+  const passCfg = usePassConfig();
+  const redeemed = useRef(false);
+  useEffect(() => {
+    if (redeemed.current || room.status !== "open" || !room.you || !room.state?.players[room.you]) return;
+    const id = new URLSearchParams(window.location.search).get("pass");
+    if (!id) return;
+    redeemed.current = true;
+    room.redeemPass(id);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("pass");
+    window.history.replaceState(null, "", url.pathname + url.search);
+  }, [room, room.status, room.you, room.state]);
 
   // Host broadcasts the currently-selected game so guests see what's coming.
   // Kept above any early return so hook order stays stable every render.
@@ -315,8 +340,11 @@ export default function LobbyPage() {
   const connectedCount = players.filter((p) => p.isConnected).length;
   const neededReady = state ? minReadyFor(state, launchId) : 2;
   const missingReady = Math.max(0, neededReady - readyCount);
-  const maxPlayers = state?.config.maxPlayers ?? 8;
-  const startable = !!state && canStart(state, launchId);
+  const maxPlayers = state ? effectiveMaxPlayers(state, room.serverNow()) : 8;
+  const hasPass = !!state && passActive(state, room.serverNow());
+  // Mimic Boum reste limité à 8 voix (lecture/vote des prises), même avec le Pass.
+  const tooManyForGame = selectedGame === "mimic" && connectedCount > 8;
+  const startable = !!state && canStart(state, launchId) && !tooManyForGame;
 
   async function copyLink() {
     const url = window.location.href;
@@ -370,7 +398,7 @@ export default function LobbyPage() {
       case "mimic":
         return room.startGame("mimic", { totalRounds: curRounds, recordSeconds: t, mode });
       case "quiz":
-        return room.startGame("quiz", { totalQuestions: curRounds, secondsPerQuestion: t, types: "all", mode });
+        return room.startGame("quiz", { totalQuestions: curRounds, secondsPerQuestion: t, types: "all", mode, ...(hasPass && roomQuestions.trim() ? { roomQuestions } : {}) });
       case "reco":
         return room.startGame("reco", { totalQuestions: curRounds, secondsPerQuestion: t, category: "all", mode });
       case "pixel":
@@ -605,6 +633,8 @@ export default function LobbyPage() {
         </section>
       )}
 
+      {state && <PassCard state={state} serverNow={room.serverNow} cfg={passCfg} />}
+
       </div>
 
       {/* Colonne droite (écran large, hôte) : choix du jeu + réglages */}
@@ -649,7 +679,7 @@ export default function LobbyPage() {
                       <img src={c.img} alt="" className="h-full w-full object-cover" draggable={false} />
                     </span>
                     <span className="rounded-full border px-2.5 py-0.5 text-[11px] tabular-nums" style={{ borderColor: sel ? `${c.tint}66` : "#332A5A", color: sel ? c.tint : "#8078a8" }}>
-                      {c.players}
+                      {c.players.replace(/–\d+$/, `–${c.id === "mimic" ? Math.min(8, maxPlayers) : maxPlayers}`)}
                     </span>
                   </div>
                   <div className="font-display text-base font-bold text-text">{c.label}</div>
@@ -762,6 +792,37 @@ export default function LobbyPage() {
           })()}
 
           {/* THÈMES — Boum Dessin uniquement, hors Faux-artiste / Relais */}
+          {/* PASS SOIRÉE — questions écrites par l'hôte pour « Ça te parle ? » */}
+          {selectedGame === "quiz" && isHost && (
+            <div className="cfg-grp">
+              <div className="cfg-head">
+                <div className="min-w-0 flex-1">
+                  <h2 className="cfg-tt">Tes questions {!hasPass && <span style={{ fontSize: 12, color: "#FFC24B" }}>· Pass Soirée</span>}</h2>
+                  <span className="cfg-sub">{hasPass ? "Jouées en priorité, la banque complète" : "Personnalise le quiz pour ta bande"}</span>
+                </div>
+              </div>
+              {hasPass ? (
+                <>
+                  <textarea
+                    value={roomQuestions}
+                    onChange={(e) => saveRoomQuestions(e.target.value.slice(0, 6000))}
+                    rows={5}
+                    spellCheck={false}
+                    placeholder={"Une question par ligne, la réponse après « = » :\nLe surnom de Karim au lycée ? = Le Boss | boss\nLa ville de nos dernières vacances ? = Marseille"}
+                    style={{ width: "100%", boxSizing: "border-box", borderRadius: 14, border: "1px solid #332A5A", background: "#0E0B1A", color: "#F3EEFF", padding: "12px 14px", fontSize: 14, lineHeight: 1.5, resize: "vertical" }}
+                  />
+                  <span className="cfg-sub" style={{ textTransform: "none", letterSpacing: 0 }}>
+                    {(() => { const n = roomQuestions.split(/\r?\n/).filter((l) => l.includes("=") && l.split("=")[1]?.trim()).length; return `${n} question${n > 1 ? "s" : ""} prête${n > 1 ? "s" : ""} · « | » pour accepter plusieurs réponses`; })()}
+                  </span>
+                </>
+              ) : (
+                <p style={{ margin: 0, fontSize: 14, color: "#A79FC7" }}>
+                  Les private jokes de ta bande dans le quiz : débloque-les avec le Pass Soirée{passCfg?.enabled ? " (juste au-dessus)" : " (bientôt disponible)"}.
+                </p>
+              )}
+            </div>
+          )}
+
           {selectedGame === "draw" && curMode !== "fakeartist" && curMode !== "relay" && (() => {
             const selCount = drawThemes.length === 0 ? DRAW_THEMES.length : drawThemes.length;
             const allOn = drawThemes.length === 0;
@@ -837,7 +898,9 @@ export default function LobbyPage() {
           ) : (
             <button disabled className="arc arc-dis arc-block">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
-              {connectedCount < neededReady
+              {tooManyForGame
+                ? "Mimic Boum : 8 joueurs maximum"
+                : connectedCount < neededReady
                 ? `Il faut au moins ${neededReady} joueurs — invite tes potes`
                 : missingReady > 0
                 ? `Encore ${missingReady} joueur${missingReady > 1 ? "s" : ""} prêt${missingReady > 1 ? "s" : ""}`

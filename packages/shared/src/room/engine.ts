@@ -43,6 +43,19 @@ export function createInitialState(
   };
 }
 
+/** Pass Soirée : nombre de joueurs max par salon quand il est actif. */
+export const PASS_MAX_PLAYERS = 12;
+
+/** Le Pass Soirée de ce salon est-il actif à l'instant `now` ? */
+export function passActive(state: RoomState, now: number): boolean {
+  return !!state.pass && state.pass.activeUntil > now;
+}
+
+/** Capacité réelle du salon (8 joueurs, 12 avec le Pass Soirée). */
+export function effectiveMaxPlayers(state: RoomState, now: number): number {
+  return passActive(state, now) ? Math.max(PASS_MAX_PLAYERS, state.config.maxPlayers) : state.config.maxPlayers;
+}
+
 // --- helpers ----------------------------------------------------------------
 
 function connectedIds(state: RoomState): string[] {
@@ -81,10 +94,11 @@ export function reduce(state: RoomState, action: RoomAction): ReduceResult {
         return ok(patchPlayer(state, action.playerId, { isConnected: true, name }));
       }
 
-      if (connectedIds(state).length >= state.config.maxPlayers) {
+      const cap = effectiveMaxPlayers(state, action.now);
+      if (connectedIds(state).length >= cap) {
         return reject(state, {
           code: "room_full",
-          message: `La partie est complète (${state.config.maxPlayers} joueurs max).`,
+          message: `La partie est complète (${cap} joueurs max).`,
         });
       }
 
@@ -192,6 +206,12 @@ export function reduce(state: RoomState, action: RoomAction): ReduceResult {
         });
       }
       return ok({ ...state, phase: "in_game", gameId: action.gameId });
+    }
+
+    case "activate_pass": {
+      // Jamais raccourcir un pass déjà actif (ex. double achat).
+      const until = Math.max(action.until, state.pass?.activeUntil ?? 0);
+      return ok({ ...state, pass: { activeUntil: until, offeredBy: action.offeredBy ?? state.pass?.offeredBy ?? null } });
     }
 
     default: {
