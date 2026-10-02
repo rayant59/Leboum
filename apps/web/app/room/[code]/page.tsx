@@ -20,6 +20,7 @@ import { MimicView } from "@/components/MimicView";
 import { WhoisView } from "@/components/WhoisView";
 import { FunnyView } from "@/components/FunnyView";
 import { ImposterView } from "@/components/ImposterView";
+import { PhoneView } from "@/components/PhoneView";
 import { GameIntro } from "@/components/GameIntro";
 import { HostQuitButton } from "@/components/HostQuitButton";
 import { SupportButton } from "@/components/SupportButton";
@@ -30,7 +31,7 @@ import { SubtitleStrip } from "@/components/SubtitleStrip";
 import { MODE_ICONS } from "./modeIcons";
 import { SoireeBuilder, SoireeFinal, SoireeHud, SoireeLobbyCard, type BuilderItem } from "@/components/Soiree";
 
-type GameId = "draw" | "mimic" | "quiz" | "reco" | "pixel" | "bombe" | "whois" | "funny" | "imposter";
+type GameId = "draw" | "mimic" | "quiz" | "reco" | "pixel" | "bombe" | "whois" | "funny" | "imposter" | "phone";
 
 /** Un mode de jeu tel qu'exposé dans la salle d'attente.
  *  `img` : illustration dédiée (modes de Dessin) ; sinon on retombe sur la
@@ -83,6 +84,10 @@ const MODE_SETS: Record<GameId, ModeDef[]> = {
     { id: "classic", c: "#FF4D8D", nm: "Classique", ds: "Le temps de soigner sa vanne : une phrase, une réponse, un vote." },
     { id: "express", c: "#FFC24B", nm: "Express", ds: "30 secondes pour écrire : la première idée est souvent la meilleure." },
   ],
+  phone: [
+    { id: "classique", c: "#46E0B0", nm: "Classique", ds: "Phrase → dessin → description → dessin → description. Cinq étapes, fou rire garanti." },
+    { id: "complet", c: "#FFC24B", nm: "Tour complet", ds: "Chaque chaîne passe entre les mains de TOUS les joueurs avant la révélation." },
+  ],
   imposter: [
     { id: "classique", c: "#FF5C7A", nm: "Classique", ds: "L'imposteur sait qu'il l'est et ne connaît que la catégorie. Démasqué, il peut encore deviner le mot." },
     { id: "infiltre", c: "#8B7DF6", nm: "Infiltré", ds: "L'imposteur reçoit un mot voisin… et ne sait même pas que c'est lui." },
@@ -104,6 +109,7 @@ const TIMES: Record<GameId, { title: string; sub: string; opts: number[]; def: n
   pixel: { title: "Temps de révélation", sub: "Durée avant l'image complète", opts: [20, 30, 45, 60], def: 30 },
   whois: { title: "Temps de vote", sub: "Délai pour désigner quelqu'un", opts: [10, 15, 20, 30], def: 20 },
   funny: { title: "Temps d'écriture", sub: "Pour trouver ta meilleure réponse", opts: [30, 45, 60, 90], def: 60 },
+  phone: { title: "Temps de dessin", sub: "L'écriture dure un peu plus de la moitié", opts: [45, 60, 75, 90], def: 75 },
   imposter: { title: "Temps par indice", sub: "Pour donner ton indice quand c'est ton tour", opts: [20, 30, 45, 60], def: 30 },
   bombe: { title: "Temps par joueur", sub: "Mèche avant l'explosion", opts: [5, 7, 10, 15], def: 7 },
 };
@@ -112,7 +118,8 @@ const TIMES: Record<GameId, { title: string; sub: string; opts: number[]; def: n
  *  compte en MANCHES (dessin, mimic, bombe) ou en QUESTIONS/IMAGES (quiz, reco,
  *  pixel). Chaque jeu garde son propre défaut et ses propres bornes — le quiz,
  *  par exemple, va jusqu'à 20 questions (le moteur borne totalQuestions à 3–20). */
-const ROUNDS: Record<GameId, { headTitle: string; rowTitle: string; rowSub: string; unit: string; min: number; max: number; def: number }> = {
+const ROUNDS: Record<GameId, { headTitle: string; rowTitle: string; rowSub: string; unit: string; min: number; max: number; def: number } | null> = {
+  phone: null, // la longueur d'une chaîne dépend du nombre de joueurs et du mode
   draw:  { headTitle: "Manches",   rowTitle: "Nombre de manches",   rowSub: "La partie s'arrête au bout du compte", unit: "manches",   min: 2, max: 8,  def: 3 },
   mimic: { headTitle: "Manches",   rowTitle: "Nombre de manches",   rowSub: "La partie s'arrête au bout du compte", unit: "manches",   min: 2, max: 8,  def: 3 },
   quiz:  { headTitle: "Questions", rowTitle: "Nombre de questions", rowSub: "Autant de questions posées dans la partie", unit: "questions", min: 5, max: 20, def: 10 },
@@ -181,6 +188,7 @@ export default function LobbyPage() {
   // Nombre de tours effectif (borné aux limites du jeu), avec repli sur son défaut.
   const roundsOf = (g: GameId) => {
     const cfg = ROUNDS[g];
+    if (!cfg) return 1;
     const v = roundsByGame[g] ?? cfg.def;
     return Math.max(cfg.min, Math.min(cfg.max, v));
   };
@@ -192,6 +200,7 @@ export default function LobbyPage() {
   const bumpRounds = (g: GameId, delta: number) =>
     setRoundsByGame((p) => {
       const cfg = ROUNDS[g];
+      if (!cfg) return p;
       const cur = p[g] ?? cfg.def;
       return { ...p, [g]: Math.max(cfg.min, Math.min(cfg.max, cur + delta)) };
     });
@@ -434,7 +443,7 @@ export default function LobbyPage() {
     const mode = curMode;
     const t = turnSeconds;
     const modeName = MODE_SETS[selectedGame].find((m) => m.id === mode)?.nm ?? "Classique";
-    const detail = `${modeName} · ${curRounds} ${ROUNDS[selectedGame].unit} · ${selectedGame === "bombe" && mode === "hardcore" ? 15 : t}s`;
+    const detail = `${modeName} · ${ROUNDS[selectedGame] ? `${curRounds} ${ROUNDS[selectedGame]!.unit} · ` : ""}${selectedGame === "bombe" && mode === "hardcore" ? 15 : t}s`;
     switch (selectedGame) {
       case "draw":
         if (mode === "fakeartist") return { gameId: "fakeartist", settings: { totalRounds: curRounds }, detail: `${curRounds} manches` };
@@ -452,6 +461,8 @@ export default function LobbyPage() {
         return { gameId: "whois", settings: { totalRounds: curRounds, seconds: t, mode }, detail };
       case "funny":
         return { gameId: "funny", settings: { totalRounds: curRounds, seconds: mode === "express" ? 30 : t }, detail: mode === "express" ? `Express · ${curRounds} manches · 30s` : detail };
+      case "phone":
+        return { gameId: "phone", settings: { seconds: t, mode }, detail };
       case "imposter":
         return { gameId: "imposter", settings: { totalRounds: curRounds, seconds: t, mode }, detail };
       case "bombe":
@@ -504,6 +515,7 @@ export default function LobbyPage() {
       room.gameId === "whois" ? <WhoisView room={room} /> :
       room.gameId === "funny" ? <FunnyView room={room} /> :
       room.gameId === "imposter" ? <ImposterView room={room} /> :
+      room.gameId === "phone" ? <PhoneView room={room} /> :
       room.gameId === "draw" ? <DrawGameView room={room} /> :
       <GameView room={room} />;
     // Fin de partie : fournie par le moteur (`isOver`), plus de table dupliquée.
@@ -805,20 +817,22 @@ export default function LobbyPage() {
           </div>
 
           {/* NOMBRE DE TOURS — libellé et bornes propres à chaque jeu (manches, questions, images) */}
+          {ROUNDS[selectedGame] && (() => { const rc = ROUNDS[selectedGame]!; return (
           <div className="cfg-grp">
             <div className="cfg-head">
               <span className="cfg-ic-img"><img src="/ui/manche.png" alt="" draggable={false} /></span>
-              <div><h2 className="cfg-tt">{ROUNDS[selectedGame].headTitle}</h2><span className="cfg-sub">Réglage de la partie</span></div>
+              <div><h2 className="cfg-tt">{rc.headTitle}</h2><span className="cfg-sub">Réglage de la partie</span></div>
             </div>
             <div className="cfg-rounds">
-              <div className="cfg-rlab"><b>{ROUNDS[selectedGame].rowTitle}</b>{ROUNDS[selectedGame].rowSub}</div>
+              <div className="cfg-rlab"><b>{rc.rowTitle}</b>{rc.rowSub}</div>
               <div className="cfg-stepper">
-                <button className="cfg-sbtn" onClick={() => bumpRounds(selectedGame, -1)} disabled={!isHost || curRounds <= ROUNDS[selectedGame].min} aria-label="Moins"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M5 12h14" /></svg></button>
-                <div className="cfg-sval"><div className="cfg-svaln">{curRounds}</div><div className="cfg-svalu">{ROUNDS[selectedGame].unit}</div></div>
-                <button className="cfg-sbtn" onClick={() => bumpRounds(selectedGame, 1)} disabled={!isHost || curRounds >= ROUNDS[selectedGame].max} aria-label="Plus"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg></button>
+                <button className="cfg-sbtn" onClick={() => bumpRounds(selectedGame, -1)} disabled={!isHost || curRounds <= rc.min} aria-label="Moins"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M5 12h14" /></svg></button>
+                <div className="cfg-sval"><div className="cfg-svaln">{curRounds}</div><div className="cfg-svalu">{rc.unit}</div></div>
+                <button className="cfg-sbtn" onClick={() => bumpRounds(selectedGame, 1)} disabled={!isHost || curRounds >= rc.max} aria-label="Plus"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg></button>
               </div>
             </div>
           </div>
+          ); })()}
 
           {/* TEMPS PAR TOUR — presets + saisie libre 5–300 s, mémoire par jeu (SPEC §3) */}
           {(() => {

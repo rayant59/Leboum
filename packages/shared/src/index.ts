@@ -56,3 +56,4 @@ export * from "./platform/util";
 export * from "./games/whois/index";
 export * from "./games/funny/index";
 export * from "./games/imposter/index";
+export * from "./games/phone/index";

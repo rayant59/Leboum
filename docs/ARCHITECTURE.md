@@ -113,6 +113,7 @@ une vue ; aucun autre jeu n'est touché.
 | 5 — Qui de nous ? | ✅ | `games/whois/`, `WhoisView.tsx` |
 | 6 — La Plus Drôle | ✅ | `games/funny/`, `FunnyView.tsx` |
 | 7 — Imposteur (mot) | ✅ | `games/imposter/`, `ImposterView.tsx` |
+| 8 — Téléphone cassé | ✅ | `games/phone/`, `PhoneView.tsx`, `DrawPad.tsx` |
 
 **Composants communs des jeux « social »** : `components/social/kit.tsx`
 (en-tête + chrono, carte de question, grille de vote, écran final avec
@@ -135,3 +136,20 @@ Le podium (`ResultsScreen`) partage les places en cas d'égalité (1, 1, 3).
 * L'identité de l'imposteur ne sort jamais du serveur avant la révélation ;
   un indice qui contient le mot secret est refusé.
 * Mots perso : `imposteur/*.txt` (« catégorie | mot | mot proche »).
+
+### Téléphone cassé — règles du moteur
+
+* Chaque joueur lance une chaîne (phrase). À l'étape k, le joueur placé k rangs
+  après le propriétaire la reçoit : texte → dessin → texte… Personne ne revoit
+  sa propre chaîne avant la révélation.
+* Longueur : 5 étapes max en classique (`min(joueurs, 5)`), une par joueur en
+  « tour complet ». Écriture ≈ 60 % du temps de dessin.
+* Rien rendu à temps : phrase de secours tirée au sort à l'étape 1 (la chaîne
+  doit vivre), rendu vide ensuite. Un absent ne bloque jamais l'étape.
+* Dessins : ardoise locale `components/DrawPad.tsx` (réutilisable), exportée en
+  WebP/JPEG 480×360 (< 190 Ko), validée côté moteur (`data:image/…`, ≤ 200 Ko).
+  Ils ne transitent qu'une fois : jamais renvoyés en écho pendant le jeu, et
+  la révélation n'envoie que la chaîne en cours.
+* Révélation étape par étape (chrono auto, l'hôte peut accélérer), « J'adore »
+  = +100 pour l'auteur → distinctions « Meilleur dessinateur » / « Plume d'or ».
+* Phrases perso : `telephone/*.txt`.

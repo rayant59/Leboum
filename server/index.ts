@@ -82,6 +82,8 @@ import {
   parseImposterPairs,
   addCustomImposterPairs,
   imposterBankSize,
+  addCustomPhonePhrases,
+  phonePhraseBank,
   setCustomWords,
   addCustomQuestions,
   parseCustomQuestions,
@@ -324,6 +326,25 @@ const PORT = Number(process.env.PORT ?? 1999);
       if (!pairs.length) continue;
       addCustomImposterPairs(pairs);
       console.log(`[imposteur] ${pairs.length} paire(s) perso chargée(s) (${files.join(", ")}) — total : ${imposterBankSize()}`);
+      return;
+    } catch {
+      /* ignore and try next */
+    }
+  }
+})();
+
+// Phrases de départ perso du « Téléphone cassé » : telephone/*.txt, une par ligne.
+(() => {
+  const dirs = [resolve(process.cwd(), "telephone"), resolve(process.cwd(), "..", "telephone"), resolve(__dirname, "..", "telephone")];
+  for (const dir of dirs) {
+    try {
+      if (!existsSync(dir)) continue;
+      const files = readdirSync(dir).filter((f) => f.toLowerCase().endsWith(".txt") && f.toLowerCase() !== "readme.txt");
+      if (!files.length) continue;
+      const before = phonePhraseBank().length;
+      addCustomPhonePhrases(files.map((f) => readFileSync(resolve(dir, f), "utf8")).join("\n").split(/\r?\n/));
+      const added = phonePhraseBank().length - before;
+      if (added > 0) console.log(`[telephone] ${added} phrase(s) perso chargée(s) (${files.join(", ")})`);
       return;
     } catch {
       /* ignore and try next */

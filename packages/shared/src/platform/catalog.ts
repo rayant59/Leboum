@@ -59,6 +59,12 @@ export const GAME_CATALOG: Record<string, GameModeInfo> = {
     rules: ["Deux dessinateurs se passent le crayon.", "Les autres devinent le mot."],
     listed: false, parent: "draw",
   }),
+  phone: G({
+    id: "phone", name: "Téléphone cassé", tagline: "Une phrase, un dessin, une description… et tout part en vrille.",
+    img: "/games/phone.svg", accent: "#46E0B0", category: "creatif", minPlayers: 3, maxPlayers: 12, durationMin: 10,
+    rules: ["Écris une phrase de départ.", "Elle passe de main en main : on dessine ce qu'on lit, on décrit ce qu'on voit.", "À la fin, on dévoile chaque chaîne. Chaque « j'adore » reçu = +100."],
+    listed: true,
+  }),
   reco: G({
     id: "reco", name: "Œil de Boum", tagline: "Devine le personnage, le film, le lieu…",
     img: "/games/reco.png", accent: "#4CC9F0", category: "creatif", minPlayers: 1, maxPlayers: 12, durationMin: 6,

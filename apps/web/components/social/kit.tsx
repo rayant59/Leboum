@@ -91,6 +91,7 @@ export function SocialHeader({
   label,
   left,
   seconds,
+  unit = "Manche",
 }: {
   gameId: string;
   round: number;
@@ -98,6 +99,8 @@ export function SocialHeader({
   label?: string;
   left: number | null;
   seconds: number;
+  /** « Manche », « Étape », « Chaîne »… */
+  unit?: string;
 }) {
   const g = gameInfo(gameId);
   return (
@@ -108,7 +111,7 @@ export function SocialHeader({
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 18, lineHeight: 1.1 }}>{g.name}</div>
           <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".12em", textTransform: "uppercase", color: K.faint }}>
-            Manche {round}/{total}{label ? ` · ${label}` : ""}
+            {unit} {round}/{total}{label ? ` · ${label}` : ""}
           </div>
         </div>
         {left != null && (

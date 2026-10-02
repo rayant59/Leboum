@@ -9,6 +9,7 @@ dans une **Soirée LeBoum** avec un classement commun.
 | Jeu | Famille | Joueurs | Principe |
 |-----|---------|:------:|----------|
 | **Boum Dessin** | Créatif | 2+ | Un joueur dessine un mot secret, les autres devinent. Modes : classique, aveugle, contraintes, coop, Faux-artiste, Relais. |
+| **Téléphone cassé** | Créatif | 3+ | Phrase → dessin → description → dessin… puis on dévoile chaque chaîne. Modes : classique (5 étapes), tour complet. |
 | **Œil de Boum** | Créatif | 1+ | Une image s'affiche : trouve le personnage, le film, le lieu… |
 | **Ça te parle ?** | Réflexion | 1+ | Quiz chronométré (classique, vitesse, survie, équipes). |
 | **Qui de nous ?** | Social | 3+ | « Qui de nous… ? » : tout le monde vote pour un joueur. |
@@ -22,7 +23,7 @@ dans une **Soirée LeBoum** avec un classement commun.
 de soirée s'additionnent d'un jeu à l'autre jusqu'au classement final.
 
 **Contenus perso** (relancer le serveur après modification) : `questionquizz/`,
-`motdessin/`, `motbombe/`, `quidenous/`, `plusdrole/`, `imposteur/` — chaque
+`motdessin/`, `motbombe/`, `quidenous/`, `plusdrole/`, `imposteur/`, `telephone/` — chaque
 dossier contient un `README.txt` qui explique le format.
 
 ## 🚀 Démarrer en local (2 terminaux)

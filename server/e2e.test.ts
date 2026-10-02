@@ -942,6 +942,41 @@ async function main() {
     for (const c of cl) c.ws.close();
   }
 
+  console.log("\nServeur générique — Téléphone cassé\n");
+  {
+    const ids = ["pa", "pb", "pc"];
+    const cl: Client[] = [];
+    for (const [i, id] of ids.entries()) {
+      const c = new Client("TELE", id, i === 0);
+      await c.open();
+      c.send({ type: "join", name: id.toUpperCase() });
+      await sleep(30);
+      cl.push(c);
+    }
+    for (const c of cl.slice(1)) c.send({ type: "set_ready", ready: true });
+    await sleep(50);
+    cl[0].send({ type: "start_game", gameId: "phone", settings: { seconds: 60 } });
+    await sleep(80);
+    type T = { phase: string; step: number; steps: number; task: { kind: string; prev: { content: string } | null } | null; submittedIds: string[]; reveal: { chain: { entries: { content: string; kind: string }[] } } | null; scores: Record<string, number> };
+    const g = (c: Client) => c.last()?.game as unknown as T;
+    check("Téléphone cassé démarre : écrire une phrase", cl[0].last()?.gameId === "phone" && g(cl[0])?.task?.kind === "text" && g(cl[0]).steps === 3);
+    for (const [i, c] of cl.entries()) c.send({ type: "game", action: { kind: "submit", content: `phrase de ${ids[i]}` } });
+    await sleep(80);
+    const prev = g(cl[1]).task?.prev?.content ?? "";
+    check("étape 2 : dessiner la phrase d'un autre", g(cl[1]).step === 1 && g(cl[1]).task?.kind === "drawing" && prev.startsWith("phrase de") && prev !== "phrase de pb");
+    const IMG = "data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==";
+    for (const c of cl) c.send({ type: "game", action: { kind: "submit", content: IMG } });
+    await sleep(80);
+    check("étape 3 : décrire un dessin reçu", g(cl[2]).step === 2 && g(cl[2]).task?.prev?.content === IMG);
+    for (const c of cl) c.send({ type: "game", action: { kind: "submit", content: "une description" } });
+    await sleep(80);
+    check("révélation de la 1re chaîne, une étape à la fois", g(cl[0]).phase === "reveal" && g(cl[0]).reveal?.chain.entries.length === 1);
+    for (let i = 0; i < 9; i++) { cl[0].send({ type: "skip" }); await sleep(30); }
+    await sleep(60);
+    check("fin : l'album complet est diffusé", g(cl[0]).phase === "final" && (cl[0].last()?.game as { album?: unknown[] }).album?.length === 3);
+    for (const c of cl) c.ws.close();
+  }
+
   console.log("\nServeur — santé & statistiques anonymes\n");
   const health = await fetch("http://localhost:3999/health");
   check("/health répond ok", health.status === 200 && (await health.text()) === "ok");
