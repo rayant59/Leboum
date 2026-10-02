@@ -116,6 +116,7 @@ une vue ; aucun autre jeu n'est touché.
 | 8 — Téléphone cassé | ✅ | `games/phone/`, `PhoneView.tsx`, `DrawPad.tsx` |
 | 9 — Mot interdit | ✅ | `games/taboo/`, `TabooView.tsx`, `platform/text.ts` |
 | 10 — Ni oui ni non | ✅ | `games/yesno/`, `YesNoView.tsx` |
+| 11 — Devine qui | ✅ | `games/guesswho/`, `GuessWhoView.tsx` |
 
 **Composants communs des jeux « social »** : `components/social/kit.tsx`
 (en-tête + chrono, carte de question, grille de vote, écran final avec
@@ -183,3 +184,17 @@ Le podium (`ResultsScreen`) partage les places en cas d'égalité (1, 1, 3).
   Le piégeur est l'auteur de la dernière question.
 * Barème : cible +5 par seconde tenue (+100 si elle tient jusqu'au bout),
   piégeur +150, fausse alerte −50.
+
+### Devine qui — règles du moteur (version simple)
+
+* Le rôle de Maître du secret tourne à chaque manche (1 à 10). Manche :
+  secret (le Maître découvre la personne, 10 s max) → enquête (chrono, 120 s
+  par défaut) → révélation.
+* **Célébrités** : 85 personnalités et personnages (avec indice pour le Maître
+  et alias acceptés : « Zizou », « Darth Vader », nom de famille seul…).
+  **Entre nous** : la personne mystère est un joueur du salon (jamais le Maître).
+* Stock commun de 20 questions : oui/non en consomment une, « je ne sais pas »
+  et « écartée » non ; une mauvaise proposition en coûte une. Une seule question
+  en attente par joueur (pas de spam).
+* Barème : celui qui trouve +100 et +10 par question restante ; le Maître +50
+  si la table trouve (il a intérêt à bien répondre).

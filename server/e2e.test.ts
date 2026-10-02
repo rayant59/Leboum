@@ -1052,6 +1052,44 @@ async function main() {
     for (const c of cl) c.ws.close();
   }
 
+  console.log("\nServeur générique — Devine qui\n");
+  {
+    const ids = ["ga", "gb", "gc"];
+    const cl: Client[] = [];
+    for (const [i, id] of ids.entries()) {
+      const c = new Client("DQUI", id, i === 0);
+      await c.open();
+      c.send({ type: "join", name: id.toUpperCase() });
+      await sleep(30);
+      cl.push(c);
+    }
+    for (const c of cl.slice(1)) c.send({ type: "set_ready", ready: true });
+    await sleep(50);
+    cl[0].send({ type: "start_game", gameId: "guesswho", settings: { totalRounds: 1, seconds: 120 } });
+    await sleep(80);
+    type D = { phase: string; masterId: string; celebrity: { name: string } | null; questions: { id: number; text: string; answer: string | null }[]; left: number; finderId: string | null; scores: Record<string, number> };
+    const g = (c: Client) => c.last()?.game as unknown as D;
+    check("Devine qui démarre : un Maître du secret", cl[0].last()?.gameId === "guesswho" && g(cl[0])?.phase === "secret" && ids.includes(g(cl[0]).masterId));
+    const master = cl[ids.indexOf(g(cl[0]).masterId)];
+    const others = cl.filter((c) => c !== master);
+    const name = g(master).celebrity!.name;
+    check("seul le Maître connaît la personne mystère", !!name && others.every((c) => g(c).celebrity === null && !JSON.stringify(c.last()?.game).includes(name)));
+    master.send({ type: "game", action: { kind: "ready" } });
+    await sleep(50);
+    others[0].send({ type: "game", action: { kind: "ask", text: "Est-ce un humain ?" } });
+    await sleep(50);
+    const q = g(master).questions[0];
+    master.send({ type: "game", action: { kind: "answer", questionId: q.id, answer: "oui" } });
+    await sleep(50);
+    check("question posée, réponse du Maître visible par tous", g(others[1]).questions[0]?.answer === "oui" && g(others[1]).left === 19);
+    others[1].send({ type: "game", action: { kind: "guess", text: name } });
+    await sleep(60);
+    const fid = ids[cl.indexOf(others[1])];
+    check("bonne proposition : manche gagnée et secret révélé", g(cl[0]).phase === "reveal" && g(cl[0]).finderId === fid && g(others[0]).celebrity?.name === name);
+    check("points : 100 + 10 × 19 et +50 au Maître", g(cl[0]).scores[fid] === 290 && g(cl[0]).scores[g(cl[0]).masterId] === 50, JSON.stringify(g(cl[0]).scores));
+    for (const c of cl) c.ws.close();
+  }
+
   console.log("\nServeur — santé & statistiques anonymes\n");
   const health = await fetch("http://localhost:3999/health");
   check("/health répond ok", health.status === 200 && (await health.text()) === "ok");

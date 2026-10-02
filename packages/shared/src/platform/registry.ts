@@ -16,6 +16,7 @@ import { imposterModule } from "../games/imposter/module";
 import { phoneModule } from "../games/phone/module";
 import { tabooModule } from "../games/taboo/module";
 import { yesnoModule } from "../games/yesno/module";
+import { guessWhoModule } from "../games/guesswho/module";
 
 export const ALL_GAME_MODULES: AnyGameModule[] = [
   drawModule,
@@ -33,6 +34,7 @@ export const ALL_GAME_MODULES: AnyGameModule[] = [
   phoneModule,
   tabooModule,
   yesnoModule,
+  guessWhoModule,
 ];
 
 export const GAME_REGISTRY: Record<string, AnyGameModule> = Object.fromEntries(ALL_GAME_MODULES.map((m) => [m.id, m]));

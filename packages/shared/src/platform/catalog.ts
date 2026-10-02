@@ -83,6 +83,12 @@ export const GAME_CATALOG: Record<string, GameModeInfo> = {
     rules: ["À ton tour, fais deviner un maximum de mots avant la fin du chrono.", "Les mots interdits de la carte sont… interdits (−50, carte perdue).", "Mot trouvé : +100 pour toi et +100 pour celui qui trouve."],
     listed: true,
   }),
+  guesswho: G({
+    id: "guesswho", name: "Devine qui", tagline: "Une personne mystère, 20 questions oui/non pour la démasquer.",
+    img: "/games/guesswho.svg", accent: "#4CC9F0", category: "social", minPlayers: 3, maxPlayers: 12, durationMin: 10,
+    rules: ["Le Maître du secret connaît une personne mystère.", "Posez-lui des questions : il répond oui, non ou je ne sais pas.", "Le premier qui la trouve : +100, et +10 par question restante."],
+    listed: true,
+  }),
   whois: G({
     id: "whois", name: "Qui de nous ?", tagline: "Qui est le plus susceptible de… ? Votez !",
     img: "/games/whois.svg", accent: "#FFC24B", category: "social", minPlayers: 3, maxPlayers: 12, durationMin: 6,

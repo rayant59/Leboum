@@ -24,9 +24,10 @@ import type { ImposterClientAction, ImposterPublic } from "./games/imposter/type
 import type { PhoneClientAction, PhonePublic } from "./games/phone/types";
 import type { TabooClientAction, TabooPublic } from "./games/taboo/types";
 import type { YesNoClientAction, YesNoPublic } from "./games/yesno/types";
+import type { GuessWhoClientAction, GuessWhoPublic } from "./games/guesswho/types";
 
 /** Any game's public projection. Discriminate with the state message `gameId`. */
-export type AnyPublicGame = PublicGameState | DrawPublic | FakeArtistPublic | RelayPublic | DoublagePublic | QuizPublic | RecoPublic | BombePublic | MimicPublic | WhoisPublic | FunnyPublic | ImposterPublic | PhonePublic | TabooPublic | YesNoPublic;
+export type AnyPublicGame = PublicGameState | DrawPublic | FakeArtistPublic | RelayPublic | DoublagePublic | QuizPublic | RecoPublic | BombePublic | MimicPublic | WhoisPublic | FunnyPublic | ImposterPublic | PhonePublic | TabooPublic | YesNoPublic | GuessWhoPublic;
 
 // --- Client -> server -------------------------------------------------------
 
@@ -39,7 +40,7 @@ export type ClientMessage =
   | { type: "set_settings"; settings: GameSettings } // host only
   | { type: "set_pending_game"; gameId: string } // host only: preview selection to guests
   | { type: "start_game"; gameId: string; settings?: unknown }
-  | { type: "game"; action: GameClientAction | DrawClientAction | FakeArtistClientAction | DoublageClientAction | QuizClientAction | BombeClientAction | MimicClientAction | WhoisClientAction | FunnyClientAction | ImposterClientAction | PhoneClientAction | TabooClientAction | YesNoClientAction }
+  | { type: "game"; action: GameClientAction | DrawClientAction | FakeArtistClientAction | DoublageClientAction | QuizClientAction | BombeClientAction | MimicClientAction | WhoisClientAction | FunnyClientAction | ImposterClientAction | PhoneClientAction | TabooClientAction | YesNoClientAction | GuessWhoClientAction }
   | { type: "voice_take"; round: number; audio: string } // mimic: my recorded take (base64 data URL), relayed to all
   | { type: "bombe_typing"; text: string } // bombe: live preview of what the active player is typing
   | { type: "skip" } // host advances the current game phase early

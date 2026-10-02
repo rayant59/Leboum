@@ -60,3 +60,4 @@ export * from "./games/imposter/index";
 export * from "./games/phone/index";
 export * from "./games/taboo/index";
 export * from "./games/yesno/index";
+export * from "./games/guesswho/index";
