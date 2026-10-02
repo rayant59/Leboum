@@ -14,6 +14,7 @@ dans une **Soirée LeBoum** avec un classement commun.
 | **Ça te parle ?** | Réflexion | 1+ | Quiz chronométré (classique, vitesse, survie, équipes). |
 | **Mot interdit** | Réflexion | 3+ | Fais deviner un max de mots sans dire les mots interdits. Modes : écrit (validation automatique), à voix haute (avec censeur). |
 | **Devine qui** | Social | 3+ | Le Maître du secret connaît une personne mystère ; 20 questions oui/non pour la trouver. Modes : célébrités, entre nous. |
+| **Le Top** | Réflexion | 1+ | Classe 5 éléments dans le bon ordre (poids, dates, distances…). Modes : le bon ordre, comme la table (consensus). |
 | **Qui de nous ?** | Social | 3+ | « Qui de nous… ? » : tout le monde vote pour un joueur. |
 | **La Plus Drôle** | Social | 3+ | Complète la phrase en secret, puis vote pour la meilleure réponse anonyme. |
 | **Imposteur** | Social | 3+ | Tout le monde a le même mot sauf un. Indices à tour de rôle, puis vote. Modes : classique, infiltré. |

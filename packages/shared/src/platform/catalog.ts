@@ -89,6 +89,12 @@ export const GAME_CATALOG: Record<string, GameModeInfo> = {
     rules: ["Le Maître du secret connaît une personne mystère.", "Posez-lui des questions : il répond oui, non ou je ne sais pas.", "Le premier qui la trouve : +100, et +10 par question restante."],
     listed: true,
   }),
+  ranking: G({
+    id: "ranking", name: "Le Top", tagline: "Classe 5 trucs dans le bon ordre. Plus tu colles, plus tu marques.",
+    img: "/games/ranking.svg", accent: "#FFC24B", category: "reflexion", minPlayers: 1, maxPlayers: 12, durationMin: 6,
+    rules: ["Une consigne : du plus lourd au plus léger, du plus ancien au plus récent…", "Range les 5 éléments avant la fin du chrono.", "Bonne place : +100, à une place près : +50. Sans faute : bonus !"],
+    listed: true,
+  }),
   whois: G({
     id: "whois", name: "Qui de nous ?", tagline: "Qui est le plus susceptible de… ? Votez !",
     img: "/games/whois.svg", accent: "#FFC24B", category: "social", minPlayers: 3, maxPlayers: 12, durationMin: 6,

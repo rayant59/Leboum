@@ -1090,6 +1090,34 @@ async function main() {
     for (const c of cl) c.ws.close();
   }
 
+  console.log("\nServeur générique — Le Top\n");
+  {
+    const ids = ["ra", "rb"];
+    const cl: Client[] = [];
+    for (const [i, id] of ids.entries()) {
+      const c = new Client("LTOP", id, i === 0);
+      await c.open();
+      c.send({ type: "join", name: id.toUpperCase() });
+      await sleep(30);
+      cl.push(c);
+    }
+    cl[1].send({ type: "set_ready", ready: true });
+    await sleep(50);
+    cl[0].send({ type: "start_game", gameId: "ranking", settings: { totalRounds: 2, seconds: 45, mode: "savoir" } });
+    await sleep(80);
+    type T = { phase: string; items: { label: string; value?: string }[]; expected: number[] | null; gained: Record<string, number> | null };
+    const g = (c: Client) => c.last()?.game as unknown as T;
+    check("Le Top démarre : 5 éléments, sans valeurs ni réponse", cl[0].last()?.gameId === "ranking" && g(cl[0])?.items.length === 5 && g(cl[0]).items.every((i) => !i.value) && g(cl[0]).expected === null);
+    cl[0].send({ type: "game", action: { kind: "order", order: [0, 1, 2, 3, 4] } });
+    cl[1].send({ type: "game", action: { kind: "order", order: [4, 3, 2, 1, 0] } });
+    await sleep(80);
+    const v = g(cl[0]);
+    check("tout le monde a classé → révélation avec valeurs", v.phase === "reveal" && v.items.every((i) => !!i.value) && Array.isArray(v.expected));
+    const { scoreOrder } = await import("../packages/shared/src/games/ranking/engine");
+    check("les points correspondent au barème", v.gained!.ra === scoreOrder([0, 1, 2, 3, 4], v.expected!) && v.gained!.rb === scoreOrder([4, 3, 2, 1, 0], v.expected!), JSON.stringify(v.gained));
+    for (const c of cl) c.ws.close();
+  }
+
   console.log("\nServeur — santé & statistiques anonymes\n");
   const health = await fetch("http://localhost:3999/health");
   check("/health répond ok", health.status === 200 && (await health.text()) === "ok");

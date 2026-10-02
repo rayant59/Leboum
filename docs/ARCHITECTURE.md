@@ -117,6 +117,7 @@ une vue ; aucun autre jeu n'est touché.
 | 9 — Mot interdit | ✅ | `games/taboo/`, `TabooView.tsx`, `platform/text.ts` |
 | 10 — Ni oui ni non | ✅ | `games/yesno/`, `YesNoView.tsx` |
 | 11 — Devine qui | ✅ | `games/guesswho/`, `GuessWhoView.tsx` |
+| 12 — Top / Classement | ✅ | `games/ranking/`, `RankingView.tsx` |
 
 **Composants communs des jeux « social »** : `components/social/kit.tsx`
 (en-tête + chrono, carte de question, grille de vote, écran final avec
@@ -198,3 +199,16 @@ Le podium (`ResultsScreen`) partage les places en cas d'égalité (1, 1, 3).
   en attente par joueur (pas de spam).
 * Barème : celui qui trouve +100 et +10 par question restante ; le Maître +50
   si la table trouve (il a intérêt à bien répondre).
+
+### Le Top — règles du moteur
+
+* 2 à 10 manches, une consigne par manche et 5 éléments à ranger (chrono, 45 s
+  par défaut). On peut renvoyer son classement tant que tout le monde n'a pas
+  validé ; envoi automatique juste avant la fin du chrono.
+* **Le bon ordre** : 24 consignes factuelles (valeurs arrondies affichées à la
+  révélation). **Comme la table** : 15 consignes subjectives, l'ordre attendu est
+  la place moyenne de chaque élément (il faut au moins 2 classements).
+* Barème par élément selon l'écart à la bonne place : 0 → +100, 1 → +50,
+  2 → +20, au-delà 0 ; ordre parfait : +100 de bonus (max 600 par manche).
+* Sécurité : l'ordre interne des éléments EST la réponse. Le client ne reçoit
+  que les éléments mélangés et parle en positions affichées ; le serveur traduit.

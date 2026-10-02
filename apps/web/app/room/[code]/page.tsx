@@ -24,6 +24,7 @@ import { PhoneView } from "@/components/PhoneView";
 import { TabooView } from "@/components/TabooView";
 import { YesNoView } from "@/components/YesNoView";
 import { GuessWhoView } from "@/components/GuessWhoView";
+import { RankingView } from "@/components/RankingView";
 import { GameIntro } from "@/components/GameIntro";
 import { HostQuitButton } from "@/components/HostQuitButton";
 import { SupportButton } from "@/components/SupportButton";
@@ -34,7 +35,7 @@ import { SubtitleStrip } from "@/components/SubtitleStrip";
 import { MODE_ICONS } from "./modeIcons";
 import { SoireeBuilder, SoireeFinal, SoireeHud, SoireeLobbyCard, type BuilderItem } from "@/components/Soiree";
 
-type GameId = "draw" | "mimic" | "quiz" | "reco" | "pixel" | "bombe" | "whois" | "funny" | "imposter" | "phone" | "taboo" | "yesno" | "guesswho";
+type GameId = "draw" | "mimic" | "quiz" | "reco" | "pixel" | "bombe" | "whois" | "funny" | "imposter" | "phone" | "taboo" | "yesno" | "guesswho" | "ranking";
 
 /** Un mode de jeu tel qu'exposé dans la salle d'attente.
  *  `img` : illustration dédiée (modes de Dessin) ; sinon on retombe sur la
@@ -87,6 +88,10 @@ const MODE_SETS: Record<GameId, ModeDef[]> = {
     { id: "classic", c: "#FF4D8D", nm: "Classique", ds: "Le temps de soigner sa vanne : une phrase, une réponse, un vote." },
     { id: "express", c: "#FFC24B", nm: "Express", ds: "30 secondes pour écrire : la première idée est souvent la meilleure." },
   ],
+  ranking: [
+    { id: "savoir", c: "#FFC24B", nm: "Le bon ordre", ds: "Poids, dates, distances, tailles : un seul classement est juste. Jouable même seul." },
+    { id: "table", c: "#FF4D8D", nm: "Comme la table", ds: "Pas de bonne réponse : il faut classer comme la moyenne de la table. Pense comme tes potes !", min: 3 },
+  ],
   guesswho: [
     { id: "celebrites", c: "#4CC9F0", nm: "Célébrités", ds: "Une personnalité ou un personnage connu : Zidane, Dark Vador, Marie Curie, Shrek…" },
     { id: "entrenous", c: "#FFC24B", nm: "Entre nous", ds: "La personne mystère est l'un des joueurs du salon. Qui vous connaît le mieux ?" },
@@ -124,6 +129,7 @@ const TIMES: Record<GameId, { title: string; sub: string; opts: number[]; def: n
   pixel: { title: "Temps de révélation", sub: "Durée avant l'image complète", opts: [20, 30, 45, 60], def: 30 },
   whois: { title: "Temps de vote", sub: "Délai pour désigner quelqu'un", opts: [10, 15, 20, 30], def: 20 },
   funny: { title: "Temps d'écriture", sub: "Pour trouver ta meilleure réponse", opts: [30, 45, 60, 90], def: 60 },
+  ranking: { title: "Temps pour classer", sub: "Pour ranger les 5 éléments", opts: [30, 45, 60, 90], def: 45 },
   guesswho: { title: "Durée d'une manche", sub: "Pour poser les questions et trouver", opts: [60, 90, 120, 180], def: 120 },
   yesno: { title: "Temps à tenir", sub: "Durée pendant laquelle la cible doit résister", opts: [30, 45, 60, 90], def: 45 },
   taboo: { title: "Temps par passage", sub: "Pour faire deviner un maximum de mots", opts: [45, 60, 90, 120], def: 60 },
@@ -137,6 +143,7 @@ const TIMES: Record<GameId, { title: string; sub: string; opts: number[]; def: n
  *  pixel). Chaque jeu garde son propre défaut et ses propres bornes — le quiz,
  *  par exemple, va jusqu'à 20 questions (le moteur borne totalQuestions à 3–20). */
 const ROUNDS: Record<GameId, { headTitle: string; rowTitle: string; rowSub: string; unit: string; min: number; max: number; def: number } | null> = {
+  ranking: { headTitle: "Manches", rowTitle: "Nombre de classements", rowSub: "Une consigne différente à chaque manche", unit: "manches", min: 2, max: 10, def: 5 },
   guesswho: { headTitle: "Manches", rowTitle: "Nombre de manches", rowSub: "Un nouveau Maître du secret à chaque manche", unit: "manches", min: 1, max: 10, def: 4 },
   yesno: { headTitle: "Tours de table", rowTitle: "Nombre de tours", rowSub: "Chacun passe une fois sur le gril par tour", unit: "tours", min: 1, max: 3, def: 1 },
   taboo: { headTitle: "Tours de table", rowTitle: "Nombre de tours", rowSub: "Chacun fait deviner une fois par tour", unit: "tours", min: 1, max: 3, def: 1 },
@@ -482,6 +489,8 @@ export default function LobbyPage() {
         return { gameId: "whois", settings: { totalRounds: curRounds, seconds: t, mode }, detail };
       case "funny":
         return { gameId: "funny", settings: { totalRounds: curRounds, seconds: mode === "express" ? 30 : t }, detail: mode === "express" ? `Express · ${curRounds} manches · 30s` : detail };
+      case "ranking":
+        return { gameId: "ranking", settings: { totalRounds: curRounds, seconds: t, mode }, detail };
       case "guesswho":
         return { gameId: "guesswho", settings: { totalRounds: curRounds, seconds: t, mode }, detail };
       case "yesno":
@@ -546,6 +555,7 @@ export default function LobbyPage() {
       room.gameId === "taboo" ? <TabooView room={room} /> :
       room.gameId === "yesno" ? <YesNoView room={room} /> :
       room.gameId === "guesswho" ? <GuessWhoView room={room} /> :
+      room.gameId === "ranking" ? <RankingView room={room} /> :
       room.gameId === "draw" ? <DrawGameView room={room} /> :
       <GameView room={room} />;
     // Fin de partie : fournie par le moteur (`isOver`), plus de table dupliquée.
