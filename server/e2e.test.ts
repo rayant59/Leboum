@@ -1015,6 +1015,43 @@ async function main() {
     for (const c of cl) c.ws.close();
   }
 
+  console.log("\nServeur générique — Ni oui ni non\n");
+  {
+    const ids = ["ya", "yb", "yc"];
+    const cl: Client[] = [];
+    for (const [i, id] of ids.entries()) {
+      const c = new Client("NOUI", id, i === 0);
+      await c.open();
+      c.send({ type: "join", name: id.toUpperCase() });
+      await sleep(30);
+      cl.push(c);
+    }
+    for (const c of cl.slice(1)) c.send({ type: "set_ready", ready: true });
+    await sleep(50);
+    cl[0].send({ type: "start_game", gameId: "yesno", settings: { seconds: 45, mode: "chat" } });
+    await sleep(80);
+    type Y = { phase: string; targetId: string; log: { text: string }[]; result: { outcome: string; catcherId: string | null; word: string | null } | null; scores: Record<string, number> };
+    const g = (c: Client) => c.last()?.game as unknown as Y;
+    check("Ni oui ni non démarre : une cible désignée", cl[0].last()?.gameId === "yesno" && g(cl[0])?.phase === "ready" && ids.includes(g(cl[0]).targetId));
+    cl[0].send({ type: "skip" });
+    await sleep(60);
+    const targetId = g(cl[0]).targetId;
+    const target = cl[ids.indexOf(targetId)];
+    const asker = cl.find((c) => c !== target)!;
+    check("le chrono démarre", g(cl[0]).phase === "hot");
+    asker.send({ type: "game", action: { kind: "say", text: "Tu as faim ?" } });
+    await sleep(40);
+    target.send({ type: "game", action: { kind: "say", text: "Un peu" } });
+    await sleep(40);
+    check("les messages circulent", g(cl[0]).phase === "hot" && g(cl[0]).log.length === 2);
+    target.send({ type: "game", action: { kind: "say", text: "nan pas trop" } });
+    await sleep(60);
+    const r = g(cl[0]).result;
+    check("« nan » repéré par le serveur : la cible tombe", g(cl[0]).phase === "result" && r?.outcome === "caught" && r?.word === "nan" && r?.catcherId === ids[cl.indexOf(asker)]);
+    check("le piégeur marque +150", g(cl[0]).scores[ids[cl.indexOf(asker)]] === 150);
+    for (const c of cl) c.ws.close();
+  }
+
   console.log("\nServeur — santé & statistiques anonymes\n");
   const health = await fetch("http://localhost:3999/health");
   check("/health répond ok", health.status === 200 && (await health.text()) === "ok");

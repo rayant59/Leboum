@@ -101,6 +101,12 @@ export const GAME_CATALOG: Record<string, GameModeInfo> = {
     rules: ["Tout le monde reçoit le même mot… sauf l'imposteur.", "Chacun donne un indice à son tour, sans dire le mot.", "Votez : démasquer l'imposteur = +100. S'il s'en sort : +250 pour lui."],
     listed: true,
   }),
+  yesno: G({
+    id: "yesno", name: "Ni oui ni non", tagline: "Bombarde la cible de questions jusqu'à ce qu'elle craque.",
+    img: "/games/yesno.svg", accent: "#FF6B4D", category: "chaos", minPlayers: 3, maxPlayers: 12, durationMin: 5,
+    rules: ["Chacun son tour, un joueur est la cible.", "Les autres l'interrogent pour lui faire dire OUI ou NON.", "Elle marque à chaque seconde tenue ; celui qui la fait craquer : +150."],
+    listed: true,
+  }),
   bombe: G({
     id: "bombe", name: "Boum Rush", tagline: "Trouve un mot avec la syllabe avant l'explosion.",
     img: "/games/bombe.png", accent: "#FF6B4D", category: "chaos", minPlayers: 2, maxPlayers: 12, durationMin: 5,

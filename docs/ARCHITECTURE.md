@@ -115,6 +115,7 @@ une vue ; aucun autre jeu n'est touché.
 | 7 — Imposteur (mot) | ✅ | `games/imposter/`, `ImposterView.tsx` |
 | 8 — Téléphone cassé | ✅ | `games/phone/`, `PhoneView.tsx`, `DrawPad.tsx` |
 | 9 — Mot interdit | ✅ | `games/taboo/`, `TabooView.tsx`, `platform/text.ts` |
+| 10 — Ni oui ni non | ✅ | `games/yesno/`, `YesNoView.tsx` |
 
 **Composants communs des jeux « social »** : `components/social/kit.tsx`
 (en-tête + chrono, carte de question, grille de vote, écran final avec
@@ -169,3 +170,16 @@ Le podium (`ResultsScreen`) partage les places en cas d'égalité (1, 1, 3).
 * `platform/text.ts` regroupe la comparaison de mots (`normalizeWord`,
   `isWordGuess`, `findForbidden`) — partagée avec l'Imposteur.
 * Cartes perso : `motinterdit/*.txt` (« mot | interdit, interdit… »).
+
+### Ni oui ni non — règles du moteur
+
+* Chaque joueur est la cible une fois par tour de table (1 à 3 tours) :
+  « prêt » (6 s) → chrono (20–120 s, 45 par défaut) → résultat.
+* **À voix haute** : n'importe qui (sauf la cible) appuie sur « Il l'a dit ! ».
+  Le chrono de la cible est gelé, les autres joueurs votent en 10 s ; égalité
+  = la cible est sauvée et le chrono reprend là où il était.
+* **Par écrit** : le serveur repère seul oui / non et leurs variantes
+  (ouais, nan, ouiii, yes…), sans faux positif sur ouistiti, oignon, nonante…
+  Le piégeur est l'auteur de la dernière question.
+* Barème : cible +5 par seconde tenue (+100 si elle tient jusqu'au bout),
+  piégeur +150, fausse alerte −50.
