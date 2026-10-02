@@ -4,7 +4,7 @@
 // suivi pendant les jeux, et grand classement de fin de soirée.
 
 import { useState } from "react";
-import { gameInfo, soireeStandings, type SoireeState } from "@subtitles-party/shared";
+import { SOIREE_FORMATS, estimateMinutes, gameInfo, soireeStandings, type SoireeState } from "@subtitles-party/shared";
 import { Avatar } from "@/components/Avatar";
 import { ResultsScreen, type RankRow } from "@/components/ResultsScreen";
 
@@ -36,6 +36,7 @@ export function SoireeBuilder({
   onMoveUp,
   onClear,
   onLaunch,
+  onGenerate,
   launchDisabled,
   launchHint,
 }: {
@@ -46,10 +47,13 @@ export function SoireeBuilder({
   onMoveUp: (i: number) => void;
   onClear: () => void;
   onLaunch: () => void;
+  /** Générateur (phase 14) : remplace le programme par une proposition. */
+  onGenerate?: (formatId: string) => void;
   launchDisabled: boolean;
   launchHint: string | null;
 }) {
-  const minutes = items.reduce((m, it) => m + gameInfo(it.gameId).durationMin, 0);
+  const minutes = estimateMinutes(items);
+  const [lastFormat, setLastFormat] = useState<string | null>(null);
   return (
     <section className="mb-8 rounded-2xl border p-5" style={{ borderColor: "rgba(255,194,75,.35)", background: "linear-gradient(165deg, rgba(255,194,75,.09), rgba(28,22,54,.65) 55%)" }}>
       <div className="mb-4 flex items-start gap-3">
@@ -64,6 +68,37 @@ export function SoireeBuilder({
           <button onClick={onClear} className="text-xs" style={{ color: C.faint, background: "none", border: "none", cursor: "pointer" }}>Vider</button>
         )}
       </div>
+
+      {onGenerate && (
+        <div className="mb-4">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".14em", textTransform: "uppercase", color: C.gold }}>Générer une soirée</span>
+            {lastFormat && (
+              <button onClick={() => onGenerate(lastFormat)} className="text-xs font-semibold" style={{ color: C.gold, background: "none", border: "none", cursor: "pointer" }} title="Nouveau tirage, même format">
+                ↻ Autre tirage
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {SOIREE_FORMATS.map((f) => {
+              const on = lastFormat === f.id;
+              return (
+                <button
+                  key={f.id}
+                  onClick={() => { setLastFormat(f.id); onGenerate(f.id); }}
+                  className="rounded-xl border px-3 py-2 text-left transition-colors"
+                  style={{ borderColor: on ? C.gold : C.line, background: on ? "rgba(255,194,75,.12)" : "rgba(14,11,26,.45)", cursor: "pointer" }}
+                  title={f.blurb}
+                >
+                  <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: on ? C.gold : C.text }}>{f.name}</div>
+                  <div style={{ fontSize: 11, color: C.muted }}>{f.blurb}</div>
+                </button>
+              );
+            })}
+          </div>
+          {items.length > 0 && lastFormat && <p className="mt-2 text-xs" style={{ color: C.faint }}>Proposition modifiable : retire, réordonne ou ajoute des jeux ci-dessous.</p>}
+        </div>
+      )}
 
       {items.length > 0 ? (
         <ol className="mb-4 flex flex-col gap-2" style={{ listStyle: "none", margin: 0, padding: 0 }}>

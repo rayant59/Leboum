@@ -91,6 +91,14 @@ une vue ; aucun autre jeu n'est touché.
   même programme à zéro, `soiree_end` ferme la soirée.
 * Points de soirée par place : 10 / 7 / 5 / 4 / 3 puis 2 ; égalité = mêmes
   points ; coopératif = 5 pour tout le monde (`soiree/score.ts`).
+* **Générateur de soirée** (phase 14, `soiree/generator.ts`) : l'hôte choisit
+  un format (Soirée rapide, 45 min, Chaos, Entre potes, Créative, Cerveau,
+  Grande soirée). Un format impose des jeux (remplacés par un jeu de la même
+  famille s'ils sont injouables au nombre de joueurs présents) ou fixe des
+  quotas par famille (tirage sans doublon, familles alternées). Les formats
+  courts utilisent des réglages « express » (`SHORT_SETTINGS`). Le résultat
+  remplit simplement le programme du constructeur : l'hôte peut retirer,
+  réordonner, ajouter ou relancer un tirage avant de lancer.
 
 ## 5. Ajouter un nouveau jeu — check-list
 
@@ -119,6 +127,7 @@ une vue ; aucun autre jeu n'est touché.
 | 11 — Devine qui | ✅ | `games/guesswho/`, `GuessWhoView.tsx` |
 | 12 — Top / Classement | ✅ | `games/ranking/`, `RankingView.tsx` |
 | 13 — Enrichir LeBoum (familles) | ✅ | `platform/catalog.ts` (`gamesByCategory`), lobby |
+| 14 — Générateur de soirée | ✅ | `soiree/generator.ts`, `Soiree.tsx` (`SoireeBuilder`) |
 
 **Composants communs des jeux « social »** : `components/social/kit.tsx`
 (en-tête + chrono, carte de question, grille de vote, écran final avec

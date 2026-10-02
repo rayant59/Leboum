@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { effectiveMaxPlayers, passActive, canStart, isEffectivelyReady, minReadyFor, sanitizeName, DRAW_THEMES, GAME_CATALOG, gameInfo, gamesByCategory, listedGames, type GameCategory } from "@subtitles-party/shared";
+import { effectiveMaxPlayers, passActive, canStart, isEffectivelyReady, minReadyFor, sanitizeName, DRAW_THEMES, GAME_CATALOG, gameInfo, gamesByCategory, generateSoiree, listedGames, type GameCategory } from "@subtitles-party/shared";
 import { getPlayerName, setPlayerName } from "@/lib/identity";
 import { useRoom } from "@/lib/useRoom";
 import { BoumBackdrop } from "@/components/BoumBackdrop";
@@ -775,6 +775,7 @@ export default function LobbyPage() {
           onMoveUp={(i) => setSoireeItems((p) => { if (i <= 0) return p; const n = p.slice(); [n[i - 1], n[i]] = [n[i], n[i - 1]]; return n; })}
           onClear={() => setSoireeItems(() => [])}
           onLaunch={() => room.startSoiree(soireeItems.map((i) => ({ gameId: i.gameId, settings: i.settings })))}
+          onGenerate={(id) => setSoireeItems(() => generateSoiree(id, Math.max(2, connectedCount)).map((i) => ({ gameId: i.gameId, settings: i.settings, detail: i.detail })))}
           launchDisabled={!soireeStartable}
           launchHint={connectedCount < 2 ? "Invite au moins un ami pour lancer une soirée." : missingSoireeReady > 0 ? `Encore ${missingSoireeReady} joueur${missingSoireeReady > 1 ? "s" : ""} prêt${missingSoireeReady > 1 ? "s" : ""}.` : null}
         />

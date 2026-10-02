@@ -1118,6 +1118,28 @@ async function main() {
     for (const c of cl) c.ws.close();
   }
 
+  console.log("\nServeur — Soirée générée (phase 14)\n");
+  {
+    const { generateSoiree } = await import("../packages/shared/src/soiree/generator");
+    const ids = ["sa", "sb", "sc"];
+    const cl: Client[] = [];
+    for (const [i, id] of ids.entries()) {
+      const c = new Client("GENS", id, i === 0);
+      await c.open();
+      c.send({ type: "join", name: id.toUpperCase() });
+      await sleep(30);
+      cl.push(c);
+    }
+    for (const c of cl.slice(1)) c.send({ type: "set_ready", ready: true });
+    await sleep(50);
+    const items = generateSoiree("chaos", 3).map((i) => ({ gameId: i.gameId, settings: i.settings }));
+    cl[0].send({ type: "soiree_start", items });
+    await sleep(100);
+    const st = cl[0].last() as unknown as { gameId: string; soiree?: { items: { gameId: string }[] } };
+    check("une soirée « Chaos » générée se lance sur son 1er jeu", st?.gameId === items[0].gameId && st?.soiree?.items.length === items.length, `${st?.gameId} / ${items.map((i) => i.gameId).join()}`);
+    for (const c of cl) c.ws.close();
+  }
+
   console.log("\nServeur — santé & statistiques anonymes\n");
   const health = await fetch("http://localhost:3999/health");
   check("/health répond ok", health.status === 200 && (await health.text()) === "ok");
