@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from "react";
 import { Avatar } from "@/components/Avatar";
+import { gameInfo } from "@subtitles-party/shared";
 
 type IntroPlayer = {
   id: string;
@@ -13,19 +14,6 @@ type IntroPlayer = {
   color: string;
   avatar?: string | null;
   isConnected: boolean;
-};
-
-const INTRO_META: Record<string, { name: string; img: string; accent: string; tagline: string }> = {
-  subtitles:  { name: "Sous-titres",   img: "/games/subtitles.png", accent: "#FFC24B", tagline: "Invente les meilleures répliques." },
-  draw:       { name: "Boum Dessin",   img: "/games/draw.png",      accent: "#FF4D8D", tagline: "Dessine le mot secret, les autres devinent." },
-  fakeartist: { name: "Faux-artiste",  img: "/games/draw.png",      accent: "#FF6B6B", tagline: "Un imposteur ignore le mot — démasquez-le au vote." },
-  relay:      { name: "Relais",        img: "/games/draw.png",      accent: "#4CC9F0", tagline: "Deux joueurs se relaient au crayon." },
-  mimic:      { name: "Mimic Boum",    img: "/games/mimic.png",     accent: "#46E0B0", tagline: "Imite un son avec ta voix — une seule prise." },
-  quiz:       { name: "Ça te parle ?", img: "/games/quiz.png",      accent: "#8B7DF6", tagline: "Réponds vite et montre ta culture." },
-  reco:       { name: "Œil de Boum",   img: "/games/reco.png",      accent: "#4FC3F7", tagline: "Devine le personnage, le film, le lieu…" },
-  pixel:      { name: "Pixel Panic",   img: "/games/pixel.png",     accent: "#46E0B0", tagline: "L'image se dévoile pixel par pixel." },
-  bombe:      { name: "Boum Rush",     img: "/games/bombe.png",     accent: "#FF6B4D", tagline: "Trouve un mot avec la syllabe avant l'explosion." },
-  doublage:   { name: "Doublage",      img: "/games/doublage.png",  accent: "#FFC24B", tagline: "Double la scène à ta façon." },
 };
 
 const DISPLAY = "'Bricolage Grotesque', system-ui, sans-serif";
@@ -39,8 +27,7 @@ export function GameIntro({
   players: IntroPlayer[];
   onDone: () => void;
 }) {
-  const meta =
-    INTRO_META[gameId] ?? { name: "Prochain jeu", img: "/games/draw.png", accent: "#FFC24B", tagline: "" };
+  const meta = gameInfo(gameId);
   const a = meta.accent;
 
   const [count, setCount] = useState(3);
@@ -98,6 +85,15 @@ export function GameIntro({
           <h1 style={{ margin: 0, fontSize: 46, fontWeight: 800, letterSpacing: "-.02em" }}>{meta.name}</h1>
           {meta.tagline && (
             <p style={{ margin: 0, maxWidth: 460, fontSize: 15, lineHeight: 1.5, color: "#A79FC7" }}>{meta.tagline}</p>
+          )}
+          {meta.rules.length > 0 && (
+            <ol style={{ margin: "6px 0 0", padding: 0, listStyle: "none", display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8, maxWidth: 560 }}>
+              {meta.rules.slice(0, 3).map((r, i) => (
+                <li key={i} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 999, border: `1px solid ${a}40`, background: `${a}12`, fontSize: 13, color: "#E4DDFB", fontFamily: "'Inter', system-ui, sans-serif" }}>
+                  <b style={{ color: a, fontFamily: DISPLAY }}>{i + 1}</b>{r}
+                </li>
+              ))}
+            </ol>
           )}
         </div>
 

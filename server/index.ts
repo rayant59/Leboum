@@ -34,19 +34,11 @@ import {
   pickTwists,
   DEFAULT_GAME_SETTINGS,
   // platform + draw game
-  drawModule,
+  GAME_REGISTRY,
   isCloseGuess,
   BOMBE_COUNTDOWN_MS,
-  fakeArtistModule,
-  relayModule,
-  doublageModule,
-  quizModule,
-  recoModule,
-  pixelModule,
-  bombeModule,
   setBombeDictionary,
   bombeDictSize,
-  mimicModule,
   setMimicSounds,
   parseMimicSounds,
   mimicSoundCount,
@@ -74,6 +66,22 @@ import {
   type SubtitlesErrorCode,
   type SubtitlesState,
   type VotingCaption,
+  type SoireeItem,
+  type SoireeState,
+  createSoiree,
+  recordGame,
+  nextGame,
+  isRecorded,
+  withPlayers,
+  gameInfo,
+  parseWhoisQuestions,
+  addCustomWhoisQuestions,
+  whoisBankSize,
+  funnyPromptBank,
+  addCustomFunnyPrompts,
+  parseImposterPairs,
+  addCustomImposterPairs,
+  imposterBankSize,
   setCustomWords,
   addCustomQuestions,
   parseCustomQuestions,
@@ -263,6 +271,66 @@ const PORT = Number(process.env.PORT ?? 1999);
   console.log(`[mimic-sounds] aucun manifeste — pack de démarrage utilisé (${mimicSoundCount()} sons)`);
 })();
 
+// Questions perso de « Qui de nous ? » : quidenous/*.txt, une par ligne,
+// au format « catégorie | question ». Ajoutées à la banque intégrée.
+(() => {
+  const dirs = [resolve(process.cwd(), "quidenous"), resolve(process.cwd(), "..", "quidenous"), resolve(__dirname, "..", "quidenous")];
+  for (const dir of dirs) {
+    try {
+      if (!existsSync(dir)) continue;
+      const files = readdirSync(dir).filter((f) => f.toLowerCase().endsWith(".txt") && f.toLowerCase() !== "readme.txt");
+      if (!files.length) continue;
+      const qs = parseWhoisQuestions(files.map((f) => readFileSync(resolve(dir, f), "utf8")).join("\n"));
+      if (!qs.length) continue;
+      addCustomWhoisQuestions(qs);
+      console.log(`[quidenous] ${qs.length} question(s) perso chargée(s) (${files.join(", ")}) — total : ${whoisBankSize()}`);
+      return;
+    } catch {
+      /* ignore and try next */
+    }
+  }
+})();
+
+// Phrases perso de « La Plus Drôle » : plusdrole/*.txt, une par ligne
+// (« ___ » marque le trou ; sans trou, il est ajouté à la fin).
+(() => {
+  const dirs = [resolve(process.cwd(), "plusdrole"), resolve(process.cwd(), "..", "plusdrole"), resolve(__dirname, "..", "plusdrole")];
+  for (const dir of dirs) {
+    try {
+      if (!existsSync(dir)) continue;
+      const files = readdirSync(dir).filter((f) => f.toLowerCase().endsWith(".txt") && f.toLowerCase() !== "readme.txt");
+      if (!files.length) continue;
+      const before = funnyPromptBank().length;
+      addCustomFunnyPrompts(files.map((f) => readFileSync(resolve(dir, f), "utf8")).join("\n").split(/\r?\n/));
+      const added = funnyPromptBank().length - before;
+      if (added > 0) console.log(`[plusdrole] ${added} phrase(s) perso chargée(s) (${files.join(", ")})`);
+      return;
+    } catch {
+      /* ignore and try next */
+    }
+  }
+})();
+
+// Mots perso de l'« Imposteur » : imposteur/*.txt, une paire par ligne,
+// au format « catégorie | mot | mot proche ».
+(() => {
+  const dirs = [resolve(process.cwd(), "imposteur"), resolve(process.cwd(), "..", "imposteur"), resolve(__dirname, "..", "imposteur")];
+  for (const dir of dirs) {
+    try {
+      if (!existsSync(dir)) continue;
+      const files = readdirSync(dir).filter((f) => f.toLowerCase().endsWith(".txt") && f.toLowerCase() !== "readme.txt");
+      if (!files.length) continue;
+      const pairs = parseImposterPairs(files.map((f) => readFileSync(resolve(dir, f), "utf8")).join("\n"));
+      if (!pairs.length) continue;
+      addCustomImposterPairs(pairs);
+      console.log(`[imposteur] ${pairs.length} paire(s) perso chargée(s) (${files.join(", ")}) — total : ${imposterBankSize()}`);
+      return;
+    } catch {
+      /* ignore and try next */
+    }
+  }
+})();
+
 const GRACE_MS = 45_000;
 /** Taille max d'une prise vocale (base64) relayée dans le mode Mimic. */
 const MAX_TAKE_BYTES = 260_000;
@@ -292,21 +360,16 @@ interface Room {
   sockets: Map<string, WebSocket>;
   pruneTimers: Map<string, NodeJS.Timeout>;
   gameTimer: NodeJS.Timeout | null;
+  /** Compteur de parties lancées dans ce salon (une revanche = nouvelle partie). */
+  gameRun: number;
+  /** Soirée LeBoum en cours (enchaînement de jeux + score global). */
+  soiree: SoireeState | null;
+  /** Partie (`gameRun`) lancée par la soirée : seule celle-ci compte au score. */
+  soireeRun: number;
 }
 
-/** Registry of games hosted generically (subtitles keeps its bespoke path for
- *  now; it can be migrated to a module later without touching this table). */
-const GAME_REGISTRY: Record<string, AnyGameModule> = {
-  draw: drawModule,
-  fakeartist: fakeArtistModule,
-  relay: relayModule,
-  doublage: doublageModule,
-  quiz: quizModule,
-  reco: recoModule,
-  pixel: pixelModule,
-  bombe: bombeModule,
-  mimic: mimicModule,
-};
+/** Registre des jeux hébergés génériquement : source unique dans
+ *  packages/shared/src/platform/registry.ts (Sous-titres garde son chemin dédié). */
 const gameCtx = (): GameContext => ({ now: Date.now(), rng: Math.random });
 /** Durée de l'écran d'annonce « prochain jeu » côté client (GameIntro, 4,2 s).
  *  Le premier chrono de chaque jeu démarre APRÈS cette annonce : sinon la
@@ -349,6 +412,9 @@ function getRoom(code: string, allowCreate = false): Room | null {
       sockets: new Map(),
       pruneTimers: new Map(),
       gameTimer: null,
+      gameRun: 0,
+      soiree: null,
+      soireeRun: -1,
     };
     rooms.set(code, room);
     stats.roomCreated();
@@ -446,6 +512,13 @@ function projectAny(room: Room, pid: string): { gameId: string | null; game: Any
   if (room.game) return { gameId: room.state.gameId ?? "subtitles", game: projectGame(room, pid) };
   if (room.mod) return { gameId: room.mod.module.id, game: room.mod.module.project(room.mod.state, pid) as AnyPublicGame };
   return { gameId: null, game: null };
+}
+
+/** La partie en cours est-elle terminée (écran de résultats final) ? */
+function gameIsOver(room: Room): boolean {
+  if (room.game) return room.game.phase === "scoreboard";
+  if (room.mod) return room.mod.module.isOver(room.mod.state);
+  return false;
 }
 
 function gameDeadline(room: Room): number | null {
@@ -582,6 +655,104 @@ function handleRelayGuess(room: Room, playerId: string, text: string, ws: WebSoc
 
 // --- transport --------------------------------------------------------------
 
+// --- Soirée LeBoum -------------------------------------------------------------
+
+/** Vue publique de la soirée : sans les réglages de lancement (inutiles aux clients). */
+function publicSoiree(room: Room): SoireeState | null {
+  const s = room.soiree;
+  return s ? { ...s, items: s.items.map((i) => ({ gameId: i.gameId })) } : null;
+}
+
+/** Tient la soirée à jour : nouveaux joueurs, et résultat du jeu dès qu'il se termine. */
+function syncSoiree(room: Room) {
+  if (!room.soiree) return;
+  room.soiree = withPlayers(room.soiree, gameRoster(room));
+  const s = room.soiree;
+  if (s.finished || !room.mod || room.gameRun !== room.soireeRun) return;
+  if (!room.mod.module.isOver(room.mod.state) || isRecorded(s, s.current, room.gameRun)) return;
+  const result = room.mod.module.results(room.mod.state);
+  if (!result) return;
+  const players = (room.mod.state as { players?: GamePlayer[] }).players ?? gameRoster(room);
+  room.soiree = recordGame(s, s.current, room.gameRun, room.mod.module.id, result, players);
+}
+
+/** Arrête la partie en cours et ramène tout le monde au salon. */
+function stopGameToLobby(room: Room) {
+  if (room.gameTimer) {
+    clearTimeout(room.gameTimer);
+    room.gameTimer = null;
+  }
+  room.game = null;
+  room.tokens = null;
+  room.mod = null;
+  room.strokes = [];
+  room.mimicTakes.clear();
+  clearSwaps(room);
+  const players = Object.fromEntries(
+    Object.entries(room.state.players).map(([id, p]) => [id, { ...p, isReady: false }]),
+  );
+  room.state = { ...room.state, phase: "lobby", gameId: null, players };
+}
+
+/** Lance le jeu courant du programme. Un jeu injouable (trop ou pas assez de
+ *  joueurs) est sauté avec un message ; après le dernier, retour au salon
+ *  pour le classement final. */
+function launchSoireeItem(room: Room, sender?: WebSocket, skipReady = false) {
+  let s = room.soiree;
+  if (!s) return;
+  const count = connectedPlayers(room.state).length;
+  while (!s.finished) {
+    const item = s.items[s.current];
+    const mod = item ? GAME_REGISTRY[item.gameId] : undefined;
+    if (mod && count >= mod.meta.minPlayers && count <= mod.meta.maxPlayers) break;
+    if (item) {
+      const info = gameInfo(item.gameId);
+      relay(room, { type: "chat", from: "*", name: "LeBoum", text: `${info.name} passé : il faut ${info.minPlayers} à ${info.maxPlayers} joueurs.`, kind: "system" });
+    }
+    s = nextGame(s);
+  }
+  room.soiree = s;
+  if (s.finished) {
+    if (room.state.phase !== "lobby") stopGameToLobby(room);
+    broadcast(room);
+    return;
+  }
+  const item = s.items[s.current];
+  room.pendingSettings = item.settings ?? null;
+  if (room.state.phase === "lobby") {
+    const hostId = room.state.hostId;
+    if (!hostId) return;
+    // Soirée déjà commencée (reprise, revanche) : la tablée est là, on ne
+    // redemande pas « prêt » à chacun entre deux jeux.
+    if (skipReady) {
+      const players = Object.fromEntries(
+        Object.entries(room.state.players).map(([id, p]) => [id, p.isConnected ? { ...p, isReady: true } : p]),
+      );
+      room.state = { ...room.state, players };
+    }
+    applyRoom(room, { type: "start_game", playerId: hostId, gameId: item.gameId, now: Date.now() }, sender);
+    if ((room.state.phase as string) === "in_game") room.soireeRun = room.gameRun;
+    broadcast(room);
+    return;
+  }
+  // Déjà en jeu : on enchaîne directement, sans repasser par le salon.
+  room.game = null;
+  room.tokens = null;
+  room.state = { ...room.state, gameId: item.gameId };
+  startGame(room);
+  room.soireeRun = room.gameRun;
+  broadcast(room);
+}
+
+/** Valide un programme de soirée envoyé par un client. */
+function sanitizeSoireeItems(input: unknown): SoireeItem[] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .filter((i): i is SoireeItem => !!i && typeof (i as SoireeItem).gameId === "string" && !!GAME_REGISTRY[(i as SoireeItem).gameId])
+    .slice(0, 12)
+    .map((i) => ({ gameId: i.gameId, settings: i.settings ?? null }));
+}
+
 function stateMessageFor(room: Room, pid: string): ServerMessage {
   const { gameId, game } = projectAny(room, pid);
   return {
@@ -591,12 +762,16 @@ function stateMessageFor(room: Room, pid: string): ServerMessage {
     game,
     settings: room.settings,
     pendingGame: room.pendingGame,
+    gameOver: gameIsOver(room),
+    gameRun: room.gameRun,
+    soiree: publicSoiree(room),
     serverTime: Date.now(),
     you: pid,
   };
 }
 
 function broadcast(room: Room) {
+  syncSoiree(room);
   for (const [pid, sock] of room.sockets) {
     if (sock.readyState !== WebSocket.OPEN) continue;
     sock.send(JSON.stringify(stateMessageFor(room, pid)));
@@ -627,6 +802,7 @@ function gameRoster(room: Room): GamePlayer[] {
 
 function startGame(room: Room) {
   clearSwaps(room);
+  room.gameRun++;
   const players: GamePlayer[] = connectedPlayers(room.state).map((p) => ({
     id: p.id,
     name: p.name,
@@ -998,21 +1174,46 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 
       case "return_lobby": {
         // Host-only: end the current game and send everyone back to the lobby.
+        // En soirée, le résultat d'un jeu terminé est déjà compté (syncSoiree).
         if (playerId !== room.state.hostId) return;
-        if (room.gameTimer) {
-          clearTimeout(room.gameTimer);
-          room.gameTimer = null;
-        }
-        room.game = null;
-        room.tokens = null;
-        room.mod = null;
-        room.strokes = [];
-        room.mimicTakes.clear();
-        clearSwaps(room);
-        const players = Object.fromEntries(
-          Object.entries(room.state.players).map(([id, p]) => [id, { ...p, isReady: false }]),
-        );
-        room.state = { ...room.state, phase: "lobby", gameId: null, players };
+        syncSoiree(room);
+        stopGameToLobby(room);
+        return broadcast(room);
+      }
+
+      case "soiree_start": {
+        // Hôte, depuis le salon : lance une soirée (plusieurs jeux enchaînés).
+        if (playerId !== room.state.hostId || room.state.phase !== "lobby") return;
+        const items = sanitizeSoireeItems(msg.items);
+        if (items.length === 0) return sendError(ws, "soiree_empty", "Ajoute au moins un jeu à ta soirée.");
+        room.soiree = withPlayers(createSoiree(items, t), gameRoster(room));
+        return launchSoireeItem(room, ws);
+      }
+
+      case "soiree_next": {
+        // Hôte : jeu suivant (depuis l'écran de fin d'un jeu ou depuis le salon).
+        if (playerId !== room.state.hostId || !room.soiree || room.soiree.finished) return;
+        syncSoiree(room);
+        const s = room.soiree;
+        // Un jeu abandonné en cours de route (non terminé) est rejoué depuis le salon,
+        // mais sauté si l'hôte demande la suite pendant la partie.
+        if (room.state.phase === "in_game" || isRecorded(s, s.current)) room.soiree = nextGame(s);
+        return launchSoireeItem(room, ws, true);
+      }
+
+      case "soiree_rematch": {
+        // Hôte : revanche — même programme, scores remis à zéro.
+        if (playerId !== room.state.hostId || !room.soiree || room.state.phase !== "lobby") return;
+        room.soiree = withPlayers(createSoiree(room.soiree.items, t), gameRoster(room));
+        return launchSoireeItem(room, ws, true);
+      }
+
+      case "soiree_end": {
+        // Hôte : termine / abandonne la soirée.
+        if (playerId !== room.state.hostId) return;
+        room.soiree = null;
+        room.soireeRun = -1;
+        if (room.state.phase !== "lobby") stopGameToLobby(room);
         return broadcast(room);
       }
 
@@ -1020,7 +1221,11 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
         // Host-only: immediately start a fresh game with the players currently
         // connected and the current settings — no trip back to the lobby.
         if (playerId !== room.state.hostId || room.state.phase !== "in_game") return;
+        // En soirée, « Rejouer » est une revanche du jeu courant : son nouveau
+        // résultat remplacera l'ancien (jamais de double comptage).
+        const soireeGame = room.soiree && !room.soiree.finished && room.gameRun === room.soireeRun;
         startGame(room);
+        if (soireeGame) room.soireeRun = room.gameRun;
         return broadcast(room);
       }
 

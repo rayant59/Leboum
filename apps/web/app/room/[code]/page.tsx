@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { effectiveMaxPlayers, passActive, canStart, isEffectivelyReady, minReadyFor, sanitizeName, DRAW_THEMES } from "@subtitles-party/shared";
+import { effectiveMaxPlayers, passActive, canStart, isEffectivelyReady, minReadyFor, sanitizeName, DRAW_THEMES, GAME_CATALOG, gameInfo, listedGames } from "@subtitles-party/shared";
 import { getPlayerName, setPlayerName } from "@/lib/identity";
 import { useRoom } from "@/lib/useRoom";
 import { BoumBackdrop } from "@/components/BoumBackdrop";
@@ -17,6 +17,9 @@ import { QuizView } from "@/components/QuizView";
 import { RecoView } from "@/components/RecoView";
 import { BombeView } from "@/components/BombeView";
 import { MimicView } from "@/components/MimicView";
+import { WhoisView } from "@/components/WhoisView";
+import { FunnyView } from "@/components/FunnyView";
+import { ImposterView } from "@/components/ImposterView";
 import { GameIntro } from "@/components/GameIntro";
 import { HostQuitButton } from "@/components/HostQuitButton";
 import { SupportButton } from "@/components/SupportButton";
@@ -25,8 +28,9 @@ import { Avatar } from "@/components/Avatar";
 import { ProfileModal } from "@/components/ProfileModal";
 import { SubtitleStrip } from "@/components/SubtitleStrip";
 import { MODE_ICONS } from "./modeIcons";
+import { SoireeBuilder, SoireeFinal, SoireeHud, SoireeLobbyCard, type BuilderItem } from "@/components/Soiree";
 
-type GameId = "draw" | "mimic" | "quiz" | "reco" | "pixel" | "bombe";
+type GameId = "draw" | "mimic" | "quiz" | "reco" | "pixel" | "bombe" | "whois" | "funny" | "imposter";
 
 /** Un mode de jeu tel qu'exposé dans la salle d'attente.
  *  `img` : illustration dédiée (modes de Dessin) ; sinon on retombe sur la
@@ -66,6 +70,23 @@ const MODE_SETS: Record<GameId, ModeDef[]> = {
     { id: "rush", c: "#FF6B4D", nm: "Rush", ds: "Révélation deux fois plus rapide, mais les points doublent." },
     { id: "coop", c: "#4CC9F0", nm: "Coopératif", ds: "Score commun : trouvez un maximum d'images avant la fin du chrono." },
   ],
+  whois: [
+    { id: "mix", c: "#FFC24B", nm: "Grand mélange", ds: "Toutes les catégories : drôle, perso, absurde, amis, compét', soirée." },
+    { id: "drole", c: "#FF4D8D", nm: "Drôle", ds: "Les questions qui font rire (et un peu rougir)." },
+    { id: "personnalite", c: "#8B7DF6", nm: "Personnalité", ds: "Qui est le plus têtu, le plus organisé, le plus sensible ?" },
+    { id: "absurde", c: "#4CC9F0", nm: "Situations absurdes", ds: "Île déserte, oies agressives et extraterrestres." },
+    { id: "amis", c: "#46E0B0", nm: "Entre amis", ds: "Retards, potins, groupes WhatsApp : la vérité éclate." },
+    { id: "competition", c: "#FF6B4D", nm: "Compétition", ds: "Mauvais perdants et tricheurs au Monopoly." },
+    { id: "soiree", c: "#FFC24B", nm: "Soirée", ds: "Piste de danse, karaoké et derniers à partir." },
+  ],
+  funny: [
+    { id: "classic", c: "#FF4D8D", nm: "Classique", ds: "Le temps de soigner sa vanne : une phrase, une réponse, un vote." },
+    { id: "express", c: "#FFC24B", nm: "Express", ds: "30 secondes pour écrire : la première idée est souvent la meilleure." },
+  ],
+  imposter: [
+    { id: "classique", c: "#FF5C7A", nm: "Classique", ds: "L'imposteur sait qu'il l'est et ne connaît que la catégorie. Démasqué, il peut encore deviner le mot." },
+    { id: "infiltre", c: "#8B7DF6", nm: "Infiltré", ds: "L'imposteur reçoit un mot voisin… et ne sait même pas que c'est lui." },
+  ],
   bombe: [
     { id: "classic", c: "#FF6B4D", nm: "Classique", ds: "Une syllabe, un mot, la bombe tourne jusqu'à l'explosion." },
     { id: "hardcore", c: "#FF6B6B", nm: "Hardcore", ds: "Chrono partagé de 15 s : chaque bonne réponse rend 2 s, jamais moins de 5 s." },
@@ -81,6 +102,9 @@ const TIMES: Record<GameId, { title: string; sub: string; opts: number[]; def: n
   quiz: { title: "Temps par question", sub: "Délai pour répondre", opts: [10, 15, 20, 30], def: 15 },
   reco: { title: "Temps par image", sub: "Délai pour trouver la bonne réponse", opts: [15, 20, 30, 45], def: 20 },
   pixel: { title: "Temps de révélation", sub: "Durée avant l'image complète", opts: [20, 30, 45, 60], def: 30 },
+  whois: { title: "Temps de vote", sub: "Délai pour désigner quelqu'un", opts: [10, 15, 20, 30], def: 20 },
+  funny: { title: "Temps d'écriture", sub: "Pour trouver ta meilleure réponse", opts: [30, 45, 60, 90], def: 60 },
+  imposter: { title: "Temps par indice", sub: "Pour donner ton indice quand c'est ton tour", opts: [20, 30, 45, 60], def: 30 },
   bombe: { title: "Temps par joueur", sub: "Mèche avant l'explosion", opts: [5, 7, 10, 15], def: 7 },
 };
 
@@ -94,18 +118,16 @@ const ROUNDS: Record<GameId, { headTitle: string; rowTitle: string; rowSub: stri
   quiz:  { headTitle: "Questions", rowTitle: "Nombre de questions", rowSub: "Autant de questions posées dans la partie", unit: "questions", min: 5, max: 20, def: 10 },
   reco:  { headTitle: "Images",    rowTitle: "Nombre d'images",     rowSub: "Autant d'images à reconnaître dans la partie", unit: "images", min: 5, max: 20, def: 10 },
   pixel: { headTitle: "Images",    rowTitle: "Nombre d'images",     rowSub: "Autant d'images à deviner dans la partie", unit: "images", min: 5, max: 20, def: 10 },
+  whois: { headTitle: "Questions", rowTitle: "Nombre de questions", rowSub: "Autant de « Qui de nous ? » dans la partie", unit: "questions", min: 5, max: 20, def: 10 },
+  funny: { headTitle: "Manches", rowTitle: "Nombre de manches", rowSub: "Une phrase à compléter par manche", unit: "manches", min: 3, max: 10, def: 5 },
+  imposter: { headTitle: "Manches", rowTitle: "Nombre de manches", rowSub: "Un nouvel imposteur à chaque manche", unit: "manches", min: 1, max: 8, def: 3 },
   bombe: { headTitle: "Manches",   rowTitle: "Nombre de manches",   rowSub: "La partie s'arrête au bout du compte", unit: "manches",   min: 2, max: 8,  def: 3 },
 };
 
-const GAME_META: Record<string, { label: string; img: string; tint: string }> = {
-  subtitles: { label: "Sous-titres", img: "/games/subtitles.png", tint: "#FFC24B" },
-  draw: { label: "Boum Dessin", img: "/games/draw.png", tint: "#FF4D8D" },
-  mimic: { label: "Mimic Boum", img: "/games/mimic.png", tint: "#46E0B0" },
-  quiz: { label: "Ça te parle ?", img: "/games/quiz.png", tint: "#8B7DF6" },
-  reco: { label: "Œil de Boum", img: "/games/reco.png", tint: "#4CC9F0" },
-  pixel: { label: "Pixel Panic", img: "/games/pixel.png", tint: "#46E0B0" },
-  bombe: { label: "Boum Rush", img: "/games/bombe.png", tint: "#FF6B4D" },
-};
+/** Nom / vignette / couleur d'un jeu : lus dans le catalogue commun. */
+const GAME_META: Record<string, { label: string; img: string; tint: string }> = Object.fromEntries(
+  Object.values(GAME_CATALOG).map((g) => [g.id, { label: g.name, img: g.img, tint: g.accent }]),
+);
 
 export default function LobbyPage() {
   const params = useParams<{ code: string }>();
@@ -125,6 +147,20 @@ export default function LobbyPage() {
   const [modeByGame, setModeByGame] = useState<Partial<Record<GameId, string>>>({});
   const [timeByGame, setTimeByGame] = useState<Partial<Record<GameId, number>>>({});
   const [drawThemes, setDrawThemes] = useState<string[]>([]);
+  // Soirée LeBoum : programme préparé par l'hôte (gardé dans son navigateur).
+  const [soireeItems, setSoireeItemsState] = useState<BuilderItem[]>([]);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("lb:soireeItems");
+      if (raw) setSoireeItemsState((JSON.parse(raw) as BuilderItem[]).filter((i) => i && typeof i.gameId === "string").slice(0, 12));
+    } catch { /* ignore */ }
+  }, []);
+  const setSoireeItems = (fn: (prev: BuilderItem[]) => BuilderItem[]) =>
+    setSoireeItemsState((prev) => {
+      const next = fn(prev).slice(0, 12);
+      try { localStorage.setItem("lb:soireeItems", JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
   // Pass Soirée : questions perso du quiz (gardées dans le navigateur de l'hôte).
   const [roomQuestions, setRoomQuestions] = useState("");
   useEffect(() => {
@@ -255,14 +291,14 @@ export default function LobbyPage() {
   // pas dans un useEffect — pour armer l'intro dès la toute première frame :
   // un effet ne s'exécute qu'après le premier paint, ce qui laissait apparaître
   // le jeu ~1 s avant que l'overlay du décompte ne le recouvre.
-  const gameKey = room.state?.phase === "in_game" && room.gameId ? room.gameId : null;
+  const gameKey = room.state?.phase === "in_game" && room.gameId ? `${room.gameId}#${room.gameRun}` : null;
   // On n'annonce un jeu que si on l'a vu démarrer depuis le salon : après un
   // rechargement en pleine partie, l'annonce masquerait le jeu déjà en cours.
   const sawLobby = useRef(false);
   if (room.state?.phase === "lobby") sawLobby.current = true;
   if (gameKey !== introKey) {
     setIntroKey(gameKey);
-    setIntroGame(gameKey && sawLobby.current ? gameKey : null); // nouveau jeu → intro ; retour au lobby → on la cache
+    setIntroGame(gameKey && sawLobby.current ? gameKey.split("#")[0] : null); // nouveau jeu → intro ; retour au lobby → on la cache
   }
   // Auto-disparition après 4,2 s (le clic sur l'overlay la ferme aussi).
   useEffect(() => {
@@ -342,9 +378,16 @@ export default function LobbyPage() {
   const missingReady = Math.max(0, neededReady - readyCount);
   const maxPlayers = state ? effectiveMaxPlayers(state, room.serverNow()) : 8;
   const hasPass = !!state && passActive(state, room.serverNow());
-  // Mimic Boum reste limité à 8 voix (lecture/vote des prises), même avec le Pass.
-  const tooManyForGame = selectedGame === "mimic" && connectedCount > 8;
+  // Limite propre au jeu (Mimic Boum : 8 voix), même avec le Pass Soirée.
+  const gameMaxPlayers = gameInfo(launchId).maxPlayers;
+  const tooManyForGame = connectedCount > gameMaxPlayers;
   const startable = !!state && canStart(state, launchId) && !tooManyForGame;
+  // Soirée : le 1er jeu du programme fixe l'exigence de « prêts » ; on demande au
+  // moins 2 joueurs (une soirée en solo n'a pas de sens).
+  const firstSoireeGame = soireeItems[0]?.gameId ?? null;
+  const soireeNeeded = state && firstSoireeGame ? Math.max(2, minReadyFor(state, firstSoireeGame)) : 2;
+  const missingSoireeReady = Math.max(0, soireeNeeded - readyCount);
+  const soireeStartable = !!state && soireeItems.length > 0 && connectedCount >= 2 && missingSoireeReady === 0 && state.phase === "lobby";
 
   async function copyLink() {
     const url = window.location.href;
@@ -387,25 +430,37 @@ export default function LobbyPage() {
   /** Traduit le modèle unifié (jeu + mode + manches + temps) en payload de
    *  démarrage propre à chaque moteur. Un mode que le back ne joue pas encore
    *  est transmis tel quel : le moteur retombe alors sur « classique ». */
-  function startSelectedGame() {
+  function buildLaunch(): BuilderItem {
     const mode = curMode;
     const t = turnSeconds;
+    const modeName = MODE_SETS[selectedGame].find((m) => m.id === mode)?.nm ?? "Classique";
+    const detail = `${modeName} · ${curRounds} ${ROUNDS[selectedGame].unit} · ${selectedGame === "bombe" && mode === "hardcore" ? 15 : t}s`;
     switch (selectedGame) {
       case "draw":
-        if (mode === "fakeartist") return room.startGame("fakeartist", { totalRounds: curRounds });
-        if (mode === "relay") return room.startGame("relay", { totalRounds: curRounds });
-        return room.startGame("draw", { totalRounds: curRounds, mode, themes: drawThemes, seconds: t });
+        if (mode === "fakeartist") return { gameId: "fakeartist", settings: { totalRounds: curRounds }, detail: `${curRounds} manches` };
+        if (mode === "relay") return { gameId: "relay", settings: { totalRounds: curRounds }, detail: `${curRounds} manches` };
+        return { gameId: "draw", settings: { totalRounds: curRounds, mode, themes: drawThemes, seconds: t }, detail };
       case "mimic":
-        return room.startGame("mimic", { totalRounds: curRounds, recordSeconds: t, mode });
+        return { gameId: "mimic", settings: { totalRounds: curRounds, recordSeconds: t, mode }, detail };
       case "quiz":
-        return room.startGame("quiz", { totalQuestions: curRounds, secondsPerQuestion: t, types: "all", mode, ...(hasPass && roomQuestions.trim() ? { roomQuestions } : {}) });
+        return { gameId: "quiz", settings: { totalQuestions: curRounds, secondsPerQuestion: t, types: "all", mode, ...(hasPass && roomQuestions.trim() ? { roomQuestions } : {}) }, detail };
       case "reco":
-        return room.startGame("reco", { totalQuestions: curRounds, secondsPerQuestion: t, category: "all", mode });
+        return { gameId: "reco", settings: { totalQuestions: curRounds, secondsPerQuestion: t, category: "all", mode }, detail };
       case "pixel":
-        return room.startGame("pixel", { totalQuestions: curRounds, secondsPerQuestion: t, category: "all", mode });
+        return { gameId: "pixel", settings: { totalQuestions: curRounds, secondsPerQuestion: t, category: "all", mode }, detail };
+      case "whois":
+        return { gameId: "whois", settings: { totalRounds: curRounds, seconds: t, mode }, detail };
+      case "funny":
+        return { gameId: "funny", settings: { totalRounds: curRounds, seconds: mode === "express" ? 30 : t }, detail: mode === "express" ? `Express · ${curRounds} manches · 30s` : detail };
+      case "imposter":
+        return { gameId: "imposter", settings: { totalRounds: curRounds, seconds: t, mode }, detail };
       case "bombe":
-        return room.startGame("bombe", { lives: 3, minSeconds: t, maxSeconds: t + 3, minLetters: 2, maxLetters: 3, mode });
+        return { gameId: "bombe", settings: { lives: 3, minSeconds: t, maxSeconds: t + 3, minLetters: 2, maxLetters: 3, mode }, detail: `${modeName} · 3 vies` };
     }
+  }
+  function startSelectedGame() {
+    const l = buildLaunch();
+    room.startGame(l.gameId, l.settings);
   }
 
   // --- game hand-off: render the game module once the room is in_game -------
@@ -446,22 +501,21 @@ export default function LobbyPage() {
       room.gameId === "reco" ? <RecoView room={room} /> :
       room.gameId === "pixel" ? <RecoView room={room} pixel /> :
       room.gameId === "bombe" ? <BombeView room={room} /> :
+      room.gameId === "whois" ? <WhoisView room={room} /> :
+      room.gameId === "funny" ? <FunnyView room={room} /> :
+      room.gameId === "imposter" ? <ImposterView room={room} /> :
       room.gameId === "draw" ? <DrawGameView room={room} /> :
       <GameView room={room} />;
-    // Phases de fin propres à chaque jeu : l'écran de résultats a déjà ses
-    // propres boutons « Salon / Rejouer ».
-    const gamePhase = (room.game as { phase?: string } | null)?.phase ?? "";
-    // Phase FINALE de chaque jeu (pas les classements intermédiaires entre manches).
-    const FINAL_PHASE: Record<string, string> = {
-      quiz: "final", reco: "final", pixel: "final", bombe: "gameover", mimic: "gameover",
-      draw: "scoreboard", relay: "scoreboard", fakeartist: "scoreboard", doublage: "result",
-    };
-    const gameOver = gamePhase === (FINAL_PHASE[room.gameId ?? ""] ?? "scoreboard");
+    // Fin de partie : fournie par le moteur (`isOver`), plus de table dupliquée.
+    const gameOver = room.gameOver;
     return (
       <>
         {gameEl}
         {isHost && !gameOver && !introGame && <HostQuitButton onQuit={() => room.returnLobby()} />}
-        {gameOver && <SupportButton floating />}
+        {gameOver && !room.soiree && <SupportButton floating />}
+        {room.soiree && !room.soiree.finished && !introGame && (
+          <SoireeHud soiree={room.soiree} you={room.you} isHost={isHost} gameOver={gameOver} onNext={() => room.soireeNext()} />
+        )}
         {introGame && (
           <GameIntro gameId={introGame} players={players} onDone={() => setIntroGame(null)} />
         )}
@@ -470,6 +524,19 @@ export default function LobbyPage() {
   }
 
   const online = room.status === "open";
+
+  // Fin de soirée : grand classement pour toute la tablée.
+  if (room.soiree?.finished && room.soiree.records.length > 0) {
+    return (
+      <>
+        <BoumBackdrop />
+        <main className="relative z-[1]">
+          <SoireeFinal soiree={room.soiree} you={room.you} isHost={isHost} onRematch={() => room.soireeRematch()} onEnd={() => room.soireeEnd()} />
+        </main>
+      </>
+    );
+  }
+  const soireeLive = !!room.soiree && !room.soiree.finished;
 
   return (
     <>
@@ -615,8 +682,12 @@ export default function LobbyPage() {
         )}
       </section>
 
+      {soireeLive && room.soiree && (
+        <SoireeLobbyCard soiree={room.soiree} you={room.you} isHost={isHost} onNext={() => room.soireeNext()} onEnd={() => room.soireeEnd()} />
+      )}
+
       {/* guests: read-only preview of the game the host will launch */}
-      {!isHost && (
+      {!isHost && !soireeLive && (
         <section className="mb-8">
           <p className="eyebrow mb-2 px-1">Jeu choisi par l'hôte</p>
           {room.pendingGame && GAME_META[room.pendingGame] ? (
@@ -639,21 +710,29 @@ export default function LobbyPage() {
 
       {/* Colonne droite (écran large, hôte) : choix du jeu + réglages */}
       <div className="lobby-right">
+      {isHost && !soireeLive && (
+        <SoireeBuilder
+          items={soireeItems}
+          selectedName={(() => { const l = buildLaunch(); return gameInfo(l.gameId).name; })()}
+          onAdd={() => { const l = buildLaunch(); setSoireeItems((p) => [...p, l]); }}
+          onRemove={(i) => setSoireeItems((p) => p.filter((_, j) => j !== i))}
+          onMoveUp={(i) => setSoireeItems((p) => { if (i <= 0) return p; const n = p.slice(); [n[i - 1], n[i]] = [n[i], n[i - 1]]; return n; })}
+          onClear={() => setSoireeItems(() => [])}
+          onLaunch={() => room.startSoiree(soireeItems.map((i) => ({ gameId: i.gameId, settings: i.settings })))}
+          launchDisabled={!soireeStartable}
+          launchHint={connectedCount < 2 ? "Invite au moins un ami pour lancer une soirée." : missingSoireeReady > 0 ? `Encore ${missingSoireeReady} joueur${missingSoireeReady > 1 ? "s" : ""} prêt${missingSoireeReady > 1 ? "s" : ""}.` : null}
+        />
+      )}
+
       {/* game picker (host) */}
       {isHost && (
         <section className="mb-8">
           <p className="eyebrow mb-2 px-1">Jeu</p>
           <div className="game-picker-grid">
-            {(
-              [
-                { id: "draw", img: "/games/draw.png", label: "Boum Dessin", players: "2–8", desc: "Dessine le mot secret, les autres devinent — avec ses variantes.", tint: "#FF4D8D", tintBg: "rgba(255,77,141,0.12)", tintBorder: "rgba(255,77,141,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 5.6l3.9 3.9" /><path d="M4 20l1.3-4.4L15.7 5.2a1.9 1.9 0 0 1 2.7 0l.4.4a1.9 1.9 0 0 1 0 2.7L8.4 18.7 4 20Z" /></svg> },
-                { id: "mimic", img: "/games/mimic.png", label: "Mimic Boum", players: "2–8", desc: "Imite un son avec ta voix — une seule prise. Les autres votent pour la meilleure imitation !", tint: "#46E0B0", tintBg: "rgba(70,224,176,0.12)", tintBorder: "rgba(70,224,176,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M6 11a6 6 0 0 0 12 0" /><path d="M12 17v3.2" /><path d="M9 20.2h6" /></svg> },
-                { id: "quiz", img: "/games/quiz.png", label: "Ça te parle ?", players: "1–8", desc: "Réponds aux questions et montre ta culture !", tint: "#8B7DF6", tintBg: "rgba(139,125,246,0.14)", tintBorder: "rgba(139,125,246,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4" /><circle cx="12" cy="17.5" r="0.6" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="9" /></svg> },
-                { id: "reco", img: "/games/reco.png", label: "Œil de Boum", players: "1–8", desc: "Devine le personnage, le film, le lieu et bien plus.", tint: "#4CC9F0", tintBg: "rgba(76,201,240,0.14)", tintBorder: "rgba(76,201,240,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="14" rx="2.5" /><circle cx="9" cy="10" r="2" /><path d="M4 17l4.5-4 3 2.5L15 12l5 4.5" /></svg> },
-                { id: "pixel", img: "/games/pixel.png", label: "Pixel Panic", players: "1–8", desc: "Une image se dévoile pixel par pixel — devine le plus vite possible !", tint: "#46E0B0", tintBg: "rgba(70,224,176,0.12)", tintBorder: "rgba(70,224,176,0.32)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="6" height="6"/><rect x="15" y="3" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/><rect x="3" y="15" width="6" height="6"/><rect x="15" y="15" width="6" height="6"/></svg> },
-                { id: "bombe", img: "/games/bombe.png", label: "Boum Rush", players: "2–8", desc: "Trouve vite un mot avec la syllabe avant que la bombe explose !", tint: "#FF6B4D", tintBg: "rgba(255,107,77,0.14)", tintBorder: "rgba(255,107,77,0.4)", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="14" r="7" /><path d="M16 9l2-2" /><path d="M18 7l1 .3M19 5.5l.3-1M20.5 6.8l1-.3" /></svg> },
-              ] as const
-            ).map((c) => {
+            {listedGames()
+              .filter((g): g is typeof g & { id: GameId } => g.id in MODE_SETS)
+              .map((g) => ({ id: g.id, img: g.img, label: g.name, desc: g.tagline, tint: g.accent, tintBg: `${g.accent}1f`, tintBorder: `${g.accent}66`, min: g.minPlayers, max: g.maxPlayers }))
+              .map((c) => {
               const sel = selectedGame === c.id;
               return (
                 <button
@@ -679,7 +758,7 @@ export default function LobbyPage() {
                       <img src={c.img} alt="" className="h-full w-full object-cover" draggable={false} />
                     </span>
                     <span className="rounded-full border px-2.5 py-0.5 text-[11px] tabular-nums" style={{ borderColor: sel ? `${c.tint}66` : "#332A5A", color: sel ? c.tint : "#8078a8" }}>
-                      {c.players.replace(/–\d+$/, `–${c.id === "mimic" ? Math.min(8, maxPlayers) : maxPlayers}`)}
+                      {`${c.min}–${Math.min(c.max, maxPlayers)}`}
                     </span>
                   </div>
                   <div className="font-display text-base font-bold text-text">{c.label}</div>
@@ -745,9 +824,11 @@ export default function LobbyPage() {
           {(() => {
             const tCfg = TIMES[selectedGame];
             const custom = !tCfg.opts.includes(turnSeconds);
-            const hardcoreLocked = selectedGame === "bombe" && curMode === "hardcore";
+            const hardcoreLocked = (selectedGame === "bombe" && curMode === "hardcore") || (selectedGame === "funny" && curMode === "express");
             const timeLocked = !isHost || hardcoreLocked;
-            const hint = hardcoreLocked
+            const hint = selectedGame === "funny" && curMode === "express"
+              ? "Imposé en Express : 30 secondes pour écrire."
+              : hardcoreLocked
               ? "Imposé en Hardcore : chrono partagé de 15 s, +2 s par bonne réponse."
               : selectedGame === "draw" && curMode === "blind"
                 ? `Mode Aveugle : +25 % de temps automatiquement (${Math.round(turnSeconds * 1.25)}s).`
@@ -759,7 +840,7 @@ export default function LobbyPage() {
                 <div className="cfg-time" style={{ opacity: hardcoreLocked ? 0.55 : undefined }}>
                   <div className="cfg-time-head">
                     <div className="cfg-rlab"><b>{tCfg.title}</b>{tCfg.sub}</div>
-                    <div className="cfg-time-val"><span className="n">{hardcoreLocked ? 15 : turnSeconds}</span><span className="u">sec</span></div>
+                    <div className="cfg-time-val"><span className="n">{hardcoreLocked ? (selectedGame === "funny" ? 30 : 15) : turnSeconds}</span><span className="u">sec</span></div>
                   </div>
                   <div className="cfg-time-opts">
                     {tCfg.opts.map((v) => (
@@ -899,7 +980,7 @@ export default function LobbyPage() {
             <button disabled className="arc arc-dis arc-block">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
               {tooManyForGame
-                ? "Mimic Boum : 8 joueurs maximum"
+                ? `${gameInfo(launchId).name} : ${gameMaxPlayers} joueurs maximum`
                 : connectedCount < neededReady
                 ? `Il faut au moins ${neededReady} joueurs — invite tes potes`
                 : missingReady > 0

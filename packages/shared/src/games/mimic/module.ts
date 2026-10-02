@@ -1,6 +1,7 @@
 import type { GameModule } from "../../platform/types";
 import { createMimic, mimicDeadline, mimicIsOver, projectMimic, reduceMimic, resolveMimicConfig } from "./engine";
 import type { MimicClientAction, MimicPublic, MimicSettings, MimicState } from "./types";
+import { bestBy, scoresResult } from "../../platform/result";
 
 export const MIMIC_GAME_ID = "mimic" as const;
 
@@ -19,4 +20,11 @@ export const mimicModule: GameModule<MimicState, MimicPublic, MimicSettings, Mim
   project: projectMimic,
   deadline: mimicDeadline,
   isOver: mimicIsOver,
+  results: (s) => {
+    if (!mimicIsOver(s)) return null;
+    const best = bestBy(s.bestCount);
+    return scoresResult(s.players, s.scores, {
+      awards: best ? [{ id: "best_mimic", label: "Meilleur imitateur", playerId: best, detail: `${s.bestCount[best]} victoire${s.bestCount[best] > 1 ? "s" : ""}` }] : [],
+    });
+  },
 };

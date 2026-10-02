@@ -13,6 +13,9 @@ import {
   type SubtitlesErrorCode,
   type DoublageClientAction,
   type MimicClientAction,
+  type SoireeItem,
+  type ClientMessage,
+  type SoireeState,
 } from "@subtitles-party/shared";
 import { getPlayerId } from "./identity";
 import {
@@ -72,6 +75,18 @@ export interface UseRoom {
   game: AnyPublicGame | null;
   settings: GameSettings;
   pendingGame: string | null;
+  /** La partie en cours est terminée (écran de résultats final). */
+  gameOver: boolean;
+  /** Numéro de la partie en cours (change à chaque lancement / revanche). */
+  gameRun: number;
+  /** Soirée LeBoum en cours (programme, résultats, score global). */
+  soiree: SoireeState | null;
+  startSoiree: (items: SoireeItem[]) => void;
+  soireeNext: () => void;
+  soireeRematch: () => void;
+  soireeEnd: () => void;
+  /** Action générique de jeu (nouveaux Game Modes : vote, réponse, indice…). */
+  gameAction: (action: { kind: string; [k: string]: unknown }) => void;
   you: string;
   status: ConnectionStatus;
   error: RoomError | null;
@@ -130,6 +145,10 @@ export function useRoom(code: string, create = false): UseRoom {
   const [game, setGame] = useState<AnyPublicGame | null>(null);
   const [settings, setSettingsState] = useState<GameSettings>(DEFAULT_GAME_SETTINGS);
   const [pendingGame, setPendingGame] = useState<string | null>(null);
+  const [gameOver, setGameOver] = useState(false);
+  const [gameRun, setGameRun] = useState(0);
+  const [soiree, setSoiree] = useState<SoireeState | null>(null);
+  const lastRun = useRef(0);
   const [you, setYou] = useState("");
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
   const [error, setError] = useState<RoomError | null>(null);
@@ -158,6 +177,18 @@ export function useRoom(code: string, create = false): UseRoom {
         setGame(msg.game);
         setSettingsState(msg.settings);
         setPendingGame((msg as { pendingGame?: string | null }).pendingGame ?? null);
+        setGameOver(!!msg.gameOver);
+        setSoiree(msg.soiree ?? null);
+        const run = msg.gameRun ?? 0;
+        setGameRun(run);
+        // Nouvelle partie (jeu suivant de la soirée, revanche) : on repart d'un
+        // chat et d'une toile vierges, comme au retour du salon.
+        if (run !== lastRun.current) {
+          lastRun.current = run;
+          setChat([]);
+          setVoiceTakes(new Map());
+          setBombeTyping(null);
+        }
         setYou(msg.you);
         if (msg.state.phase !== "in_game") {
           setChat([]);
@@ -300,6 +331,14 @@ export function useRoom(code: string, create = false): UseRoom {
   );
   const skipPhase = useCallback(() => send.current?.send({ type: "skip" }), [send]);
   const debugFill = useCallback(() => send.current?.send({ type: "debug_fill" }), [send]);
+  const startSoiree = useCallback((items: SoireeItem[]) => send.current?.send({ type: "soiree_start", items }), [send]);
+  const soireeNext = useCallback(() => send.current?.send({ type: "soiree_next" }), [send]);
+  const soireeRematch = useCallback(() => send.current?.send({ type: "soiree_rematch" }), [send]);
+  const gameAction = useCallback(
+    (action: { kind: string; [k: string]: unknown }) => send.current?.send({ type: "game", action } as ClientMessage),
+    [send],
+  );
+  const soireeEnd = useCallback(() => send.current?.send({ type: "soiree_end" }), [send]);
   const returnLobby = useCallback(() => send.current?.send({ type: "return_lobby" }), [send]);
   const playAgain = useCallback(() => send.current?.send({ type: "play_again" }), [send]);
   const react = useCallback((emoji: string) => send.current?.send({ type: "react", emoji }), [send]);
@@ -308,7 +347,7 @@ export function useRoom(code: string, create = false): UseRoom {
 
   return {
     state, gameId, game, settings, you, status, error, clearError,
-    join, setReady, setName, setAvatar, setSettings, selectGame, startGame, leave, pendingGame,
+    join, setReady, setName, setAvatar, setSettings, selectGame, startGame, leave, pendingGame, gameOver, gameRun, soiree, startSoiree, soireeNext, soireeRematch, soireeEnd, gameAction,
     submitLines, vote, skipPhase, debugFill, returnLobby, playAgain, react, reactions, speakingIds, sendSpeaking, quizAnswer, redeemPass, bombeSubmit,
     mimicAction, sendVoiceTake, voiceTakes, sendBombeTyping, bombeTyping,
     chooseWord, guess, sendTalk, castVote, doublageAction, revealTheme, endDrawing, sendStroke, sendFill, clearCanvas, chat, strokeQueueRef, strokeResetRef, serverNow,

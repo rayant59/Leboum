@@ -19,4 +19,5 @@ export const doublageModule: GameModule<DoublageState, DoublagePublic, DoublageS
   project: projectDoublage,
   deadline: (s) => s.deadline,
   isOver: () => false, // host-driven; returns to lobby via room controls
+  results: () => null, // jeu libre sans score : ne compte pas dans la soirée
 };

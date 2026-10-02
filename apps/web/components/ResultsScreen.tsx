@@ -34,6 +34,11 @@ export function ResultsScreen({
   isHost,
   onReturn,
   onReplay,
+  eyebrow = "Classement final",
+  winnerText = "remporte la partie",
+  returnLabel = "Retour au salon",
+  replayLabel = "Rejouer",
+  children,
 }: {
   ranking: RankRow[];
   you: string | null;
@@ -41,11 +46,23 @@ export function ResultsScreen({
   isHost: boolean;
   onReturn: () => void;
   onReplay: () => void;
+  eyebrow?: string;
+  winnerText?: string;
+  returnLabel?: string;
+  replayLabel?: string;
+  /** Contenu additionnel sous le podium (stats de soirée…). */
+  children?: ReactNode;
 }) {
   const winner = ranking[0];
   const second = ranking[1];
   const third = ranking[2];
   const rest = ranking.slice(3);
+  // Égalité en tête : on le dit plutôt que de désigner un vainqueur au hasard.
+  const coLeaders = winner ? ranking.filter((r) => r.score === winner.score) : [];
+  // Classement « sportif » : à égalité de points, même place (1, 1, 3).
+  const places: number[] = [];
+  ranking.forEach((r, i) => places.push(i > 0 && r.score === ranking[i - 1].score ? places[i - 1] : i + 1));
+  const medal = (place: number) => (place === 1 ? GOLD : place === 2 ? SILVER : BRONZE);
 
   return (
     <div className="animate-pop" style={{ position: "relative", overflow: "hidden" }}>
@@ -69,7 +86,7 @@ export function ResultsScreen({
 
       {/* héros */}
       <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, paddingTop: 14, textAlign: "center" }}>
-        <span style={{ fontFamily: DISPLAY, fontSize: 11, fontWeight: 700, letterSpacing: ".18em", textTransform: "uppercase", color: "#6E6796" }}>Classement final</span>
+        <span style={{ fontFamily: DISPLAY, fontSize: 11, fontWeight: 700, letterSpacing: ".18em", textTransform: "uppercase", color: "#6E6796" }}>{eyebrow}</span>
         <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" style={{ filter: "drop-shadow(0 6px 20px rgba(255,194,75,.55))", animation: "rs-float 4s ease-in-out infinite" }}>
           <path d="M6 4h12v5a6 6 0 0 1-12 0V4Z" fill="rgba(255,194,75,.16)" />
           <path d="M6 6H3.5v1.5a3 3 0 0 0 3 3" />
@@ -77,10 +94,14 @@ export function ResultsScreen({
           <path d="M9.5 15.2 9 19h6l-.5-3.8" />
           <path d="M7.5 21h9" />
         </svg>
-        <h1 className="font-display" style={{ margin: 0, fontSize: 44, fontWeight: 800, letterSpacing: "-.02em", color: GOLD, animation: "rs-pop .7s cubic-bezier(.2,.9,.3,1.3) both, rs-glow 3s ease-in-out .7s infinite" }}>{winner && winner.id === you ? "Victoire\u202f!" : "Fin de partie\u202f!"}</h1>
+        <h1 className="font-display" style={{ margin: 0, fontSize: 44, fontWeight: 800, letterSpacing: "-.02em", color: GOLD, animation: "rs-pop .7s cubic-bezier(.2,.9,.3,1.3) both, rs-glow 3s ease-in-out .7s infinite" }}>{winner && coLeaders.some((r) => r.id === you) ? (coLeaders.length > 1 ? "Ex æquo\u202f!" : "Victoire\u202f!") : "Fin de partie\u202f!"}</h1>
         {winner && (
           <p style={{ margin: 0, fontSize: 15, color: "#A79FC7" }}>
-            <b style={{ color: "#F3EEFF" }}>{winner.name}{winner.id === you ? " (toi)" : ""}</b> remporte la partie
+            {coLeaders.length > 1 ? (
+              <><b style={{ color: "#F3EEFF" }}>{coLeaders.map((r) => r.name + (r.id === you ? " (toi)" : "")).join(" & ")}</b> à égalité en tête !</>
+            ) : (
+              <><b style={{ color: "#F3EEFF" }}>{winner.name}{winner.id === you ? " (toi)" : ""}</b> {winnerText}</>
+            )}
           </p>
         )}
         <span style={{ marginTop: 2, borderRadius: 999, border: "1px solid #332A5A", background: "rgba(28,22,54,.5)", padding: "5px 13px", fontFamily: DISPLAY, fontSize: 10, fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", color: "#6E6796" }}>{ranking.length} joueur{ranking.length > 1 ? "s" : ""}</span>
@@ -88,9 +109,9 @@ export function ResultsScreen({
 
       {/* podium */}
       <div style={{ position: "relative", display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 16, marginTop: 20, maxWidth: 520, marginInline: "auto" }}>
-        {second && <PodiumCol row={second} you={you} place={2} color={SILVER} h={96} font={30} avatar={56} rise=".2s" />}
-        {winner && <PodiumCol row={winner} you={you} place={1} color={GOLD} h={134} font={40} avatar={74} rise=".05s" winner />}
-        {third && <PodiumCol row={third} you={you} place={3} color={BRONZE} h={76} font={28} avatar={56} rise=".32s" />}
+        {second && <PodiumCol row={second} you={you} place={places[1]} color={medal(places[1])} h={96} font={30} avatar={56} rise=".2s" />}
+        {winner && <PodiumCol row={winner} you={you} place={places[0]} color={medal(places[0])} h={134} font={40} avatar={74} rise=".05s" winner />}
+        {third && <PodiumCol row={third} you={you} place={places[2]} color={medal(places[2])} h={76} font={28} avatar={56} rise=".32s" />}
       </div>
 
       {/* rangs 4+ */}
@@ -98,7 +119,7 @@ export function ResultsScreen({
         <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 8, marginTop: 20, maxWidth: 460, marginInline: "auto" }}>
           {rest.map((r, i) => (
             <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 14, border: "1px solid #332A5A", background: "linear-gradient(180deg, rgba(37,28,69,.6), rgba(28,22,54,.6))" }}>
-              <span style={{ width: 16, fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: "#6E6796" }}>{i + 4}</span>
+              <span style={{ width: 16, fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: "#6E6796" }}>{places[i + 3]}</span>
               <Avatar name={r.name} color={r.color} avatar={r.avatar} size={34} />
               <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: DISPLAY, fontWeight: 700, fontSize: 15 }}>{r.name}{r.id === you ? " (toi)" : ""}</span>
               <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 15, color: "#A79FC7" }}>{r.score.toLocaleString("fr-FR")}</span>
@@ -122,13 +143,15 @@ export function ResultsScreen({
         </div>
       )}
 
+      {children}
+
       {/* actions */}
       {isHost && (
         <div style={{ position: "relative", display: "flex", justifyContent: "center", gap: 14, marginTop: 24 }}>
-          <button onClick={onReturn} className="arc arc-sec">Retour au salon</button>
+          <button onClick={onReturn} className="arc arc-sec">{returnLabel}</button>
           <button onClick={onReplay} className="arc arc-p" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 1 2.6 6.3" /><path d="M3 20v-5h5" /></svg>
-            Rejouer
+            {replayLabel}
           </button>
         </div>
       )}

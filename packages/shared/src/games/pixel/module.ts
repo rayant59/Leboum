@@ -6,6 +6,7 @@
 import type { GameModule } from "../../platform/types";
 import { createReco, projectReco, reduceReco } from "../reconnaissance/engine";
 import type { RecoClientAction, RecoPublic, RecoSettings, RecoState } from "../reconnaissance/types";
+import { quizResults } from "../../platform/standard";
 
 export const PIXEL_GAME_ID = "pixel" as const;
 
@@ -30,4 +31,5 @@ export const pixelModule: GameModule<RecoState, RecoPublic, RecoSettings, RecoCl
   project: projectReco,
   deadline: (s) => s.deadline,
   isOver: (s) => s.phase === "final",
+  results: (s) => (s.phase === "final" ? quizResults(s, s.config.mode === "coop") : null),
 };

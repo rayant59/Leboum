@@ -1,6 +1,7 @@
 import type { GameModule } from "../../platform/types";
 import { bombeDeadline, bombeIsOver, createBombe, projectBombe, reduceBombe, resolveBombeConfig } from "./engine";
 import type { BombeClientAction, BombePublic, BombeSettings, BombeState } from "./types";
+import { bombeResults } from "../../platform/standard";
 
 export const BOMBE_GAME_ID = "bombe" as const;
 
@@ -27,4 +28,5 @@ export const bombeModule: GameModule<BombeState, BombePublic, BombeSettings, Bom
   project: projectBombe,
   deadline: bombeDeadline,
   isOver: bombeIsOver,
+  results: (s) => (bombeIsOver(s) ? bombeResults(s) : null),
 };

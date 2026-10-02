@@ -1,6 +1,7 @@
 import type { GameModule } from "../../platform/types";
 import { createQuiz, projectQuiz, reduceQuiz } from "./engine";
 import type { QuizClientAction, QuizPublic, QuizSettings, QuizState } from "./types";
+import { quizResults } from "../../platform/standard";
 
 export const QUIZ_GAME_ID = "quiz" as const;
 
@@ -31,4 +32,5 @@ export const quizModule: GameModule<QuizState, QuizPublic, QuizSettings, QuizCli
   project: projectQuiz,
   deadline: (s) => s.deadline,
   isOver: (s) => s.phase === "final",
+  results: (s) => (s.phase === "final" ? quizResults(s, s.config.mode === "teams") : null),
 };

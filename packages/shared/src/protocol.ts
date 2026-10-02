@@ -17,9 +17,12 @@ import type { QuizClientAction, QuizPublic } from "./games/quiz/types";
 import type { RecoPublic } from "./games/reconnaissance/types";
 import type { BombeClientAction, BombePublic } from "./games/bombe/types";
 import type { MimicClientAction, MimicPublic } from "./games/mimic/types";
+import type { SoireeItem, SoireeState } from "./soiree/types";
+import type { WhoisClientAction, WhoisPublic } from "./games/whois/types";
+import type { FunnyClientAction, FunnyPublic } from "./games/funny/types";
 
 /** Any game's public projection. Discriminate with the state message `gameId`. */
-export type AnyPublicGame = PublicGameState | DrawPublic | FakeArtistPublic | RelayPublic | DoublagePublic | QuizPublic | RecoPublic | BombePublic | MimicPublic;
+export type AnyPublicGame = PublicGameState | DrawPublic | FakeArtistPublic | RelayPublic | DoublagePublic | QuizPublic | RecoPublic | BombePublic | MimicPublic | WhoisPublic | FunnyPublic;
 
 // --- Client -> server -------------------------------------------------------
 
@@ -32,7 +35,7 @@ export type ClientMessage =
   | { type: "set_settings"; settings: GameSettings } // host only
   | { type: "set_pending_game"; gameId: string } // host only: preview selection to guests
   | { type: "start_game"; gameId: string; settings?: unknown }
-  | { type: "game"; action: GameClientAction | DrawClientAction | FakeArtistClientAction | DoublageClientAction | QuizClientAction | BombeClientAction | MimicClientAction }
+  | { type: "game"; action: GameClientAction | DrawClientAction | FakeArtistClientAction | DoublageClientAction | QuizClientAction | BombeClientAction | MimicClientAction | WhoisClientAction | FunnyClientAction }
   | { type: "voice_take"; round: number; audio: string } // mimic: my recorded take (base64 data URL), relayed to all
   | { type: "bombe_typing"; text: string } // bombe: live preview of what the active player is typing
   | { type: "skip" } // host advances the current game phase early
@@ -45,7 +48,12 @@ export type ClientMessage =
   | { type: "draw_stroke"; stroke: DrawStroke } // ephemeral: drawer's stroke
   | { type: "draw_fill"; x: number; y: number; color: string } // ephemeral: bucket fill
   | { type: "draw_clear" } // ephemeral: drawer cleared the canvas
-  | { type: "redeem_pass"; sessionId: string }; // Pass Soirée : activer un paiement sur ce salon
+  | { type: "redeem_pass"; sessionId: string } // Pass Soirée : activer un paiement sur ce salon
+  // --- Soirée LeBoum (hôte) ---
+  | { type: "soiree_start"; items: SoireeItem[] } // lance une soirée depuis le salon
+  | { type: "soiree_next" } // jeu suivant du programme
+  | { type: "soiree_rematch" } // revanche : même programme, scores à zéro
+  | { type: "soiree_end" }; // termine la soirée
 
 // --- Server -> client -------------------------------------------------------
 
@@ -59,6 +67,12 @@ export type ServerMessage =
       settings: GameSettings;
       /** Game the host is about to launch (shown to guests in the lobby). */
       pendingGame: string | null;
+      /** La partie en cours est terminée (moteur : `isOver`). */
+      gameOver?: boolean;
+      /** Numéro de la partie en cours (change à chaque lancement / revanche). */
+      gameRun?: number;
+      /** Soirée en cours (programme, résultats, score global), sinon null. */
+      soiree?: SoireeState | null;
       /** The server's clock at send time, so clients can correct for skew and
        *  synchronise video playback to the authoritative timeline. */
       serverTime: number;

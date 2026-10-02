@@ -7,6 +7,7 @@
 
 import type { GamePlayer } from "../game/types";
 import type { PlayerId } from "../room/types";
+import type { GameResult } from "./result";
 
 /** Impure inputs the server injects into otherwise-pure game functions. */
 export interface GameContext {
@@ -47,6 +48,12 @@ export interface GameModule<State, Public, Settings, ClientMsg> {
   deadline(state: State): number | null;
   /** True once the game is over (server can offer replay / return to lobby). */
   isOver(state: State): boolean;
+  /**
+   * Résultat standard de la partie, transmis au score global de la soirée.
+   * Renvoie `null` tant que la partie n'est pas terminée, ou pour un jeu sans
+   * score (Doublage). Chaque jeu garde son propre barème dans `scores`.
+   */
+  results(state: State): GameResult | null;
 }
 
 /**

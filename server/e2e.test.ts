@@ -15,6 +15,9 @@ import {
   parseDoublageScenes,
   addCustomQuestions,
   parseCustomQuestions,
+  GAME_REGISTRY,
+  type AnyGameModule,
+  type GamePlayer,
 } from "@subtitles-party/shared";
 
 // Les banques intégrées (quiz, doublage) sont volontairement vides : le contenu
@@ -98,6 +101,26 @@ class Client {
     return this.game()?.captions.find((c) => c.lines[0] === text)?.token;
   }
 }
+
+// Jeu de test minimal (2 « tours » au chrono, l'hôte peut passer) pour
+// éprouver la Soirée sans dépendre des délais des vrais jeux.
+function testModule(id: string): AnyGameModule {
+  type S = { players: GamePlayer[]; step: number };
+  return {
+    id,
+    meta: { name: id, minPlayers: 1, maxPlayers: 12 },
+    defaultSettings: () => ({}),
+    sanitizeSettings: () => ({}),
+    createState: (players: GamePlayer[]): S => ({ players, step: 0 }),
+    reduce: (s: S, a: { type: string }) => ({ state: a.type === "advance" ? { ...s, step: Math.min(2, s.step + 1) } : s }),
+    project: (s: S) => s,
+    deadline: () => null,
+    isOver: (s: S) => s.step >= 2,
+    results: (s: S) => (s.step >= 2 ? { scores: Object.fromEntries(s.players.map((p, i) => [p.id, 100 - i * 10])) } : null),
+  };
+}
+GAME_REGISTRY.zap = testModule("zap");
+GAME_REGISTRY.zap2 = testModule("zap2");
 
 async function main() {
   await import("./index");
@@ -365,7 +388,9 @@ async function main() {
   const drawerId = da.drawGame()?.drawerId ?? null;
   const drawer = clients.find((c) => c.drawGame()?.youAreDrawer)!;
   check("le dessinateur voit ses choix de mots", (drawer.drawGame()?.wordChoices?.length ?? 0) === 5);
-  const word = drawer.drawGame()!.wordChoices![0];
+  // Le mot le plus long : une faute d'une lettre y reste « presque juste »
+  // (sur un mot de 3 lettres, elle ne l'est pas — test instable sinon).
+  const word = drawer.drawGame()!.wordChoices!.reduce((a, b) => (b.length > a.length ? b : a));
   drawer.send({ type: "game", action: { kind: "choose_word", word } });
   await sleep(90);
   check("après le choix : phase de dessin", da.drawGame()?.phase === "drawing");
@@ -712,6 +737,210 @@ async function main() {
   check("avec pass : les questions de l'hôte sont jouées", ownPrompts.includes(prompt()));
   pv.send({ type: "return_lobby" });
   await sleep(40);
+
+  console.log("\nServeur — Soirée LeBoum (plusieurs jeux + score global)\n");
+  {
+    const h = new Client("SOIR", "sh");
+    await h.open();
+    h.send({ type: "join", name: "Hôte" });
+    const g = new Client("SOIR", "sg", false);
+    await g.open();
+    g.send({ type: "join", name: "Invité" });
+    await sleep(60);
+    g.send({ type: "set_ready", ready: true });
+    await sleep(40);
+    const skipToEnd = async () => {
+      for (let i = 0; i < 40 && !h.last()?.gameOver; i++) {
+        h.send({ type: "skip" });
+        await sleep(25);
+      }
+    };
+    g.send({ type: "soiree_start", items: [{ gameId: "quiz" }] });
+    await sleep(60);
+    check("seul l'hôte lance une soirée", h.last()?.state.phase === "lobby" && !h.last()?.soiree);
+    h.send({ type: "soiree_start", items: [] });
+    await sleep(40);
+    check("soirée vide refusée", h.errors.some((e) => e.code === "soiree_empty"));
+    h.send({
+      type: "soiree_start",
+      items: [
+        { gameId: "zap", settings: { secret: "x" } },
+        { gameId: "fakeartist" },
+        { gameId: "nope" },
+        { gameId: "zap2" },
+      ],
+    });
+    await sleep(80);
+    const s0 = h.last();
+    check("la soirée démarre sur le 1er jeu", s0?.state.phase === "in_game" && s0?.gameId === "zap" && s0?.soiree?.current === 0);
+    check("un jeu inconnu est retiré du programme", s0?.soiree?.items.length === 3);
+    check("les réglages de lancement ne sont pas diffusés", s0?.soiree?.items.every((i) => i.settings === undefined) === true);
+    check("l'invité voit la soirée", g.last()?.soiree?.items.length === 3);
+    await skipToEnd();
+    const s1 = h.last();
+    check("fin du jeu 1 signalée (gameOver)", s1?.gameOver === true);
+    check("le résultat du jeu 1 est compté", s1?.soiree?.records.length === 1 && s1?.soiree?.records[0].gameId === "zap");
+    const tot1 = Object.values(s1?.soiree?.totals ?? {}).reduce((a, b) => a + b, 0);
+    check("points de soirée attribués (10 + 7)", tot1 === 17 && s1?.soiree?.totals.sh === 10, JSON.stringify(s1?.soiree?.totals));
+    const run1 = s1?.gameRun ?? 0;
+    h.send({ type: "soiree_next" });
+    await sleep(80);
+    const s2 = h.last();
+    check("jeu suivant enchaîné sans repasser par le salon", s2?.state.phase === "in_game" && s2?.gameId === "zap2");
+    check("un jeu injouable à 2 (Faux-artiste) est sauté", s2?.soiree?.current === 2 && h.chats.some((c) => c.text.includes("Faux-artiste")));
+    check("nouvelle partie = nouveau numéro", (s2?.gameRun ?? 0) > run1);
+    await skipToEnd();
+    check("résultat du jeu 2 compté", h.last()?.soiree?.records.length === 2);
+    const totBefore = JSON.stringify(h.last()?.soiree?.totals);
+    h.send({ type: "play_again" });
+    await sleep(60);
+    await skipToEnd();
+    const s3 = h.last();
+    check("une revanche ne compte pas en double", s3?.soiree?.records.length === 2, totBefore + " → " + JSON.stringify(s3?.soiree?.totals));
+    const tot3 = Object.values(s3?.soiree?.totals ?? {}).reduce((a, b) => a + b, 0);
+    check("total cohérent après revanche (2 jeux × 17)", tot3 === 34, String(tot3));
+    h.send({ type: "soiree_next" });
+    await sleep(80);
+    const s4 = h.last();
+    check("après le dernier jeu : retour au salon", s4?.state.phase === "lobby");
+    check("la soirée est terminée et garde le classement", s4?.soiree?.finished === true && s4?.soiree?.records.length === 2);
+    h.send({ type: "soiree_rematch" });
+    await sleep(80);
+    const s5 = h.last();
+    check("revanche de soirée : même programme, scores à zéro", s5?.state.phase === "in_game" && s5?.gameId === "zap" && s5?.soiree?.records.length === 0);
+    h.send({ type: "return_lobby" });
+    await sleep(40);
+    check("retour au salon en pleine soirée : la soirée continue", h.last()?.state.phase === "lobby" && h.last()?.soiree?.finished === false);
+    h.send({ type: "soiree_next" });
+    await sleep(80);
+    check("reprise : le jeu abandonné est rejoué", h.last()?.state.phase === "in_game" && h.last()?.gameId === "zap");
+    h.send({ type: "soiree_end" });
+    await sleep(40);
+    check("terminer la soirée ramène au salon", h.last()?.state.phase === "lobby" && h.last()?.soiree === null);
+    h.ws.close();
+    g.ws.close();
+  }
+
+  console.log("\nServeur générique — Qui de nous ?\n");
+  {
+    const ids = ["wa", "wb", "wc"];
+    const cl: Client[] = [];
+    for (const [i, id] of ids.entries()) {
+      const c = new Client("WHOI", id, i === 0);
+      await c.open();
+      c.send({ type: "join", name: id.toUpperCase() });
+      await sleep(30);
+      cl.push(c);
+    }
+    cl[1].send({ type: "set_ready", ready: true });
+    cl[2].send({ type: "set_ready", ready: true });
+    await sleep(50);
+    cl[0].send({ type: "start_game", gameId: "whois", settings: { totalRounds: 3, seconds: 30 } });
+    await sleep(80);
+    type W = { phase: string; question: { text: string } | null; votedIds: string[]; votes: Record<string, string> | null; elected: string[]; scores: Record<string, number> };
+    const w = (c: Client) => c.last()?.game as unknown as W;
+    check("Qui de nous ? démarre sur une question", cl[0].last()?.gameId === "whois" && w(cl[0])?.phase === "question" && !!w(cl[0])?.question?.text);
+    cl[0].send({ type: "game", action: { kind: "vote", targetId: "wa" } });
+    await sleep(40);
+    check("vote pour soi refusé", cl[0].errors.some((e) => e.code === "self_vote"));
+    cl[0].send({ type: "game", action: { kind: "vote", targetId: "wb" } });
+    await sleep(40);
+    check("les autres voient qui a voté, pas pour qui", w(cl[1]).votedIds.includes("wa") && w(cl[1]).votes === null);
+    cl[1].send({ type: "game", action: { kind: "vote", targetId: "wc" } });
+    cl[2].send({ type: "game", action: { kind: "vote", targetId: "wb" } });
+    await sleep(60);
+    check("révélation dès que tout le monde a voté", w(cl[2]).phase === "reveal" && w(cl[2]).elected.join() === "wb");
+    check("points : majorité +100, élu +50", w(cl[2]).scores.wa === 100 && w(cl[2]).scores.wc === 100 && w(cl[2]).scores.wb === 50, JSON.stringify(w(cl[2]).scores));
+    for (const c of cl) c.ws.close();
+  }
+
+  console.log("\nServeur générique — La Plus Drôle\n");
+  {
+    const ids = ["fa", "fb", "fc"];
+    const cl: Client[] = [];
+    for (const [i, id] of ids.entries()) {
+      const c = new Client("FUNY", id, i === 0);
+      await c.open();
+      c.send({ type: "join", name: id.toUpperCase() });
+      await sleep(30);
+      cl.push(c);
+    }
+    cl[1].send({ type: "set_ready", ready: true });
+    cl[2].send({ type: "set_ready", ready: true });
+    await sleep(50);
+    cl[0].send({ type: "start_game", gameId: "funny", settings: { totalRounds: 2, seconds: 60 } });
+    await sleep(80);
+    type F = { phase: string; prompt: string; answers: { token: string; text: string }[] | null; yourToken: string | null; results: { authorId: string; votes: number }[] | null; scores: Record<string, number> };
+    const f = (c: Client) => c.last()?.game as unknown as F;
+    check("La Plus Drôle démarre en écriture", cl[0].last()?.gameId === "funny" && f(cl[0])?.phase === "write" && f(cl[0]).prompt.includes("___"));
+    cl[0].send({ type: "game", action: { kind: "answer", text: "réponse A" } });
+    cl[1].send({ type: "game", action: { kind: "answer", text: "réponse B" } });
+    await sleep(40);
+    check("les réponses restent secrètes pendant l'écriture", f(cl[2]).answers === null);
+    cl[2].send({ type: "game", action: { kind: "answer", text: "réponse C" } });
+    await sleep(60);
+    const pub = f(cl[2]);
+    check("révélation anonyme (aucun auteur diffusé)", pub.phase === "reveal" && pub.answers?.length === 3 && !JSON.stringify(cl[2].last()?.game).includes("authorId"));
+    cl[0].send({ type: "skip" });
+    await sleep(40);
+    const tokB = f(cl[1]).yourToken!;
+    cl[0].send({ type: "game", action: { kind: "vote", token: f(cl[0]).yourToken } });
+    await sleep(40);
+    check("vote pour sa propre réponse refusé", cl[0].errors.some((e) => e.code === "self_vote"));
+    cl[0].send({ type: "game", action: { kind: "vote", token: tokB } });
+    cl[2].send({ type: "game", action: { kind: "vote", token: tokB } });
+    cl[1].send({ type: "game", action: { kind: "vote", token: f(cl[1]).answers!.find((a) => a.token !== tokB)!.token } });
+    await sleep(60);
+    check("résultats : auteurs dévoilés, B gagne", f(cl[0]).phase === "results" && f(cl[0]).results?.[0].authorId === "fb" && f(cl[0]).results?.[0].votes === 2);
+    check("points : 2 votes + bonus = 250", f(cl[0]).scores.fb === 250, JSON.stringify(f(cl[0]).scores));
+    for (const c of cl) c.ws.close();
+  }
+
+  console.log("\nServeur générique — Imposteur\n");
+  {
+    const ids = ["ia", "ib", "ic", "id"];
+    const cl: Client[] = [];
+    for (const [i, id] of ids.entries()) {
+      const c = new Client("IMPO", id, i === 0);
+      await c.open();
+      c.send({ type: "join", name: id.toUpperCase() });
+      await sleep(30);
+      cl.push(c);
+    }
+    for (const c of cl.slice(1)) c.send({ type: "set_ready", ready: true });
+    await sleep(50);
+    cl[0].send({ type: "start_game", gameId: "imposter", settings: { totalRounds: 1, seconds: 30, mode: "classique" } });
+    await sleep(80);
+    type I = { phase: string; yourWord: string | null; youAreImposter: boolean; currentId: string | null; order: string[]; clues: { playerId: string; text: string }[]; votedIds: string[]; accused: string[]; reveal: { imposterId: string; word: string; outcome: string } | null; scores: Record<string, number> };
+    const g = (c: Client) => c.last()?.game as unknown as I;
+    const byId = (id: string) => cl[ids.indexOf(id)];
+    check("Imposteur démarre en phase secrète", cl[0].last()?.gameId === "imposter" && g(cl[0])?.phase === "secret");
+    const imps = cl.filter((c) => g(c).youAreImposter);
+    check("un seul imposteur, sans mot ; les autres partagent le même mot", imps.length === 1 && g(imps[0]).yourWord === null && new Set(cl.filter((c) => c !== imps[0]).map((c) => g(c).yourWord)).size === 1);
+    const impId = ids[cl.indexOf(imps[0])];
+    const citizen = cl.find((c) => c !== imps[0])!;
+    check("aucun client ne reçoit l'identité de l'imposteur", !JSON.stringify(citizen.last()?.game).includes(`"imposterId"`));
+    for (const c of cl) c.send({ type: "game", action: { kind: "seen" } });
+    await sleep(60);
+    check("tout le monde a vu sa carte → indices", g(cl[0]).phase === "clues" && !!g(cl[0]).currentId);
+    for (let n = 0; n < 8 && g(cl[0]).phase === "clues"; n++) {
+      byId(g(cl[0]).currentId!).send({ type: "game", action: { kind: "clue", text: `indice ${n}` } });
+      await sleep(40);
+    }
+    check("2 tours d'indices puis vote", g(cl[0]).phase === "vote" && g(cl[0]).clues.length === 8);
+    for (const [i, c] of cl.entries()) {
+      const target = ids[i] === impId ? ids.find((x) => x !== impId)! : impId;
+      c.send({ type: "game", action: { kind: "vote", targetId: target } });
+    }
+    await sleep(60);
+    check("imposteur démasqué → dernière chance", g(cl[0]).phase === "guess" && g(cl[0]).accused.join() === impId);
+    imps[0].send({ type: "game", action: { kind: "guess", text: "zzz" } });
+    await sleep(60);
+    const rv = g(cl[0]).reveal;
+    check("révélation : imposteur, mot et issue", g(cl[0]).phase === "reveal" && rv?.imposterId === impId && rv?.outcome === "caught" && !!rv?.word);
+    check("points : +100 par bon vote, 0 pour l'imposteur", ids.every((id) => (g(cl[0]).scores[id] ?? 0) === (id === impId ? 0 : 100)), JSON.stringify(g(cl[0]).scores));
+    for (const c of cl) c.ws.close();
+  }
 
   console.log("\nServeur — santé & statistiques anonymes\n");
   const health = await fetch("http://localhost:3999/health");

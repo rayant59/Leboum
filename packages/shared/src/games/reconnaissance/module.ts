@@ -1,6 +1,7 @@
 import type { GameModule } from "../../platform/types";
 import { createReco, projectReco, reduceReco } from "./engine";
 import type { RecoClientAction, RecoPublic, RecoSettings, RecoState } from "./types";
+import { quizResults } from "../../platform/standard";
 
 export const RECO_GAME_ID = "reco" as const;
 
@@ -24,4 +25,5 @@ export const recoModule: GameModule<RecoState, RecoPublic, RecoSettings, RecoCli
   project: projectReco,
   deadline: (s) => s.deadline,
   isOver: (s) => s.phase === "final",
+  results: (s) => (s.phase === "final" ? quizResults(s, false) : null),
 };

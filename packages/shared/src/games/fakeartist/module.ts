@@ -6,6 +6,7 @@ import type {
   FakeArtistSettings,
   FakeArtistState,
 } from "./types";
+import { scoresResult } from "../../platform/result";
 
 export const FAKE_ARTIST_GAME_ID = "fakeartist" as const;
 
@@ -29,4 +30,5 @@ export const fakeArtistModule: GameModule<
   project: projectFakeArtist,
   deadline: (s) => s.deadline,
   isOver: (s) => s.phase === "scoreboard",
+  results: (s) => (s.phase === "scoreboard" ? scoresResult(s.players, s.scores) : null),
 };

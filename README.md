@@ -1,26 +1,29 @@
-# Sous-Titre — plateforme de jeux entre amis 🎉
+# LeBoum — les jeux de soirée entre potes 🎉
 
-Une plateforme de **party games** multijoueur (interface en français), jouable
-sur ordinateur et téléphone, sur le même Wi-Fi. Crée une salle, partage le code,
-et lancez une partie ensemble en temps réel.
+Une plateforme de **party games** multijoueur en français, jouable sur
+ordinateur et téléphone. Crée un salon, partage le code, et enchaînez les jeux
+dans une **Soirée LeBoum** avec un classement commun.
 
 ## 🎮 Les jeux
 
-| Jeu | Joueurs | Principe |
-|-----|:------:|----------|
-| **Sous-titres** 🎬 | 3+ | Un extrait muet ; chacun invente le sous-titre le plus drôle, puis on vote (anonymement). |
-| **Dessin & Devinette** ✏️ | 2+ | Un joueur dessine un mot secret, les autres devinent au chat. 5 modes (voir plus bas). |
-| **Faux-artiste** 🕵️ | 3+ | Tout le monde dessine le même mot… sauf un imposteur qui l'ignore. Puis on vote pour le démasquer. |
-| **Relais** 🔁 | 3+ | Deux joueurs se relaient au crayon (rotation automatique) sur le même mot ; les autres devinent. |
+| Jeu | Famille | Joueurs | Principe |
+|-----|---------|:------:|----------|
+| **Boum Dessin** | Créatif | 2+ | Un joueur dessine un mot secret, les autres devinent. Modes : classique, aveugle, contraintes, coop, Faux-artiste, Relais. |
+| **Œil de Boum** | Créatif | 1+ | Une image s'affiche : trouve le personnage, le film, le lieu… |
+| **Ça te parle ?** | Réflexion | 1+ | Quiz chronométré (classique, vitesse, survie, équipes). |
+| **Qui de nous ?** | Social | 3+ | « Qui de nous… ? » : tout le monde vote pour un joueur. |
+| **La Plus Drôle** | Social | 3+ | Complète la phrase en secret, puis vote pour la meilleure réponse anonyme. |
+| **Imposteur** | Social | 3+ | Tout le monde a le même mot sauf un. Indices à tour de rôle, puis vote. Modes : classique, infiltré. |
+| **Boum Rush** | Chaos | 2+ | Trouve un mot avec la syllabe avant que la bombe explose. |
+| **Pixel Panic** | Chaos | 1+ | L'image se dévoile pixel par pixel. |
+| **Mimic Boum** | Culture pop | 2+ | Imite un son culte avec ta voix, puis votez. |
 
-### Modes du jeu de dessin
-- **Classique** — dessin & devinette classiques, points au temps.
-- **Turbo** — manches courtes et nerveuses.
-- **Aveugle** 🙈 — le dessinateur ne voit pas son propre trait.
-- **Contraintes** — chaque manche impose une règle *réellement appliquée* quand
-  c'est vérifiable (une seule couleur, uniquement lignes & ronds, max 10 traits…),
-  volontaire sinon (main non-dominante…).
-- **Coopératif** 🤝 — les points sont mis en commun : score d'équipe, pas de compétition.
+**Soirée LeBoum** : l'hôte compose un programme de plusieurs jeux ; les points
+de soirée s'additionnent d'un jeu à l'autre jusqu'au classement final.
+
+**Contenus perso** (relancer le serveur après modification) : `questionquizz/`,
+`motdessin/`, `motbombe/`, `quidenous/`, `plusdrole/`, `imposteur/` — chaque
+dossier contient un `README.txt` qui explique le format.
 
 ## 🚀 Démarrer en local (2 terminaux)
 
@@ -82,8 +85,9 @@ replanifie sur l'échéance de l'état, l'anonymisation (jetons) et le relais de
 messages éphémères (traits de dessin, chat, remplissage).
 
 **Contrat plateforme :** chaque nouveau jeu implémente un `GameModule`
-(id, meta, createState, reduce, project, deadline, isOver) et s'enregistre dans le
-registre du serveur — sans toucher aux autres jeux.
+(id, meta, createState, reduce, project, deadline, isOver, results), a sa fiche
+dans `platform/catalog.ts` et s'enregistre dans `platform/registry.ts` — sans
+toucher aux autres jeux. Détails et check-list : `docs/ARCHITECTURE.md`.
 
 ## ✅ Tests
 
@@ -97,8 +101,9 @@ npx tsx packages/shared/src/games/draw/engine.test.ts
 npx tsx server/e2e.test.ts
 ```
 
-État actuel : **143 tests** (salle, sous-titres, réglages, twists, dessin,
-faux-artiste, relais, avatars + e2e serveur bout-en-bout).
+Chaque jeu a ses tests de moteur, `platform/modes.test.ts` vérifie que tous les
+Game Modes respectent le socle commun, et `server/e2e.test.ts` joue de vraies
+parties à travers le serveur WebSocket.
 
 Vérifier les types partout :
 ```bash

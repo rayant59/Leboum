@@ -1,6 +1,7 @@
 import type { GameModule } from "../../platform/types";
 import { createRelay, projectRelay, reduceRelay } from "./engine";
 import type { RelayClientAction, RelayPublic, RelaySettings, RelayState } from "./types";
+import { scoresResult } from "../../platform/result";
 
 export const RELAY_GAME_ID = "relay" as const;
 
@@ -19,4 +20,5 @@ export const relayModule: GameModule<RelayState, RelayPublic, RelaySettings, Rel
   project: projectRelay,
   deadline: (s) => s.deadline,
   isOver: (s) => s.phase === "scoreboard",
+  results: (s) => (s.phase === "scoreboard" ? scoresResult(s.players, s.scores) : null),
 };
