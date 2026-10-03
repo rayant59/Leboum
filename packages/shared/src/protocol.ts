@@ -59,6 +59,7 @@ export type ClientMessage =
   | { type: "soiree_start"; items: SoireeItem[] } // lance une soirée depuis le salon
   | { type: "soiree_next" } // jeu suivant du programme
   | { type: "soiree_rematch" } // revanche : même programme, scores à zéro
+  | { type: "soiree_vote_rematch"; want: boolean } // fin de soirée : « je veux la revanche »
   | { type: "soiree_end" }; // termine la soirée
 
 // --- Server -> client -------------------------------------------------------

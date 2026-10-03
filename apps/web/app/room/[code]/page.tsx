@@ -587,7 +587,7 @@ export default function LobbyPage() {
       <>
         <BoumBackdrop />
         <main className="relative z-[1]">
-          <SoireeFinal soiree={room.soiree} you={room.you} isHost={isHost} onRematch={() => room.soireeRematch()} onEnd={() => room.soireeEnd()} />
+          <SoireeFinal soiree={room.soiree} you={room.you} isHost={isHost} onRematch={() => room.soireeRematch()} onEnd={() => room.soireeEnd()} onVote={(want) => room.soireeVote(want)} />
         </main>
       </>
     );

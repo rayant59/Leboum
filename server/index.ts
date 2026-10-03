@@ -73,6 +73,7 @@ import {
   nextGame,
   isRecorded,
   withPlayers,
+  voteRematch,
   gameInfo,
   parseWhoisQuestions,
   addCustomWhoisQuestions,
@@ -1249,6 +1250,13 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
         if (playerId !== room.state.hostId || !room.soiree || room.state.phase !== "lobby") return;
         room.soiree = withPlayers(createSoiree(room.soiree.items, t), gameRoster(room));
         return launchSoireeItem(room, ws, true);
+      }
+
+      case "soiree_vote_rematch": {
+        // N'importe quel joueur : « je veux la revanche ! » (l'hôte voit le compte et lance).
+        if (!room.soiree?.finished || room.state.phase !== "lobby") return;
+        room.soiree = voteRematch(room.soiree, playerId, msg.want !== false);
+        return broadcast(room);
       }
 
       case "soiree_end": {

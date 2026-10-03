@@ -125,6 +125,7 @@ export function createDrawGame(
     mode: getDrawMode(settings.mode).id,
     wordThemes: settings.themes ?? [],
     usedWords: entries.map((e) => e.word),
+    drawingsFound: {},
   };
 }
 
@@ -193,6 +194,9 @@ function reduceClient(
         ? { [state.drawerId]: (state.scores[state.drawerId] ?? 0) + state.config.pointsDrawerPerGuess }
         : {}),
     },
+    drawingsFound: state.drawerId
+      ? { ...state.drawingsFound, [state.drawerId]: (state.drawingsFound?.[state.drawerId] ?? 0) + 1 }
+      : state.drawingsFound,
   };
   // Everyone (but the drawer) has found it → end the turn early.
   if (Object.keys(next.guessedAt).length >= next.players.length - 1) return ok(toReveal(next, ctx));

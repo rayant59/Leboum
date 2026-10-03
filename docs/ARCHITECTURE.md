@@ -99,6 +99,16 @@ une vue ; aucun autre jeu n'est touché.
   courts utilisent des réglages « express » (`SHORT_SETTINGS`). Le résultat
   remplit simplement le programme du constructeur : l'hôte peut retirer,
   réordonner, ajouter ou relancer un tirage avant de lancer.
+* **Fin de soirée** (phase 15, `soiree/stats.ts`, `SoireeFinal`) : podium,
+  bilan perso (« Ta soirée » : place, points, jeux gagnés, podiums, meilleur
+  jeu), distinctions de soirée et « film de la soirée » (vainqueur de chaque
+  jeu). Distinctions : plus de jeux gagnés, plus gros carton, tête de quiz,
+  remontada, abonné au podium, plus les distinctions standard des jeux
+  (`GameResult.awards` : meilleur dessinateur, meilleur menteur, réponse la
+  plus drôle…), regroupées si gagnées plusieurs fois. Une égalité en tête =
+  distinction non décernée. Les joueurs réclament la revanche
+  (`soiree_vote_rematch`) ; l'hôte lance « Revanche ! » (même programme,
+  scores et demandes à zéro) ou « Nouvelle soirée ».
 
 ## 5. Ajouter un nouveau jeu — check-list
 
@@ -128,6 +138,7 @@ une vue ; aucun autre jeu n'est touché.
 | 12 — Top / Classement | ✅ | `games/ranking/`, `RankingView.tsx` |
 | 13 — Enrichir LeBoum (familles) | ✅ | `platform/catalog.ts` (`gamesByCategory`), lobby |
 | 14 — Générateur de soirée | ✅ | `soiree/generator.ts`, `Soiree.tsx` (`SoireeBuilder`) |
+| 15 — Fin de soirée | ✅ | `soiree/stats.ts`, `Soiree.tsx` (`SoireeFinal`), `soiree_vote_rematch` |
 
 **Composants communs des jeux « social »** : `components/social/kit.tsx`
 (en-tête + chrono, carte de question, grille de vote, écran final avec

@@ -3,8 +3,9 @@
 // Soirée LeBoum — composants d'interface : préparation du programme (lobby),
 // suivi pendant les jeux, et grand classement de fin de soirée.
 
-import { useState } from "react";
-import { SOIREE_FORMATS, estimateMinutes, gameInfo, soireeStandings, type SoireeState } from "@subtitles-party/shared";
+import { useEffect, useState } from "react";
+import { SOIREE_FORMATS, estimateMinutes, gameInfo, playerSummary, soireeHighlights, soireeRecap, soireeStandings, type SoireePlayerSummary, type SoireeState } from "@subtitles-party/shared";
+import { playSound } from "@/lib/sound";
 import { Avatar } from "@/components/Avatar";
 import { ResultsScreen, type RankRow } from "@/components/ResultsScreen";
 
@@ -251,13 +252,58 @@ export function SoireeHud({ soiree, you, isHost, gameOver, onNext }: { soiree: S
   );
 }
 
-/** Grand final : classement de la soirée + distinctions. */
-export function SoireeFinal({ soiree, you, isHost, onRematch, onEnd }: { soiree: SoireeState; you: string; isHost: boolean; onRematch: () => void; onEnd: () => void }) {
+/** Grand final : classement, bilan perso, distinctions, film de la soirée, revanche. */
+export function SoireeFinal({ soiree, you, isHost, onRematch, onEnd, onVote }: { soiree: SoireeState; you: string; isHost: boolean; onRematch: () => void; onEnd: () => void; onVote: (want: boolean) => void }) {
   const standings = soireeStandings(soiree);
   const ranking: RankRow[] = standings
     .map((r) => ({ ...soiree.players[r.id], score: r.total }))
     .filter((r): r is RankRow => !!r && typeof r.name === "string");
-  const awards = soireeAwards(soiree);
+  const highlights = soireeHighlights(soiree);
+  const recap = soireeRecap(soiree);
+  const mine = playerSummary(soiree, you);
+  const votes = (soiree.rematchVotes ?? []).filter((id) => soiree.players[id]);
+  const iVoted = votes.includes(you);
+  const n = soiree.records.length;
+
+  useEffect(() => {
+    playSound("fanfare");
+  }, []);
+
+  const actions = (
+    <section aria-label="On remet ça ?" style={{ position: "relative", maxWidth: 560, margin: "28px auto 0", padding: "18px 18px 16px", borderRadius: 22, border: "1px solid rgba(255,194,75,.45)", background: "linear-gradient(160deg, rgba(255,194,75,.14), rgba(28,22,54,.75) 65%)", textAlign: "center", animation: "pop-in .35s ease-out 1s both" }}>
+      <div style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 24, color: C.text, lineHeight: 1.1 }}>On remet ça ?</div>
+      <p style={{ margin: "6px 0 12px", color: C.muted, fontSize: 14 }}>Revanche : même programme, scores remis à zéro.</p>
+      {votes.length > 0 && (
+        <div className="mb-3 flex items-center justify-center gap-2" aria-live="polite">
+          <span className="flex">
+            {votes.slice(0, 6).map((id, i) => (
+              <span key={id} style={{ marginLeft: i ? -8 : 0, borderRadius: 999, boxShadow: `0 0 0 2px ${C.deep}` }}>
+                <Avatar name={soiree.players[id].name} color={soiree.players[id].color} avatar={soiree.players[id].avatar} size={26} />
+              </span>
+            ))}
+          </span>
+          <span style={{ fontSize: 14, color: C.gold, fontWeight: 700 }}>{votes.length === 1 ? `${soiree.players[votes[0]].name} veut sa revanche !` : `${votes.length} joueurs veulent la revanche !`}</span>
+        </div>
+      )}
+      {isHost ? (
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+          <button onClick={onEnd} className="arc arc-sec">Nouvelle soirée</button>
+          <button onClick={onRematch} className="arc arc-p" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 1 2.6 6.3" /><path d="M3 20v-5h5" /></svg>
+            Revanche !
+          </button>
+        </div>
+      ) : (
+        <>
+          <button onClick={() => { onVote(!iVoted); playSound(iVoted ? "click" : "vote"); }} className={`arc ${iVoted ? "arc-sec" : "arc-p"}`} aria-pressed={iVoted}>
+            {iVoted ? "Revanche demandée ✓" : "Je veux la revanche !"}
+          </button>
+          <p className="mt-2 text-xs" style={{ color: C.faint }}>{iVoted ? "Touche encore pour annuler. " : ""}L'hôte lance la revanche ou une nouvelle soirée.</p>
+        </>
+      )}
+    </section>
+  );
+
   return (
     <div className="mx-auto max-w-2xl px-5 py-8">
       <ResultsScreen
@@ -267,48 +313,146 @@ export function SoireeFinal({ soiree, you, isHost, onRematch, onEnd }: { soiree:
         isHost={isHost}
         onReturn={onEnd}
         onReplay={onRematch}
-        eyebrow={`Fin de soirée · ${soiree.records.length} jeu${soiree.records.length > 1 ? "x" : ""}`}
+        eyebrow={`Fin de soirée · ${n} jeu${n > 1 ? "x" : ""}`}
         winnerText="remporte la soirée"
-        returnLabel="Retour au salon"
-        replayLabel="Revanche !"
+        endTitle={"Fin de soirée\u202f!"}
+        actions={actions}
       >
-        {awards.length > 0 && (
-          <div style={{ position: "relative", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 10, marginTop: 24, maxWidth: 560, marginInline: "auto" }}>
-            {awards.map((a, i) => {
-              const p = soiree.players[a.playerId];
-              if (!p) return null;
-              return (
-                <div key={i} className="flex items-center gap-3 rounded-2xl border px-3 py-2.5" style={{ borderColor: C.line, background: "rgba(28,22,54,.6)", animation: `pop-in .3s ease-out ${(0.6 + i * 0.12).toFixed(2)}s both` }}>
-                  <Avatar name={p.name} color={p.color} avatar={p.avatar} size={34} />
-                  <div className="min-w-0">
-                    <div style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: C.gold }}>{a.label}</div>
-                    <div className="truncate" style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 14, color: C.text }}>{p.name}{a.detail ? <span style={{ fontWeight: 500, color: C.muted }}> · {a.detail}</span> : null}</div>
+        {mine && <MySoiree s={mine} total={standings.length} shared={standings.filter((r) => r.place === mine.place).length > 1} />}
+        {highlights.length > 0 && (
+          <>
+            <SectionTitle>Les distinctions</SectionTitle>
+            <div style={{ position: "relative", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10, maxWidth: 560, marginInline: "auto" }}>
+              {highlights.map((a, i) => {
+                const p = soiree.players[a.playerId];
+                if (!p) return null;
+                const isYou = a.playerId === you;
+                return (
+                  <div key={a.id} className="flex items-center gap-3 rounded-2xl border px-3 py-2.5" style={{ borderColor: isYou ? "rgba(255,194,75,.5)" : C.line, background: isYou ? "rgba(255,194,75,.08)" : "rgba(28,22,54,.6)", animation: `pop-in .3s ease-out ${(0.5 + i * 0.1).toFixed(2)}s both` }}>
+                    <span style={{ position: "relative", flex: "none" }}>
+                      <Avatar name={p.name} color={p.color} avatar={p.avatar} size={38} />
+                      <span style={{ position: "absolute", right: -6, bottom: -6, width: 22, height: 22, display: "grid", placeItems: "center", borderRadius: 999, background: C.deep, border: `1px solid ${C.gold}` }}>
+                        <HighlightIcon id={a.id} />
+                      </span>
+                    </span>
+                    <div className="min-w-0" style={{ textAlign: "left" }}>
+                      <div style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: C.gold }}>{a.label}</div>
+                      <div className="truncate" style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 15, color: C.text }}>{p.name}{isYou ? " (toi)" : ""}</div>
+                      {a.detail && <div className="truncate" style={{ fontSize: 12, color: C.muted }} title={a.detail}>{a.detail}</div>}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          </>
         )}
-        {!isHost && <p className="mt-6 text-center text-sm" style={{ color: C.muted }}>L'hôte peut lancer une revanche avec le même programme.</p>}
+        {recap.length > 0 && (
+          <>
+            <SectionTitle>Le film de la soirée</SectionTitle>
+            <ol style={{ listStyle: "none", margin: "0 auto", padding: 0, maxWidth: 560, display: "flex", flexDirection: "column", gap: 6 }}>
+              {recap.map((r, i) => {
+                const g = gameInfo(r.gameId);
+                const names = r.winners.map((id) => soiree.players[id]?.name).filter(Boolean) as string[];
+                const first = r.winners.length === 1 ? soiree.players[r.winners[0]] : null;
+                return (
+                  <li key={r.index} className="flex items-center gap-3 rounded-xl px-3 py-2" style={{ background: "rgba(14,11,26,.45)", border: `1px solid ${C.line}`, animation: `pop-in .3s ease-out ${(0.7 + i * 0.08).toFixed(2)}s both` }}>
+                    <span style={{ width: 18, fontFamily: MONO, fontWeight: 700, fontSize: 12, color: C.faint }}>{r.index + 1}</span>
+                    <Thumb gameId={r.gameId} size={30} />
+                    <span className="flex-1 truncate" style={{ minWidth: 72, fontFamily: DISPLAY, fontWeight: 700, fontSize: 14, color: C.text, textAlign: "left" }}>{g.name}</span>
+                    {r.coop ? (
+                      <span style={{ fontSize: 13, color: C.mint }}>Victoire d'équipe</span>
+                    ) : first ? (
+                      <span className="inline-flex min-w-0 items-center gap-2" style={{ fontSize: 13, color: C.muted }}>
+                        <Avatar name={first.name} color={first.color} avatar={first.avatar} size={22} />
+                        <span className="truncate" style={{ color: r.winners[0] === you ? C.gold : C.text, fontWeight: 700 }}>{first.name}</span>
+                      </span>
+                    ) : names.length > 1 ? (
+                      <span className="inline-flex items-center gap-2" style={{ fontSize: 13, color: C.muted }} title={`Ex æquo : ${names.join(", ")}`}>
+                        <span className="flex">
+                          {r.winners.slice(0, 4).map((id, k) => {
+                            const w = soiree.players[id];
+                            return w ? (
+                              <span key={id} style={{ marginLeft: k ? -7 : 0, borderRadius: 999, boxShadow: `0 0 0 2px ${C.deep}` }}>
+                                <Avatar name={w.name} color={w.color} avatar={w.avatar} size={22} />
+                              </span>
+                            ) : null;
+                          })}
+                        </span>
+                        Ex æquo
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 13, color: C.faint }}>—</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </>
+        )}
       </ResultsScreen>
     </div>
   );
 }
 
-/** Distinctions de fin de soirée : jeux gagnés + meilleures distinctions des jeux. */
-export function soireeAwards(soiree: SoireeState): { label: string; playerId: string; detail?: string }[] {
-  const out: { label: string; playerId: string; detail?: string }[] = [];
-  const st = soireeStandings(soiree);
-  const byWins = st.slice().sort((a, b) => b.wins - a.wins);
-  const topWins = byWins[0];
-  if (topWins && topWins.wins >= 2 && (byWins[1]?.wins ?? 0) < topWins.wins) out.push({ label: "Plus de jeux gagnés", playerId: topWins.id, detail: `${topWins.wins} victoires` });
-  const seen = new Set<string>();
-  for (const r of soiree.records) {
-    for (const a of r.awards) {
-      if (seen.has(a.id)) continue;
-      seen.add(a.id);
-      out.push({ label: a.label, playerId: a.playerId, detail: a.detail });
-    }
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <h3 style={{ position: "relative", margin: "26px 0 10px", textAlign: "center", fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: ".18em", textTransform: "uppercase", color: C.muted }}>{children}</h3>;
+}
+
+const ordinal = (n: number) => (n === 1 ? "1re" : `${n}e`);
+
+/** « Ta soirée » : le bilan du joueur qui regarde. */
+function MySoiree({ s, total, shared }: { s: SoireePlayerSummary; total: number; shared: boolean }) {
+  const line = s.place === 1 ? (shared ? "Co-champion·ne de la soirée !" : "Champion·ne de la soirée !") : s.place <= 3 ? "Sur le podium, bien joué !" : s.place === total && total > 2 ? "La lanterne rouge… la revanche t'attend." : "Belle soirée, la prochaine est pour toi.";
+  const cells: { v: string; l: string }[] = [
+    { v: ordinal(s.place), l: shared ? "ex æquo" : `sur ${total}` },
+    { v: String(s.total), l: "pts de soirée" },
+    { v: String(s.wins), l: s.wins > 1 ? "jeux gagnés" : "jeu gagné" },
+    { v: String(s.podiums), l: s.podiums > 1 ? "podiums" : "podium" },
+  ];
+  return (
+    <section aria-label="Ta soirée" style={{ position: "relative", maxWidth: 560, margin: "24px auto 0", padding: 14, borderRadius: 20, border: `1px solid ${C.line}`, background: "rgba(28,22,54,.6)", animation: "pop-in .3s ease-out .35s both" }}>
+      <div className="mb-2 flex items-baseline justify-between gap-3">
+        <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: ".14em", textTransform: "uppercase", color: C.gold }}>Ta soirée</span>
+        <span className="truncate" style={{ fontSize: 13, color: C.muted }}>{line}</span>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
+        {cells.map((c) => (
+          <div key={c.l} style={{ textAlign: "center", padding: "8px 4px", borderRadius: 14, background: "rgba(14,11,26,.5)" }}>
+            <div style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 22, color: C.text, lineHeight: 1 }}>{c.v}</div>
+            <div style={{ marginTop: 4, fontSize: 11, color: C.faint }}>{c.l}</div>
+          </div>
+        ))}
+      </div>
+      {s.best && (
+        <p style={{ margin: "10px 0 0", fontSize: 13, color: C.muted, textAlign: "center" }}>
+          Ton meilleur jeu : <b style={{ color: C.text }}>{gameInfo(s.best.gameId).name}</b> ({ordinal(s.best.place)} place)
+        </p>
+      )}
+    </section>
+  );
+}
+
+/** Petites icônes dessinées (pas d'emoji) pour les distinctions. */
+function HighlightIcon({ id }: { id: string }) {
+  const p = { width: 13, height: 13, viewBox: "0 0 24 24", fill: "none", stroke: C.gold, strokeWidth: 2.2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  switch (id) {
+    case "most_wins":
+      return <svg {...p}><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z" /><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 14v4M8 20h8" /></svg>;
+    case "big_win":
+      return <svg {...p}><path d="M13 2 4 14h6l-1 8 10-13h-6l1-7z" /></svg>;
+    case "quiz_head":
+      return <svg {...p}><circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01" /></svg>;
+    case "best_drawer":
+      return <svg {...p}><path d="M4 20l4-1 11-11-3-3L5 16l-1 4Z" /><path d="M14 6l3 3" /></svg>;
+    case "best_liar":
+      return <svg {...p}><path d="M3 8c3-2 15-2 18 0 0 6-4 9-9 9S3 14 3 8Z" /><path d="M8 11h2M14 11h2" /></svg>;
+    case "funny_best":
+      return <svg {...p}><circle cx="12" cy="12" r="9" /><path d="M8 14c1.2 2 6.8 2 8 0M9 9.5v.01M15 9.5v.01" /></svg>;
+    case "comeback":
+      return <svg {...p}><path d="M4 18l6-6 4 4 6-8" /><path d="M15 8h5v5" /></svg>;
+    case "always_podium":
+      return <svg {...p}><path d="M3 20h18M5 20v-6h4v6M10 20V9h4v11M15 20v-8h4v8" /></svg>;
+    default:
+      return <svg {...p}><path d="m12 3 2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7L12 3Z" /></svg>;
   }
-  return out.slice(0, 6);
 }

@@ -39,6 +39,8 @@ export function ResultsScreen({
   returnLabel = "Retour au salon",
   replayLabel = "Rejouer",
   children,
+  actions,
+  endTitle = "Fin de partie\u202f!",
 }: {
   ranking: RankRow[];
   you: string | null;
@@ -52,6 +54,10 @@ export function ResultsScreen({
   replayLabel?: string;
   /** Contenu additionnel sous le podium (stats de soirée…). */
   children?: ReactNode;
+  /** Remplace les boutons d'hôte par défaut (ex. fin de soirée). */
+  actions?: ReactNode;
+  /** Titre affiché à ceux qui n'ont pas gagné. */
+  endTitle?: string;
 }) {
   const winner = ranking[0];
   const second = ranking[1];
@@ -94,7 +100,7 @@ export function ResultsScreen({
           <path d="M9.5 15.2 9 19h6l-.5-3.8" />
           <path d="M7.5 21h9" />
         </svg>
-        <h1 className="font-display" style={{ margin: 0, fontSize: 44, fontWeight: 800, letterSpacing: "-.02em", color: GOLD, animation: "rs-pop .7s cubic-bezier(.2,.9,.3,1.3) both, rs-glow 3s ease-in-out .7s infinite" }}>{winner && coLeaders.some((r) => r.id === you) ? (coLeaders.length > 1 ? "Ex æquo\u202f!" : "Victoire\u202f!") : "Fin de partie\u202f!"}</h1>
+        <h1 className="font-display" style={{ margin: 0, fontSize: 44, fontWeight: 800, letterSpacing: "-.02em", color: GOLD, animation: "rs-pop .7s cubic-bezier(.2,.9,.3,1.3) both, rs-glow 3s ease-in-out .7s infinite" }}>{winner && coLeaders.some((r) => r.id === you) ? (coLeaders.length > 1 ? "Ex æquo\u202f!" : "Victoire\u202f!") : endTitle}</h1>
         {winner && (
           <p style={{ margin: 0, fontSize: 15, color: "#A79FC7" }}>
             {coLeaders.length > 1 ? (
@@ -146,7 +152,7 @@ export function ResultsScreen({
       {children}
 
       {/* actions */}
-      {isHost && (
+      {actions ?? (isHost && (
         <div style={{ position: "relative", display: "flex", justifyContent: "center", gap: 14, marginTop: 24 }}>
           <button onClick={onReturn} className="arc arc-sec">{returnLabel}</button>
           <button onClick={onReplay} className="arc arc-p" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
@@ -154,7 +160,7 @@ export function ResultsScreen({
             {replayLabel}
           </button>
         </div>
-      )}
+      ))}
     </div>
   );
 }

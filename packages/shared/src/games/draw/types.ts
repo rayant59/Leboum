@@ -66,6 +66,8 @@ export interface DrawState {
   wordThemes: string[]; // active theme filter (empty = all)
   /** Tous les mots déjà PROPOSÉS cette partie : ils ne ressortent jamais. */
   usedWords: string[];
+  /** Nombre de fois où le dessin de chacun a été trouvé (distinction « Meilleur dessinateur »). */
+  drawingsFound?: Record<PlayerId, number>;
 }
 
 /** What a client may send. */

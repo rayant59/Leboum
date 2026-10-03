@@ -104,3 +104,12 @@ export function soireeStandings(s: SoireeState): SoireeStanding[] {
   });
   return out;
 }
+
+/** Fin de soirée : un joueur réclame (ou retire) sa demande de revanche. */
+export function voteRematch(s: SoireeState, playerId: PlayerId, want = true): SoireeState {
+  if (!s.finished || !s.players[playerId]) return s;
+  const votes = new Set(s.rematchVotes ?? []);
+  if (want) votes.add(playerId);
+  else votes.delete(playerId);
+  return { ...s, rematchVotes: [...votes] };
+}

@@ -94,6 +94,7 @@ test("devinette fausse = aucun point ; correcte = devineur + dessinateur marquen
   assert(s.guessedAt[g] != null, "marqué comme trouvé");
   assert(s.scores[g] > 0, "le devineur marque");
   eq(s.scores[drawer], s.config.pointsDrawerPerGuess, "le dessinateur marque aussi");
+  eq(s.drawingsFound?.[drawer], 1, "dessin trouvé compté (distinction Meilleur dessinateur)");
 });
 
 test("quand tous les devineurs trouvent → révélation", () => {

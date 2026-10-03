@@ -804,9 +804,21 @@ async function main() {
     const s4 = h.last();
     check("après le dernier jeu : retour au salon", s4?.state.phase === "lobby");
     check("la soirée est terminée et garde le classement", s4?.soiree?.finished === true && s4?.soiree?.records.length === 2);
+    // Phase 15 : fin de soirée — les joueurs réclament la revanche.
+    g.send({ type: "soiree_vote_rematch", want: true });
+    await sleep(50);
+    check("fin de soirée : un invité réclame la revanche, tout le monde le voit", JSON.stringify(h.last()?.soiree?.rematchVotes) === JSON.stringify(["sg"]));
+    g.send({ type: "soiree_vote_rematch", want: false });
+    await sleep(50);
+    check("il peut retirer sa demande", h.last()?.soiree?.rematchVotes?.length === 0);
+    g.send({ type: "soiree_vote_rematch", want: true });
+    h.send({ type: "soiree_vote_rematch", want: true });
+    await sleep(50);
+    check("demandes cumulées (2 joueurs)", h.last()?.soiree?.rematchVotes?.length === 2);
     h.send({ type: "soiree_rematch" });
     await sleep(80);
     const s5 = h.last();
+    check("la revanche remet les demandes à zéro", !s5?.soiree?.rematchVotes?.length);
     check("revanche de soirée : même programme, scores à zéro", s5?.state.phase === "in_game" && s5?.gameId === "zap" && s5?.soiree?.records.length === 0);
     h.send({ type: "return_lobby" });
     await sleep(40);

@@ -6,7 +6,7 @@ import type { GameModule } from "../../platform/types";
 import { createDrawGame, projectDraw, reduceDraw } from "./engine";
 import { DEFAULT_DRAW_SETTINGS, sanitizeDrawSettings } from "./modes";
 import type { DrawClientAction, DrawPublic, DrawSettings, DrawState } from "./types";
-import { scoresResult } from "../../platform/result";
+import { bestBy, plural, scoresResult } from "../../platform/result";
 
 export const DRAW_GAME_ID = "draw" as const;
 
@@ -20,5 +20,12 @@ export const drawModule: GameModule<DrawState, DrawPublic, DrawSettings, DrawCli
   project: projectDraw,
   deadline: (s) => s.deadline,
   isOver: (s) => s.phase === "scoreboard",
-  results: (s) => (s.phase === "scoreboard" ? scoresResult(s.players, s.scores, { coop: s.mode === "coop" }) : null),
+  results: (s) => {
+    if (s.phase !== "scoreboard") return null;
+    const drawer = bestBy(s.drawingsFound);
+    return scoresResult(s.players, s.scores, {
+      coop: s.mode === "coop",
+      awards: drawer ? [{ id: "best_drawer", label: "Meilleur dessinateur", playerId: drawer, detail: `dessins trouvés ${plural(s.drawingsFound![drawer], "fois", "fois")}` }] : [],
+    });
+  },
 };

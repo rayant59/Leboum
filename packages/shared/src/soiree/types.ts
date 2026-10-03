@@ -47,6 +47,8 @@ export interface SoireeState {
   players: Record<PlayerId, SoireePlayer>;
   finished: boolean;
   startedAt: number;
+  /** Fin de soirée : joueurs qui réclament une revanche (l'hôte la lance). */
+  rematchVotes?: PlayerId[];
 }
 
 /** Ligne du classement de soirée. */

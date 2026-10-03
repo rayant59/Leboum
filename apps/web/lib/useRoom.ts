@@ -84,6 +84,8 @@ export interface UseRoom {
   startSoiree: (items: SoireeItem[]) => void;
   soireeNext: () => void;
   soireeRematch: () => void;
+  /** Fin de soirée : « je veux la revanche » (ou retirer sa demande). */
+  soireeVote: (want: boolean) => void;
   soireeEnd: () => void;
   /** Action générique de jeu (nouveaux Game Modes : vote, réponse, indice…). */
   gameAction: (action: { kind: string; [k: string]: unknown }) => void;
@@ -334,6 +336,7 @@ export function useRoom(code: string, create = false): UseRoom {
   const startSoiree = useCallback((items: SoireeItem[]) => send.current?.send({ type: "soiree_start", items }), [send]);
   const soireeNext = useCallback(() => send.current?.send({ type: "soiree_next" }), [send]);
   const soireeRematch = useCallback(() => send.current?.send({ type: "soiree_rematch" }), [send]);
+  const soireeVote = useCallback((want: boolean) => send.current?.send({ type: "soiree_vote_rematch", want }), [send]);
   const gameAction = useCallback(
     (action: { kind: string; [k: string]: unknown }) => send.current?.send({ type: "game", action } as ClientMessage),
     [send],
@@ -347,7 +350,7 @@ export function useRoom(code: string, create = false): UseRoom {
 
   return {
     state, gameId, game, settings, you, status, error, clearError,
-    join, setReady, setName, setAvatar, setSettings, selectGame, startGame, leave, pendingGame, gameOver, gameRun, soiree, startSoiree, soireeNext, soireeRematch, soireeEnd, gameAction,
+    join, setReady, setName, setAvatar, setSettings, selectGame, startGame, leave, pendingGame, gameOver, gameRun, soiree, startSoiree, soireeNext, soireeRematch, soireeVote, soireeEnd, gameAction,
     submitLines, vote, skipPhase, debugFill, returnLobby, playAgain, react, reactions, speakingIds, sendSpeaking, quizAnswer, redeemPass, bombeSubmit,
     mimicAction, sendVoiceTake, voiceTakes, sendBombeTyping, bombeTyping,
     chooseWord, guess, sendTalk, castVote, doublageAction, revealTheme, endDrawing, sendStroke, sendFill, clearCanvas, chat, strokeQueueRef, strokeResetRef, serverNow,

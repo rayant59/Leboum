@@ -27,6 +27,8 @@ dans une **Soirée LeBoum** avec un classement commun.
 de soirée s'additionnent d'un jeu à l'autre jusqu'au classement final.
 Pas d'idée ? Le **générateur** propose une soirée toute prête (rapide, 45 min,
 Chaos, entre potes, créative, cerveau, grande soirée) — modifiable avant de lancer.
+À la fin : podium, bilan de chacun, distinctions (meilleur dessinateur, meilleur
+menteur, réponse la plus drôle, remontada…), le film de la soirée et la revanche.
 
 **Contenus perso** (relancer le serveur après modification) : `questionquizz/`,
 `motdessin/`, `motbombe/`, `quidenous/`, `plusdrole/`, `imposteur/`, `telephone/`, `motinterdit/` — chaque
