@@ -5,7 +5,7 @@
 import type { GamePlayer } from "../../game/types";
 import type { PlayerId } from "../../room/types";
 import type { GameAction, GameContext, GameReduceResult } from "../../platform/types";
-import { latePlayers, withZeros } from "../../platform/presence";
+import { latePlayers, withZeros, zeroScores } from "../../platform/presence";
 import { argmaxAll, clampInt, shuffle } from "../../platform/util";
 import { whoisBank } from "./questions";
 import {
@@ -34,7 +34,6 @@ export function resolveWhoisConfig(s: WhoisSettings | undefined): WhoisConfig {
   };
 }
 
-const zeros = (players: GamePlayer[]) => Object.fromEntries(players.map((p) => [p.id, 0]));
 
 export function createWhois(players: GamePlayer[], settings: WhoisSettings, ctx: GameContext): WhoisState {
   const config = resolveWhoisConfig(settings);
@@ -50,12 +49,12 @@ export function createWhois(players: GamePlayer[], settings: WhoisSettings, ctx:
     index: 0,
     votes: {},
     deadline: ctx.now + config.seconds * 1000,
-    scores: zeros(players),
+    scores: zeroScores(players),
     gained: {},
     tally: {},
     elected: [],
-    timesElected: zeros(players),
-    majorityVotes: zeros(players),
+    timesElected: zeroScores(players),
+    majorityVotes: zeroScores(players),
     history: [],
   };
 }
@@ -66,10 +65,10 @@ function expectedVoters(s: WhoisState): PlayerId[] {
 }
 
 function reveal(s: WhoisState, ctx: GameContext): WhoisState {
-  const tally: Record<PlayerId, number> = zeros(s.players);
+  const tally: Record<PlayerId, number> = zeroScores(s.players);
   for (const target of Object.values(s.votes)) tally[target] = (tally[target] ?? 0) + 1;
   const elected = argmaxAll(tally);
-  const gained: Record<PlayerId, number> = zeros(s.players);
+  const gained: Record<PlayerId, number> = zeroScores(s.players);
   const scores = { ...s.scores };
   const majorityVotes = { ...s.majorityVotes };
   const timesElected = { ...s.timesElected };

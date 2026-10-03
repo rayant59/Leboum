@@ -9,6 +9,8 @@ import { BoumBackdrop } from "@/components/BoumBackdrop";
 import { ResultsScreen } from "@/components/ResultsScreen";
 import { SoundToggle, useGameSounds, playSound } from "@/lib/sound";
 import { BoumIcon } from "@/components/BoumIcon";
+import { useCountdown } from "@/lib/countdown";
+import { hexA } from "@/lib/color";
 
 // ── Palette « LeBoum » (identité or / menthe / rose / violet) ───────────────
 const C = {
@@ -31,22 +33,6 @@ const C = {
 };
 const DISPLAY = "'Bricolage Grotesque', system-ui, sans-serif";
 const BODY = "'Inter', system-ui, sans-serif";
-
-function hexA(hex: string, a: number) {
-  const h = hex.replace("#", "");
-  const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
-}
-
-function useCountdown(deadline: number | null, now: () => number) {
-  const [, force] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => force((n) => n + 1), 200);
-    return () => clearInterval(id);
-  }, []);
-  if (deadline == null) return null;
-  return Math.max(0, Math.ceil((deadline - now()) / 1000));
-}
 
 // --- real image resolver (Wikimedia REST) ----------------------------------
 type WikiImg = { url: string; page: string };
@@ -414,7 +400,6 @@ export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boole
       <BoumBackdrop />
       <div className="rc-card" style={{ position: "relative", zIndex: 1, flex: 1, minHeight: 0, display: "flex", overflow: "hidden" }}>
         <Rail kicker={railKicker} heading={railHeading} sub={railSub} rows={railRows} />
-
 
         <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
           <div style={progressBar} />

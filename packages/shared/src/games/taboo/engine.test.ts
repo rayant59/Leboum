@@ -6,13 +6,8 @@ import { TABOO_FOUND_POINTS, TABOO_SLIP_PENALTY, censorOf, createTaboo, giverOf,
 import { tabooModule } from "./module";
 import { addCustomTabooCards, parseTabooCards, resetCustomTabooCards, tabooBank } from "./cards";
 import type { TabooClientAction, TabooState } from "./types";
+import { assert, done, test } from "../../testing";
 
-let passed = 0, failed = 0;
-function test(name: string, fn: () => void) {
-  try { fn(); passed++; console.log(`  \u001b[32m✓\u001b[0m ${name}`); }
-  catch (e) { failed++; console.log(`  \u001b[31m✗ ${name}\u001b[0m\n      ${(e as Error).message}`); }
-}
-function assert(c: boolean, m: string) { if (!c) throw new Error(m); }
 
 const P: GamePlayer[] = ["a", "b", "c", "d"].map((id) => ({ id, name: id.toUpperCase(), color: "#fff" }));
 let t = 1000;
@@ -194,5 +189,4 @@ test("module : résultat standard et distinctions", () => {
   assert(v.seconds === 30 && v.totalRounds === 4 && v.mode === "ecrit", JSON.stringify(v));
 });
 
-console.log(`\n${passed} réussis, ${failed} échoués\n`);
-if (failed) process.exit(1);
+done();

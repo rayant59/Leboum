@@ -9,7 +9,7 @@
 import type { GamePlayer } from "../../game/types";
 import type { PlayerId } from "../../room/types";
 import type { GameAction, GameContext, GameReduceResult } from "../../platform/types";
-import { latePlayers, withZeros } from "../../platform/presence";
+import { latePlayers, withZeros, zeroScores } from "../../platform/presence";
 import { findForbidden, isWordGuess } from "../../platform/text";
 import { clampInt, shuffle } from "../../platform/util";
 import { tabooBank } from "./cards";
@@ -41,7 +41,6 @@ export function resolveTabooConfig(s: TabooSettings | undefined): TabooConfig {
   };
 }
 
-const zeros = (players: GamePlayer[]) => Object.fromEntries(players.map((p) => [p.id, 0]));
 
 export function createTaboo(players: GamePlayer[], settings: TabooSettings, ctx: GameContext): TabooState {
   const config = resolveTabooConfig(settings);
@@ -60,11 +59,11 @@ export function createTaboo(players: GamePlayer[], settings: TabooSettings, ctx:
     nextMsgId: 1,
     deadline: null,
     phaseMs: 0,
-    scores: zeros(players),
+    scores: zeroScores(players),
     gained: {},
-    cardsGiven: zeros(players),
-    cardsFound: zeros(players),
-    slips: zeros(players),
+    cardsGiven: zeroScores(players),
+    cardsFound: zeroScores(players),
+    slips: zeroScores(players),
   };
   return startReady(base, 0, ctx);
 }

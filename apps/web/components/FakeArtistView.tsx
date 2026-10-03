@@ -8,14 +8,9 @@ import { Avatar } from "@/components/Avatar";
 import { DrawCanvas, SkipButton, ChatPanel } from "@/components/DrawGameView";
 import { LB, DISPLAY, MONO, hexA, Aurora, type RailRow, lbShell, lbCard, lbGoldBtn, lbGhostBtn, topBar, LB_SCOPED_CSS } from "@/components/leboum";
 import { WaitHost } from "@/lib/voice";
+import { useCountdown } from "@/lib/countdown";
 
 function initials(name: string) { return name.trim().slice(0, 2).toUpperCase() || "?"; }
-function useCountdown(deadline: number | null, serverNow: () => number) {
-  const [, setTick] = useState(0);
-  useEffect(() => { if (deadline == null) return; const id = setInterval(() => setTick((n) => n + 1), 250); return () => clearInterval(id); }, [deadline]);
-  if (deadline == null) return null;
-  return Math.max(0, Math.ceil((deadline - serverNow()) / 1000));
-}
 
 // Rail joueurs + chat (aucun anneau de chrono dans ce mode).
 function FaRail({ kicker, heading, sub, rows, chat }: { kicker: string; heading: string; sub: string; rows: RailRow[]; chat?: ReactNode }) {

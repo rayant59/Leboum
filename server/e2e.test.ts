@@ -1152,6 +1152,68 @@ async function main() {
     for (const c of cl) c.ws.close();
   }
 
+  console.log("\nServeur — le grand tour : tous les jeux enchaînés dans une vraie soirée (phase 17)\n");
+  {
+    const { listedGames } = await import("../packages/shared/src/platform/catalog");
+    const { soireeSettings } = await import("../packages/shared/src/soiree/generator");
+    const ids = ["ta", "tb", "tc"];
+    const cl: Client[] = [];
+    for (const [i, id] of ids.entries()) {
+      const c = new Client("TOUR", id, i === 0);
+      await c.open();
+      c.send({ type: "join", name: id.toUpperCase() });
+      await sleep(30);
+      cl.push(c);
+    }
+    for (const c of cl.slice(1)) c.send({ type: "set_ready", ready: true });
+    await sleep(50);
+    const h = cl[0];
+    // Tous les jeux du lobby jouables à 3 (un nouveau jeu est couvert automatiquement), en version
+    // express, répartis en soirées de SOIREE_MAX_ITEMS jeux maximum.
+    const { SOIREE_MAX_ITEMS } = await import("../packages/shared/src/soiree/types");
+    const games = listedGames().filter((g) => g.minPlayers <= 3 && g.maxPlayers >= 3).map((g) => g.id);
+    const finishedGames: string[] = [];
+    const stuck: string[] = [];
+    let allRecorded = true;
+    let totalsOk = true;
+    for (let from = 0; from < games.length; from += SOIREE_MAX_ITEMS) {
+      const chunk = games.slice(from, from + SOIREE_MAX_ITEMS);
+      h.send({ type: "soiree_start", items: chunk.map((gameId) => ({ gameId, settings: soireeSettings(gameId, true) })) });
+      await sleep(120);
+      for (let k = 0; k < chunk.length; k++) {
+        const gameId = h.last()?.gameId as string;
+        let prevKey = "";
+        let still = 0;
+        for (let i = 0; i < 600 && !h.last()?.gameOver; i++) {
+          h.send({ type: "skip" });
+          await sleep(8);
+          const key = JSON.stringify(h.last()?.game ?? null);
+          still = key === prevKey ? still + 1 : 0;
+          prevKey = key;
+          // Phases pilotées par l'hôte (Mimic : « Lancer », « Manche suivante ») : comme dans modes.test.
+          if (still > 3) for (const kind of ["start", "next"]) h.send({ type: "game", action: { kind } as never });
+        }
+        await sleep(40);
+        if (h.last()?.gameOver) finishedGames.push(gameId);
+        else stuck.push(`${gameId}@${(h.last()?.game as { phase?: string } | undefined)?.phase}`);
+        h.send({ type: "soiree_next" });
+        await sleep(120);
+      }
+      const end = h.last();
+      if (end?.soiree?.records.length !== chunk.length || end?.state.phase !== "lobby" || !end?.soiree?.finished) allRecorded = false;
+      const pts = (end?.soiree?.records ?? []).reduce((a, r) => a + Object.values(r.points).reduce((x, y) => x + y, 0), 0);
+      const tot = Object.values(end?.soiree?.totals ?? {}).reduce((a, b) => a + b, 0);
+      if (pts !== tot || tot <= 0) totalsOk = false;
+      h.send({ type: "soiree_end" });
+      await sleep(60);
+    }
+    check(`les ${games.length} jeux du lobby vont tous au bout en soirée`, stuck.length === 0 && finishedGames.length === games.length, `bloqués : ${stuck.join(", ")}`);
+    check("chaque jeu enregistre son résultat et chaque soirée finit au salon", allRecorded);
+    check("score global = somme des points de chaque jeu", totalsOk);
+    check("le même salon et les mêmes joueurs du début à la fin", ids.every((id) => !!h.last()?.state.players[id]) && h.last()?.state.phase === "lobby");
+    for (const c of cl) c.ws.close();
+  }
+
   console.log("\nServeur — santé & statistiques anonymes\n");
   const health = await fetch("http://localhost:3999/health");
   check("/health répond ok", health.status === 200 && (await health.text()) === "ok");

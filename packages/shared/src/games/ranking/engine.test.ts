@@ -5,13 +5,8 @@ import { RANKING_PERFECT_BONUS, consensusOrder, createRanking, isValidOrder, pro
 import { rankingModule } from "./module";
 import { SAVOIR_PROMPTS, TABLE_PROMPTS } from "./prompts";
 import type { RankingClientAction, RankingState } from "./types";
+import { assert, done, test } from "../../testing";
 
-let passed = 0, failed = 0;
-function test(name: string, fn: () => void) {
-  try { fn(); passed++; console.log(`  \u001b[32m✓\u001b[0m ${name}`); }
-  catch (e) { failed++; console.log(`  \u001b[31m✗ ${name}\u001b[0m\n      ${(e as Error).message}`); }
-}
-function assert(c: boolean, m: string) { if (!c) throw new Error(m); }
 
 const P: GamePlayer[] = ["a", "b", "c"].map((id) => ({ id, name: id.toUpperCase(), color: "#fff" }));
 let t = 1000;
@@ -112,5 +107,4 @@ test("partie complète + résultat standard + distinction", () => {
   assert(v.totalRounds === 2 && v.seconds === 120 && v.mode === "savoir", JSON.stringify(v));
 });
 
-console.log(`\n${passed} réussis, ${failed} échoués\n`);
-if (failed) process.exit(1);
+done();

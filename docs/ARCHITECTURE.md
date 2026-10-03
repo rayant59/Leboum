@@ -118,7 +118,31 @@ une vue ; aucun autre jeu n'est touché.
 3. Vue `apps/web/components/<Id>View.tsx` + aiguillage dans `room/[code]/page.tsx`
    (et ses réglages dans `MODE_SETS` / `TIMES` / `ROUNDS`).
 4. `npm test` — le test `platform/modes.test.ts` vérifie automatiquement la
-   fiche, le cycle de vie complet et le résultat standard du nouveau jeu.
+   fiche, le cycle de vie complet, le résultat standard **et le bouton
+   « Passer » de l'hôte** du nouveau jeu ; `npm run test:server` le joue
+   jusqu'au bout **dans une vraie soirée** (« le grand tour »).
+
+### Principes techniques (phase 17) — ne pas réinventer
+
+| Besoin | À réutiliser | Où |
+|---|---|---|
+| Salon, joueurs, hôte, prêt, reconnexion | le serveur générique (`applyMod`) | `server/index.ts` |
+| Chrono d'une phase | `deadline()` du module (1 seul minuteur serveur) | `platform/types.ts` |
+| « Passer » de l'hôte | action `advance` (= chrono écoulé **ou** hôte) | contrat `GameModule` |
+| Arrivée / départ en cours de partie | `latePlayers`, `withZeros`, `zeroScores` | `platform/presence.ts` |
+| Fin de jeu → soirée | `results()` → `GameResult` (`scoresResult`, `bestBy`, `plural`) | `platform/result.ts` |
+| Comparer des mots | `normalizeWord`, `isWordGuess`, `findForbidden` | `platform/text.ts` |
+| Hasard, bornes | `shuffle`, `clampInt`, `argmaxAll` | `platform/util.ts` |
+| Tests | `test`, `assert`, `done` | `src/testing.ts` |
+| Compte à rebours (vue) | `useCountdown(deadline, now, exact?)` | `apps/web/lib/countdown.ts` |
+| Couleurs translucides | `hexA` | `apps/web/lib/color.ts` |
+| Écrans de jeu « social » | en-tête, chrono, vote, final | `components/social/kit.tsx` |
+| Classement final / podium | `ResultsScreen` | `components/ResultsScreen.tsx` |
+| Icônes, ton, sons | `BoumIcon`, `VOICE`, `playSound` | voir [`IDENTITE.md`](IDENTITE.md) |
+
+Règle : **jamais casser un ancien mode**. Chaque changement passe par
+`npm test`, `npm run typecheck`, `npm run test:server` et `next build`, puis un
+essai dans le navigateur du mode seul **et** en soirée.
 
 ## 6. Journal des phases
 
@@ -140,6 +164,7 @@ une vue ; aucun autre jeu n'est touché.
 | 14 — Générateur de soirée | ✅ | `soiree/generator.ts`, `Soiree.tsx` (`SoireeBuilder`) |
 | 15 — Fin de soirée | ✅ | `soiree/stats.ts`, `Soiree.tsx` (`SoireeFinal`), `soiree_vote_rematch` |
 | 16 — Identité LeBoum | ✅ (continue) | [`docs/IDENTITE.md`](IDENTITE.md), `BoumIcon.tsx`, `lib/voice.tsx`, sons `boum`/`champion` |
+| 17 — Principes techniques | ✅ | §5 ci-dessus, `testing.ts`, `lib/countdown.ts`, grand tour e2e |
 
 **Composants communs des jeux « social »** : `components/social/kit.tsx`
 (en-tête + chrono, carte de question, grille de vote, écran final avec

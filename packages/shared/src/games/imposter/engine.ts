@@ -10,7 +10,7 @@
 import type { GamePlayer } from "../../game/types";
 import type { PlayerId } from "../../room/types";
 import type { GameAction, GameContext, GameReduceResult } from "../../platform/types";
-import { latePlayers, withZeros } from "../../platform/presence";
+import { latePlayers, withZeros, zeroScores } from "../../platform/presence";
 import { argmaxAll, clampInt, shuffle } from "../../platform/util";
 import { isWordGuess, normalizeWord } from "../../platform/text";
 import { imposterBank } from "./words";
@@ -52,7 +52,6 @@ export function isImposterGuessRight(guess: string, word: string): boolean {
   return isWordGuess(guess, word);
 }
 
-const zeros = (players: GamePlayer[]) => Object.fromEntries(players.map((p) => [p.id, 0]));
 
 export function createImposter(players: GamePlayer[], settings: ImposterSettings, ctx: GameContext): ImposterState {
   const config = resolveImposterConfig(settings, players.length);
@@ -78,10 +77,10 @@ export function createImposter(players: GamePlayer[], settings: ImposterSettings
     accused: [],
     deadline: null,
     phaseMs: 0,
-    scores: zeros(players),
+    scores: zeroScores(players),
     gained: {},
-    imposterWins: zeros(players),
-    goodVotes: zeros(players),
+    imposterWins: zeroScores(players),
+    goodVotes: zeroScores(players),
     history: [],
     pastImposters: [],
   };

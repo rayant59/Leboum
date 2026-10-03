@@ -7,6 +7,8 @@
 
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { Avatar } from "@/components/Avatar";
+import { hexA } from "@/lib/color";
+import { useCountdown } from "@/lib/countdown";
 
 export const LB = {
   bg: "#14102A",
@@ -34,24 +36,6 @@ export const LB = {
 export const DISPLAY = "'Bricolage Grotesque', system-ui, sans-serif";
 export const MONO = "'Bricolage Grotesque', system-ui, sans-serif";
 export const BODY = "'Inter', system-ui, sans-serif";
-
-export function hexA(hex: string, a: number) {
-  const h = String(hex || "#FFC24B").replace("#", "");
-  const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
-}
-
-// Chrono partagé — renvoie les secondes restantes (arrondi sup.) ou null.
-export function useCountdown(deadline: number | null, now: () => number, ms = false) {
-  const [, force] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => force((n) => n + 1), 200);
-    return () => clearInterval(id);
-  }, []);
-  if (deadline == null) return null;
-  const rem = Math.max(0, (deadline - now()) / 1000);
-  return ms ? rem : Math.ceil(rem);
-}
 
 // Aurores animées de fond (keyframes globales bmbAuroraA/B).
 export function Aurora({ tint = "rgba(255,194,75,.10)", tint2 = "rgba(139,125,246,.12)" }: { tint?: string; tint2?: string }) {
@@ -187,3 +171,6 @@ export const LB_SCOPED_CSS = `
   .lb-scope .dc-fit .dc-box{height:100%;width:auto;max-width:100%}
 }
 `;
+
+// Helpers partagés (définis une seule fois dans lib/) — ré-exportés pour les vues existantes.
+export { hexA, useCountdown };

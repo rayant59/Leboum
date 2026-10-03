@@ -2,13 +2,8 @@
 import type { GamePlayer } from "../game/types";
 import { createSoiree, currentItem, finishSoiree, isRecorded, nextGame, recordGame, soireeStandings, withPlayers } from "./engine";
 import { COOP_POINTS, pointsForPlace, soireePoints } from "./score";
+import { assert, done, test } from "../testing";
 
-let passed = 0, failed = 0;
-function test(name: string, fn: () => void) {
-  try { fn(); passed++; console.log(`  \u001b[32m✓\u001b[0m ${name}`); }
-  catch (e) { failed++; console.log(`  \u001b[31m✗ ${name}\u001b[0m\n      ${(e as Error).message}`); }
-}
-function assert(c: boolean, m: string) { if (!c) throw new Error(m); }
 
 const P: GamePlayer[] = [
   { id: "a", name: "Ana", color: "#f00" },
@@ -100,5 +95,4 @@ test("finishSoiree termine immédiatement", () => {
   assert(finishSoiree(createSoiree(items, 0)).finished, "fini");
 });
 
-console.log(`\n${passed} réussis, ${failed} échoués\n`);
-if (failed) process.exit(1);
+done();

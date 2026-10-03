@@ -10,15 +10,10 @@ import { addCustomQuestions, parseCustomQuestions } from "../games/quiz/question
 import { doublageModule } from "../games/doublage/module";
 import { bombeModule } from "../games/bombe/module";
 import { ALL_GAME_MODULES } from "./registry";
+import { assert, done, test } from "../testing";
 
 addCustomQuestions(parseCustomQuestions(["Capitale de l'Italie ? = Rome", "Couleur du ciel ? = bleu", "Capitale du Japon ? = Tokyo", "Plus grand ocean ? = Pacifique", "Quel animal aboie ? = chien"].join("\n")));
 
-let passed = 0, failed = 0;
-function test(name: string, fn: () => void) {
-  try { fn(); passed++; console.log(`  \u001b[32m✓\u001b[0m ${name}`); }
-  catch (e) { failed++; console.log(`  \u001b[31m✗ ${name}\u001b[0m\n      ${(e as Error).message}`); }
-}
-function assert(c: boolean, m: string) { if (!c) throw new Error(m); }
 
 const players: GamePlayer[] = [
   { id: "a", name: "Ana", color: "#f00" },
@@ -97,6 +92,21 @@ for (const mod of ALL_GAME_MODULES.filter((m) => m.id !== "bombe" && m.id !== "d
   });
 }
 
+// Phase 17 — contrat commun : « advance » = chrono écoulé OU l'hôte passe. Un jeu ne doit
+// pas ignorer le bouton « Passer » de l'hôte en attendant que son chrono sonne.
+for (const mod of ALL_GAME_MODULES.filter((m) => m.id !== "doublage")) {
+  test(`${mod.id} : l'hôte peut passer une phase chronométrée avant la fin du chrono`, () => {
+    const T = 5_000_000;
+    let s = mod.createState(players, mod.sanitizeSettings(undefined), { now: T, rng: Math.random });
+    // Première phase chronométrée (Mimic commence par une phase lancée par l'hôte).
+    for (let i = 0; i < 3 && mod.deadline(s) == null; i++) s = mod.reduce(s, { type: "client", playerId: "a", msg: { kind: "start" } }, { now: T, rng: Math.random }).state;
+    const d = mod.deadline(s);
+    if (d == null) return; // aucune phase chronométrée au départ : rien à passer
+    const next = mod.reduce(s, { type: "advance" }, { now: T + 1, rng: Math.random }).state;
+    assert(next !== s && JSON.stringify(next) !== JSON.stringify(s), "« Passer » ignoré tant que le chrono n'a pas sonné");
+  });
+}
+
 test("bombe : va au bout, le survivant est 1er", () => {
   const s = runToEnd(bombeModule, { lives: 1 }, 2000);
   assert(bombeModule.isOver(s), "fin");
@@ -130,5 +140,4 @@ test("bombeResults : vainqueur, puis éliminés du dernier au premier", () => {
   assert(r.awards![0].playerId === "c", "Dico vivant = c");
 });
 
-console.log(`\n${passed} réussis, ${failed} échoués\n`);
-if (failed) process.exit(1);
+done();

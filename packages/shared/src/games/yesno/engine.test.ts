@@ -4,13 +4,8 @@ import type { GameContext } from "../../platform/types";
 import { YESNO_CATCH_POINTS, YESNO_FALSE_ACCUSE, YESNO_POINTS_PER_SEC, YESNO_SURVIVE_BONUS, createYesNo, findYesNo, projectYesNo, reduceYesNo, targetOf, totalTurnsYN } from "./engine";
 import { yesnoModule } from "./module";
 import type { YesNoClientAction, YesNoState } from "./types";
+import { assert, done, test } from "../../testing";
 
-let passed = 0, failed = 0;
-function test(name: string, fn: () => void) {
-  try { fn(); passed++; console.log(`  \u001b[32m✓\u001b[0m ${name}`); }
-  catch (e) { failed++; console.log(`  \u001b[31m✗ ${name}\u001b[0m\n      ${(e as Error).message}`); }
-}
-function assert(c: boolean, m: string) { if (!c) throw new Error(m); }
 
 const P: GamePlayer[] = ["a", "b", "c", "d"].map((id) => ({ id, name: id.toUpperCase(), color: "#fff" }));
 let t = 1000;
@@ -144,5 +139,4 @@ test("module : résultat standard, distinctions, réglages bornés", () => {
   assert(v.seconds === 20 && v.totalRounds === 3 && v.mode === "voix", JSON.stringify(v));
 });
 
-console.log(`\n${passed} réussis, ${failed} échoués\n`);
-if (failed) process.exit(1);
+done();

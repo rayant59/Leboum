@@ -9,7 +9,7 @@
 import type { GamePlayer } from "../../game/types";
 import type { PlayerId } from "../../room/types";
 import type { GameAction, GameContext, GameReduceResult } from "../../platform/types";
-import { latePlayers, withZeros } from "../../platform/presence";
+import { latePlayers, withZeros, zeroScores } from "../../platform/presence";
 import { normalizeWord } from "../../platform/text";
 import { clampInt, shuffle } from "../../platform/util";
 import type { YesNoClientAction, YesNoConfig, YesNoMessage, YesNoMode, YesNoOutcome, YesNoPublic, YesNoSettings, YesNoState } from "./types";
@@ -42,7 +42,6 @@ export function resolveYesNoConfig(s: YesNoSettings | undefined): YesNoConfig {
   return { totalRounds: clampInt(s?.totalRounds, 1, 3, 1), seconds: clampInt(s?.seconds, 20, 120, 45), mode };
 }
 
-const zeros = (players: GamePlayer[]) => Object.fromEntries(players.map((p) => [p.id, 0]));
 export const totalTurnsYN = (s: Pick<YesNoState, "order" | "config">) => s.order.length * s.config.totalRounds;
 export const targetOf = (s: Pick<YesNoState, "order" | "turn">): PlayerId | null => (s.order.length ? s.order[s.turn % s.order.length] : null);
 const isOn = (s: YesNoState, id: PlayerId | null) => !!id && s.connectedIds.includes(id);
@@ -65,9 +64,9 @@ export function createYesNo(players: GamePlayer[], settings: YesNoSettings, ctx:
     log: [],
     nextMsgId: 1,
     result: null,
-    scores: zeros(players),
-    catches: zeros(players),
-    survivals: zeros(players),
+    scores: zeroScores(players),
+    catches: zeroScores(players),
+    survivals: zeroScores(players),
   };
   return startReady(base, 0, ctx);
 }

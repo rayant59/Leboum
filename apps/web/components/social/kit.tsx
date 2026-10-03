@@ -11,6 +11,8 @@ import type { UseRoom } from "@/lib/useRoom";
 import { Avatar } from "@/components/Avatar";
 import { ResultsScreen, type RankRow } from "@/components/ResultsScreen";
 import { SoundToggle } from "@/lib/sound";
+import { hexA } from "@/lib/color";
+import { useCountdown } from "@/lib/countdown";
 
 export const K = {
   bg: "#14102A",
@@ -31,24 +33,6 @@ export const K = {
 export const DISPLAY = "'Bricolage Grotesque', system-ui, sans-serif";
 export const MONO = "'Space Mono', monospace";
 export const BODY = "'Inter', system-ui, sans-serif";
-
-export function hexA(hex: string, a: number) {
-  const h = hex.replace("#", "");
-  const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
-}
-
-/** Secondes restantes avant `deadline` (horloge serveur), rafraîchi 5×/s. */
-export function useCountdown(deadline: number | null, now: () => number): number | null {
-  const [, force] = useState(0);
-  useEffect(() => {
-    if (deadline == null) return;
-    const id = window.setInterval(() => force((n) => n + 1), 200);
-    return () => window.clearInterval(id);
-  }, [deadline]);
-  if (deadline == null) return null;
-  return Math.max(0, Math.ceil((deadline - now()) / 1000));
-}
 
 /** Jauge de temps : se vide de gauche à droite, rougit sur la fin. */
 export function TimerBar({ left, total, accent }: { left: number | null; total: number; accent: string }) {
@@ -265,3 +249,6 @@ export function SocialFinal({
 /** Le joueur au plus haut total d'une stat (null si tout le monde est à 0
  *  ou en cas d'égalité en tête — même règle que `bestBy` côté serveur). */
 export { bestBy as topOf, plural } from "@subtitles-party/shared";
+
+// Helpers partagés (définis une seule fois dans lib/) — ré-exportés pour les vues existantes.
+export { hexA, useCountdown };

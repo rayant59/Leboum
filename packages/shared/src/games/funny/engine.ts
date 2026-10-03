@@ -5,7 +5,7 @@
 import type { GamePlayer } from "../../game/types";
 import type { PlayerId } from "../../room/types";
 import type { GameAction, GameContext, GameReduceResult } from "../../platform/types";
-import { latePlayers, withZeros } from "../../platform/presence";
+import { latePlayers, withZeros, zeroScores } from "../../platform/presence";
 import { argmaxAll, clampInt, shuffle } from "../../platform/util";
 import { funnyPromptBank } from "./prompts";
 import type { FunnyClientAction, FunnyConfig, FunnyPublic, FunnySettings, FunnyState } from "./types";
@@ -26,7 +26,6 @@ export function resolveFunnyConfig(s: FunnySettings | undefined): FunnyConfig {
   };
 }
 
-const zeros = (players: GamePlayer[]) => Object.fromEntries(players.map((p) => [p.id, 0]));
 
 /** Nettoie une réponse : espaces compactés, longueur bornée. */
 export function cleanAnswer(text: unknown): string {
@@ -50,11 +49,11 @@ export function createFunny(players: GamePlayer[], settings: FunnySettings, ctx:
     votes: {},
     deadline: ctx.now + config.writeSeconds * 1000,
     phaseMs: config.writeSeconds * 1000,
-    scores: zeros(players),
+    scores: zeroScores(players),
     gained: {},
     winners: [],
-    votesReceived: zeros(players),
-    roundWins: zeros(players),
+    votesReceived: zeroScores(players),
+    roundWins: zeroScores(players),
     best: [],
   };
 }
@@ -92,7 +91,7 @@ function toResults(s: FunnyState, ctx: GameContext): FunnyState {
   const count: Record<string, number> = Object.fromEntries(s.order.map((t) => [t, 0]));
   for (const t of Object.values(s.votes)) if (count[t] != null) count[t]++;
   const winners = argmaxAll(count);
-  const gained: Record<PlayerId, number> = zeros(s.players);
+  const gained: Record<PlayerId, number> = zeroScores(s.players);
   const scores = { ...s.scores };
   const votesReceived = { ...s.votesReceived };
   const roundWins = { ...s.roundWins };

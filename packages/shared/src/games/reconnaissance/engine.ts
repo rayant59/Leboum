@@ -92,14 +92,14 @@ export function reduceReco(state: RecoState, action: GameAction<RecoClientAction
       return ok(next);
     }
     case "advance": {
-      // Coop : un seul chrono global ; quand il expire → fin de partie.
+      // Contrat GameModule : « advance » = le chrono a sonné OU l'hôte passe la phase.
+      // Coop : un seul chrono global ; quand il expire (ou que l'hôte passe) → fin de partie.
       if (state.config.mode === "coop") {
-        if (state.phase === "question" && state.deadline != null && ctx.now >= state.deadline)
-          return ok({ ...state, phase: "final", deadline: null, revealAt: null });
+        if (state.phase === "question" && state.deadline != null) return ok({ ...state, phase: "final", deadline: null, revealAt: null });
         return ok(state);
       }
-      if (state.phase === "question" && state.deadline != null && ctx.now >= state.deadline) return ok(reveal(state, ctx));
-      if (state.phase === "reveal" && state.deadline != null && ctx.now >= state.deadline) return ok(nextItem(state, ctx));
+      if (state.phase === "question" && state.deadline != null) return ok(reveal(state, ctx));
+      if (state.phase === "reveal" && state.deadline != null) return ok(nextItem(state, ctx));
       return ok(state);
     }
   }

@@ -9,7 +9,7 @@
 import type { GamePlayer } from "../../game/types";
 import type { PlayerId } from "../../room/types";
 import type { GameAction, GameContext, GameReduceResult } from "../../platform/types";
-import { latePlayers, withZeros } from "../../platform/presence";
+import { latePlayers, withZeros, zeroScores } from "../../platform/presence";
 import { isWordGuess, normalizeWord } from "../../platform/text";
 import { clampInt, shuffle } from "../../platform/util";
 import { guessWhoBank } from "./people";
@@ -41,7 +41,6 @@ export function isCelebrityGuess(guess: string, c: Celebrity): boolean {
   return last.length >= 4 && isWordGuess(guess, last);
 }
 
-const zeros = (players: GamePlayer[]) => Object.fromEntries(players.map((p) => [p.id, 0]));
 export const masterOf = (s: Pick<GuessWhoState, "order" | "round">): PlayerId | null => (s.order.length ? s.order[s.round % s.order.length] : null);
 const isOn = (s: GuessWhoState, id: PlayerId | null) => !!id && s.connectedIds.includes(id);
 
@@ -64,10 +63,10 @@ export function createGuessWho(players: GamePlayer[], settings: GuessWhoSettings
     finderId: null,
     deadline: null,
     phaseMs: 0,
-    scores: zeros(players),
+    scores: zeroScores(players),
     gained: {},
-    founds: zeros(players),
-    masterWins: zeros(players),
+    founds: zeroScores(players),
+    masterWins: zeroScores(players),
   };
   return startRound(base, 0, ctx);
 }

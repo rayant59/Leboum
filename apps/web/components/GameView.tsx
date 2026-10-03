@@ -9,6 +9,7 @@ import { playTick, playChime, playFanfare, SoundToggle } from "@/lib/sound";
 import { BoumBackdrop } from "@/components/BoumBackdrop";
 import { BoumIcon, PlaceMedal } from "@/components/BoumIcon";
 import { WaitHost } from "@/lib/voice";
+import { useCountdown } from "@/lib/countdown";
 
 function initials(n: string) {
   const p = n.trim().split(/\s+/);
@@ -16,16 +17,6 @@ function initials(n: string) {
 }
 
 /** Countdown to a server-set deadline, using the clock-corrected server time. */
-function useCountdown(deadline: number | null, serverNow: () => number): number {
-  const [, tick] = useState(0);
-  useEffect(() => {
-    if (deadline == null) return;
-    const id = setInterval(() => tick((n) => n + 1), 250);
-    return () => clearInterval(id);
-  }, [deadline]);
-  if (deadline == null) return 0;
-  return Math.max(0, Math.ceil((deadline - serverNow()) / 1000));
-}
 
 function Timer({
   deadline,
@@ -36,7 +27,7 @@ function Timer({
   serverNow: () => number;
   warnAt?: number;
 }) {
-  const s = useCountdown(deadline, serverNow);
+  const s = useCountdown(deadline, serverNow) ?? 0;
   if (deadline == null) return null;
   return (
     <span className={`font-mono text-sm tabular-nums ${s <= warnAt ? "text-magenta" : "text-text-muted"}`}>

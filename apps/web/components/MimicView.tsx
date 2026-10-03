@@ -10,6 +10,7 @@ import { ChatPanel } from "@/components/DrawGameView";
 import { LB, DISPLAY, MONO, hexA, Aurora, type RailRow, lbShell, lbCard, lbGoldBtn, lbGhostBtn, topBar, LB_SCOPED_CSS } from "@/components/leboum";
 import { BoumIcon } from "@/components/BoumIcon";
 import { WaitHost } from "@/lib/voice";
+import { useCountdown } from "@/lib/countdown";
 
 // ═══════════════ Audio réel : décodage, pics (waveform) & enveloppe (score) ══
 // On décode VRAIMENT le son (Web Audio) pour : (1) dessiner la vraie forme
@@ -231,15 +232,6 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 }
 
 // Secondes restantes (fraction) — 120ms tick pour une aiguille fluide.
-function useCountdown(deadline: number | null, serverNow: () => number) {
-  const [, force] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => force((n) => n + 1), 120);
-    return () => clearInterval(id);
-  }, []);
-  if (deadline == null) return null;
-  return Math.max(0, (deadline - serverNow()) / 1000);
-}
 
 // Carte-plaque qui entoure l'onde.
 function WavePlate({ mode, children }: { mode: "listen" | "record"; children: ReactNode }) {
@@ -541,7 +533,7 @@ const skipBtn = (room: UseRoom, isHost: boolean, phase: string) => (isHost && ph
 
 // ═══════ 10a · COUNTDOWN ═════════════════════════════════════════════════════
 function Countdown({ room, game, isHost }: { room: UseRoom; game: MimicPublic; isHost: boolean }) {
-  const secs = useCountdown(game.deadline, room.serverNow);
+  const secs = useCountdown(game.deadline, room.serverNow, true);
   const n = secs == null ? 0 : Math.max(1, Math.ceil(secs));
   const prev = useRef(-1);
   useEffect(() => { if (n !== prev.current && n >= 1 && n <= 3) { playSound("tick"); prev.current = n; } }, [n]);
@@ -655,7 +647,7 @@ function Listening({ room, game, isHost }: { room: UseRoom; game: MimicPublic; i
 
 // ═══════ 10c · RECORDING ═════════════════════════════════════════════════════
 function Recording({ room, game, mic, isHost }: { room: UseRoom; game: MimicPublic; mic: ReturnType<typeof useMic>; isHost: boolean }) {
-  const secs = useCountdown(game.deadline, room.serverNow);
+  const secs = useCountdown(game.deadline, room.serverNow, true);
   const remaining = secs == null ? 0 : secs;
   const total = game.recordMs / 1000;
   const played = Math.max(0, Math.min(1, 1 - remaining / total));

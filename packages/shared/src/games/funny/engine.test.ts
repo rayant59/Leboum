@@ -5,13 +5,8 @@ import { cleanAnswer, createFunny, FUNNY_MAX_CHARS, FUNNY_VOTE_POINTS, FUNNY_WIN
 import { funnyModule } from "./module";
 import { addCustomFunnyPrompts, funnyPromptBank, FUNNY_PROMPTS } from "./prompts";
 import type { FunnyState } from "./types";
+import { assert, done, test } from "../../testing";
 
-let passed = 0, failed = 0;
-function test(name: string, fn: () => void) {
-  try { fn(); passed++; console.log(`  \u001b[32m✓\u001b[0m ${name}`); }
-  catch (e) { failed++; console.log(`  \u001b[31m✗ ${name}\u001b[0m\n      ${(e as Error).message}`); }
-}
-function assert(c: boolean, m: string) { if (!c) throw new Error(m); }
 
 const P: GamePlayer[] = ["a", "b", "c"].map((id) => ({ id, name: id.toUpperCase(), color: "#fff" }));
 let t = 1000;
@@ -152,5 +147,4 @@ test("phrases perso : sans « ___ », le trou est ajouté à la fin", () => {
   assert(bank.includes("Le meilleur souvenir de vacances de Karim : ___") && bank.includes("Ma pire honte : ___"), "ajoutées");
 });
 
-console.log(`\n${passed} réussis, ${failed} échoués\n`);
-if (failed) process.exit(1);
+done();

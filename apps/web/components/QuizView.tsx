@@ -7,6 +7,8 @@ import type { UseRoom } from "@/lib/useRoom";
 import { Avatar } from "@/components/Avatar";
 import { SoundToggle, useGameSounds, playSound } from "@/lib/sound";
 import { BoumIcon } from "@/components/BoumIcon";
+import { useCountdown } from "@/lib/countdown";
+import { hexA } from "@/lib/color";
 
 // ── Palette « LeBoum » (identité or / menthe / rose) ────────────────────────
 const C = {
@@ -34,12 +36,6 @@ const DISPLAY = "'Bricolage Grotesque', system-ui, sans-serif";
 const MONO = "'Bricolage Grotesque', system-ui, sans-serif";
 const BODY = "'Inter', system-ui, sans-serif";
 
-function hexA(hex: string, a: number) {
-  const h = String(hex || "#FFC24B").replace("#", "");
-  const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
-}
-
 // Styles de survol / enfoncement — signature « chunky » du jeu.
 const SCOPED_CSS = `
 .qz-tile{transition:box-shadow .12s ease,transform .06s ease}
@@ -61,16 +57,6 @@ const SCOPED_CSS = `
 
 function initials(name: string) {
   return (name || "?").trim().slice(0, 2).toUpperCase();
-}
-
-function useCountdown(deadline: number | null, now: () => number) {
-  const [, force] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => force((n) => n + 1), 200);
-    return () => clearInterval(id);
-  }, []);
-  if (deadline == null) return null;
-  return Math.max(0, Math.ceil((deadline - now()) / 1000));
 }
 
 // Aurores animées en fond (réutilise les keyframes globales bmbAuroraA/B).

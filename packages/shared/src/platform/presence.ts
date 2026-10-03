@@ -20,3 +20,8 @@ export function withZeros(rec: Record<string, number>, added: GamePlayer[]): Rec
   for (const p of added) if (out[p.id] == null) out[p.id] = 0;
   return out;
 }
+
+/** Un compteur `id → 0` pour chaque joueur (scores, votes, stats de départ). */
+export function zeroScores(players: GamePlayer[]): Record<string, number> {
+  return Object.fromEntries(players.map((p) => [p.id, 0]));
+}

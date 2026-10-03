@@ -171,12 +171,10 @@ export function reduceQuiz(
     }
 
     case "advance": {
-      if (state.phase === "question" && state.deadline != null && ctx.now >= state.deadline) {
-        return ok(reveal(state, ctx));
-      }
-      if (state.phase === "reveal" && state.deadline != null && ctx.now >= state.deadline) {
-        return ok(nextQuestion(state, ctx));
-      }
+      // Contrat GameModule : « advance » = le chrono a sonné OU l'hôte passe la phase.
+      // (Le serveur ne programme qu'un minuteur, sur `deadline` : pas d'appel fantôme.)
+      if (state.phase === "question" && state.deadline != null) return ok(reveal(state, ctx));
+      if (state.phase === "reveal" && state.deadline != null) return ok(nextQuestion(state, ctx));
       return ok(state);
     }
   }

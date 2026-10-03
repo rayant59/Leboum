@@ -5,13 +5,8 @@ import { drawModule } from "../games/draw/module";
 import { createSoiree, nextGame, recordGame, voteRematch } from "./engine";
 import { playerSummary, soireeHighlights, soireeRecap } from "./stats";
 import type { SoireeState } from "./types";
+import { assert, done, test } from "../testing";
 
-let passed = 0, failed = 0;
-function test(name: string, fn: () => void) {
-  try { fn(); passed++; console.log(`  \u001b[32m✓\u001b[0m ${name}`); }
-  catch (e) { failed++; console.log(`  \u001b[31m✗ ${name}\u001b[0m\n      ${(e as Error).message}`); }
-}
-function assert(c: boolean, m: string) { if (!c) throw new Error(m); }
 
 const P: GamePlayer[] = ["a", "b", "c", "d"].map((id) => ({ id, name: id.toUpperCase(), color: "#fff" }));
 
@@ -163,5 +158,4 @@ test("Boum Dessin : « Meilleur dessinateur » = dessin le plus souvent trouvé"
   assert((drawModule.results({ ...done, drawingsFound: undefined })!.awards ?? []).length === 0, "anciens états");
 });
 
-console.log(`\n${passed} réussis, ${failed} échoués\n`);
-if (failed) process.exit(1);
+done();

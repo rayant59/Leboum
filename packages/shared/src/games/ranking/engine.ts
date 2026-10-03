@@ -6,7 +6,7 @@
 import type { GamePlayer } from "../../game/types";
 import type { PlayerId } from "../../room/types";
 import type { GameAction, GameContext, GameReduceResult } from "../../platform/types";
-import { latePlayers, withZeros } from "../../platform/presence";
+import { latePlayers, withZeros, zeroScores } from "../../platform/presence";
 import { clampInt, shuffle } from "../../platform/util";
 import { SAVOIR_PROMPTS, TABLE_PROMPTS } from "./prompts";
 import type { RankingClientAction, RankingConfig, RankingMode, RankingPublic, RankingSettings, RankingState } from "./types";
@@ -54,7 +54,6 @@ export function isValidOrder(order: unknown, n: number): order is number[] {
   return true;
 }
 
-const zeros = (players: GamePlayer[]) => Object.fromEntries(players.map((p) => [p.id, 0]));
 
 export function createRanking(players: GamePlayer[], settings: RankingSettings, ctx: GameContext): RankingState {
   const config = resolveRankingConfig(settings);
@@ -72,9 +71,9 @@ export function createRanking(players: GamePlayer[], settings: RankingSettings, 
     expected: null,
     deadline: null,
     phaseMs: 0,
-    scores: zeros(players),
+    scores: zeroScores(players),
     gained: {},
-    perfects: zeros(players),
+    perfects: zeroScores(players),
   };
   return startRound(base, 0, ctx);
 }

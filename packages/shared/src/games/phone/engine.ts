@@ -7,7 +7,7 @@
 import type { GamePlayer } from "../../game/types";
 import type { PlayerId } from "../../room/types";
 import type { GameAction, GameContext, GameReduceResult } from "../../platform/types";
-import { latePlayers, withZeros } from "../../platform/presence";
+import { latePlayers, withZeros, zeroScores } from "../../platform/presence";
 import { clampInt, shuffle } from "../../platform/util";
 import { phonePhraseBank } from "./phrases";
 import type {
@@ -45,7 +45,6 @@ export function resolvePhoneConfig(s: PhoneSettings | undefined, playerCount = 4
 
 export const stepKindOf = (step: number): PhoneStepKind => (step % 2 === 0 ? "text" : "drawing");
 
-const zeros = (players: GamePlayer[]) => Object.fromEntries(players.map((p) => [p.id, 0]));
 
 function stepMs(s: { config: PhoneConfig }, step: number) {
   return (stepKindOf(step) === "text" ? s.config.writeSeconds : s.config.drawSeconds) * 1000;
@@ -69,9 +68,9 @@ export function createPhone(players: GamePlayer[], settings: PhoneSettings, ctx:
     likes: {},
     deadline: ctx.now + ms,
     phaseMs: ms,
-    scores: zeros(players),
-    drawLikes: zeros(players),
-    textLikes: zeros(players),
+    scores: zeroScores(players),
+    drawLikes: zeroScores(players),
+    textLikes: zeroScores(players),
   };
 }
 

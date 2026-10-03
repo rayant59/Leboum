@@ -5,13 +5,8 @@ import { GUESSWHO_FIND_POINTS, GUESSWHO_MASTER_POINTS, GUESSWHO_PER_LEFT, create
 import { guessWhoModule } from "./module";
 import { guessWhoBank } from "./people";
 import type { GuessWhoClientAction, GuessWhoState } from "./types";
+import { assert, done, test } from "../../testing";
 
-let passed = 0, failed = 0;
-function test(name: string, fn: () => void) {
-  try { fn(); passed++; console.log(`  \u001b[32m✓\u001b[0m ${name}`); }
-  catch (e) { failed++; console.log(`  \u001b[31m✗ ${name}\u001b[0m\n      ${(e as Error).message}`); }
-}
-function assert(c: boolean, m: string) { if (!c) throw new Error(m); }
 
 const P: GamePlayer[] = ["a", "b", "c", "d"].map((id) => ({ id, name: id.toUpperCase(), color: "#fff" }));
 let t = 1000;
@@ -163,5 +158,4 @@ test("module : résultat standard, distinctions, réglages bornés", () => {
   assert(v.totalRounds === 10 && v.seconds === 45 && v.mode === "celebrites", JSON.stringify(v));
 });
 
-console.log(`\n${passed} réussis, ${failed} échoués\n`);
-if (failed) process.exit(1);
+done();

@@ -2,13 +2,8 @@
 import { GAME_CATALOG } from "../platform/catalog";
 import { GAME_REGISTRY } from "../platform/registry";
 import { SOIREE_FORMATS, estimateMinutes, generateSoiree, soireeSettings } from "./generator";
+import { assert, done, test } from "../testing";
 
-let passed = 0, failed = 0;
-function test(name: string, fn: () => void) {
-  try { fn(); passed++; console.log(`  \u001b[32m✓\u001b[0m ${name}`); }
-  catch (e) { failed++; console.log(`  \u001b[31m✗ ${name}\u001b[0m\n      ${(e as Error).message}`); }
-}
-function assert(c: boolean, m: string) { if (!c) throw new Error(m); }
 let seed = 3;
 const rng = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
 
@@ -70,5 +65,4 @@ test("durée estimée cohérente avec le format", () => {
   assert(estimateMinutes(generateSoiree("rapide", 5, rng)) <= 20, "rapide");
 });
 
-console.log(`\n${passed} réussis, ${failed} échoués\n`);
-if (failed) process.exit(1);
+done();

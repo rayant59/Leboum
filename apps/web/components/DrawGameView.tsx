@@ -8,6 +8,7 @@ import { Avatar } from "@/components/Avatar";
 import { LB, DISPLAY, MONO, hexA, Aurora, type RailRow, lbShell, lbCard, lbGoldBtn, lbGhostBtn, topBar, LB_SCOPED_CSS } from "@/components/leboum";
 import { BoumIcon, type BoumIconName } from "@/components/BoumIcon";
 import { WaitHost } from "@/lib/voice";
+import { useCountdown } from "@/lib/countdown";
 
 const CW = 1200;
 const CH = 800;
@@ -206,17 +207,6 @@ function ColorPalette({ color, setColor, locked, noVariants }: { color: string; 
       })}
     </div>
   );
-}
-
-function useCountdown(deadline: number | null, serverNow: () => number) {
-  const [, setTick] = useState(0);
-  useEffect(() => {
-    if (deadline == null) return;
-    const id = setInterval(() => setTick((n) => n + 1), 250);
-    return () => clearInterval(id);
-  }, [deadline]);
-  if (deadline == null) return null;
-  return Math.max(0, Math.ceil((deadline - serverNow()) / 1000));
 }
 
 /** Compte à rebours lisible : discret tant qu'il reste du temps, puis il grossit,
