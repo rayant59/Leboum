@@ -12,7 +12,6 @@ export default function MentionsLegales() {
       {editor.name ? (
         <p>
           {editor.name}
-          {editor.address && <><br />{editor.address}</>}
           {editor.siret && <><br />SIRET : {editor.siret}</>}
         </p>
       ) : (

@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { BoumTrailer } from "@/components/BoumTrailer";
 import { SiteFooter } from "@/components/SiteFooter";
 import { generateRoomCode, isValidRoomCode, sanitizeName } from "@subtitles-party/shared";
 import { getPlayerName, setPlayerName } from "@/lib/identity";
@@ -64,7 +63,6 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [typed, setTyped] = useState(" ");
   const [confetti, setConfetti] = useState<Confetto[]>([]);
-  const [trailerOpen, setTrailerOpen] = useState(false);
 
   const machine = useRef<{ ti: number; chars: number; phase: "type" | "hold" | "erase" }>({ ti: 0, chars: 0, phase: "type" });
   const holdT = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -145,7 +143,6 @@ export default function HomePage() {
         @keyframes bm-driftUp { 0% { transform: translateY(0) translateX(0); opacity: 0; } 12% { opacity: var(--o,0.5); } 88% { opacity: var(--o,0.5); } 100% { transform: translateY(-110px) translateX(var(--dx,0)); opacity: 0; } }
         @keyframes bm-confettiFall { 0% { transform: translateY(-14vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(114vh) rotate(760deg); opacity: 0.85; } }
         @keyframes bm-sheen { 0% { transform: translateX(-140%) skewX(-18deg); } 55%, 100% { transform: translateX(340%) skewX(-18deg); } }
-        @keyframes bm-playPulse { 0% { opacity: 0.5; transform: scale(1); } 70%, 100% { opacity: 0; transform: scale(1.9); } }
         @keyframes bm-shimmerLine { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
         .mn-desc { text-wrap: pretty; }
         .mn-name:focus { outline: none; border-color: #FFC24B; box-shadow: 0 0 0 3px rgba(255,194,75,0.15); }
@@ -154,7 +151,6 @@ export default function HomePage() {
         .mn-create:active { transform: translateY(4px); box-shadow: 0 1px 0 #B47F16; }
         .mn-join:hover { filter: brightness(1.05); transform: translateY(-1px); }
         .mn-join:active { transform: translateY(4px); box-shadow: 0 1px 0 #A1315F; }
-        .mn-trailer:hover { border-color: rgba(255,194,75,0.55); color: #FFC24B; transform: translateY(-1px); }
         .mn-card:hover { transform: translateY(-5px); border-color: rgba(255,194,75,0.5); box-shadow: 0 18px 36px -22px rgba(0,0,0,0.95); }
         .mn-card:hover .mn-card-img { transform: scale(1.07); }
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; } }
@@ -257,17 +253,6 @@ export default function HomePage() {
 
           {error && <p role="alert" style={{ margin: "12px 0 0", fontSize: 14, color: "#FF5C5C", animation: "bm-fadeUp 0.3s ease both" }}>{error}</p>}
 
-          <button
-            className="mn-trailer"
-            onClick={() => setTrailerOpen(true)}
-            style={{ margin: "14px auto 0", display: "flex", alignItems: "center", gap: 9, border: "1px solid #332A5A", background: "transparent", borderRadius: 999, padding: "9px 18px", fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 700, fontSize: 14, color: "#C9C2E6", cursor: "pointer", transition: "border-color .18s, color .18s, transform .18s", opacity: 0, animation: "bm-fadeUp 0.5s ease 0.88s both" }}
-          >
-            <span style={{ position: "relative", display: "grid", placeItems: "center", width: 20, height: 20, borderRadius: "50%", border: "1px solid currentColor" }}>
-              <span aria-hidden style={{ position: "absolute", inset: -1, borderRadius: "50%", border: "1px solid #FFC24B", animation: "bm-playPulse 2.8s ease-out infinite" }} />
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 1 }}><path d="M8 5v14l11-7z" /></svg>
-            </span>
-            Bande-annonce
-          </button>
 
         </div>
 
@@ -300,7 +285,6 @@ export default function HomePage() {
         <SiteFooter />
       </main>
 
-      {trailerOpen && <BoumTrailer onClose={() => setTrailerOpen(false)} onCreate={() => { setTrailerOpen(false); onCreate(); }} />}
     </div>
   );
 }

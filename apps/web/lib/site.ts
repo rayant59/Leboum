@@ -19,14 +19,11 @@ export const SITE = {
   /** Adresse de contact (page Entreprises + mentions légales). */
   contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "",
 
-  /** Mentions légales. Tant que LeBoum n'est pas une activité pro, un
-   *  particulier peut rester anonyme : seuls le contact et les hébergeurs
-   *  sont alors affichés. Dès qu'il y a une activité pro (micro-entreprise),
-   *  il FAUT remplir `editor` (nom, adresse, SIRET). */
+  /** Mentions légales : nom, SIRET, contact et hébergeur. Aucune adresse
+   *  postale n'est affichée sur le site (choix de l'éditeur). */
   legal: {
     editor: {
       name: process.env.NEXT_PUBLIC_LEGAL_NAME ?? "",
-      address: process.env.NEXT_PUBLIC_LEGAL_ADDRESS ?? "",
       siret: process.env.NEXT_PUBLIC_LEGAL_SIRET ?? "",
     },
     /** Médiateur de la consommation (obligatoire dès qu'on vend aux particuliers). */

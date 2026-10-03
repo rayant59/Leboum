@@ -137,7 +137,7 @@ Tout est désactivé par défaut ; chaque brique s'allume avec une variable d'en
 |---|---|
 | `NEXT_PUBLIC_SUPPORT_URL` | Lien Ko-fi/Tipeee → bouton « Paie ta tournée à LeBoum » (accueil + fin de partie) |
 | `NEXT_PUBLIC_CONTACT_EMAIL` | Contact (page Entreprises, mentions légales, CGV) |
-| `NEXT_PUBLIC_LEGAL_NAME` / `_ADDRESS` / `_SIRET` | Éditeur du site (obligatoire dès qu'il y a une activité pro) |
+| `NEXT_PUBLIC_LEGAL_NAME` / `_SIRET` | Éditeur du site (nom et SIRET — aucune adresse postale n'est affichée) |
 | `NEXT_PUBLIC_LEGAL_MEDIATOR` | Médiateur de la consommation (obligatoire pour vendre) |
 
 **Serveur de jeu (Northflank → service `leboum-server` → Environment variables)**

@@ -1,5 +1,7 @@
 "use client";
 
+// ⚠ Plus affichée sur le site (retirée de l'accueil, oct. 2026) — à refaire. Gardée comme base.
+
 import { useEffect, useMemo, useState } from "react";
 import { BoumIcon } from "@/components/BoumIcon";
 

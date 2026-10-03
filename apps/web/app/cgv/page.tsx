@@ -11,7 +11,6 @@ export default function CGV() {
       <h2>Vendeur</h2>
       <p>
         {editor.name || "LeBoum"}
-        {editor.address && <><br />{editor.address}</>}
         {editor.siret && <><br />SIRET : {editor.siret}</>}
         {SITE.contactEmail && <><br />Contact : <a href={`mailto:${SITE.contactEmail}`}>{SITE.contactEmail}</a></>}
       </p>
