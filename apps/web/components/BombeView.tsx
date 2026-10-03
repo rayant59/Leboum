@@ -9,6 +9,7 @@ import {
   preloadBombeSounds, playBombe, playTouche,
   startChrono, stopChrono, playCountdown, stopBombeTimers,
 } from "@/lib/bombeSound";
+import { BoumIcon } from "@/components/BoumIcon";
 
 // ── Palette « LeBoum » (identité or / menthe / rose) ────────────────────────
 const C = {
@@ -73,7 +74,7 @@ function Hearts({ lives, max }: { lives: number; max: number }) {
   if (max > 6) {
     return (
       <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-        <span style={{ fontSize: 14, lineHeight: 1 }}>❤️</span>
+        <BoumIcon name="heart" size={15} color={C.pink} />
         <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, color: C.faint }}>×{lives}</span>
       </span>
     );
@@ -81,7 +82,7 @@ function Hearts({ lives, max }: { lives: number; max: number }) {
   return (
     <>
       {Array.from({ length: max }).map((_, i) => (
-        <span key={i} style={{ fontSize: 14, lineHeight: 1, opacity: i < lives ? 1 : 0.28, filter: i < lives ? "none" : "grayscale(1)" }}>❤️</span>
+        <BoumIcon key={i} name="heart" size={15} color={i < lives ? C.pink : C.faint} style={{ opacity: i < lives ? 1 : 0.45 }} />
       ))}
     </>
   );
@@ -110,7 +111,7 @@ function Bomb({ syllable, secs, frac, color, exploded }: { syllable: string; sec
             <circle cx="119" cy="119" r={RING} fill="none" stroke="rgba(255,77,141,.35)" strokeWidth="6" strokeDasharray="14 24" />
           </svg>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 32, lineHeight: 1 }}>💥</span>
+            <BoumIcon name="blast" size={36} color={C.pink} />
             <span style={{ fontFamily: DISPLAY, fontSize: 44, fontWeight: 800, lineHeight: 1, color: C.pink }}>0s</span>
             <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 12, textTransform: "uppercase", letterSpacing: ".16em", color: C.muted }}>{syllable}</span>
           </div>
@@ -123,7 +124,7 @@ function Bomb({ syllable, secs, frac, color, exploded }: { syllable: string; sec
           </svg>
           <div data-bmb-anim style={{ position: "absolute", inset: 26, borderRadius: "50%", background: `radial-gradient(circle at 50% 42%, ${color}33, transparent 70%)`, animation: "bmbFuseGlow 1.1s ease-in-out infinite" }} />
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-            <span style={{ fontSize: 26, lineHeight: 1 }}>💣</span>
+            <BoumIcon name="bomb" size={36} color={color} strokeWidth={2.2} />
             <span style={{ fontFamily: DISPLAY, fontSize: 62, fontWeight: 800, letterSpacing: ".05em", lineHeight: 1, textShadow: `0 2px 20px ${color}80` }}>{syllable.toUpperCase()}</span>
             <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 13, letterSpacing: ".14em", color }}>{Math.ceil(secs)}s</span>
           </div>
@@ -415,7 +416,7 @@ export function BombeView({ room }: { room: UseRoom }) {
             {game.coopScore != null ? (
               <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 22, padding: 24 }}>
                 <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: C.faint }}>Score de la table</span>
-                <span style={{ fontSize: 52 }}>🤝</span>
+                <BoumIcon name="handshake" size={56} color={C.mint} />
                 <span style={{ fontFamily: DISPLAY, fontSize: 84, fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1, color: C.mint, textShadow: "0 0 40px rgba(70,224,176,.5)" }}>{game.coopScore}</span>
                 <span style={{ fontFamily: DISPLAY, fontSize: 18, fontWeight: 700, color: C.text }}>mots tenus ensemble avant l'explosion</span>
                 <span style={{ fontSize: 13, color: C.faint }}>{game.players.length} joueur·euses · battez votre record du salon !</span>
@@ -469,7 +470,7 @@ export function BombeView({ room }: { room: UseRoom }) {
               <div style={{ position: "absolute", inset: 26, borderRadius: "50%", background: `radial-gradient(circle at 50% 42%, ${C.gold}33, transparent 70%)` }} />
               <span style={{ fontFamily: DISPLAY, fontSize: 120, fontWeight: 800, lineHeight: 1, color: C.gold, textShadow: `0 4px 30px ${C.gold}66` }}>{left}</span>
             </div>
-            <span style={{ fontSize: 14, color: C.muted }}>Prépare-toi… 💣</span>
+            <span style={{ fontSize: 14, color: C.muted }}>Prépare-toi… ça va péter.</span>
           </div>
         </div>
       </main>
@@ -496,7 +497,7 @@ export function BombeView({ room }: { room: UseRoom }) {
               {!exploded && (
                 <>
                   <SonButton />
-                  {isHost && <button onClick={() => room.skipPhase()} aria-label="Passer" title="Passer le tour" style={{ display: "grid", placeItems: "center", width: 36, height: 36, border: `1px solid ${C.line}`, background: "transparent", color: C.faint, borderRadius: 10, cursor: "pointer", fontSize: 15 }}>💥</button>}
+                  {isHost && <button onClick={() => room.skipPhase()} aria-label="Passer" title="Passer le tour" style={{ display: "grid", placeItems: "center", width: 36, height: 36, border: `1px solid ${C.line}`, background: "transparent", color: C.faint, borderRadius: 10, cursor: "pointer", fontSize: 15 }}><BoumIcon name="blast" size={17} color={C.pink} /></button>}
                 </>
               )}
             </div>
@@ -552,7 +553,7 @@ export function BombeView({ room }: { room: UseRoom }) {
                   <button onClick={send} style={{ flex: "none", position: "relative", zIndex: 1, border: "none", borderRadius: 14, padding: "15px clamp(18px,3vw,30px)", fontFamily: DISPLAY, fontSize: 17, fontWeight: 700, lineHeight: 1, background: C.gold, color: C.ink, cursor: "pointer", boxShadow: `0 5px 0 ${C.goldSh}, 0 10px 18px -8px rgba(0,0,0,.6)` }}>OK</button>
                 </div>
                 {room.error && (
-                  <span key={room.error.message} style={{ fontSize: 12, color: C.pink }}>❌ {room.error.message} <span style={{ color: C.faint }}>· le timer continue</span></span>
+                  <span key={room.error.message} style={{ fontSize: 12, color: C.pink, display: "inline-flex", alignItems: "center", gap: 5 }}><BoumIcon name="cross" size={13} color={C.pink} strokeWidth={2.6} /> {room.error.message} <span style={{ color: C.faint }}>· le timer continue</span></span>
                 )}
               </>
             ) : (

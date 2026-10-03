@@ -81,7 +81,23 @@ export function ResultsScreen({
         @keyframes rs-fall { 0% { transform: translateY(-40px) rotate(0); opacity:0 } 8% { opacity:1 } 92% { opacity:1 } 100% { transform: translateY(820px) rotate(540deg); opacity:0 } }
         @keyframes rs-rise { 0% { transform: translateY(48px); opacity:0 } 100% { transform: translateY(0); opacity:1 } }
         @keyframes rs-pop { 0% { transform: scale(.6); opacity:0 } 62% { transform: scale(1.1); opacity:1 } 100% { transform: scale(1) } }
+        @keyframes rs-wave { 0% { transform: translate(-50%,-50%) scale(.2); opacity:.9 } 100% { transform: translate(-50%,-50%) scale(3.2); opacity:0 } }
+        @keyframes rs-burst { 0% { transform: translate(-50%,-50%) scale(.2) rotate(-20deg); opacity:0 } 35% { opacity:1 } 100% { transform: translate(-50%,-50%) scale(1.25) rotate(8deg); opacity:0 } }
+        @keyframes rs-stamp { 0% { transform: rotate(-14deg) scale(2.4); opacity:0 } 55% { transform: rotate(-9deg) scale(.92); opacity:1 } 75% { transform: rotate(-11deg) scale(1.04) } 100% { transform: rotate(-10deg) scale(1); opacity:1 } }
+        @media (prefers-reduced-motion: reduce) { .rs-boom * { animation: none !important; opacity: 0 !important } }
       `}</style>
+
+      {/* effet de victoire LeBoum : onde de choc + « BOUM ! » tamponné, pour le(s) vainqueur(s) */}
+      {winner && coLeaders.some((r) => r.id === you) && (
+        <div aria-hidden className="rs-boom" style={{ position: "absolute", left: "50%", top: 92, width: 0, height: 0, pointerEvents: "none" }}>
+          <span style={{ position: "absolute", left: 0, top: 0, width: 120, height: 120, borderRadius: "50%", border: `3px solid ${GOLD}`, animation: "rs-wave 1.1s cubic-bezier(.1,.7,.3,1) .15s both" }} />
+          <span style={{ position: "absolute", left: 0, top: 0, width: 120, height: 120, borderRadius: "50%", border: "2px solid #FF4D8D", animation: "rs-wave 1.3s cubic-bezier(.1,.7,.3,1) .35s both" }} />
+          <svg width="260" height="260" viewBox="0 0 24 24" style={{ position: "absolute", left: 0, top: 0, animation: "rs-burst .9s ease-out .1s both" }}>
+            <path d="m12 2 1.9 5.2L19 4.6l-2.1 5L22 12l-5.1 1.9 2.1 5.5-5.2-2.6L12 22l-1.8-5.2L5 19.4l2.1-5.5L2 12l5.1-2.4L5 4.6l5.1 2.6L12 2Z" fill="rgba(255,194,75,.22)" stroke="rgba(255,194,75,.6)" strokeWidth=".4" />
+          </svg>
+          <span style={{ position: "absolute", left: 58, top: -64, padding: "2px 10px", border: "3px solid #FF4D8D", borderRadius: 8, fontFamily: DISPLAY, fontWeight: 800, fontSize: 22, letterSpacing: ".04em", color: "#FF4D8D", background: "rgba(20,16,42,.7)", whiteSpace: "nowrap", animation: "rs-stamp .5s cubic-bezier(.2,.9,.3,1.3) .55s both" }}>BOUM&nbsp;!</span>
+        </div>
+      )}
 
       {/* confettis */}
       <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden" }}>

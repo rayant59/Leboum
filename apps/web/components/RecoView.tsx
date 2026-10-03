@@ -8,6 +8,7 @@ import { Avatar } from "@/components/Avatar";
 import { BoumBackdrop } from "@/components/BoumBackdrop";
 import { ResultsScreen } from "@/components/ResultsScreen";
 import { SoundToggle, useGameSounds, playSound } from "@/lib/sound";
+import { BoumIcon } from "@/components/BoumIcon";
 
 // ── Palette « LeBoum » (identité or / menthe / rose / violet) ───────────────
 const C = {
@@ -436,7 +437,7 @@ export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boole
               )}
               {isCoop && (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "5px 12px", borderRadius: 999, background: hexA(C.mint, 0.14), boxShadow: `inset 0 0 0 1px ${hexA(C.mint, 0.5)}`, color: C.mint }}>
-                  <span style={{ fontSize: 13 }}>🤝</span>
+                  <BoumIcon name="handshake" size={15} color={C.mint} />
                   <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 15 }}>{game.coopScore ?? 0}</span>
                   <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".14em", color: hexA(C.mint, 0.85) }}>trouvées</span>
                 </span>
@@ -556,7 +557,7 @@ export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boole
                   </div>
                   <span style={{ fontSize: 13, marginTop: 2 }}>
                     {game.yourCorrect ? (
-                      <span style={{ fontFamily: DISPLAY, fontWeight: 700, color: C.mint }}>Bravo ! <span style={{ color: C.gold }}>+{game.yourGained}</span>{(game.yourGained ?? 0) >= 900 ? " ⚡" : ""}</span>
+                      <span style={{ fontFamily: DISPLAY, fontWeight: 700, color: C.mint }}>Bravo ! <span style={{ color: C.gold }}>+{game.yourGained}</span>{(game.yourGained ?? 0) >= 900 ? <> <BoumIcon name="bolt" size={16} color={C.gold} /></> : null}</span>
                     ) : (
                       <span style={{ color: C.muted }}>{answered ? `« ${game.yourAnswer} » — raté` : "Pas de réponse"} · +0</span>
                     )}
@@ -582,7 +583,7 @@ function FinalScreen({ game, you, room }: { game: RecoPublic; you: string | null
         <BoumBackdrop />
         <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, padding: 24, textAlign: "center" }}>
           <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".2em", color: C.faint }}>Score de la table</span>
-          <span style={{ fontSize: 52 }}>🤝</span>
+          <BoumIcon name="handshake" size={56} color={C.mint} />
           <span style={{ fontFamily: DISPLAY, fontSize: 92, fontWeight: 800, lineHeight: 1, color: C.mint, textShadow: `0 0 44px ${hexA(C.mint, 0.5)}` }}>{game.coopScore}</span>
           <span style={{ fontFamily: DISPLAY, fontSize: 18, fontWeight: 700 }}>images trouvées ensemble avant la fin du chrono</span>
           <span style={{ fontSize: 13, color: C.faint }}>{game.players.length} joueur·euses · battez votre record du salon !</span>

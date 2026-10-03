@@ -96,7 +96,8 @@ messages éphémères (traits de dessin, chat, remplissage).
 **Contrat plateforme :** chaque nouveau jeu implémente un `GameModule`
 (id, meta, createState, reduce, project, deadline, isOver, results), a sa fiche
 dans `platform/catalog.ts` et s'enregistre dans `platform/registry.ts` — sans
-toucher aux autres jeux. Détails et check-list : `docs/ARCHITECTURE.md`.
+toucher aux autres jeux. Détails et check-list : `docs/ARCHITECTURE.md` ;
+ton, icônes, couleurs et sons : `docs/IDENTITE.md`.
 
 ## ✅ Tests
 

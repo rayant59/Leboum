@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { UseRoom } from "@/lib/useRoom";
+import { BoumIcon } from "@/components/BoumIcon";
 
 // ---------------------------------------------------------------------------
 // Game sound effects — synthesised with the Web Audio API (no asset files, no
@@ -49,6 +50,29 @@ function tone(freq: number, durMs: number, gain = 0.05, type: OscillatorType = "
   }
 }
 
+/** Grave qui chute (le « BOUM » signature de LeBoum). */
+function thump(from: number, to: number, durMs: number, gain = 0.12, delay = 0) {
+  if (!soundOn) return;
+  const c = audio();
+  if (!c) return;
+  try {
+    const o = c.createOscillator();
+    const g = c.createGain();
+    o.type = "sine";
+    const t = c.currentTime + delay;
+    o.frequency.setValueAtTime(from, t);
+    o.frequency.exponentialRampToValueAtTime(to, t + durMs / 1000);
+    o.connect(g);
+    g.connect(c.destination);
+    g.gain.setValueAtTime(gain, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + durMs / 1000);
+    o.start(t);
+    o.stop(t + durMs / 1000 + 0.02);
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Named sound effects for each game situation. */
 export type SoundName =
   | "tick" // urgency countdown
@@ -64,7 +88,9 @@ export type SoundName =
   | "vote" // a vote was cast
   | "wrong" // your guess was wrong
   | "timeUp" // the phase timed out
-  | "click"; // small UI feedback
+  | "click" // small UI feedback
+  | "boum" // signature LeBoum : un nouveau jeu commence (grave + étincelles)
+  | "champion"; // vainqueur de la soirée : boum + fanfare
 
 export function playSound(name: SoundName) {
   switch (name) {
@@ -104,6 +130,16 @@ export function playSound(name: SoundName) {
       return tone(200, 280, 0.05, "sawtooth", 0.14);
     case "click":
       return tone(700, 40, 0.03, "triangle");
+    case "boum":
+      thump(170, 42, 420, 0.16);
+      tone(90, 60, 0.05, "square");
+      [1318, 1568, 2093].forEach((f, i) => tone(f, 120, 0.025, "triangle", 0.18 + i * 0.06));
+      return;
+    case "champion":
+      thump(170, 42, 420, 0.16);
+      [523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, i === 4 ? 520 : 200, 0.06, "triangle", 0.28 + i * 0.11));
+      [1568, 2093].forEach((f, i) => tone(f, 160, 0.025, "sine", 0.95 + i * 0.08));
+      return;
   }
 }
 
@@ -134,7 +170,7 @@ export function SoundToggle({ className = "" }: { className?: string }) {
       title={on ? "Couper les sons du jeu" : "Activer les sons du jeu"}
       aria-label={on ? "Couper les sons du jeu" : "Activer les sons du jeu"}
     >
-      {on ? "🔔" : "🔕"}
+      <BoumIcon name={on ? "bell" : "bellOff"} size={15} />
     </button>
   );
 }

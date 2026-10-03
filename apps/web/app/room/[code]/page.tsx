@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { effectiveMaxPlayers, passActive, canStart, isEffectivelyReady, minReadyFor, sanitizeName, DRAW_THEMES, GAME_CATALOG, gameInfo, gamesByCategory, generateSoiree, listedGames, type GameCategory } from "@subtitles-party/shared";
+import { effectiveMaxPlayers, passActive, canStart, isEffectivelyReady, minReadyFor, sanitizeName, DRAW_THEMES, GAME_CATALOG, gameInfo, gamesByCategory, generateSoiree, listedGames, soireeStandings, type GameCategory, type SoireeState } from "@subtitles-party/shared";
 import { getPlayerName, setPlayerName } from "@/lib/identity";
 import { useRoom } from "@/lib/useRoom";
 import { BoumBackdrop } from "@/components/BoumBackdrop";
@@ -25,7 +25,8 @@ import { TabooView } from "@/components/TabooView";
 import { YesNoView } from "@/components/YesNoView";
 import { GuessWhoView } from "@/components/GuessWhoView";
 import { RankingView } from "@/components/RankingView";
-import { GameIntro } from "@/components/GameIntro";
+import { GameIntro, type IntroSoiree } from "@/components/GameIntro";
+import { VoiceLine } from "@/lib/voice";
 import { HostQuitButton } from "@/components/HostQuitButton";
 import { SupportButton } from "@/components/SupportButton";
 import { PassCard, usePassConfig } from "@/components/PassCard";
@@ -48,7 +49,7 @@ interface ModeDef { id: string; c: string; nm: string; ds: string; img?: string;
 const MODE_SETS: Record<GameId, ModeDef[]> = {
   draw: [
     { id: "classic", c: "#FFC24B", nm: "Classique", ds: "Un dessine, les autres devinent. Le plus rapide marque le plus.", img: MODE_ICONS.classique },
-    { id: "blind", c: "#4CC9F0", nm: "Aveugle", ds: "Tu dessines sans voir ton trait 😅. Plus de temps pour compenser.", img: MODE_ICONS.aveugle },
+    { id: "blind", c: "#4CC9F0", nm: "Aveugle", ds: "Tu dessines sans voir ton trait (courage). Plus de temps pour compenser.", img: MODE_ICONS.aveugle },
     { id: "constraints", c: "#8B7DF6", nm: "Contraintes", ds: "Chaque dessin impose une règle absurde (une couleur, sans lever le crayon…).", img: MODE_ICONS.contraintes },
     { id: "coop", c: "#46E0B0", nm: "Coopératif", ds: "En équipe : tous vos points sont mis en commun pour un score collectif.", img: MODE_ICONS.coop },
     { id: "fakeartist", c: "#FF6B6B", nm: "Faux-artiste", ds: "Un imposteur reçoit un mot voisin sans le savoir ; démasquez-le au vote.", img: MODE_ICONS.fakeartist, min: 3 },
@@ -573,7 +574,7 @@ export default function LobbyPage() {
           <SoireeHud soiree={room.soiree} you={room.you} isHost={isHost} gameOver={gameOver} onNext={() => room.soireeNext()} />
         )}
         {introGame && (
-          <GameIntro gameId={introGame} players={players} onDone={() => setIntroGame(null)} />
+          <GameIntro gameId={introGame} players={players} onDone={() => setIntroGame(null)} soiree={introSoiree(room.soiree)} />
         )}
       </>
     );
@@ -613,7 +614,7 @@ export default function LobbyPage() {
         <div className="mb-6 rounded-xl border border-gold/40 bg-gold/[0.06] p-4 text-sm">
           <p className="mb-1 flex items-center gap-2 font-semibold text-gold">
             <span className="h-2 w-2 shrink-0 rounded-full bg-gold animate-bulb" />
-            Connexion au serveur…
+            <VoiceLine k="connecting" everyMs={4000} />
           </p>
           <p className="text-text-muted">
             Le serveur peut mettre quelques secondes à se réveiller. La partie s'ouvre dès qu'il répond.
@@ -1104,4 +1105,17 @@ export default function LobbyPage() {
       </main>
     </>
   );
+}
+
+/** Contexte de soirée pour l'annonce du jeu (position + leader actuel). */
+function introSoiree(soiree: SoireeState | null): IntroSoiree | null {
+  if (!soiree || soiree.finished) return null;
+  const st = soireeStandings(soiree);
+  const top = st[0];
+  const leaderPlayer = top ? soiree.players[top.id] : undefined;
+  return {
+    index: soiree.current,
+    total: soiree.items.length,
+    leader: top && leaderPlayer && top.total > 0 ? { name: leaderPlayer.name, total: top.total, tied: st.filter((r) => r.place === 1).length > 1 } : null,
+  };
 }

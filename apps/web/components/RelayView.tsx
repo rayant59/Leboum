@@ -6,6 +6,8 @@ import { SoundToggle } from "@/lib/sound";
 import { Avatar } from "@/components/Avatar";
 import { DrawCanvas, GuessBar, ChatPanel, MaskedWord, SkipButton } from "@/components/DrawGameView";
 import { LB, DISPLAY, MONO, hexA, Aurora, Rail, type RailRow, lbShell, lbCard, lbGoldBtn, lbGhostBtn, topBar, useCountdown, LB_SCOPED_CSS } from "@/components/leboum";
+import { BoumIcon, PlaceMedal } from "@/components/BoumIcon";
+import { WaitHost } from "@/lib/voice";
 
 export function RelayView({ room }: { room: UseRoom }) {
   const game = room.game as RelayPublic;
@@ -33,11 +35,11 @@ export function RelayView({ room }: { room: UseRoom }) {
             <div style={{ flex: 1, display: "grid", placeItems: "center", padding: 28 }}>
               <div style={{ width: "100%", maxWidth: 440, textAlign: "center" }}>
                 <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: LB.faint }}>Classement final</span>
-                <div style={{ fontSize: 40, margin: "8px 0 18px" }}>🏆</div>
+                <div style={{ margin: "8px 0 18px" }}><BoumIcon name="trophy" size={44} color={LB.gold} /></div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10, textAlign: "left" }}>
                   {ranking.map((p, i) => (
                     <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, background: i === 0 ? hexA(LB.gold, 0.1) : LB.surface, boxShadow: i === 0 ? `0 0 0 1px ${hexA(LB.gold, 0.55)}` : `0 0 0 1px ${LB.line}` }}>
-                      <span style={{ width: 26, textAlign: "center", fontFamily: DISPLAY, fontSize: 20, fontWeight: 800, color: i === 0 ? LB.gold : LB.faint }}>{["🥇", "🥈", "🥉"][i] ?? i + 1}</span>
+                      <span style={{ width: 26, textAlign: "center", fontFamily: DISPLAY, fontSize: 20, fontWeight: 800, color: i === 0 ? LB.gold : LB.faint }}>{i < 3 ? <PlaceMedal place={i + 1} size={26} /> : i + 1}</span>
                       <Avatar name={p.name} color={color(p.id)} avatar={avatarOf(p.id)} size={40} />
                       <span style={{ flex: 1, fontWeight: 600 }}>{p.name}{p.id === you && <span style={{ color: LB.faint, fontWeight: 400 }}> · toi</span>}</span>
                       <span style={{ fontFamily: DISPLAY, fontWeight: 800, color: LB.gold }}>{game.scores[p.id] ?? 0}</span>
@@ -51,7 +53,7 @@ export function RelayView({ room }: { room: UseRoom }) {
                       <button onClick={() => room.returnLobby()} className="lb-ghost" style={{ ...lbGhostBtn, width: "100%" }}>Retour au salon</button>
                     </>
                   ) : (
-                    <p style={{ fontSize: 14, color: LB.muted }}>En attente de l'hôte…</p>
+                    <p style={{ fontSize: 14, color: LB.muted }}><WaitHost /></p>
                   )}
                 </div>
               </div>
@@ -75,7 +77,7 @@ export function RelayView({ room }: { room: UseRoom }) {
       return {
         id: p.id, name: p.name, color: p.color, avatar: p.avatar, you: isYou,
         accent: isActive ? LB.gold : isDrawer ? LB.violet : found ? LB.mint : undefined,
-        badge: isDrawer ? { text: isActive ? "✏️ stylo" : "binôme", color: isActive ? LB.gold : LB.violet } : found ? { text: fi >= 0 ? `${fi + 1}ᵉ` : "trouvé", color: LB.mint } : undefined,
+        badge: isDrawer ? { text: isActive ? "stylo en main" : "binôme", color: isActive ? LB.gold : LB.violet } : found ? { text: fi >= 0 ? `${fi + 1}ᵉ` : "trouvé", color: LB.mint } : undefined,
         score: (game.scores[p.id] ?? 0).toLocaleString("fr-FR"),
       } as RailRow;
     });
@@ -136,7 +138,7 @@ export function RelayView({ room }: { room: UseRoom }) {
               <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, marginBottom: 14 }}>
                 {game.youAreDrawer ? (
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 8, borderRadius: 10, padding: "8px 14px", background: hexA(game.youAreActive ? LB.mint : LB.violet, 0.1), boxShadow: `inset 0 0 0 1px ${hexA(game.youAreActive ? LB.mint : LB.violet, 0.45)}` }}>
-                    <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: game.youAreActive ? LB.mint : LB.violet }}>{game.youAreActive ? "✏️ À toi de dessiner !" : `Au tour de ${activeName}…`}</span>
+                    <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: game.youAreActive ? LB.mint : LB.violet }}>{game.youAreActive ? "À toi de dessiner !" : `Au tour de ${activeName}…`}</span>
                     {swapSecs != null && <span style={{ fontSize: 11, color: LB.faint }}>rotation dans {swapSecs}s</span>}
                   </span>
                 ) : (
@@ -170,7 +172,7 @@ export function RelayView({ room }: { room: UseRoom }) {
                   return (
                     <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 14, background: drew || found ? hexA(drew ? LB.violet : LB.mint, 0.08) : LB.surface, boxShadow: `0 0 0 1px ${drew ? hexA(LB.violet, 0.4) : found ? hexA(LB.mint, 0.4) : LB.line}` }}>
                       <Avatar name={p.name} color={color(p.id)} avatar={avatarOf(p.id)} size={32} />
-                      <span style={{ flex: 1, fontWeight: 600 }}>{p.name}{drew && <span style={{ marginLeft: 8, fontSize: 11, color: LB.violet }}>✏️ a dessiné</span>}{found && <span style={{ marginLeft: 8, fontSize: 11, color: LB.mint }}>a trouvé</span>}</span>
+                      <span style={{ flex: 1, fontWeight: 600 }}>{p.name}{drew && <span style={{ marginLeft: 8, fontSize: 11, color: LB.violet }}>a dessiné</span>}{found && <span style={{ marginLeft: 8, fontSize: 11, color: LB.mint }}>a trouvé</span>}</span>
                       <span style={{ fontFamily: DISPLAY, fontWeight: 700, color: LB.gold }}>{game.scores[p.id] ?? 0}</span>
                     </div>
                   );

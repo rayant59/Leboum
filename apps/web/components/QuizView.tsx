@@ -6,6 +6,7 @@ import type { QuizPublic } from "@subtitles-party/shared";
 import type { UseRoom } from "@/lib/useRoom";
 import { Avatar } from "@/components/Avatar";
 import { SoundToggle, useGameSounds, playSound } from "@/lib/sound";
+import { BoumIcon } from "@/components/BoumIcon";
 
 // ── Palette « LeBoum » (identité or / menthe / rose) ────────────────────────
 const C = {
@@ -275,7 +276,7 @@ export function QuizView({ room }: { room: UseRoom }) {
             <div style={{ height: 3, background: `linear-gradient(90deg,transparent,${C.gold} 5%,${C.gold} 95%,transparent)` }} />
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 26, padding: 24 }}>
               <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: C.faint, display: "inline-flex", alignItems: "center", gap: 9 }}>
-                <span style={{ fontSize: 18, lineHeight: 1 }}>🏆</span>Meilleur score
+                <BoumIcon name="trophy" size={18} color={C.gold} />Meilleur score
               </span>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
                 {topScore > 0 && tied.length === 1 && (
@@ -394,7 +395,7 @@ export function QuizView({ room }: { room: UseRoom }) {
                 </div>
                 {fastest && (
                   <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 14, padding: "22px 26px", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 1px ${C.line}` }}>
-                    <span style={{ fontSize: 15, lineHeight: 1 }}>⚡</span>
+                    <BoumIcon name="bolt" size={17} color={C.gold} />
                     <span style={{ fontFamily: DISPLAY, fontSize: 16, fontWeight: 700, color: C.gold }}>{fastest.name}</span>
                     <span style={{ fontFamily: DISPLAY, fontSize: 16, fontWeight: 800, color: C.mint }}>+{fastest.gained}</span>
                   </div>
@@ -424,7 +425,7 @@ export function QuizView({ room }: { room: UseRoom }) {
                 {/* Survie : éliminé → spectateur, plus de réponse possible */}
                 {game.yourEliminated && (
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: "36px 24px", borderRadius: 18, background: C.surface, boxShadow: `0 0 0 1px ${C.line}` }}>
-                    <span style={{ fontSize: 32 }}>💀</span>
+                    <BoumIcon name="skull" size={36} color={C.muted} />
                     <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 22, color: C.text }}>Éliminé</span>
                     <span style={{ fontSize: 14, color: C.muted, textAlign: "center" }}>Tu as épuisé tes 3 vies. Tu regardes la fin de la partie en spectateur.</span>
                   </div>

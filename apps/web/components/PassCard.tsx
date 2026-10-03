@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { passActive, type PublicRoomState } from "@subtitles-party/shared";
 import { serverHttpUrl } from "@/lib/useRoom";
+import { BoumIcon } from "@/components/BoumIcon";
 
 /** Bonus du Pass Soirée — une seule liste, réutilisée partout. */
 export const PASS_PERKS = [
@@ -42,7 +43,7 @@ export function PassCard({ state, serverNow, cfg }: { state: PublicRoomState; se
     return (
       <section className="mb-8" style={{ borderRadius: 18, padding: "16px 18px", border: "1px solid rgba(255,194,75,.55)", background: "linear-gradient(135deg, rgba(255,194,75,.14), rgba(255,77,141,.08))" }}>
         <p style={{ margin: 0, fontFamily: "var(--font-display), sans-serif", fontWeight: 800, fontSize: 18, color: "#FFC24B" }}>
-          ✨ Pass Soirée actif
+          <BoumIcon name="sparkle" size={18} color="#FFC24B" /> Pass Soirée actif
         </p>
         <p style={{ margin: "4px 0 0", fontSize: 14, color: "#C9C2E6" }}>
           {state.pass.offeredBy ? <>Offert par <b style={{ color: "#F3EEFF" }}>{state.pass.offeredBy}</b> · </> : null}

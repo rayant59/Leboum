@@ -8,6 +8,8 @@ import { Avatar } from "@/components/Avatar";
 import { SoundToggle, playSound } from "@/lib/sound";
 import { ChatPanel } from "@/components/DrawGameView";
 import { LB, DISPLAY, MONO, hexA, Aurora, type RailRow, lbShell, lbCard, lbGoldBtn, lbGhostBtn, topBar, LB_SCOPED_CSS } from "@/components/leboum";
+import { BoumIcon } from "@/components/BoumIcon";
+import { WaitHost } from "@/lib/voice";
 
 // ═══════════════ Audio réel : décodage, pics (waveform) & enveloppe (score) ══
 // On décode VRAIMENT le son (Web Audio) pour : (1) dessiner la vraie forme
@@ -547,7 +549,7 @@ function Countdown({ room, game, isHost }: { room: UseRoom; game: MimicPublic; i
     <>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", padding: "16px 34px 0" }}>{skipBtn(room, isHost, game.phase)}</div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 34 }}>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 9, fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".2em", color: LB.gold }}>🎧 une seule écoute</span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 9, fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".2em", color: LB.gold }}><BoumIcon name="headphones" size={14} color={LB.gold} /> une seule écoute</span>
         <div style={{ position: "relative", width: 220, height: 220, borderRadius: "50%", display: "grid", placeItems: "center", boxShadow: "0 0 0 2px rgba(255,194,75,.55), 0 0 90px -30px rgba(255,194,75,.9)" }}>
           <span key={n} style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 112, lineHeight: 1, color: LB.gold }}>{n}</span>
           <span aria-hidden data-lb-anim style={{ position: "absolute", inset: 0, borderRadius: "50%", boxShadow: "0 0 0 2px #FFC24B", animation: "lbRingPulse 1.6s ease-out infinite" }} />
@@ -632,7 +634,7 @@ function Listening({ room, game, isHost }: { room: UseRoom; game: MimicPublic; i
             <span style={{ flex: 1, height: 4, borderRadius: 2, background: "#2A2350", overflow: "hidden" }}>
               <span style={{ display: "block", height: "100%", width: `${Math.round(played * 100)}%`, borderRadius: 2, background: "linear-gradient(90deg,rgba(255,194,75,.3),#FFC24B)" }} />
             </span>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".16em", color: LB.faint }}>🎧 aucune relecture</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".16em", color: LB.faint }}><BoumIcon name="headphones" size={13} color={LB.faint} /> aucune relecture</span>
           </div>
         </WavePlate>
       </div>
@@ -728,7 +730,7 @@ function Recording({ room, game, mic, isHost }: { room: UseRoom; game: MimicPubl
         : "Enregistrement en cours…";
     return (
       <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 34, textAlign: "center" }}>
-        <span style={{ fontSize: 40 }}>🎧</span>
+        <BoumIcon name="headphones" size={44} color={LB.mint} />
         <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 24, color: LB.text }}>{who}</span>
         <span style={{ fontSize: 14, color: LB.muted }}>
           {game.mode === "duel" ? "Écoute bien : c'est toi qui votes pour la meilleure imitation." : "Écoute : la chaîne se transmet une voix après l'autre."}
@@ -887,10 +889,10 @@ function Voting({ room, game, you, isHost }: { room: UseRoom; game: MimicPublic;
               <Avatar name={p.name} color={p.color} avatar={p.avatar} size={34} />
               <span style={{ flex: 1, minWidth: 0, fontFamily: DISPLAY, fontWeight: 700, fontSize: 17, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}{isYou && <span style={{ color: LB.faint, fontWeight: 600 }}> · toi</span>}</span>
               {picked
-                ? <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: LB.gold }}>⭐ voté</span>
+                ? <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: LB.gold, display: "inline-flex", alignItems: "center", gap: 5 }}><BoumIcon name="star" size={14} color={LB.gold} /> voté</span>
                 : <button onClick={() => room.mimicAction({ kind: "vote", targetId: p.id })} disabled={isYou || voted || !canIVote} className={isYou || voted || !canIVote ? undefined : "lb-gold"} style={isYou || voted || !canIVote
                     ? { flex: "none", border: `1px solid ${LB.line}`, background: "transparent", color: LB.faint, fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, padding: "10px 16px", borderRadius: 12, cursor: "default" }
-                    : { flex: "none", border: "none", borderRadius: 12, padding: "11px 18px", fontFamily: DISPLAY, fontWeight: 700, fontSize: 14, background: LB.gold, color: LB.ink, cursor: "pointer", boxShadow: `0 4px 0 ${LB.goldSh}` }}>{game.votedIds.includes(p.id) ? "a voté" : "Voter ⭐"}</button>}
+                    : { flex: "none", border: "none", borderRadius: 12, padding: "11px 18px", fontFamily: DISPLAY, fontWeight: 700, fontSize: 14, background: LB.gold, color: LB.ink, cursor: "pointer", boxShadow: `0 4px 0 ${LB.goldSh}` }}>{game.votedIds.includes(p.id) ? "a voté" : "Voter"}</button>}
             </div>
           );
         })}
@@ -928,7 +930,7 @@ function Verdict({ room, game, you, isHost }: { room: UseRoom; game: MimicPublic
             <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 16, padding: "16px 20px", borderRadius: 18, background: highlight ? hexA(LB.mint, 0.09) : "transparent", boxShadow: highlight ? `0 0 0 2px ${hexA(LB.mint, 0.5)}` : `0 0 0 1px ${LB.line}` }}>
               <button onClick={() => play(take)} disabled={!take} aria-label={`Réécouter ${r.name}`} style={{ display: "grid", placeItems: "center", width: 44, height: 44, flex: "none", borderRadius: 14, border: "none", background: highlight ? LB.mint : "transparent", color: highlight ? LB.ink : (take ? LB.muted : LB.dim), boxShadow: highlight ? "none" : `inset 0 0 0 1px ${LB.line}`, cursor: take ? "pointer" : "default" }}><Icon id="play" size={18} /></button>
               <Avatar name={r.name} color={r.color} avatar={r.avatar} size={34} />
-              <span style={{ width: 104, flex: "none", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 16, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}{r.id === you && <span style={{ color: LB.faint }}> · toi</span>}{r.autoBonus && <span title="Le plus proche du son d'origine"> 🎯</span>}</span>
+              <span style={{ width: 104, flex: "none", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 16, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}{r.id === you && <span style={{ color: LB.faint }}> · toi</span>}{r.autoBonus && <span title="Le plus proche du son d'origine"> <BoumIcon name="target" size={14} color={LB.mint} /></span>}</span>
               <span style={{ flex: 1, height: 12, borderRadius: 6, background: LB.lineFaint, overflow: "hidden" }}>
                 <span style={{ display: "block", height: "100%", width: `${Math.round(frac * 100)}%`, borderRadius: 6, background: col, transition: "width .4s ease" }} />
               </span>
@@ -936,8 +938,8 @@ function Verdict({ room, game, you, isHost }: { room: UseRoom; game: MimicPublic
                 <span style={{ width: 92, textAlign: "right", flex: "none", fontFamily: DISPLAY, fontWeight: 800, fontSize: 22, color: col }}>{r.closeness}<span style={{ fontSize: 13 }}> % proche</span></span>
               ) : (
                 <>
-                  <span style={{ width: 74, textAlign: "right", flex: "none", fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: r.autoBonus ? LB.mint : LB.faint }} title="Ressemblance au son d'origine">🎯 {r.closeness}%</span>
-                  <span style={{ width: 60, textAlign: "right", flex: "none", fontFamily: DISPLAY, fontWeight: 800, fontSize: 22, color: col }}>{r.roundVotes}<span style={{ fontSize: 13 }}> ⭐</span></span>
+                  <span style={{ width: 74, textAlign: "right", flex: "none", fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: r.autoBonus ? LB.mint : LB.faint }} title="Ressemblance au son d'origine"><BoumIcon name="target" size={12} color={r.autoBonus ? LB.mint : LB.faint} /> {r.closeness}%</span>
+                  <span style={{ width: 60, textAlign: "right", flex: "none", fontFamily: DISPLAY, fontWeight: 800, fontSize: 22, color: col }}>{r.roundVotes}<span style={{ fontSize: 13 }}> <BoumIcon name="star" size={14} color={col} /></span></span>
                 </>
               )}
             </div>
@@ -946,8 +948,8 @@ function Verdict({ room, game, you, isHost }: { room: UseRoom; game: MimicPublic
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 34px 24px", flexWrap: "wrap" }}>
         {game.sound?.src && <button onClick={() => play(game.sound?.src)} className="lb-ghost" style={{ display: "inline-flex", alignItems: "center", gap: 8, border: `1px solid ${LB.line}`, background: "transparent", color: LB.muted, fontSize: 14, padding: "13px 20px", borderRadius: 12, cursor: "pointer" }}><Icon id="play" size={17} />Réécouter l'original</button>}
-        <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 8, fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".14em", color: LB.mint }}>{auto ? `🎯 ${winner?.name} — le plus proche du son` : `🏆 ${winner?.name} remporte le tour${autoName ? ` · 🎯 ${autoName} le plus proche` : ""}`}</span>
-        {isHost && <button onClick={() => room.mimicAction({ kind: "next" })} className="lb-gold" style={lbGoldBtn}>{game.round >= game.totalRounds ? "Podium 🏆" : "Suivant →"}</button>}
+        <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 8, fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".14em", color: LB.mint }}>{auto ? `${winner?.name} — le plus proche du son` : `${winner?.name} remporte le tour${autoName ? ` · ${autoName} le plus proche` : ""}`}</span>
+        {isHost && <button onClick={() => room.mimicAction({ kind: "next" })} className="lb-gold" style={lbGoldBtn}>{game.round >= game.totalRounds ? "Podium →" : "Suivant →"}</button>}
       </div>
       <audio ref={audioRef} src={playSrc ?? undefined} preload="auto" />
     </>
@@ -977,7 +979,7 @@ function Final({ room, game, you, isHost }: { room: UseRoom; game: MimicPublic; 
           <div style={topBar(LB.gold)} />
           <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 34 }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 22, textAlign: "center" }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 9, fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: LB.faint }}>🎧 Meilleure oreille</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 9, fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: LB.faint }}><BoumIcon name="headphones" size={13} color={LB.faint} /> Meilleure oreille</span>
               {topScore > 0 && tied.length === 1 && <span style={{ boxShadow: `0 0 60px -18px ${hexA(LB.gold, 1)}`, borderRadius: 22 }}><Avatar name={winner?.name ?? "?"} color={winner?.color ?? LB.violet} avatar={winner?.avatar} size={92} /></span>}
               <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(28px, 5vw, 58px)", letterSpacing: "-.02em", lineHeight: 1.05 }}>{winnerLabel}</span>
               {topScore > 0 && <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 26, color: LB.gold }}>{(winner?.score ?? 0).toLocaleString("fr-FR")} points</span>}
@@ -1000,7 +1002,7 @@ function Final({ room, game, you, isHost }: { room: UseRoom; game: MimicPublic; 
                 <button onClick={() => room.returnLobby()} className="lb-ghost" style={lbGhostBtn}>Salon</button>
                 <button onClick={() => room.playAgain()} className="lb-gold" style={lbGoldBtn}>Rejouer</button>
               </>
-            ) : <span style={{ fontSize: 14, color: LB.muted }}>En attente de l'hôte…</span>}
+            ) : <WaitHost style={{ fontSize: 14, color: LB.muted }} />}
           </div>
         </div>
       </div>
@@ -1021,7 +1023,7 @@ function Prep({ room, game, mic, you, isHost }: { room: UseRoom; game: MimicPubl
           <div style={{ flex: 1, display: "grid", placeItems: "center", padding: 28 }}>
             <div style={{ width: "100%", maxWidth: 460, display: "flex", flexDirection: "column", gap: 16 }}>
               <div style={{ textAlign: "center" }}>
-                <p style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 26 }}>🎧 Prépare-toi à imiter</p>
+                <p style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 26, display: "inline-flex", alignItems: "center", gap: 10 }}><BoumIcon name="headphones" size={28} color={LB.mint} /> Prépare-toi à imiter</p>
                 <p style={{ fontSize: 14, color: LB.muted, marginTop: 6 }}>{
                   game.mode === "chain"
                     ? "Téléphone arabe : seul le premier entend le vrai son. Chacun imite ensuite l'imitation du précédent — on compare au final."
@@ -1040,7 +1042,7 @@ function Prep({ room, game, mic, you, isHost }: { room: UseRoom; game: MimicPubl
                 ) : mic.status === "denied" ? (
                   <p style={{ fontSize: 13, color: LB.muted }}>Micro indisponible (souvent en http sur IP locale). Ouvre en https ou sur localhost pour enregistrer.</p>
                 ) : (
-                  <button onClick={mic.request} className="lb-gold" style={lbGoldBtn}>{mic.status === "asking" ? "Autorisation…" : "🎙️ Tester mon micro"}</button>
+                  <button onClick={mic.request} className="lb-gold" style={lbGoldBtn}>{mic.status === "asking" ? "Autorisation…" : "Tester mon micro"}</button>
                 )}
               </div>
               <div style={{ padding: 14, borderRadius: 18, background: LB.surface, boxShadow: `0 0 0 1px ${LB.line}` }}>

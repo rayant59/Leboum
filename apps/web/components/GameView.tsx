@@ -7,6 +7,8 @@ import { SubtitleStrip } from "./SubtitleStrip";
 import { VideoStage } from "./VideoStage";
 import { playTick, playChime, playFanfare, SoundToggle } from "@/lib/sound";
 import { BoumBackdrop } from "@/components/BoumBackdrop";
+import { BoumIcon, PlaceMedal } from "@/components/BoumIcon";
+import { WaitHost } from "@/lib/voice";
 
 function initials(n: string) {
   const p = n.trim().split(/\s+/);
@@ -137,7 +139,9 @@ function Confetti({ count = 26 }: { count?: number }) {
         delay: Math.random() * 0.5,
         dur: 1.8 + Math.random() * 1.6,
         size: 14 + Math.random() * 16,
-        emoji: ["🎉", "✨", "🎊", "⭐", "💛", "💜"][i % 6],
+        color: ["#FFC24B", "#FF4D8D", "#46E0B0", "#8B7DF6", "#4CC9F0", "#FF6B4D"][i % 6],
+        shape: i % 3,
+        spin: Math.random() * 360,
       })),
     [count],
   );
@@ -146,16 +150,19 @@ function Confetti({ count = 26 }: { count?: number }) {
       {pieces.map((p) => (
         <span
           key={p.id}
+          aria-hidden
           style={{
             position: "absolute",
             left: `${p.left}%`,
             top: 0,
-            fontSize: p.size,
+            width: p.shape === 1 ? p.size * 0.5 : p.size * 0.42,
+            height: p.shape === 1 ? p.size * 0.5 : p.size * 0.9,
+            borderRadius: p.shape === 1 ? 999 : p.shape === 2 ? 3 : 1,
+            background: p.color,
+            rotate: `${p.spin}deg`,
             animation: `confetti-fall ${p.dur}s linear ${p.delay}s forwards`,
           }}
-        >
-          {p.emoji}
-        </span>
+        />
       ))}
     </div>
   );
@@ -394,7 +401,7 @@ function WritingPhase({ room }: { room: UseRoom }) {
               onClick={() => room.debugFill()}
               className="w-full rounded-xl border border-dashed border-ink-border px-4 py-2.5 text-sm text-text-muted transition-colors hover:border-magenta hover:text-magenta"
             >
-              ✍️ Écrire pour tout le monde (test)
+              Écrire pour tout le monde (test)
             </button>
           )}
         </div>
@@ -443,7 +450,7 @@ function WritingPhase({ room }: { room: UseRoom }) {
               onClick={() => room.debugFill()}
               className="mt-2 w-full rounded-xl border border-dashed border-ink-border px-4 py-2.5 text-sm text-text-muted transition-colors hover:border-magenta hover:text-magenta"
             >
-              ✍️ Écrire pour tout le monde (test)
+              Écrire pour tout le monde (test)
             </button>
           )}
         </>
@@ -589,7 +596,7 @@ function ResultsPhase({
             >
               {isWinner && (
                 <div className="mb-1.5 animate-pop text-center font-display text-sm font-extrabold text-gold">
-                  🎉 Manche remportée !
+                  <BoumIcon name="party" size={16} color="#FFC24B" /> Manche remportée !
                 </div>
               )}
               <div className="mb-1.5 flex items-center gap-2">
@@ -631,7 +638,6 @@ function ScoreRow({
   score: number;
 }) {
   const shown = useCountUp(score, 1100);
-  const medals = ["🥇", "🥈", "🥉"];
   return (
     <div
       className={`animate-pop flex items-center gap-3 rounded-xl border p-3 ${
@@ -644,7 +650,7 @@ function ScoreRow({
           rank === 0 ? "text-gold" : "text-text-faint"
         }`}
       >
-        {medals[rank] ?? rank + 1}
+        {rank < 3 ? <PlaceMedal place={rank + 1} size={26} /> : rank + 1}
       </span>
       <span
         className="grid h-10 w-10 place-items-center rounded-lg font-display font-bold text-ink-deep"
@@ -692,7 +698,7 @@ function Scoreboard({
         <h1 className="mb-4 font-display text-3xl font-extrabold">Classement final</h1>
         {hasWinner && (
           <div className="mb-5 animate-pop">
-            <div className="text-4xl">🏆</div>
+            <BoumIcon name="trophy" size={44} color="#FFC24B" />
             <div className="font-display text-lg font-extrabold text-gold">
               {champion.name}
               {champion.id === you && " (toi)"} !
@@ -722,7 +728,7 @@ function Scoreboard({
               </button>
             </>
           ) : (
-            <p className="text-sm text-text-muted">En attente de l'hôte…</p>
+            <p className="text-sm text-text-muted"><WaitHost /></p>
           )}
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { clipSlots, type CaptionSlot, type PublicGameState } from "@subtitles-party/shared";
 import { FilmFrame } from "./FilmFrame";
+import { BoumIcon } from "@/components/BoumIcon";
 
 // Session-wide sound preference (persists as players move between phases).
 let preferSound = true;
@@ -126,7 +127,7 @@ export function VideoStage({
           />
         )}
         <span className="pointer-events-none absolute left-3 top-3 rounded-md border border-ink-border bg-black/60 px-2 py-1 font-mono text-[11px] tracking-widest text-text-muted">
-          🔁 revois l'extrait autant que tu veux
+          <BoumIcon name="replay" size={12} /> revois l'extrait autant que tu veux
         </span>
       </div>
     );
@@ -165,7 +166,7 @@ export function VideoStage({
       {media}
       {inPause && (
         <div className="absolute inset-0 grid place-items-center bg-ink-deep/70">
-          <span className="animate-pop text-3xl">👀</span>
+          <span className="animate-pop"><BoumIcon name="eye" size={34} color="#FFC24B" /></span>
         </div>
       )}
       <span className="pointer-events-none absolute left-3 top-3 rounded-md border border-ink-border bg-black/55 px-2 py-1 font-mono text-[11px] tracking-widest text-text-muted">
@@ -177,7 +178,7 @@ export function VideoStage({
         title={soundOn ? "Couper le son" : "Activer le son"}
         aria-label={soundOn ? "Couper le son" : "Activer le son"}
       >
-        {soundOn ? "🔊" : "🔇"}
+        <BoumIcon name={soundOn ? "speaker" : "speakerOff"} size={16} />
       </button>
       {clip?.attribution && (
         <span className="pointer-events-none absolute bottom-2 right-3 max-w-[55%] truncate text-right font-mono text-[10px] text-white/40">

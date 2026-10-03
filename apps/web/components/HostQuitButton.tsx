@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BoumIcon } from "@/components/BoumIcon";
 
 /**
  * Bouton commun à tous les jeux : l'hôte peut arrêter la partie en cours et
@@ -44,7 +45,7 @@ export function HostQuitButton({ onQuit }: { onQuit: () => void }) {
         opacity: armed ? 1 : 0.75,
       }}
     >
-      <span aria-hidden>{armed ? "⚠" : "✕"}</span>
+      <BoumIcon name={armed ? "warning" : "cross"} size={14} />
       {armed ? "Arrêter pour tout le monde ?" : "Retour au salon"}
     </button>
   );

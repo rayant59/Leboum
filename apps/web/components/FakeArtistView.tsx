@@ -7,6 +7,7 @@ import { SoundToggle } from "@/lib/sound";
 import { Avatar } from "@/components/Avatar";
 import { DrawCanvas, SkipButton, ChatPanel } from "@/components/DrawGameView";
 import { LB, DISPLAY, MONO, hexA, Aurora, type RailRow, lbShell, lbCard, lbGoldBtn, lbGhostBtn, topBar, LB_SCOPED_CSS } from "@/components/leboum";
+import { WaitHost } from "@/lib/voice";
 
 function initials(name: string) { return name.trim().slice(0, 2).toUpperCase() || "?"; }
 function useCountdown(deadline: number | null, serverNow: () => number) {
@@ -140,7 +141,7 @@ export function FakeArtistView({ room }: { room: UseRoom }) {
               {isHost ? (<>
                 <button onClick={() => room.returnLobby()} className="lb-ghost" style={lbGhostBtn}>Salon</button>
                 <button onClick={() => room.playAgain()} className="lb-gold" style={lbGoldBtn}>Rejouer</button>
-              </>) : <span style={{ fontSize: 14, color: LB.muted }}>En attente de l'hôte…</span>}
+              </>) : <WaitHost style={{ fontSize: 14, color: LB.muted }} />}
             </div>
           </div>
         </div>
@@ -177,7 +178,7 @@ export function FakeArtistView({ room }: { room: UseRoom }) {
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "0 40px 30px", flexWrap: "wrap" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 12, background: hexA(res.caught ? LB.mint : LB.pink, 0.1), boxShadow: `0 0 0 1px ${hexA(res.caught ? LB.mint : LB.pink, 0.5)}` }}>
-                <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: res.caught ? LB.mint : LB.pink }}>{res.caught ? "Imposteur démasqué 🎯" : "Il vous a bernés 😈"}</span>
+                <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: res.caught ? LB.mint : LB.pink }}>{res.caught ? "Imposteur démasqué !" : "Il vous a bien bernés !"}</span>
               </span>
               {game.yourVote && (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 12, boxShadow: `0 0 0 1px ${LB.line}` }}>
@@ -270,7 +271,7 @@ export function FakeArtistView({ room }: { room: UseRoom }) {
                 {!isMine && <button onClick={() => you && setSelected(you)} className="lb-ghost" style={{ alignSelf: "flex-start", marginBottom: 8, border: `1px solid ${LB.line}`, background: "transparent", color: LB.muted, fontSize: 13, padding: "8px 14px", borderRadius: 12, cursor: "pointer" }}>← Revenir à ma toile</button>}
                 <DrawCanvas room={room} drawable={isMine} blind={false} authorFilter={selected} turnKey={`fa-${game.round}`} fit
                   ctaSlot={isMine ? <button onClick={() => room.endDrawing()} className="lb-gold" style={{ ...lbGoldBtn, flex: "none" }}>J'ai fini</button> : undefined} />
-                {!isMine && <span style={{ fontSize: 12, color: LB.faint, marginTop: 6 }}>👁️ Tu observes {name(selected)} en direct — lecture seule.</span>}
+                {!isMine && <span style={{ fontSize: 12, color: LB.faint, marginTop: 6 }}>Tu observes {name(selected)} en direct — lecture seule.</span>}
               </div>
 
               <div className="fa-others">

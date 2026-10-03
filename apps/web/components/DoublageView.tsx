@@ -7,6 +7,7 @@ import type { UseRoom } from "@/lib/useRoom";
 import { BoumBackdrop } from "@/components/BoumBackdrop";
 import { Avatar } from "@/components/Avatar";
 import { SoundToggle } from "@/lib/sound";
+import { BoumIcon } from "@/components/BoumIcon";
 
 // --- Microphone: permission, live level meter, mute, timestamped recording ---
 function useMicrophone() {
@@ -113,7 +114,7 @@ function SpeakingBar({ room, you, localSpeaking }: { room: UseRoom; you: string 
             </span>
             <span className="font-medium">{p.name}{p.id === you && " (toi)"}</span>
             {cname && <span className="text-text-faint">· {cname}</span>}
-            {active && <span className="text-mint">🔊</span>}
+            {active && <span className="text-mint"><BoumIcon name="speaker" size={15} /></span>}
           </span>
         );
       })}
@@ -189,7 +190,7 @@ function MicControls({ mic }: { mic: ReturnType<typeof useMicrophone> }) {
   if (mic.status === "idle" || mic.status === "asking")
     return (
       <button onClick={mic.request} className="rounded-xl bg-gold px-4 py-2 font-display font-bold text-ink-deep">
-        {mic.status === "asking" ? "Autorisation…" : "🎙️ Autoriser le micro"}
+        {mic.status === "asking" ? "Autorisation…" : <><BoumIcon name="mic" size={16} /> Autoriser le micro</>}
       </button>
     );
   if (mic.status === "denied")
@@ -204,7 +205,7 @@ function MicControls({ mic }: { mic: ReturnType<typeof useMicrophone> }) {
         onClick={mic.toggleMute}
         className={`rounded-xl border px-4 py-2 font-medium transition-colors ${mic.muted ? "border-magenta text-magenta" : "border-mint text-mint"}`}
       >
-        {mic.muted ? "🔇 Micro coupé" : "🎙️ Micro actif"}
+        {mic.muted ? <><BoumIcon name="micOff" size={16} /> Micro coupé</> : <><BoumIcon name="mic" size={16} /> Micro actif</>}
       </button>
       <LevelMeter level={mic.level} />
     </div>
@@ -262,7 +263,7 @@ export function DoublageView({ room }: { room: UseRoom }) {
       <BoumBackdrop />
       <main className="relative z-[1] mx-auto max-w-5xl px-4 py-6" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
       <div className="mb-4 flex items-center justify-between">
-        <span className="eyebrow">🎙️ Doublage · {game.phase === "prep" ? "préparation" : game.phase === "dubbing" ? "en scène" : "résultat"}</span>
+        <span className="eyebrow"><BoumIcon name="mic" size={13} /> Doublage · {game.phase === "prep" ? "préparation" : game.phase === "dubbing" ? "en scène" : "résultat"}</span>
         <div className="flex items-center gap-2">
           {mic.status === "on" && (
             <button
@@ -270,7 +271,7 @@ export function DoublageView({ room }: { room: UseRoom }) {
               className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${mic.muted ? "border-magenta text-magenta" : "border-mint text-mint"}`}
               title={mic.muted ? "Réactiver ton micro" : "Couper ton micro"}
             >
-              {mic.muted ? "🔇 Micro coupé" : "🎙️ Micro"}
+              {mic.muted ? <><BoumIcon name="micOff" size={13} /> Micro coupé</> : <><BoumIcon name="mic" size={13} /> Micro</>}
             </button>
           )}
           <SoundToggle />
@@ -391,7 +392,7 @@ function PrepRoom({
           <p className="eyebrow mb-3 text-gold">Ton micro <span className="text-text-faint">· facultatif</span></p>
           <MicControls mic={mic} />
           <p className="mt-2 text-xs text-text-faint">Le micro sert juste à l'indicateur « qui parle ». Tu peux très bien jouer <b>sans</b> : parlez à voix haute (même pièce ou appel vocal).</p>
-          <p className="mt-1 text-xs text-gold/80">💡 À 2 sur le même PC : coupe le micro d'un des deux onglets (bouton 🎙️) pour éviter l'écho.</p>
+          <p className="mt-1 text-xs text-gold/80"><BoumIcon name="bulb" size={13} /> À 2 sur le même PC : coupe le micro d'un des deux onglets (bouton Micro) pour éviter l'écho.</p>
           <div className="mt-3">
             <SpeakingBar room={room} you={you} localSpeaking={mic.level > 0.14 && !mic.muted} />
           </div>
@@ -522,7 +523,7 @@ function DubStage({
           onClick={() => setMuted((m) => !m)}
           className={`rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${muted ? "border-ink-border text-text-muted hover:border-gold" : "border-gold text-gold"}`}
         >
-          {muted ? "🔊 Activer le son original" : "🔇 Couper le son original"}
+          {muted ? <><BoumIcon name="speaker" size={16} /> Activer le son original</> : <><BoumIcon name="speakerOff" size={16} /> Couper le son original</>}
         </button>
         {!muted && (
           <label className="flex items-center gap-2 text-sm text-text-muted">

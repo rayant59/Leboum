@@ -7,6 +7,8 @@
 import { useEffect, useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { GAME_CATEGORIES, gameInfo } from "@subtitles-party/shared";
+import { playSound } from "@/lib/sound";
+import { VoiceLine } from "@/lib/voice";
 
 type IntroPlayer = {
   id: string;
@@ -18,19 +20,31 @@ type IntroPlayer = {
 
 const DISPLAY = "'Bricolage Grotesque', system-ui, sans-serif";
 
+/** Contexte de soirée : position dans le programme et leader actuel. */
+export interface IntroSoiree {
+  index: number; // 0-based
+  total: number;
+  leader: { name: string; total: number; tied: boolean } | null;
+}
+
 export function GameIntro({
   gameId,
   players,
   onDone,
+  soiree,
 }: {
   gameId: string;
   players: IntroPlayer[];
   onDone: () => void;
+  soiree?: IntroSoiree | null;
 }) {
   const meta = gameInfo(gameId);
   const a = meta.accent;
 
   const [count, setCount] = useState(3);
+  useEffect(() => {
+    playSound("boum");
+  }, []);
   useEffect(() => {
     const id = window.setInterval(() => setCount((c) => (c > 1 ? c - 1 : c)), 900);
     return () => window.clearInterval(id);
@@ -67,10 +81,17 @@ export function GameIntro({
         @keyframes gi-in { 0% { opacity: 0 } 100% { opacity: 1 } }
         @keyframes gi-halo { to { transform: rotate(360deg) } }
         @keyframes gi-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }
+        @keyframes gi-drop { 0% { opacity: 0; transform: translateY(-14px) scale(.9) } 100% { opacity: 1; transform: none } }
+        @keyframes gi-slam { 0% { opacity: 0; transform: scale(1.6) rotate(-4deg) } 60% { opacity: 1; transform: scale(.96) rotate(1deg) } 100% { transform: none } }
         @keyframes gi-pulse { 0%,100% { transform: scale(1); opacity:.85 } 50% { transform: scale(1.06); opacity:1 } }
       `}</style>
 
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 22, padding: "0 32px", textAlign: "center" }}>
+        {soiree && (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 12px", borderRadius: 999, border: "1px solid rgba(255,194,75,.45)", background: "rgba(255,194,75,.1)", fontSize: 12, fontWeight: 800, letterSpacing: ".16em", textTransform: "uppercase", color: "#FFC24B", animation: "gi-drop .5s cubic-bezier(.2,.9,.3,1.3) both" }}>
+            Soirée · jeu {soiree.index + 1}/{soiree.total}
+          </span>
+        )}
         <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: ".28em", textTransform: "uppercase", color: "#A79FC7" }}>
           Prochain jeu · <span style={{ color: GAME_CATEGORIES[meta.category].tint }}>{GAME_CATEGORIES[meta.category].label}</span>
         </span>
@@ -82,7 +103,7 @@ export function GameIntro({
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-          <h1 style={{ margin: 0, fontSize: 46, fontWeight: 800, letterSpacing: "-.02em" }}>{meta.name}</h1>
+          <h1 style={{ margin: 0, fontSize: 46, fontWeight: 800, letterSpacing: "-.02em", animation: "gi-slam .55s cubic-bezier(.2,.9,.3,1.2) .1s both" }}>{meta.name}</h1>
           {meta.tagline && (
             <p style={{ margin: 0, maxWidth: 460, fontSize: 15, lineHeight: 1.5, color: "#A79FC7" }}>{meta.tagline}</p>
           )}
@@ -105,6 +126,17 @@ export function GameIntro({
           </svg>
           <span style={{ position: "relative", fontSize: 48, fontWeight: 800, color: a }}>{count}</span>
         </div>
+
+        <p style={{ margin: "-8px 0 0", fontSize: 15, fontWeight: 700, color: "#E4DDFB" }}>
+          {soiree && soiree.index > 0 && soiree.leader ? (
+            <>
+              {soiree.leader.tied ? "Égalité en tête" : <>En tête : <span style={{ color: "#FFC24B" }}>{soiree.leader.name}</span></>} · {soiree.leader.total} pts.{" "}
+              <VoiceLine k="soireeNext" style={{ color: "#A79FC7", fontWeight: 600 }} />
+            </>
+          ) : (
+            <VoiceLine k="introPunch" style={{ color: "#A79FC7", fontWeight: 600 }} />
+          )}
+        </p>
 
         {connected.length > 0 && (
           <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", borderRadius: 999, border: "1px solid #332A5A", background: "rgba(28,22,54,.55)" }}>

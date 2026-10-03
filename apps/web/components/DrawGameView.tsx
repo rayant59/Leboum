@@ -6,6 +6,8 @@ import type { UseRoom } from "@/lib/useRoom";
 import { SoundToggle } from "@/lib/sound";
 import { Avatar } from "@/components/Avatar";
 import { LB, DISPLAY, MONO, hexA, Aurora, type RailRow, lbShell, lbCard, lbGoldBtn, lbGhostBtn, topBar, LB_SCOPED_CSS } from "@/components/leboum";
+import { BoumIcon, type BoumIconName } from "@/components/BoumIcon";
+import { WaitHost } from "@/lib/voice";
 
 const CW = 1200;
 const CH = 800;
@@ -725,18 +727,18 @@ export function DrawCanvas({
           {oneColor && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Une seule couleur{colorLocked ? " · verrouillée" : ""}</span>}
           {maxStrokes && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Traits {traits}/{MAX_TRAITS}</span>}
           {shapesOnly && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Lignes &amp; ronds uniquement</span>}
-          {mirror && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Effet miroir 🪞</span>}
-          {shake && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Ça tremble ! 🫨</span>}
-          {inverted && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Curseur inversé 🔄</span>}
+          {mirror && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Effet miroir</span>}
+          {shake && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Ça tremble !</span>}
+          {inverted && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Curseur inversé</span>}
           {transformRule === "jitter" && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Le trait tremble 〰️</span>}
-          {transformRule === "betray" && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Pinceau traître 😈</span>}
-          {transformRule === "elastic" && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Pinceau élastique 🪢</span>}
-          {sizeShift && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Taille qui change 📏</span>}
-          {colorShift && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Couleur qui change 🌈</span>}
-          {fog && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Brouillard 🌫️</span>}
-          {shrink && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Toile qui rétrécit 🔻</span>}
-          {ghostCursor && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Pinceau fantôme 👻</span>}
-          {roam && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Toile baladeuse 🏃</span>}
+          {transformRule === "betray" && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Pinceau traître</span>}
+          {transformRule === "elastic" && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Pinceau élastique</span>}
+          {sizeShift && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Taille qui change</span>}
+          {colorShift && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Couleur qui change</span>}
+          {fog && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Brouillard</span>}
+          {shrink && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Toile qui rétrécit</span>}
+          {ghostCursor && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Pinceau fantôme</span>}
+          {roam && <span className="rounded border border-magenta/30 px-1.5 py-0.5">Toile baladeuse</span>}
         </div>
       )}
 
@@ -889,7 +891,7 @@ export function ChatPanel({ room }: { room: UseRoom }) {
           value={talkText}
           onChange={(e) => setTalkText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submitTalk()}
-          placeholder="💬 Discuter…"
+          placeholder="Discuter…"
           maxLength={140}
           className="min-w-0 flex-1 rounded-xl border border-ink-border bg-ink-deep px-3 py-2.5 text-sm text-text-muted outline-none transition-colors focus:border-text-faint"
         />
@@ -1086,7 +1088,7 @@ function DrawRail({ kicker, heading, sub, rows, chat, pops }: { kicker: string; 
 // « 🟢 X a trouvé ! +72 », dessinateur qui termine, joueur qui rejoint. Le son
 // est déjà géré par useGameSounds ; ici on ajoute uniquement le visuel, à partir
 // de l'état déjà diffusé (scores, guessedIds) — aucune nouvelle plomberie.
-type DrawToast = { id: number; icon: string; title: string; points: string | null; accent: string; mine: boolean };
+type DrawToast = { id: number; icon: BoumIconName; title: string; points: string | null; accent: string; mine: boolean };
 type ScorePop = { id: number; text: string };
 
 function useDrawFeedback(
@@ -1141,7 +1143,7 @@ function useDrawFeedback(
         const mine = id === you;
         newToasts.push({
           id: idRef.current++,
-          icon: "🟢",
+          icon: "dot",
           title: mine ? "Bien joué, trouvé !" : `${nameOf(id)} a trouvé !`,
           points: gained > 0 ? `+${gained}` : null,
           accent: LB.mint,
@@ -1154,14 +1156,14 @@ function useDrawFeedback(
     if (game.finished && !finishedRef.current) {
       finishedRef.current = true;
       if (game.drawerId) {
-        newToasts.push({ id: idRef.current++, icon: "✏️", title: `${nameOf(game.drawerId)} a terminé son dessin`, points: null, accent: LB.gold, mine: game.drawerId === you });
+        newToasts.push({ id: idRef.current++, icon: "pencil", title: `${nameOf(game.drawerId)} a terminé son dessin`, points: null, accent: LB.gold, mine: game.drawerId === you });
       }
     }
 
     // Un joueur rejoint la partie.
     if (game.players.length > countRef.current) {
       const newcomer = game.players[game.players.length - 1];
-      if (newcomer) newToasts.push({ id: idRef.current++, icon: "👋", title: `${newcomer.name} a rejoint`, points: null, accent: LB.violet, mine: newcomer.id === you });
+      if (newcomer) newToasts.push({ id: idRef.current++, icon: "wave", title: `${newcomer.name} a rejoint`, points: null, accent: LB.violet, mine: newcomer.id === you });
     }
 
     // On enregistre la nouvelle référence de scores + effectif.
@@ -1209,7 +1211,7 @@ function EventToasts({ toasts }: { toasts: DrawToast[] }) {
             maxWidth: "90%",
           }}
         >
-          <span style={{ fontSize: 15, lineHeight: 1 }}>{t.icon}</span>
+          <BoumIcon name={t.icon} size={16} color={t.accent} />
           <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 15, color: t.mine ? t.accent : LB.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.title}</span>
           {t.points && (
             <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 15, color: t.accent, background: hexA(t.accent, 0.14), boxShadow: `inset 0 0 0 1px ${hexA(t.accent, 0.5)}`, borderRadius: 8, padding: "2px 9px", lineHeight: 1 }}>{t.points}</span>
@@ -1292,7 +1294,7 @@ export function DrawGameView({ room }: { room: UseRoom }) {
                   <button onClick={() => room.playAgain()} className="lb-gold" style={lbGoldBtn}>Rejouer</button>
                 </>
               ) : (
-                <span style={{ fontSize: 14, color: LB.muted }}>En attente de l'hôte…</span>
+                <WaitHost style={{ fontSize: 14, color: LB.muted }} />
               )}
             </div>
           </div>

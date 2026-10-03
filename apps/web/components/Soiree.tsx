@@ -266,7 +266,7 @@ export function SoireeFinal({ soiree, you, isHost, onRematch, onEnd, onVote }: {
   const n = soiree.records.length;
 
   useEffect(() => {
-    playSound("fanfare");
+    playSound("champion");
   }, []);
 
   const actions = (

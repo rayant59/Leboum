@@ -139,6 +139,7 @@ une vue ; aucun autre jeu n'est touché.
 | 13 — Enrichir LeBoum (familles) | ✅ | `platform/catalog.ts` (`gamesByCategory`), lobby |
 | 14 — Générateur de soirée | ✅ | `soiree/generator.ts`, `Soiree.tsx` (`SoireeBuilder`) |
 | 15 — Fin de soirée | ✅ | `soiree/stats.ts`, `Soiree.tsx` (`SoireeFinal`), `soiree_vote_rematch` |
+| 16 — Identité LeBoum | ✅ (continue) | [`docs/IDENTITE.md`](IDENTITE.md), `BoumIcon.tsx`, `lib/voice.tsx`, sons `boum`/`champion` |
 
 **Composants communs des jeux « social »** : `components/social/kit.tsx`
 (en-tête + chrono, carte de question, grille de vote, écran final avec

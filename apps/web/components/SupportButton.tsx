@@ -1,6 +1,7 @@
 "use client";
 
 import { SITE } from "@/lib/site";
+import { BoumIcon } from "@/components/BoumIcon";
 
 /**
  * « Soutenir LeBoum » — lien vers la page de dons. Discret, jamais pendant
@@ -32,7 +33,7 @@ export function SupportButton({ floating = false }: { floating?: boolean }) {
         textDecoration: "none",
       }}
     >
-      <span aria-hidden>🍻</span>
+      <BoumIcon name="cheers" size={16} color="#FFC24B" />
       Paie ta tournée à LeBoum
     </a>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { BoumIcon } from "@/components/BoumIcon";
 
 const SCENES = [
   { key: "intro", dur: 2600, accent: "#FFC24B", eyebrow: "BOUM" },
@@ -74,7 +75,7 @@ export function BoumTrailer({ onClose, onCreate }: { onClose: () => void; onCrea
 
         {scene.key === "intro" && (
           <div className="bt-intro">
-            <h1 className="bt-logo">Boum<span className="bt-boom">🎉</span></h1>
+            <h1 className="bt-logo">Boum<span className="bt-boom"><BoumIcon name="party" size="0.85em" color="#FFC24B" style={{ verticalAlign: "-0.05em" }} /></span></h1>
             <p className="bt-tag">La soirée jeux, direct depuis ton téléphone</p>
             <Confetti n={70} />
           </div>
@@ -96,7 +97,7 @@ export function BoumTrailer({ onClose, onCreate }: { onClose: () => void; onCrea
           <div className="bt-card" style={{ ["--a" as string]: scene.accent }}>
             <div className="bt-mic"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#46E0B0" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="2.5" width="6" height="11" rx="3" /><path d="M6 11a6 6 0 0 0 12 0" /><path d="M12 17v4" /><path d="M8.5 21h7" /></svg></div>
             <div className="bt-eq">{Array.from({ length: 9 }).map((_, k) => <span key={k} style={{ animationDelay: `${k * 0.09}s` }} />)}</div>
-            <p className="bt-line">Double la vidéo et improvise les voix 🎙️</p>
+            <p className="bt-line">Double la vidéo et improvise les voix</p>
           </div>
         )}
 
@@ -131,7 +132,7 @@ export function BoumTrailer({ onClose, onCreate }: { onClose: () => void; onCrea
                 <img key={g} src={`/games/${g}.png`} alt="" className="bt-fanimg" draggable={false} style={{ ["--k" as string]: k - 2 }} />
               ))}
             </div>
-            <h2 className="bt-finaltitle">Boum<span className="bt-boom">🎉</span></h2>
+            <h2 className="bt-finaltitle">Boum<span className="bt-boom"><BoumIcon name="party" size="0.85em" color="#FFC24B" style={{ verticalAlign: "-0.05em" }} /></span></h2>
             <p className="bt-tag">2 à 10 joueurs · aucun compte requis</p>
             <button className="bt-cta" onClick={onCreate}>Créer une partie</button>
             <Confetti n={70} />
