@@ -40,7 +40,7 @@ const GAMES: { img: string; accent: Accent; name: string; desc: string; players:
   { img: "/games/quiz.png", accent: "violet", name: "Ça te parle ?", desc: "Réponds aux questions et montre ta culture !", players: "1–8", variants: [] },
   { img: "/games/reco.png", accent: "cyan", name: "Œil de Boum", desc: "Devine le personnage, le lieu, l'œuvre… sur une vraie image.", players: "1–8", variants: [] },
   { img: "/games/pixel.png", accent: "mint", name: "Pixel Panic", desc: "Une image se dévoile pixel par pixel : devine le plus vite possible !", players: "1–8", variants: [] },
-  { img: "/games/bombe.png", accent: "orange", name: "Boum Rush", desc: "Trouve vite un mot avec la syllabe avant que la bombe explose !", players: "2–8", variants: [] },
+  { img: "/games/bombe.webp", accent: "orange", name: "Boum Rush", desc: "Trouve vite un mot avec la syllabe avant que la bombe explose !", players: "2–8", variants: [] },
 ];
 
 const DOT_COLORS = ["rgba(255,194,75,0.7)", "rgba(255,77,141,0.6)", "rgba(70,224,176,0.6)", "rgba(243,238,255,0.5)"];

@@ -130,8 +130,8 @@ export function BoumTrailer({ onClose, onCreate }: { onClose: () => void; onCrea
         {scene.key === "final" && (
           <div className="bt-final">
             <div className="bt-fan">
-              {["draw", "doublage", "quiz", "reco", "pixel"].map((g, k) => (
-                <img key={g} src={`/games/${g}.png`} alt="" className="bt-fanimg" draggable={false} style={{ ["--k" as string]: k - 2 }} />
+              {["bombe.webp", "imposter.webp", "draw.png", "whois.webp", "funny.webp"].map((g, k) => (
+                <img key={g} src={`/games/${g}`} alt="" className="bt-fanimg" draggable={false} style={{ ["--k" as string]: k - 2 }} />
               ))}
             </div>
             <h2 className="bt-finaltitle">Boum<span className="bt-boom"><BoumIcon name="party" size="0.85em" color="#FFC24B" style={{ verticalAlign: "-0.05em" }} /></span></h2>

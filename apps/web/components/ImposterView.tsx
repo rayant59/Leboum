@@ -82,7 +82,7 @@ function SecretPhase({ room, g, inRound }: { room: UseRoom; g: ImposterPublic; i
         {!shown ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/games/imposter.svg" alt="" width={72} height={72} style={{ borderRadius: 18 }} />
+            <img src="/games/imposter.webp" alt="" width={72} height={72} style={{ borderRadius: 18 }} />
             <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 20 }}>Touche pour voir ta carte</span>
           </div>
         ) : g.youAreImposter ? (
