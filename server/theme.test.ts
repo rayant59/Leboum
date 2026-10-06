@@ -56,12 +56,13 @@ test("fichier abîmé : thème d'origine, pas de plantage", () => {
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test("code d'accès", () => {
-  assert(designAllowed("secret", "secret", "203.0.113.9"), "bon code");
-  assert(!designAllowed("faux", "secret", "127.0.0.1"), "mauvais code, même en local");
-  assert(!designAllowed("", "secret", "127.0.0.1"), "code vide");
-  assert(designAllowed(undefined, undefined, "127.0.0.1") && designAllowed("", undefined, "::1"), "sans code configuré : local accepté");
-  assert(!designAllowed("x", undefined, "203.0.113.9"), "sans code configuré : distant refusé");
+test("éditeur : seulement depuis ce PC, jamais via un proxy", () => {
+  assert(designAllowed("127.0.0.1", {}) && designAllowed("::1", {}) && designAllowed("::ffff:127.0.0.1", {}), "localhost accepté");
+  assert(!designAllowed("203.0.113.9", {}), "adresse extérieure refusée");
+  assert(!designAllowed("192.168.1.20", {}), "autre appareil du Wi-Fi refusé");
+  assert(!designAllowed("127.0.0.1", { "x-forwarded-for": "203.0.113.9" }), "via un proxy (site en ligne) refusé");
+  assert(!designAllowed("127.0.0.1", { forwarded: "for=1.2.3.4" }) && !designAllowed("127.0.0.1", { via: "1.1 proxy" }), "autres en-têtes de proxy refusés");
+  assert(!designAllowed(undefined, {}), "adresse inconnue refusée");
 });
 
 test("les couleurs d'origine de l'éditeur = celles de globals.css", () => {

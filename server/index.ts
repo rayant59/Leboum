@@ -435,7 +435,8 @@ setInterval(() => stats.flush(), 60_000).unref();
 // Thème du site, réglé depuis /design (voir server/theme.ts).
 // site-theme.json (suivi par git) : en local, « Publier » écrit dedans → commit + push.
 const SITE_THEME_FILE = resolve(__dirname, "..", "site-theme.json");
-const themeStore = new ThemeStore(process.env.THEME_FILE || SITE_THEME_FILE, SITE_THEME_FILE);
+// (THEME_FILE : seulement pour les tests automatiques, à ne pas utiliser.)
+const themeStore = new ThemeStore(process.env.THEME_FILE || SITE_THEME_FILE);
 
 // Pass Soirée (voir server/pass.ts). Désactivé tant que Stripe n'est pas configuré.
 const pass = passConfigFromEnv(process.env);
@@ -1038,11 +1039,11 @@ async function handleTheme(req: IncomingMessage, res: import("node:http").Server
   const send = (status: number, body: unknown) => res.writeHead(status, { "Content-Type": "application/json", "Cache-Control": "no-store" }).end(JSON.stringify(body));
   if (req.method !== "POST") return send(405, { error: "POST attendu" });
   try {
-    const body = JSON.parse(await readBody(req, 600_000)) as { token?: unknown; theme?: unknown };
-    const configured = process.env.DESIGN_TOKEN || process.env.STATS_TOKEN || undefined;
-    if (!designAllowed(body.token, configured, req.socket.remoteAddress)) {
-      return send(403, { error: configured ? "Code incorrect." : "Aucun code configuré : ajoute DESIGN_TOKEN sur le serveur de jeu." });
+    // Vérifié AVANT de lire quoi que ce soit : en ligne, tout est refusé.
+    if (!designAllowed(req.socket.remoteAddress, req.headers)) {
+      return send(403, { error: "L'éditeur de design ne marche qu'en local, sur ton PC (npm run dev)." });
     }
+    const body = JSON.parse(await readBody(req, 600_000)) as { theme?: unknown };
     if (login) return send(200, { ok: true });
     const saved = themeStore.set(body.theme, Date.now());
     if (!saved) return send(400, { error: "Thème invalide." });

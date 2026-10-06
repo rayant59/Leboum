@@ -61,18 +61,17 @@ la synchro en direct.
 
 ## 🧩 Personnalisation
 
-- **Design en direct (`/design`)** : ouvre `/design`, entre le code d'accès, et
-  un panneau s'affiche par-dessus le vrai site. Onglet **Contenu** : clique sur
+- **Éditeur de design (`/design`, en local uniquement)** : lance `npm run dev:server`
+  et `npm run dev:web`, puis ouvre http://localhost:3000/design sur ton PC. Un
+  panneau s'affiche par-dessus le vrai site. Onglet **Contenu** : clique sur
   n'importe quel élément pour changer son texte, son lien, son image ou son
   style, le cacher, le déplacer à la souris, ou ajouter un texte / titre /
   bouton / image à côté (Ctrl+Z pour annuler). Couleurs, thèmes tout prêts,
-  polices (Google Fonts) et CSS libre s'appliquent **instantanément** ; ton
-  brouillon n'est visible que par toi jusqu'à **Publier**, puis tous les joueurs
-  reçoivent le nouveau design (sans redéployer le site). « Revenir au design
-  d'origine » annule tout. En local, sans code configuré, laisse le champ vide.
-  **En local, « Publier » enregistre dans `site-theme.json`** (à la racine, suivi
-  par git) : un simple commit + push envoie ton design en ligne avec le code.
-  Si un design a aussi été publié depuis le site en ligne, le plus récent gagne.
+  polices (Google Fonts) et CSS libre s'appliquent **instantanément**.
+  **« Publier » enregistre dans `site-theme.json`** (à la racine, suivi par git) :
+  un commit + push envoie ton design en ligne avec le code.
+  Sur le site en ligne, `/design` n'existe pas et le serveur refuse toute
+  modification : personne ne peut toucher au design depuis Internet.
   Côté code : toutes les couleurs passent par les variables `--c-*` de
   `apps/web/app/globals.css` (classes Tailwind `bg-gold`, `text-text-muted`…
   ou `rgb(var(--c-gold))` en style inline) — n'écris plus de couleur du thème
@@ -161,8 +160,6 @@ Tout est désactivé par défaut ; chaque brique s'allume avec une variable d'en
 | Variable | Effet |
 |---|---|
 | `STATS_TOKEN` | Code d'accès de la page `/stats` (fréquentation anonyme) |
-| `DESIGN_TOKEN` | Code d'accès de l'éditeur de design `/design` (à défaut : `STATS_TOKEN`) |
-| `THEME_FILE` | Fichier du design publié depuis le site en ligne (disque persistant). Sans lui, c'est `site-theme.json` du dépôt |
 | `STRIPE_SECRET_KEY` + `STRIPE_PASS_PRICE` | Active le **Pass Soirée** (Stripe Checkout) |
 | `PASS_PRICE_LABEL` | Prix affiché, ex. `2,99 €` (doit correspondre au prix Stripe) |
 | `PUBLIC_SITE_URL` | `https://leboum.fr` (retour après paiement) |

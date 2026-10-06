@@ -7,7 +7,11 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { applyTheme, designToken, fetchPublished } from "@/lib/theme";
 
-const DesignPanel = dynamic(() => import("@/components/DesignPanel").then((m) => m.DesignPanel), { ssr: false });
+// L'éditeur n'est même pas inclus dans le site en ligne (build de production).
+const DesignPanel =
+  process.env.NODE_ENV === "development"
+    ? dynamic(() => import("@/components/DesignPanel").then((m) => m.DesignPanel), { ssr: false })
+    : () => null;
 
 const REFRESH_MS = 60_000;
 
@@ -45,5 +49,5 @@ export function ThemeRuntime() {
     };
   }, [token]);
 
-  return token ? <DesignPanel token={token} /> : null;
+  return token ? <DesignPanel /> : null;
 }

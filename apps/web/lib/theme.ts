@@ -14,7 +14,7 @@ const K = {
   fonts: "lb:themeFonts",
   /** Brouillon de l'éditeur (JSON). */
   draft: "lb:themeDraft",
-  /** Code d'accès de l'éditeur : sa présence = mode design actif. */
+  /** Présent = éditeur ouvert (seulement en local). */
   token: "lb:design",
 };
 
@@ -72,12 +72,12 @@ export async function fetchPublished(): Promise<{ theme: SiteTheme; updatedAt: n
   }
 }
 
-export async function publishTheme(token: string, theme: SiteTheme): Promise<{ ok: true; updatedAt: number | null } | { ok: false; error: string; status: number }> {
+export async function publishTheme(theme: SiteTheme): Promise<{ ok: true; updatedAt: number | null } | { ok: false; error: string; status: number }> {
   try {
     const res = await fetch(serverHttpUrl("/theme"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, theme }),
+      body: JSON.stringify({ theme }),
     });
     if (res.ok) {
       put(K.published, JSON.stringify(theme));
@@ -91,15 +91,26 @@ export async function publishTheme(token: string, theme: SiteTheme): Promise<{ o
   }
 }
 
-export async function designLogin(token: string): Promise<{ ok: true } | { ok: false; error: string }> {
+/**
+ * L'éditeur n'existe qu'en local : site lancé avec `npm run dev:web` et ouvert
+ * sur ce PC (localhost). En ligne, il n'est même pas proposé — et le serveur
+ * refuse de toute façon d'enregistrer quoi que ce soit.
+ */
+export function editorAllowedHere(): boolean {
+  if (process.env.NODE_ENV !== "development" || typeof window === "undefined") return false;
+  return /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname);
+}
+
+export async function designLogin(): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!editorAllowedHere()) return { ok: false, error: "L'éditeur ne marche qu'en local : ouvre http://localhost:3000/design sur ton PC." };
   try {
     const res = await fetch(serverHttpUrl("/theme/login"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
+      body: "{}",
     });
     if (res.ok) {
-      put(K.token, token || "local");
+      put(K.token, "local");
       return { ok: true };
     }
     const data = (await res.json().catch(() => ({}))) as { error?: string };
@@ -110,7 +121,7 @@ export async function designLogin(token: string): Promise<{ ok: true } | { ok: f
 }
 
 export function designToken(): string | null {
-  return get(K.token);
+  return editorAllowedHere() ? get(K.token) : null;
 }
 export function designLogout() {
   put(K.token, null);

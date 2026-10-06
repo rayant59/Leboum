@@ -1,19 +1,15 @@
 // ---------------------------------------------------------------------------
-// Thème du site (couleurs, polices, CSS libre), réglé depuis la page /design.
+// Thème du site (couleurs, polices, CSS libre, retouches à la souris), réglé
+// depuis la page /design — UNIQUEMENT EN LOCAL, sur ton PC.
 //
-//   GET  /theme                       → le thème publié (public)
-//   POST /theme  {token, theme}       → publie un nouveau thème
-//   POST /theme/login {token}         → vérifie le code d'accès
+//   GET  /theme         → le design actuel (public : tous les visiteurs le lisent)
+//   POST /theme {theme} → enregistre un nouveau design   } refusés sauf depuis
+//   POST /theme/login   → vérifie que l'éditeur est permis } ce PC (voir plus bas)
 //
-// Code d'accès : DESIGN_TOKEN (à défaut STATS_TOKEN). Sans aucun des deux, la
-// publication n'est autorisée que depuis la machine elle-même (dev local).
-//
-// Où est rangé le design :
-// - site-theme.json, à la racine du projet, SUIVI PAR GIT. En local (sans
-//   THEME_FILE), « Publier » écrit dans ce fichier : un commit + push suffit
-//   pour envoyer ton design en ligne avec le code.
-// - THEME_FILE (en ligne, sur un disque persistant) : ce qui est publié depuis
-//   le site en ligne. Le serveur lit les deux et sert LE PLUS RÉCENT.
+// Le design est rangé dans site-theme.json, à la racine du projet, SUIVI PAR
+// GIT : « Publier » écrit dans ce fichier, puis commit + push l'envoie en ligne.
+// En ligne, le serveur ne fait que LIRE ce fichier : personne ne peut rien y
+// modifier depuis Internet.
 // ---------------------------------------------------------------------------
 
 import { mkdirSync, readFileSync, writeFileSync, existsSync, renameSync } from "node:fs";
@@ -71,10 +67,15 @@ export class ThemeStore {
   }
 }
 
-/** Le code fourni ouvre-t-il l'éditeur ? */
-export function designAllowed(token: unknown, configured: string | undefined, remoteAddress: string | undefined): boolean {
-  if (configured) return typeof token === "string" && token.length > 0 && token === configured;
-  // Pas de code configuré : seulement en local (npm run dev:server sur ce PC).
+/**
+ * L'éditeur est-il permis pour cette requête ? Seulement si elle vient de la
+ * machine elle-même (localhost) ET ne passe par aucun proxy : un serveur en
+ * ligne reçoit toujours ses visiteurs via un proxy (en-têtes X-Forwarded-*),
+ * donc il refuse tout, même si quelqu'un trouvait l'adresse.
+ */
+export function designAllowed(remoteAddress: string | undefined, headers: Record<string, string | string[] | undefined>): boolean {
   const a = remoteAddress ?? "";
-  return a === "127.0.0.1" || a === "::1" || a === "::ffff:127.0.0.1";
+  const loopback = a === "127.0.0.1" || a === "::1" || a === "::ffff:127.0.0.1";
+  const proxied = ["x-forwarded-for", "x-forwarded-host", "x-real-ip", "forwarded", "via"].some((h) => headers[h] !== undefined);
+  return loopback && !proxied && process.env.DESIGN_EDITOR !== "off";
 }

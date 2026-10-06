@@ -2,7 +2,8 @@
 
 // Éditeur de design en direct : un panneau flottant par-dessus le vrai site.
 // Chaque réglage s'applique immédiatement (brouillon, visible par toi seul) ;
-// « Publier » l'envoie au serveur de jeu et tous les visiteurs le reçoivent.
+// « Publier » l'enregistre dans site-theme.json (suivi par git) : commit + push
+// pour l'envoyer en ligne. N'existe qu'en local (voir editorAllowedHere).
 //
 // Le panneau a ses propres couleurs fixes (préfixe lbd-) pour rester lisible
 // quel que soit le thème choisi.
@@ -43,7 +44,7 @@ const CHECKS: { fg: string; bg: string; min: number; label: string }[] = [
 const same = (a: SiteTheme, b: SiteTheme) => JSON.stringify(a) === JSON.stringify(b);
 const defaultHex = (name: string) => THEME_COLORS.find((t) => t.name === name)?.hex ?? "#000000";
 
-export function DesignPanel({ token }: { token: string }) {
+export function DesignPanel() {
   const [published, setPublished] = useState<SiteTheme>(() => cachedPublished());
   const [draft, setDraftState] = useState<SiteTheme>(() => cachedPublished());
   const [loaded, setLoaded] = useState(false);
@@ -101,7 +102,7 @@ export function DesignPanel({ token }: { token: string }) {
     let alive = true;
     void fetchPublished().then((r) => {
       if (!alive) return;
-      if (!r) { setStatus({ kind: "err", text: "Serveur de jeu injoignable : tu peux modifier, mais pas publier pour l'instant." }); return; }
+      if (!r) { setStatus({ kind: "err", text: "Serveur de jeu injoignable : lance aussi « npm run dev:server » pour pouvoir publier." }); return; }
       setPublished(r.theme);
       setUpdatedAt(r.updatedAt);
       const d = loadDraft(r.updatedAt);
@@ -176,17 +177,14 @@ export function DesignPanel({ token }: { token: string }) {
   async function publish() {
     setBusy(true);
     setStatus(null);
-    const r = await publishTheme(token, draft);
+    const r = await publishTheme(draft);
     setBusy(false);
     if (r.ok) {
       setPublished(draft);
       setUpdatedAt(r.updatedAt ?? Date.now());
-      const local = /^(localhost|127\.|192\.168\.|10\.|\[::1\])/.test(window.location.hostname);
-      setStatus({ kind: "ok", text: local
-        ? "Publié en local ! C'est enregistré dans site-theme.json : fais un commit + push pour l'envoyer en ligne."
-        : "Publié ! Tout le monde voit le nouveau design (au plus tard dans une minute)." });
+      setStatus({ kind: "ok", text: "Enregistré dans site-theme.json ! Fais un commit + push pour l'envoyer en ligne." });
     } else {
-      setStatus({ kind: "err", text: r.status === 403 ? `${r.error} Quitte l'éditeur et reconnecte-toi sur /design.` : r.error });
+      setStatus({ kind: "err", text: r.error });
     }
   }
 
