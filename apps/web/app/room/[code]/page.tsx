@@ -29,6 +29,7 @@ import { GameIntro, type IntroSoiree } from "@/components/GameIntro";
 import { VoiceLine } from "@/lib/voice";
 import { HostQuitButton } from "@/components/HostQuitButton";
 import { SupportButton } from "@/components/SupportButton";
+import { SITE } from "@/lib/site";
 import { PassCard, usePassConfig } from "@/components/PassCard";
 import { Avatar } from "@/components/Avatar";
 import { ProfileModal } from "@/components/ProfileModal";
@@ -997,6 +998,7 @@ export default function LobbyPage() {
       )}
 
       {state && <PassCard state={state} serverNow={room.serverNow} cfg={passCfg} />}
+      {SITE.supportUrl && <div className="mb-8 px-1"><SupportButton variant="line" /></div>}
 
       </div>
 

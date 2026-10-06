@@ -8,13 +8,21 @@
 // Une valeur vide = la fonctionnalité correspondante reste cachée.
 // ---------------------------------------------------------------------------
 
+/** ☕ Ton lien de dons — colle-le entre les guillemets, par ex.
+ *  "https://ko-fi.com/leboum". Tant qu'il est vide, le bouton reste caché.
+ *  (La variable NEXT_PUBLIC_SUPPORT_URL, si elle est définie au build, a la priorité.) */
+const DONATION_URL = "";
+
+/** N'accepte qu'un vrai lien https (évite un bouton cassé en ligne). */
+const safeUrl = (u: string | undefined) => (u && /^https:\/\/\S+$/.test(u.trim()) ? u.trim() : "");
+
 export const SITE = {
   name: "LeBoum",
   url: "https://leboum.fr",
 
   /** Lien de la page de dons (Ko-fi, Tipeee, Buy Me a Coffee…).
    *  Vide → le bouton « Soutenir LeBoum » n'apparaît nulle part. */
-  supportUrl: process.env.NEXT_PUBLIC_SUPPORT_URL ?? "",
+  supportUrl: safeUrl(process.env.NEXT_PUBLIC_SUPPORT_URL) || safeUrl(DONATION_URL),
 
   /** Adresse de contact (page Entreprises + mentions légales). */
   contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "",

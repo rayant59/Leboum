@@ -8,6 +8,7 @@ import { SOIREE_FORMATS, estimateMinutes, gameInfo, playerSummary, soireeHighlig
 import { playSound } from "@/lib/sound";
 import { Avatar } from "@/components/Avatar";
 import { NeonIcon, type NeonIconName } from "@/components/NeonIcon";
+import { SupportButton } from "@/components/SupportButton";
 import { ResultsScreen, type RankRow } from "@/components/ResultsScreen";
 
 const DISPLAY = "'Bricolage Grotesque', system-ui, sans-serif";
@@ -320,6 +321,10 @@ export function SoireeFinal({ soiree, you, isHost, onRematch, onEnd, onVote }: {
           <p className="mt-2 text-xs" style={{ color: C.faint }}>{iVoted ? "Touche encore pour annuler. " : ""}L'hôte lance la revanche ou une nouvelle soirée.</p>
         </>
       )}
+      <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${C.line}`, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+        <span style={{ fontSize: 12.5, color: C.muted }}>Bonne soirée ? LeBoum vit grâce à vous.</span>
+        <SupportButton />
+      </div>
     </section>
   );
 

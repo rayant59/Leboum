@@ -135,7 +135,7 @@ Tout est désactivé par défaut ; chaque brique s'allume avec une variable d'en
 
 | Variable | Effet |
 |---|---|
-| `NEXT_PUBLIC_SUPPORT_URL` | Lien Ko-fi/Tipeee → bouton « Paie ta tournée à LeBoum » (accueil + fin de partie) |
+| `NEXT_PUBLIC_SUPPORT_URL` | Lien Ko-fi/Tipeee → bouton « Paie ta tournée à LeBoum » (accueil, salon, fin de partie, fin de soirée). Ou plus simple : colle le lien dans `DONATION_URL` en haut de `apps/web/lib/site.ts`. |
 | `NEXT_PUBLIC_CONTACT_EMAIL` | Contact (page Entreprises, mentions légales, CGV) |
 | `NEXT_PUBLIC_LEGAL_NAME` / `_SIRET` | Éditeur du site (nom et SIRET — aucune adresse postale n'est affichée) |
 | `NEXT_PUBLIC_LEGAL_MEDIATOR` | Médiateur de la consommation (obligatoire pour vendre) |
