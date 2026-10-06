@@ -53,6 +53,7 @@ export default function DesignPage() {
       <h2>Comment ça marche</h2>
       <ul>
         <li>Le panneau s&apos;ouvre par-dessus le site : navigue (accueil, salon, jeux) pour voir chaque écran.</li>
+        <li><b>Contenu</b> : clique sur un élément du site pour changer son texte, son lien, son image ou son style, le cacher, le déplacer à la souris, ou ajouter un texte, un titre, un bouton ou une image à côté.</li>
         <li><b>Couleurs</b> : chaque couleur du site, des thèmes tout prêts et une alerte si un texte devient peu lisible.</li>
         <li><b>Polices</b> : titres, texte et étiquettes, parmi une trentaine de polices.</li>
         <li><b>Avancé</b> : du CSS libre pour tout le reste, et l&apos;export / import du thème.</li>

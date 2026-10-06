@@ -7,7 +7,8 @@
 // Le panneau a ses propres couleurs fixes (préfixe lbd-) pour rester lisible
 // quel que soit le thème choisi.
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ContentEditor } from "@/components/ContentEditor";
 import {
   EMPTY_THEME,
   THEME_COLORS,
@@ -25,7 +26,7 @@ import {
 } from "@subtitles-party/shared";
 import { applyTheme, cachedPublished, designLogout, fetchPublished, loadDraft, publishTheme, saveDraft } from "@/lib/theme";
 
-type Tab = "colors" | "fonts" | "css";
+type Tab = "content" | "colors" | "fonts" | "css";
 type Status = { kind: "ok" | "err" | "info"; text: string } | null;
 
 const GROUPS: ThemeColorGroup[] = ["Fonds", "Textes", "Accents", "Reliefs des boutons"];
@@ -44,8 +45,48 @@ const defaultHex = (name: string) => THEME_COLORS.find((t) => t.name === name)?.
 
 export function DesignPanel({ token }: { token: string }) {
   const [published, setPublished] = useState<SiteTheme>(() => cachedPublished());
-  const [draft, setDraft] = useState<SiteTheme>(() => loadDraft() ?? cachedPublished());
-  const [tab, setTab] = useState<Tab>("colors");
+  const [draft, setDraftState] = useState<SiteTheme>(() => loadDraft() ?? cachedPublished());
+  const [tab, setTab] = useState<Tab>("content");
+  // Historique pour Annuler / Rétablir (Ctrl+Z / Ctrl+Maj+Z).
+  const draftRef = useRef(draft);
+  const hist = useRef({ past: [] as SiteTheme[], future: [] as SiteTheme[], key: "", t: 0 });
+  const [, setHistTick] = useState(0);
+  const setDraft = useCallback((next: SiteTheme) => { draftRef.current = next; setDraftState(next); }, []);
+  /** Modifie le brouillon ; les changements rapides d'un même réglage (`key`) ne font qu'une étape. */
+  const change = useCallback((fn: (d: SiteTheme) => SiteTheme, key = "") => {
+    const d = draftRef.current;
+    const next = fn(d);
+    if (next === d || same(next, d)) return;
+    const h = hist.current;
+    const now = Date.now();
+    if (!(key && key === h.key && now - h.t < 900)) {
+      h.past.push(d);
+      if (h.past.length > 150) h.past.shift();
+    }
+    h.key = key;
+    h.t = now;
+    h.future = [];
+    setDraft(next);
+    setHistTick((n) => n + 1);
+  }, [setDraft]);
+  const undo = useCallback(() => {
+    const h = hist.current;
+    const prev = h.past.pop();
+    if (!prev) return;
+    h.future.push(draftRef.current);
+    h.key = "";
+    setDraft(prev);
+    setHistTick((n) => n + 1);
+  }, [setDraft]);
+  const redo = useCallback(() => {
+    const h = hist.current;
+    const next = h.future.pop();
+    if (!next) return;
+    h.past.push(draftRef.current);
+    h.key = "";
+    setDraft(next);
+    setHistTick((n) => n + 1);
+  }, [setDraft]);
   const [open, setOpen] = useState(true);
   const [status, setStatus] = useState<Status>(null);
   const [busy, setBusy] = useState(false);
@@ -75,6 +116,18 @@ export function DesignPanel({ token }: { token: string }) {
   }, [draft, published]);
 
   useEffect(() => {
+    const onKey = (ev: KeyboardEvent) => {
+      if (!(ev.ctrlKey || ev.metaKey) || ev.key.toLowerCase() !== "z") return;
+      const t = ev.target as HTMLElement | null;
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+      ev.preventDefault();
+      if (ev.shiftKey) redo(); else undo();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [undo, redo]);
+
+  useEffect(() => {
     try { localStorage.setItem(OPEN_KEY, open ? "1" : "0"); } catch { /* ignore */ }
   }, [open]);
 
@@ -85,7 +138,7 @@ export function DesignPanel({ token }: { token: string }) {
   );
 
   function setColor(name: string, hex: string) {
-    setDraft((d) => {
+    change((d) => {
       const colors = { ...d.colors };
       const put = (n: string, v: string) => {
         if (v.toUpperCase() === defaultHex(n).toUpperCase()) delete colors[n];
@@ -98,18 +151,18 @@ export function DesignPanel({ token }: { token: string }) {
         else delete colors[shade.name];
       }
       return { ...d, colors };
-    });
+    }, `color:${name}`);
   }
   function resetColor(name: string) {
     setColor(name, defaultHex(name));
   }
   function setFont(role: ThemeFontRole, family: string) {
-    setDraft((d) => {
+    change((d) => {
       const fonts = { ...d.fonts };
       if (family) fonts[role] = family;
       else delete fonts[role];
       return { ...d, fonts };
-    });
+    }, `font:${role}`);
   }
 
   async function publish() {
@@ -144,7 +197,7 @@ export function DesignPanel({ token }: { token: string }) {
     try {
       const t = sanitizeTheme(JSON.parse(await file.text()));
       if (!t) throw new Error();
-      setDraft(t);
+      change(() => t);
       setStatus({ kind: "info", text: "Thème importé (pas encore publié)." });
     } catch {
       setStatus({ kind: "err", text: "Ce fichier n'est pas un thème LeBoum." });
@@ -170,26 +223,35 @@ export function DesignPanel({ token }: { token: string }) {
           <strong>Éditeur de design</strong>
           <span className={dirty ? "lbd-chip lbd-chip-warn" : "lbd-chip"}>{dirty ? "Brouillon non publié" : "À jour"}</span>
         </div>
+        <div className="lbd-head-actions">
+        <button type="button" className="lbd-icon" disabled={!hist.current.past.length} onClick={undo} aria-label="Annuler la dernière modification" title="Annuler (Ctrl+Z)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /></svg>
+        </button>
+        <button type="button" className="lbd-icon" disabled={!hist.current.future.length} onClick={redo} aria-label="Rétablir" title="Rétablir (Ctrl+Maj+Z)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 14 5-5-5-5" /><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" /></svg>
+        </button>
         <button type="button" className="lbd-icon" onClick={() => setOpen(false)} aria-label="Réduire" title="Réduire pour voir la page">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 12h12" /></svg>
         </button>
+        </div>
       </header>
-      <p className="lbd-sub">Tout s'applique en direct sur cette page. Navigue sur le site pour voir chaque écran ; publie quand ça te plaît.</p>
+      <p className="lbd-sub">Tout s'applique en direct. Toi seul vois le brouillon ; publie quand ça te plaît.</p>
 
       <nav className="lbd-tabs" role="tablist">
-        {([["colors", "Couleurs"], ["fonts", "Polices"], ["css", "Avancé"]] as const).map(([id, label]) => (
+        {([["content", "Contenu"], ["colors", "Couleurs"], ["fonts", "Polices"], ["css", "Avancé"]] as const).map(([id, label]) => (
           <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? "on" : ""} onClick={() => setTab(id)}>{label}</button>
         ))}
       </nav>
 
       <div className="lbd-body">
+        {tab === "content" && <ContentEditor draft={draft} change={change} />}
         {tab === "colors" && (
           <>
             <div className="lbd-presets">
               {THEME_PRESETS.map((p) => {
                 const pt: SiteTheme = { ...EMPTY_THEME, colors: p.colors };
                 return (
-                  <button key={p.name} type="button" className="lbd-preset" onClick={() => setDraft((d) => ({ ...d, colors: { ...p.colors } }))} title={`Appliquer « ${p.name} »`}>
+                  <button key={p.name} type="button" className="lbd-preset" onClick={() => change((d) => ({ ...d, colors: { ...p.colors } }))} title={`Appliquer « ${p.name} »`}>
                     <span className="lbd-sw3">
                       {["ink", "gold", "magenta", "mint"].map((n) => <i key={n} style={{ background: themeColor(pt, n) }} />)}
                     </span>
@@ -242,7 +304,7 @@ export function DesignPanel({ token }: { token: string }) {
                 spellCheck={false}
                 value={draft.css}
                 maxLength={THEME_CSS_MAX}
-                onChange={(e) => { const css = e.target.value; setDraft((d) => ({ ...d, css })); }}
+                onChange={(e) => { const css = e.target.value; change((d) => ({ ...d, css }), "css"); }}
                 placeholder={".panel { border-radius: 8px; }\n.arc { border-radius: 999px; }\nh1 { letter-spacing: -0.04em; }"}
               />
             </label>
@@ -259,7 +321,7 @@ export function DesignPanel({ token }: { token: string }) {
               <button type="button" className={confirmReset ? "lbd-btn lbd-danger" : "lbd-btn"} onClick={() => {
                 if (!confirmReset) { setConfirmReset(true); setTimeout(() => setConfirmReset(false), 4000); return; }
                 setConfirmReset(false);
-                setDraft(EMPTY_THEME);
+                change(() => EMPTY_THEME);
                 setStatus({ kind: "info", text: "Design d'origine remis en brouillon. Publie pour l'appliquer à tous." });
               }}>{confirmReset ? "Clique encore pour confirmer" : "Revenir au design d'origine"}</button>
             </div>
@@ -271,7 +333,7 @@ export function DesignPanel({ token }: { token: string }) {
         {status && <p className={`lbd-status lbd-${status.kind}`} role="status">{status.text}</p>}
         {!status && updatedAt && !dirty && <p className="lbd-status">Dernière publication : {new Date(updatedAt).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" })}</p>}
         <div className="lbd-row">
-          <button type="button" className="lbd-btn" disabled={!dirty || busy} onClick={() => { setDraft(published); setStatus(null); }}>Annuler</button>
+          <button type="button" className="lbd-btn" disabled={!dirty || busy} onClick={() => { change(() => published); setStatus(null); }}>Tout annuler</button>
           <button type="button" className="lbd-btn lbd-primary" disabled={!dirty || busy} onClick={() => void publish()}>{busy ? "Publication…" : "Publier"}</button>
         </div>
         <button type="button" className="lbd-link" onClick={quit}>Quitter l'éditeur</button>
@@ -324,6 +386,7 @@ const CSS = `
 .lbd{position:fixed;z-index:2147483000;top:12px;right:12px;bottom:12px;width:360px;display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--line);border-radius:16px;box-shadow:0 24px 60px -20px rgba(0,0,0,.8);overflow:hidden}
 .lbd *{box-sizing:border-box}
 .lbd-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 12px 4px 16px}
+.lbd-head-actions{display:flex;gap:2px}
 .lbd-head strong{font-size:15px;margin-right:8px}
 .lbd-chip{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--bg2);color:var(--mu);font-size:11px;font-weight:600;vertical-align:1px}
 .lbd-chip-warn{background:rgba(245,194,107,.15);color:var(--wa)}

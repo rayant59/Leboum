@@ -62,7 +62,10 @@ la synchro en direct.
 ## 🧩 Personnalisation
 
 - **Design en direct (`/design`)** : ouvre `/design`, entre le code d'accès, et
-  un panneau s'affiche par-dessus le vrai site. Couleurs, thèmes tout prêts,
+  un panneau s'affiche par-dessus le vrai site. Onglet **Contenu** : clique sur
+  n'importe quel élément pour changer son texte, son lien, son image ou son
+  style, le cacher, le déplacer à la souris, ou ajouter un texte / titre /
+  bouton / image à côté (Ctrl+Z pour annuler). Couleurs, thèmes tout prêts,
   polices (Google Fonts) et CSS libre s'appliquent **instantanément** ; ton
   brouillon n'est visible que par toi jusqu'à **Publier**, puis tous les joueurs
   reçoivent le nouveau design (sans redéployer le site). « Revenir au design

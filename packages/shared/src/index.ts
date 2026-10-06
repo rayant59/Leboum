@@ -63,3 +63,4 @@ export * from "./games/yesno/index";
 export * from "./games/guesswho/index";
 export * from "./games/ranking/index";
 export * from "./theme";
+export * from "./edits";

@@ -7,6 +7,8 @@
 // un fichier (THEME_FILE) et le sert à tous les visiteurs (GET /theme).
 // ---------------------------------------------------------------------------
 
+import { editsToCss, sanitizeEdits, type SiteEdit } from "./edits";
+
 export type ThemeColorGroup = "Fonds" | "Textes" | "Accents" | "Reliefs des boutons";
 
 export interface ThemeColorToken {
@@ -99,9 +101,11 @@ export interface SiteTheme {
   fonts: Partial<Record<ThemeFontRole, string>>;
   /** CSS libre ajouté à la fin de la page (pour tout le reste). */
   css: string;
+  /** Textes, éléments cachés / déplacés / ajoutés à la souris (voir edits.ts). */
+  edits: SiteEdit[];
 }
 
-export const EMPTY_THEME: SiteTheme = { v: 1, colors: {}, fonts: {}, css: "" };
+export const EMPTY_THEME: SiteTheme = { v: 1, colors: {}, fonts: {}, css: "", edits: [] };
 export const THEME_CSS_MAX = 20_000;
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
@@ -125,7 +129,7 @@ export function sanitizeTheme(input: unknown): SiteTheme | null {
     }
   }
   const css = typeof raw.css === "string" ? raw.css.slice(0, THEME_CSS_MAX) : "";
-  return { v: 1, colors, fonts, css };
+  return { v: 1, colors, fonts, css, edits: sanitizeEdits(raw.edits) };
 }
 
 export function hexToTriplet(hex: string): string {
@@ -143,6 +147,8 @@ export function themeToCss(theme: SiteTheme): string {
   // Les polices d'origine sont posées sur <html> par Next.js : on les remplace
   // sur <body>, ce qui couvre toute la page.
   if (fonts.length) out += `body{${fonts.join("")}}\n`;
+  const edits = editsToCss(theme.edits);
+  if (edits) out += `/* Éléments modifiés à la souris */\n${edits}\n`;
   if (theme.css.trim()) out += `/* CSS libre */\n${theme.css}\n`;
   return out;
 }

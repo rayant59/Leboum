@@ -3,6 +3,7 @@ import {
   EMPTY_THEME, THEME_COLORS, THEME_CSS_MAX, THEME_FONTS, THEME_PRESETS,
   contrastRatio, darken, hexToTriplet, sanitizeTheme, themeColor, themeFontsUrl, themeToCss,
 } from "./theme";
+import { editsToCss, routeKey, sanitizeEdits } from "./edits";
 
 let passed = 0;
 let failed = 0;
@@ -45,16 +46,16 @@ test("le CSS libre est plafonné", () => {
 });
 
 test("themeToCss écrit des variables R G B prioritaires", () => {
-  const css = themeToCss({ v: 1, colors: { gold: "#FF0080" }, fonts: { display: "Syne" }, css: ".x{}" });
+  const css = themeToCss({ v: 1, colors: { gold: "#FF0080" }, fonts: { display: "Syne" }, css: ".x{}", edits: [] });
   assert(css.includes("html:root{--c-gold:255 0 128;}"), css);
   assert(css.includes("body{--font-display:'Syne',system-ui, sans-serif;}"), css);
   assert(css.trimEnd().endsWith(".x{}"), "css libre à la fin");
 });
 
 test("adresse Google Fonts : une famille par police, sans doublon", () => {
-  const url = themeFontsUrl({ v: 1, colors: {}, fonts: { display: "Space Grotesk", body: "Space Grotesk", mono: "DM Mono" }, css: "" })!;
+  const url = themeFontsUrl({ v: 1, colors: {}, fonts: { display: "Space Grotesk", body: "Space Grotesk", mono: "DM Mono" }, css: "", edits: [] })!;
   assert(url === "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap", url);
-  const one = themeFontsUrl({ v: 1, colors: {}, fonts: { display: "Bungee" }, css: "" })!;
+  const one = themeFontsUrl({ v: 1, colors: {}, fonts: { display: "Bungee" }, css: "", edits: [] })!;
   assert(one.includes("family=Bungee&"), "police à graisse unique : pas de wght");
 });
 
@@ -82,6 +83,36 @@ test("les thèmes tout prêts sont valides et lisibles", () => {
     const r3 = contrastRatio(themeColor(t, "text-muted"), themeColor(t, "ink-surface"));
     assert(r1 >= 4.5 && r2 >= 4.5 && r3 >= 4.5, `${p.name} : contrastes ${r1.toFixed(1)} / ${r2.toFixed(1)} / ${r3.toFixed(1)}`);
   }
+});
+
+
+test("modifications à la souris : nettoyage", () => {
+  const ok = { id: "abcd1234", route: "/", path: "main:nth-child(1) > h1:nth-child(2)", tag: "h1", fp: "Boum", texts: ["Salut", null], style: { color: "#ff0000", x: 12, y: -4, fontSize: 9999, hidden: true, bidon: 1 } };
+  const out = sanitizeEdits([
+    ok,
+    { ...ok, id: "abcd1234" }, // doublon
+    { ...ok, id: "x" }, // id invalide
+    { ...ok, id: "evil0001", path: "main > h1{}" }, // chemin invalide
+    { ...ok, id: "evil0002", href: "javascript:alert(1)" },
+    { ...ok, id: "evil0003", src: "data:image/png;base64,AAAA" },
+    { ...ok, id: "add00001", add: { kind: "button", where: "after" }, href: "/cgv" },
+    { ...ok, id: "add00002", add: { kind: "script", where: "after" } },
+  ]);
+  assert(out.length === 4, `4 gardées, pas ${out.length}`);
+  const a = out[0];
+  assert(a.style!.fontSize === 200 && a.style!.color === "#FF0000" && !("bidon" in a.style!), JSON.stringify(a.style));
+  assert(out.find((e) => e.id === "evil0002")!.href === undefined, "javascript: refusé");
+  assert(out.find((e) => e.id === "evil0003")!.src === undefined, "data: refusé");
+  assert(out.find((e) => e.id === "add00001")!.add!.kind === "button", "ajout gardé");
+  assert(!out.some((e) => e.id === "add00002"), "type d'ajout inconnu refusé");
+});
+
+test("modifications à la souris : CSS et pages", () => {
+  const css = editsToCss(sanitizeEdits([{ id: "abcd1234", route: "/", path: "div:nth-child(1)", tag: "div", fp: "", style: { hidden: true, x: 5, y: 0, opacity: 50 } }]));
+  assert(css.includes('[data-lbe~="abcd1234"]{display:none !important;opacity:0.5 !important;translate:5px 0px !important}'), css);
+  assert(routeKey("/room/ABCD") === "/room/*" && routeKey("/cgv/") === "/cgv" && routeKey("/") === "/", "clés de page");
+  const t = sanitizeTheme({ edits: [{ id: "abcd1234", route: "*", path: "p:nth-child(3)", tag: "p", fp: "x", texts: ["y"] }] })!;
+  assert(t.edits.length === 1 && themeToCss(t) === "", "un simple texte ne génère pas de CSS");
 });
 
 console.log(`\n${passed} réussis, ${failed} échoués\n`);

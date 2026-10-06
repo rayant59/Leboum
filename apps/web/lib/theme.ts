@@ -4,6 +4,7 @@
 
 import { EMPTY_THEME, sanitizeTheme, themeFontsUrl, themeToCss, type SiteTheme } from "@subtitles-party/shared";
 import { serverHttpUrl } from "@/lib/useRoom";
+import { setEdits } from "@/lib/edits";
 
 const K = {
   /** Dernier thème publié connu (JSON). */
@@ -50,6 +51,7 @@ export function applyTheme(theme: SiteTheme) {
   } else link?.remove();
   put(K.css, css);
   put(K.fonts, fonts);
+  setEdits(theme.edits);
 }
 
 export function cachedPublished(): SiteTheme {

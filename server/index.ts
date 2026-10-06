@@ -1036,7 +1036,7 @@ async function handleTheme(req: IncomingMessage, res: import("node:http").Server
   const send = (status: number, body: unknown) => res.writeHead(status, { "Content-Type": "application/json", "Cache-Control": "no-store" }).end(JSON.stringify(body));
   if (req.method !== "POST") return send(405, { error: "POST attendu" });
   try {
-    const body = JSON.parse(await readBody(req, 64_000)) as { token?: unknown; theme?: unknown };
+    const body = JSON.parse(await readBody(req, 600_000)) as { token?: unknown; theme?: unknown };
     const configured = process.env.DESIGN_TOKEN || process.env.STATS_TOKEN || undefined;
     if (!designAllowed(body.token, configured, req.socket.remoteAddress)) {
       return send(403, { error: configured ? "Code incorrect." : "Aucun code configuré : ajoute DESIGN_TOKEN sur le serveur de jeu." });
