@@ -91,6 +91,7 @@ import {
   tabooBank,
   phonePhraseBank,
   setCustomWords,
+  addBombeCommonWords,
   addCustomQuestions,
   parseCustomQuestions,
   addCustomRecoItems,
@@ -120,6 +121,8 @@ const PORT = Number(process.env.PORT ?? 1999);
       const words: string[] = [];
       for (const f of files) words.push(...readFileSync(resolve(dir, f), "utf8").split(/\r?\n/));
       setCustomWords(words);
+      // Ces mots du quotidien servent aussi d'exemples dans Boum Rush.
+      addBombeCommonWords(words.filter((w) => w.trim() && !w.trim().startsWith("#")));
       const kept = words.map((w) => w.trim()).filter((w) => w && !w.startsWith("#")).length;
       if (kept > 0) console.log(`[motdessin] ${kept} mots personnalisés chargés (${files.join(", ")})`);
       return;
@@ -594,6 +597,12 @@ function applyMod(room: Room, action: GameAction<DrawClientAction>, sender?: Web
     if (after === "choosing" || after === "drawing") {
       room.strokes = [];
       relay(room, { type: "draw_clear", from: "*" });
+    } else if (room.mod.module.id === "fakeartist" && before === "drawing") {
+      // Fin du dessin : on dévoile toutes les toiles à tout le monde.
+      relay(room, { type: "draw_clear", from: "*" });
+      for (const sock of room.sockets.values()) {
+        if (sock.readyState === WebSocket.OPEN) replayStrokes(room, sock, "*");
+      }
     }
     if (after === "drawing") {
       scheduleSwaps(room);
@@ -624,6 +633,34 @@ function applySwapTick(room: Room) {
   room.mod.state = swapActiveDrawer(s, gameCtx());
   broadcast(room);
   scheduleSwaps(room); // arm the next rotation
+}
+
+/** Faux-artiste : pendant le dessin, chacun ne voit que SA toile. Les traits
+ *  ne sont envoyés qu'à leur auteur, puis tout est dévoilé au vote. */
+function fakeArtistPrivate(room: Room): boolean {
+  return !!room.mod && room.mod.module.id === "fakeartist" && (room.mod.state as { phase?: string }).phase === "drawing";
+}
+
+/** Relaie un trait / remplissage / effacement : à tous, ou à l'auteur seul. */
+function relayDraw(room: Room, playerId: string, msg: ServerMessage) {
+  if (!fakeArtistPrivate(room)) return relay(room, msg);
+  const sock = room.sockets.get(playerId);
+  if (sock && sock.readyState === WebSocket.OPEN) sock.send(JSON.stringify(msg));
+}
+
+type StrokeOp = { kind: "stroke"; stroke: DrawStroke; from?: string } | { kind: "fill"; x: number; y: number; color: string; from?: string };
+
+/** Rejoue les traits du tour (tous, ou seulement ceux de `onlyFrom`). */
+function replayStrokes(room: Room, ws: WebSocket, fallbackFrom: string, onlyFrom?: string) {
+  for (const op of room.strokes as StrokeOp[]) {
+    const from = op.from ?? fallbackFrom;
+    if (onlyFrom && from !== onlyFrom) continue;
+    const m: ServerMessage =
+      op.kind === "stroke"
+        ? { type: "stroke", stroke: op.stroke, from }
+        : { type: "fill", x: op.x, y: op.y, color: op.color, from };
+    ws.send(JSON.stringify(m));
+  }
 }
 
 /** Send an ephemeral message to everyone in the room (strokes, chat, clear). */
@@ -1143,18 +1180,10 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
   } else {
     ws.send(JSON.stringify(stateMessageFor(room, playerId)));
   }
-  // Replay the current turn's strokes so a (re)connecting client catches up.
+  // Replay the current turn's strokes so a (re)connecting client catches up
+  // (Faux-artiste pendant le dessin : seulement sa propre toile).
   if (room.mod && (room.mod.module.id === "draw" || room.mod.module.id === "fakeartist" || room.mod.module.id === "relay")) {
-    for (const op of room.strokes as Array<
-      { kind: "stroke"; stroke: DrawStroke; from?: string } | { kind: "fill"; x: number; y: number; color: string; from?: string }
-    >) {
-      const from = op.from ?? playerId;
-      const m: ServerMessage =
-        op.kind === "stroke"
-          ? { type: "stroke", stroke: op.stroke, from }
-          : { type: "fill", x: op.x, y: op.y, color: op.color, from };
-      ws.send(JSON.stringify(m));
-    }
+    replayStrokes(room, ws, playerId, fakeArtistPrivate(room) ? playerId : undefined);
   }
   // Replay buffered voice takes (Mimic) so a (re)connecting client can play them.
   if (room.mod && room.mod.module.id === "mimic") {
@@ -1394,7 +1423,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
         if (!canDrawNow(room, playerId)) return;
         room.strokes.push({ kind: "stroke", stroke: msg.stroke, from: playerId });
         if (room.strokes.length > 6000) room.strokes.shift();
-        relay(room, { type: "stroke", stroke: msg.stroke, from: playerId });
+        relayDraw(room, playerId, { type: "stroke", stroke: msg.stroke, from: playerId });
         return;
       }
 
@@ -1402,7 +1431,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
         if (!canDrawNow(room, playerId)) return;
         room.strokes.push({ kind: "fill", x: msg.x, y: msg.y, color: msg.color, from: playerId });
         if (room.strokes.length > 6000) room.strokes.shift();
-        relay(room, { type: "fill", x: msg.x, y: msg.y, color: msg.color, from: playerId });
+        relayDraw(room, playerId, { type: "fill", x: msg.x, y: msg.y, color: msg.color, from: playerId });
         return;
       }
 
@@ -1414,7 +1443,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
         } else {
           room.strokes = [];
         }
-        relay(room, { type: "draw_clear", from: playerId });
+        relayDraw(room, playerId, { type: "draw_clear", from: playerId });
         return;
       }
     }

@@ -116,16 +116,9 @@ test("stock épuisé : plus de questions, une mauvaise proposition clôt la manc
   assert(s.phase === "reveal" && s.finderId === null, "fini");
 });
 
-test("entre nous : la personne mystère est un joueur (jamais le Maître), on la désigne", () => {
-  let s = asking("entrenous");
-  const m = masterOf(s)!;
-  assert(!!s.secretPlayerId && s.secretPlayerId !== m && s.celebrity === null, "joueur secret");
-  const g = guessers(s).find((id) => id !== s.secretPlayerId)!;
-  const wrong = s.order.find((id) => id !== s.secretPlayerId && id !== m && id !== g) ?? m;
-  s = act(s, g, { kind: "guess", targetId: wrong }).state;
-  assert(s.phase === "ask" && s.left === 19, "raté");
-  s = act(s, g, { kind: "guess", targetId: s.secretPlayerId! }).state;
-  assert(s.phase === "reveal" && s.finderId === g, "trouvé");
+test("le mode « Entre nous » est retiré : un ancien réglage donne des célébrités", () => {
+  const s = asking("entrenous");
+  assert(s.config.mode === "celebrites" && s.celebrity !== null && !s.secretPlayerId, "célébrité tirée");
 });
 
 test("le rôle de Maître tourne ; partie complète jusqu'au final", () => {

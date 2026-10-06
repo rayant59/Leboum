@@ -96,7 +96,6 @@ const MODE_SETS: Record<GameId, ModeDef[]> = {
   ],
   guesswho: [
     { id: "celebrites", c: "rgb(var(--c-cyan))", nm: "Célébrités", ds: "Une personnalité ou un personnage connu : Zidane, Dark Vador, Marie Curie, Shrek…" },
-    { id: "entrenous", c: "rgb(var(--c-gold))", nm: "Entre nous", ds: "La personne mystère est l'un des joueurs du salon. Qui vous connaît le mieux ?" },
   ],
   yesno: [
     { id: "voix", c: "rgb(var(--c-orange))", nm: "À voix haute", ds: "On interroge pour de vrai. Quiconque entend un oui ou un non buzze, la table valide d'un vote éclair." },

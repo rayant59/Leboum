@@ -79,10 +79,6 @@ export function FakeArtistView({ room }: { room: UseRoom }) {
   const secs = useCountdown(game.deadline, room.serverNow);
   const shownWord = game.youAreImpostor ? game.decoyHint : game.word;
 
-  // Toile observée (la mienne par défaut, réinitialisée chaque manche).
-  const [selected, setSelected] = useState<string>(you ?? "");
-  useEffect(() => { if (game.phase === "drawing" && you) setSelected(you); }, [game.round, game.phase, you]);
-  const isMine = selected === you;
 
   // BRIEF (9a) : overlay client de 4s à l'entrée de la manche (le moteur n'a pas
   // de phase brief — le mot est fourni dès "drawing"). Identique pour l'imposteur.
@@ -262,31 +258,12 @@ export function FakeArtistView({ room }: { room: UseRoom }) {
             </div>
 
             <div className="fa-draw">
-              <div className="dv-canvasfill" style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
-                {!isMine && <button onClick={() => you && setSelected(you)} className="lb-ghost" style={{ alignSelf: "flex-start", marginBottom: 8, border: `1px solid ${LB.line}`, background: "transparent", color: LB.muted, fontSize: 13, padding: "8px 14px", borderRadius: 12, cursor: "pointer" }}>← Revenir à ma toile</button>}
-                <DrawCanvas room={room} drawable={isMine} blind={false} authorFilter={selected} turnKey={`fa-${game.round}`} fit
-                  ctaSlot={isMine ? <button onClick={() => room.endDrawing()} className="lb-gold" style={{ ...lbGoldBtn, flex: "none" }}>J'ai fini</button> : undefined} />
-                {!isMine && <span style={{ fontSize: 12, color: LB.faint, marginTop: 6 }}>Tu observes {name(selected)} en direct — lecture seule.</span>}
-              </div>
-
-              <div className="fa-others">
-                <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".16em", color: LB.faint, flex: "none" }}>Les autres toiles</span>
-                <div className="fa-others-list">
-                  {game.players.filter((p) => p.id !== you).map((p) => {
-                    const sel = selected === p.id;
-                    return (
-                      <button key={p.id} onClick={() => setSelected(p.id)} title={`Voir la toile de ${p.name}`} style={{ display: "flex", flexDirection: "column", gap: 6, padding: 0, border: "none", background: "transparent", cursor: "pointer", textAlign: "left", flex: "none" }}>
-                        <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                          <Avatar name={p.name} color={p.color} avatar={p.avatar} size={20} />
-                          <span style={{ fontFamily: DISPLAY, fontSize: 12, fontWeight: 700, color: sel ? LB.gold : LB.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
-                        </span>
-                        <span style={{ borderRadius: 12, overflow: "hidden", boxShadow: sel ? `0 0 0 2px ${LB.gold}` : `0 0 0 1px ${LB.line}` }}>
-                          <DrawCanvas room={room} drawable={false} blind={false} authorFilter={p.id} turnKey={`fa-thumb-${p.id}-${game.round}`} />
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+              {/* Chacun ne voit QUE sa toile pendant la manche : les autres
+                  sont dévoilées au moment du vote (le serveur ne les envoie pas avant). */}
+              <div className="dv-canvasfill" style={{ minWidth: 0, flex: 1, display: "flex", flexDirection: "column" }}>
+                <DrawCanvas room={room} drawable blind={false} authorFilter={you ?? ""} turnKey={`fa-${game.round}`} fit
+                  ctaSlot={<button onClick={() => room.endDrawing()} className="lb-gold" style={{ ...lbGoldBtn, flex: "none" }}>J'ai fini</button>} />
+                <span style={{ fontSize: 12, color: LB.faint, marginTop: 6 }}>Les toiles des autres restent cachées : tu les découvriras toutes au moment du vote.</span>
               </div>
             </div>
             </div>
@@ -308,15 +285,19 @@ export function FakeArtistView({ room }: { room: UseRoom }) {
 
             <div className="fa-vote-grid" style={{ padding: "8px 34px" }}>
               <div className="fa-vote-canvases">
-                {game.players.filter((p) => p.id !== you).map((p) => (
-                  <div key={p.id} style={{ position: "relative", borderRadius: 14, overflow: "hidden", boxShadow: `0 0 0 1px ${LB.line}`, background: "#EDEAF6" }}>
-                    <DrawCanvas room={room} drawable={false} blind={false} authorFilter={p.id} turnKey={`fa-vote-${p.id}-${game.round}`} />
-                    <span style={{ position: "absolute", top: 8, left: 8, display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 9px", borderRadius: 9, background: "rgb(var(--c-ink-deep) / .92)" }}>
-                      <Avatar name={p.name} color={p.color} avatar={p.avatar} size={18} />
-                      <span style={{ fontFamily: DISPLAY, fontSize: 11, fontWeight: 700 }}>{p.name}</span>
-                    </span>
-                  </div>
-                ))}
+                {/* Toutes les toiles, la tienne en premier (« Ta toile »). */}
+                {[...game.players.filter((p) => p.id === you), ...game.players.filter((p) => p.id !== you)].map((p) => {
+                  const mine = p.id === you;
+                  return (
+                    <div key={p.id} style={{ position: "relative", borderRadius: 14, overflow: "hidden", boxShadow: mine ? `0 0 0 2px ${hexA(LB.violet, 0.8)}` : `0 0 0 1px ${LB.line}`, background: "#EDEAF6" }}>
+                      <DrawCanvas room={room} drawable={false} blind={false} authorFilter={p.id} turnKey={`fa-vote-${p.id}-${game.round}`} />
+                      <span style={{ position: "absolute", top: 8, left: 8, display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 9px", borderRadius: 9, background: "rgb(var(--c-ink-deep) / .92)" }}>
+                        <Avatar name={p.name} color={p.color} avatar={p.avatar} size={18} />
+                        <span style={{ fontFamily: DISPLAY, fontSize: 11, fontWeight: 700, color: mine ? LB.violet : undefined }}>{mine ? "Ta toile" : p.name}</span>
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="fa-vote-buttons">

@@ -2,7 +2,8 @@
 import type { GamePlayer } from "../../game/types";
 import type { GameAction, GameContext } from "../../platform/types";
 import { createBombe, reduceBombe, projectBombe, bombeDeadline, bombeIsOver, bombeWordLetters, resolveBombeConfig } from "./engine";
-import { setBombeDictionary, bombeNormalize, bombeSyllableCount } from "./dictionary";
+import { setBombeDictionary, bombeNormalize, bombeSyllableCount, isFriendlySyllable } from "./dictionary";
+import { BOMBE_AFTER_EXPLOSION_BONUS_MS } from "./engine";
 import type { BombeClientAction, BombeState } from "./types";
 
 let passed = 0;
@@ -385,6 +386,46 @@ test("coop : la 1re explosion termine la partie, aucun joueur éliminé", () => 
   assert(players.every((p) => (boom.lives[p.id] ?? 0) === (s.config.lives)), "aucune vie perdue (pas d'élimination)");
   const pub = projectBombe(boom, "a");
   assert(pub.coopScore != null && pub.coopScore >= 2, "score collectif exposé à la fin");
+});
+
+test("après une explosion : MÊME syllabe + 7 s de bonus pour le suivant, puis chrono normal", () => {
+  const s0 = started(players, { lives: 3, minSeconds: 5, maxSeconds: 5 }, ctx(1000));
+  const syl = s0.syllable;
+  const boom = reduceBombe(s0, { type: "advance" }, ctx(7000)).state;
+  const next = reduceBombe(boom, { type: "advance" }, ctx(9000)).state;
+  eq(next.syllable, syl, "la syllabe ratée reste pour le joueur suivant");
+  eq(next.deadline, 9000 + 5000 + BOMBE_AFTER_EXPLOSION_BONUS_MS, "5 s + 7 s de bonus");
+  const pub = projectBombe(next, next.currentId!);
+  eq(pub.bonusMs, BOMBE_AFTER_EXPLOSION_BONUS_MS, "bonus affiché");
+  eq(pub.maxDeadline, 9000 + 5000 + BOMBE_AFTER_EXPLOSION_BONUS_MS, "la mèche tient compte du bonus");
+  // Il trouve : le tour d'après revient à la normale (nouvelle syllabe, sans bonus).
+  const after = reduceBombe(next, submit(next.currentId!, wordWith(next.syllable)), ctx(9500)).state;
+  eq(after.bonusMs, 0, "plus de bonus");
+  eq(after.deadline, 9500 + 5000, "chrono normal");
+});
+
+test("fin de partie sur explosion : on propose quand même des mots pour la dernière syllabe", () => {
+  let s = started(players.slice(0, 2), { lives: 1 }, ctx(1000));
+  const syl = s.syllable;
+  s = reduceBombe(s, { type: "advance" }, ctx(20000)).state;
+  eq(s.phase, "gameover", "partie finie");
+  const pub = projectBombe(s, "a");
+  eq(pub.exampleSyllable, syl, "syllabe jouée");
+  assert(pub.exampleWords.length > 0 && pub.exampleWords.every((w) => bombeNormalize(w).includes(syl)), "mots proposés");
+});
+
+test("lettres : chaque joueur a SA grille (un mot ne remplit que celle de son auteur)", () => {
+  const s0 = started(players, { lives: 3 }, ctx(1000));
+  const me = s0.currentId!;
+  const other = players.find((p) => p.id !== me)!.id;
+  const s1 = reduceBombe(s0, submit(me, wordWith(s0.syllable)), ctx(1500)).state;
+  assert(projectBombe(s1, me).usedLetters.length > 0, "mes lettres");
+  eq(projectBombe(s1, other).usedLetters.length, 0, "pas celles des autres");
+});
+
+test("syllabes : jamais de groupes durs à lire (hl, yh, rp, ffl…)", () => {
+  for (const bad of ["hl", "yh", "rp", "nv", "ffl", "ngr", "chr", "ty"]) assert(!isFriendlySyllable(bad), bad);
+  for (const good of ["ch", "tr", "ou", "an", "pl", "ion", "ang", "ya", "ph", "tra"]) assert(isFriendlySyllable(good), good);
 });
 
 console.log(`\n${passed} réussis, ${failed} échoués\n`);

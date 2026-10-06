@@ -525,25 +525,34 @@ async function main() {
   type FAPub = { phase: string; youAreImpostor: boolean; word: string | null; impostorId: string | null; scores: Record<string, number> };
   const pub = (c: (typeof faClients)[number]) => c.last()?.game as unknown as FAPub;
   check("phase de dessin (tout le monde dessine)", pub(fa)?.phase === "drawing");
-  const impostor = faClients.find((c) => pub(c)?.youAreImpostor);
-  const reals = faClients.filter((c) => !pub(c)?.youAreImpostor);
+  let impostor = faClients.find((c) => pub(c)?.youAreImpostor);
+  let reals = faClients.filter((c) => !pub(c)?.youAreImpostor);
   check("exactement un imposteur", !!impostor && reals.length === 2);
   check("l'imposteur ne voit pas le mot", pub(impostor!).word === null);
   check("les joueurs réels voient le mot", reals.every((c) => typeof pub(c).word === "string"));
 
-  // n'importe qui peut dessiner en faux-artiste
+  // Chacun dessine sur SA toile… sans voir celles des autres avant le vote.
   fb.send({ type: "draw_stroke", stroke: { points: [{ x: 0.3, y: 0.3 }], color: "#000", width: 4 } });
-  await sleep(50);
-  check("un non-dessinateur peut dessiner en faux-artiste", fa.strokes.length > 0);
-  check("le trait est étiqueté avec son auteur", fa.strokes.some((s) => s.from === "fb"));
-  // toiles indépendantes : deux auteurs distincts sont bien tracés
   fa.send({ type: "draw_stroke", stroke: { points: [{ x: 0.6, y: 0.6 }], color: "#f00", width: 4 } });
-  await sleep(50);
-  check("chaque toile porte son propre auteur", fc.strokes.some((s) => s.from === "fa") && fc.strokes.some((s) => s.from === "fb"));
+  await sleep(60);
+  check("l'auteur reçoit son propre trait (étiqueté)", fb.strokes.some((s) => s.from === "fb") && fa.strokes.some((s) => s.from === "fa"));
+  check("pendant le dessin, personne ne voit la toile des autres", !fa.strokes.some((s) => s.from === "fb") && !fc.strokes.some((s) => s.from === "fa" || s.from === "fb") && !fb.strokes.some((s) => s.from === "fa"));
+  // Reconnexion pendant le dessin : on ne récupère que SA toile.
+  fc.ws.close();
+  await sleep(60);
+  const fc2 = new Client("FAKE", "fc");
+  await fc2.open();
+  fc2.send({ type: "join", name: "FC" });
+  await sleep(90);
+  check("reconnexion pendant le dessin : aucune toile des autres", fc2.strokes.length === 0);
+  faClients[2] = fc2;
+  if (impostor === fc) impostor = fc2;
+  reals = reals.map((c) => (c === fc ? fc2 : c));
 
   fa.send({ type: "skip" }); // -> voting (host)
-  await sleep(90);
+  await sleep(120);
   check("passage à la phase de vote", pub(fa)?.phase === "voting");
+  check("au vote, tout le monde voit toutes les toiles", [fa, fb, fc2].every((c) => c.strokes.some((s) => s.from === "fa") && c.strokes.some((s) => s.from === "fb")));
   const impId = faClients.find((c) => pub(c)?.youAreImpostor) ? impostor!.last()!.you : "";
   reals.forEach((c) => c.send({ type: "game", action: { kind: "vote", targetId: impId } }));
   impostor!.send({ type: "game", action: { kind: "vote", targetId: reals[0].last()!.you } });

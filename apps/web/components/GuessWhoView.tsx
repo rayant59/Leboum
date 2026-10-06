@@ -71,7 +71,7 @@ export function GuessWhoView({ room }: { room: UseRoom }) {
             <>
               <div style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 24, margin: "10px 0 6px" }}>{master?.name} découvre la personne mystère…</div>
               <p style={{ color: K.muted, margin: 0 }}>
-                {g.mode === "entrenous" ? "C'est l'un d'entre vous ! Préparez vos questions." : "Une personnalité ou un personnage connu. Préparez vos questions !"}
+                Une personnalité ou un personnage connu. Préparez vos questions !
               </p>
             </>
           )}

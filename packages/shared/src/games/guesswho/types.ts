@@ -6,7 +6,7 @@ import type { PlayerId } from "../../room/types";
 
 /**
  * - `celebrites` : une personnalité ou un personnage connu, tiré au sort.
- * - `entrenous`  : la personne mystère est l'un des joueurs du salon.
+ * - `entrenous`  : (retiré) l'un des joueurs du salon — plus proposé.
  */
 export type GuessWhoMode = "celebrites" | "entrenous";
 

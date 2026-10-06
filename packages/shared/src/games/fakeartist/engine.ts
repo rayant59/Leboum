@@ -1,13 +1,14 @@
 // ---------------------------------------------------------------------------
-// Faux-artiste — pure engine. One secret impostor doesn't get the word; everyone
-// draws at once, then votes on who the impostor is. Reuses the shared word bank.
+// Faux-artiste — pure engine. One secret impostor gets a close-but-different word
+// (pairs.ts); everyone draws at once — without seeing the others' canvases until
+// the vote (enforced by the server relay) — then votes on who the impostor is.
 // Strokes are ephemeral (server-relayed), not part of this state.
 // ---------------------------------------------------------------------------
 
 import type { GamePlayer } from "../../game/types";
 import type { PlayerId } from "../../room/types";
 import type { GameAction, GameContext, GameReduceResult } from "../../platform/types";
-import { pickWordEntries } from "../draw/words";
+import { pickFakeArtistPair } from "./pairs";
 import type {
   FakeArtistClientAction,
   FakeArtistConfig,
@@ -31,12 +32,10 @@ function startRound(
   ctx: GameContext,
 ): FakeArtistState {
   const used = base.usedWords ?? [];
-  const [entry] = pickWordEntries(1, ctx.rng, undefined, used);
-  // Decoy word given to the impostor: same theme, different word ("en rapport"
-  // but not the real one) so they can bluff more convincingly.
-  const sameTheme = pickWordEntries(8, ctx.rng, [entry.theme]).filter((e) => e.word !== entry.word);
-  const anyOther = sameTheme.length ? sameTheme : pickWordEntries(8, ctx.rng).filter((e) => e.word !== entry.word);
-  const decoy = anyOther[0]?.word ?? entry.word;
+  // Paire de mots proches (« paquebot » ↔ « voilier ») : les artistes ont l'un,
+  // le faux-artiste l'autre, pour qu'il puisse bluffer.
+  const entry = pickFakeArtistPair(ctx.rng, used);
+  const decoy = entry.decoy;
   const impostor = base.players[Math.floor(ctx.rng() * base.players.length)]?.id ?? null;
   return {
     ...base,

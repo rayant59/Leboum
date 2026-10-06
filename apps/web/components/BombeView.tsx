@@ -138,7 +138,10 @@ function Bomb({ syllable, secs, frac, color, exploded }: { syllable: string; sec
 // Surligne la syllabe dans le texte tapé.
 function Highlighted({ text, syllable, tint }: { text: string; syllable: string; tint: string }) {
   const t = text || "";
-  const idx = t.toLowerCase().indexOf(syllable.toLowerCase());
+  // Comparaison sans accents (« pêche » contient « pe »), caractère par caractère
+  // pour garder les positions du mot affiché.
+  const bare = (x: string) => Array.from(x).map((c) => { const n = c.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); return n.length === 1 ? n : c.toLowerCase(); }).join("");
+  const idx = bare(t).indexOf(bare(syllable));
   if (idx < 0 || !syllable) return <span>{t}</span>;
   return (
     <>
@@ -406,7 +409,6 @@ export function BombeView({ room }: { room: UseRoom }) {
   // ══════════════════ FIN DE PARTIE ══════════════════
   if (game.phase === "gameover") {
     const winner = game.ranking[0];
-    const wLetters = game.usedLetters.length;
     return (
       <main style={shell}>
         <div className="bmb-wrap" style={{ display: "flex", ...card }}>
@@ -435,12 +437,26 @@ export function BombeView({ room }: { room: UseRoom }) {
                   <Stat n={winner?.wordsFound ?? 0} label="mots" />
                   <div style={{ width: 1, background: `linear-gradient(180deg,transparent,rgb(var(--c-text) / .16),transparent)` }} />
                   <Stat n={winner?.lives ?? 0} label="vies restantes" />
-                  <div style={{ width: 1, background: `linear-gradient(180deg,transparent,rgb(var(--c-text) / .16),transparent)` }} />
-                  <Stat n={wLetters} label="lettres" />
                 </div>
               </div>
             )}
-            <div style={{ padding: "0 clamp(16px,4vw,40px) 34px" }}>
+            <div style={{ padding: "0 clamp(16px,4vw,40px) 34px", display: "flex", flexDirection: "column", gap: 12 }}>
+              {/* Mots qu'on aurait pu jouer sur la dernière syllabe. */}
+              {game.exampleWords.length > 0 && (
+                <div className="bmb-learn-end" style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "16px 22px", borderRadius: 16, background: "rgb(var(--c-magenta) / .07)", boxShadow: "inset 0 0 0 1px rgb(var(--c-magenta) / .28)" }}>
+                  <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 150 }}>
+                    <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".18em", color: C.pink }}>Dernière syllabe : {game.exampleSyllable.toUpperCase()}</span>
+                    <span style={{ fontSize: 12, color: C.faint }}>{game.exampleVictimId ? `${nameOf(game.exampleVictimId)} aurait pu jouer :` : "On pouvait jouer :"}</span>
+                  </span>
+                  <span style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {game.exampleWords.map((w, i) => (
+                      <span key={i} style={{ fontFamily: DISPLAY, fontSize: 14, fontWeight: 700, padding: "4px 10px", borderRadius: 8, background: "rgb(var(--c-mint) / .10)", color: C.text, boxShadow: "inset 0 0 0 1px rgb(var(--c-mint) / .3)" }}>
+                        <Highlighted text={w} syllable={game.exampleSyllable} tint={C.mint} />
+                      </span>
+                    ))}
+                  </span>
+                </div>
+              )}
               <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", padding: "22px 26px", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 1px ${C.line}, inset 0 1px 0 rgb(var(--c-text) / .04)` }}>
                 <span style={{ flex: 1, minWidth: 180, display: "flex", flexDirection: "column", gap: 3 }}>
                   <span style={{ fontFamily: DISPLAY, fontSize: 17, fontWeight: 700 }}>Plus long mot de la partie</span>
@@ -507,6 +523,11 @@ export function BombeView({ room }: { room: UseRoom }) {
           {/* Bombe */}
           <div data-bmb-anim style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, animation: exploded ? "none" : "bmbTremor 1.1s ease-in-out infinite" }}>
             <Bomb syllable={game.syllable} secs={fuse.secs} frac={fuse.frac} color={railColor} exploded={exploded} />
+            {!exploded && game.bonusMs > 0 && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 11px", borderRadius: 999, fontFamily: DISPLAY, fontSize: 13, fontWeight: 800, color: C.mint, background: "rgb(var(--c-mint) / .12)", boxShadow: "inset 0 0 0 1px rgb(var(--c-mint) / .45)" }}>
+                +{Math.round(game.bonusMs / 1000)} s · même syllabe
+              </span>
+            )}
             {!exploded && !game.youAreCurrent && (
               <span style={{ fontSize: 13, color: C.muted }}>Au tour de <span style={{ color: C.gold }}>{currentName}</span></span>
             )}

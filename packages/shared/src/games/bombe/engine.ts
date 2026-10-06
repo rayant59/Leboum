@@ -25,6 +25,9 @@ export const BOMBE_SEC_MAX = 30;
 const RECENT_SYLLABLES = 12;
 /** Durée de la pause « la bombe a sauté » avant que le tour suivant démarre. */
 export const BOMBE_EXPLODE_PAUSE_MS = 1600;
+/** Bonus pour le joueur qui passe juste après une explosion : il garde la
+ *  MÊME syllabe et a 7 s de plus pour ce tour (puis le chrono redevient normal). */
+export const BOMBE_AFTER_EXPLOSION_BONUS_MS = 7000;
 /** Petit décompte avant que la partie démarre vraiment (3, 2, 1…). */
 export const BOMBE_COUNTDOWN_MS = 3000;
 
@@ -98,24 +101,36 @@ function hardcoreHandoffMs(prevRemainingMs: number): number {
   return Math.max(HARDCORE_FLOOR_MS, Math.min(HARDCORE_CAP_MS, Math.round(prevRemainingMs) + HARDCORE_STEP_MS));
 }
 
-/** Prépare un nouveau tour : syllabe fraîche + minuteur.
- *  `fuseMs` force la durée (mode Hardcore : chrono partagé) ; sinon aléatoire. */
-function armTurn(state: BombeState, currentId: PlayerId, ctx: GameContext, fuseMs?: number): BombeState {
-  const syllable = pickBombeSyllable(ctx.rng, {
-    minLetters: state.config.minLetters,
-    maxLetters: state.config.maxLetters,
-    exclude: state.recentSyllables,
-  });
+/** Prépare un nouveau tour : syllabe fraîche (ou la même, `keepSyllable`) + minuteur.
+ *  `fuseMs` force la durée (mode Hardcore : chrono partagé) ; sinon aléatoire.
+ *  `bonusMs` ajoute du temps à CE tour seulement (après une explosion). */
+function armTurn(
+  state: BombeState,
+  currentId: PlayerId,
+  ctx: GameContext,
+  fuseMs?: number,
+  opts: { keepSyllable?: boolean; bonusMs?: number } = {},
+): BombeState {
+  const keep = !!opts.keepSyllable && !!state.syllable;
+  const syllable = keep
+    ? state.syllable
+    : pickBombeSyllable(ctx.rng, {
+        minLetters: state.config.minLetters,
+        maxLetters: state.config.maxLetters,
+        exclude: state.recentSyllables,
+      });
+  const bonusMs = Math.max(0, opts.bonusMs ?? 0);
   return {
     ...state,
     phase: "playing",
     currentId,
     syllable,
     turnStartedAt: ctx.now,
-    deadline: ctx.now + (fuseMs != null ? fuseMs : randomFuse(state.config, ctx.rng)),
+    deadline: ctx.now + (fuseMs != null ? fuseMs : randomFuse(state.config, ctx.rng)) + bonusMs,
+    bonusMs,
     // NB : exampleWords/exampleSyllable/exampleVictimId NE sont PAS effacés ici —
     // ils restent affichés jusqu'à la prochaine explosion.
-    recentSyllables: [syllable, ...state.recentSyllables].slice(0, RECENT_SYLLABLES),
+    recentSyllables: keep ? state.recentSyllables : [syllable, ...state.recentSyllables].slice(0, RECENT_SYLLABLES),
   };
 }
 
@@ -284,14 +299,16 @@ export function reduceBombe(
         };
         // Hardcore : après une explosion, le chrono partagé repart à 15 s.
         const resumeFuse = state.config.mode === "hardcore" ? HARDCORE_START_MS : undefined;
+        // Le suivant garde la MÊME syllabe (personne ne l'a trouvée) et a 7 s de bonus.
+        const after = { keepSyllable: true, bonusMs: BOMBE_AFTER_EXPLOSION_BONUS_MS };
         const target = state.pendingNext;
         if (target == null || (state.lives[target] ?? 0) <= 0) {
           // le suivant prévu n'est plus jouable → on recalcule
           const alt = nextPlayer(resumed, state.currentId ?? target ?? "");
           if (alt == null) return ok(checkOver(resumed));
-          return ok(armTurn(resumed, alt, ctx, resumeFuse));
+          return ok(armTurn(resumed, alt, ctx, resumeFuse, after));
         }
-        return ok(armTurn(resumed, target, ctx, resumeFuse));
+        return ok(armTurn(resumed, target, ctx, resumeFuse, after));
       }
 
       // Premier tic : l'échéance est atteinte → EXPLOSION sur le joueur courant.
@@ -424,7 +441,8 @@ export function projectBombe(state: BombeState, viewerId: PlayerId): BombePublic
     minMs: state.config.minMs,
     maxMs: state.config.maxMs,
     deadline: state.deadline,
-    maxDeadline: state.turnStartedAt + state.config.maxMs,
+    maxDeadline: state.turnStartedAt + state.config.maxMs + (state.bonusMs ?? 0),
+    bonusMs: state.phase === "playing" && !state.explodePause ? state.bonusMs ?? 0 : 0,
     lives: state.lives,
     maxLives: state.config.lives,
     eliminatedIds: state.eliminated,

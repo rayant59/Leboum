@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type MouseEvent as ReactMouseEvent } from "react";
 import type { MimicPublic } from "@subtitles-party/shared";
-import { mimicCategoryLabel, envelopeSimilarity } from "@subtitles-party/shared";
+import { mimicCategoryLabel, extractSoundFeatures, soundSimilarity, type SoundFeatures } from "@subtitles-party/shared";
 import type { UseRoom } from "@/lib/useRoom";
 import { Avatar } from "@/components/Avatar";
 import { SoundToggle, playSound } from "@/lib/sound";
@@ -17,7 +17,7 @@ import { useCountdown } from "@/lib/countdown";
 // On décode VRAIMENT le son (Web Audio) pour : (1) dessiner la vraie forme
 // d'onde et caler la tête de lecture sur le temps réel de l'audio, (2) extraire
 // une enveloppe d'énergie servant à mesurer la ressemblance au son d'origine.
-export interface DecodedAudio { peaks: number[]; envelope: number[]; duration: number }
+export interface DecodedAudio { peaks: number[]; envelope: number[]; duration: number; features: SoundFeatures }
 
 let sharedAC: AudioContext | null = null;
 function getAC(): AudioContext | null {
@@ -88,6 +88,7 @@ async function decodeAudio(src: string, peakCount = 96): Promise<DecodedAudio | 
       peaks: computePeaks(mono, peakCount),
       envelope: computeEnvelope(mono, 64),
       duration: audioBuf.duration,
+      features: extractSoundFeatures(mono, audioBuf.sampleRate),
     };
     audioCache.set(src, decoded);
     return decoded;
@@ -111,24 +112,8 @@ function useDecodedAudio(src: string | null | undefined): DecodedAudio | null {
   return dec;
 }
 
-/** Rogne le silence de début/fin d'une enveloppe (sous un seuil relatif au max).
- *  Indispensable : avec le délai de préparation, la prise commence par ~1 s de
- *  silence — sans rognage, le rythme serait décalé et la ressemblance faussée. */
-function trimEnvelope(env: number[], thr = 0.08): number[] {
-  let max = 0;
-  for (const v of env) max = Math.max(max, v);
-  if (max <= 1e-6) return env;
-  const t = max * thr;
-  let lo = 0;
-  while (lo < env.length && env[lo] < t) lo++;
-  let hi = env.length - 1;
-  while (hi > lo && env[hi] < t) hi--;
-  const cut = env.slice(lo, hi + 1);
-  return cut.length >= 2 ? cut : env;
-}
-
-/** Calcule la ressemblance (0–100) d'une prise (blob) au son d'origine (src),
- *  sur le rythme + l'énergie, après rognage du silence de part et d'autre.
+/** Calcule la ressemblance (0–100, au pour-cent près) d'une prise (blob) au son
+ *  d'origine (src) : rythme, timbre, durée et densité, silences de bord rognés.
  *  0 si l'un des deux est indécodable. */
 async function computeCloseness(takeBlob: Blob, originalSrc: string | null | undefined): Promise<number> {
   if (!originalSrc) return 0;
@@ -137,7 +122,8 @@ async function computeCloseness(takeBlob: Blob, originalSrc: string | null | und
     const [orig, take] = await Promise.all([decodeAudio(originalSrc), decodeAudio(takeUrl)]);
     URL.revokeObjectURL(takeUrl);
     if (!orig || !take) return 0;
-    return envelopeSimilarity(trimEnvelope(take.envelope), trimEnvelope(orig.envelope));
+    // Rythme + timbre + durée + densité (voir soundSimilarity) : % précis.
+    return soundSimilarity(take.features, orig.features);
   } catch {
     return 0;
   }

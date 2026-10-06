@@ -24,7 +24,9 @@ export const GUESSWHO_MAX_QUESTIONS = 20;
 export const GUESSWHO_TEXT_MAX = 100;
 
 export function resolveGuessWhoConfig(s: GuessWhoSettings | undefined): GuessWhoConfig {
-  const mode: GuessWhoMode = s?.mode === "entrenous" ? "entrenous" : "celebrites";
+  // Le mode « Entre nous » a été retiré : toujours des célébrités (un ancien
+  // réglage « entrenous » retombe ici aussi).
+  const mode: GuessWhoMode = "celebrites";
   return {
     totalRounds: clampInt(s?.totalRounds, 1, 10, 4),
     seconds: clampInt(s?.seconds, 45, 300, 120),

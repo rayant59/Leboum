@@ -3,6 +3,7 @@ import type { GamePlayer } from "../../game/types";
 import type { GameAction, GameContext } from "../../platform/types";
 import { createFakeArtist, projectFakeArtist, reduceFakeArtist } from "./engine";
 import type { FakeArtistClientAction, FakeArtistState } from "./types";
+import { FAKE_ARTIST_PAIRS, pickFakeArtistPair } from "./pairs";
 
 let passed = 0;
 let failed = 0;
@@ -112,6 +113,26 @@ test("la partie se termine par un scoreboard", () => {
   }
   eq(s.phase, "scoreboard", "arrive au scoreboard");
   eq(s.deadline, null, "plus de deadline");
+});
+
+test("le faux-artiste reçoit un mot PROCHE (même paire), jamais le même", () => {
+  for (let seed = 1; seed <= 200; seed++) {
+    const r = rngFrom(seed);
+    const { word, decoy, theme } = pickFakeArtistPair(r);
+    assert(word !== decoy, "mots différents");
+    const pair = FAKE_ARTIST_PAIRS.find((p) => (p.a === word && p.b === decoy) || (p.b === word && p.a === decoy));
+    assert(!!pair && pair.theme === theme, `${word} / ${decoy} viennent d'une même paire`);
+  }
+});
+
+test("pas deux fois le même mot dans une partie", () => {
+  const r = rngFrom(7);
+  const used: string[] = [];
+  for (let i = 0; i < 40; i++) {
+    const { word, decoy } = pickFakeArtistPair(r, used);
+    assert(!used.includes(word) && !used.includes(decoy), `mot déjà joué : ${word}`);
+    used.push(word, decoy);
+  }
 });
 
 console.log(`\n${passed} réussis, ${failed} échoués\n`);

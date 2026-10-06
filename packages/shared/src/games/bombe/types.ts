@@ -67,6 +67,8 @@ export interface BombeState {
   longestWord?: string | null;
   longestWordBy?: PlayerId | null;
   justExploded: PlayerId | null;           // victime de la dernière explosion (animation)
+  /** Temps bonus du tour en cours (7 s juste après une explosion, sinon 0). */
+  bonusMs?: number;
   explodePause: boolean;                    // true pendant la pause « la bombe a sauté »
   pendingNext: PlayerId | null;             // joueur à qui armer le tour après la pause
   exampleWords: string[];                   // mots à apprendre (dernière explosion) — persistants
@@ -101,7 +103,8 @@ export interface BombePublic {
   minMs: number;
   maxMs: number;
   deadline: number | null;          // instant réel d'explosion (horloge serveur)
-  maxDeadline: number;              // turnStartedAt + maxMs (borne haute)
+  maxDeadline: number;              // turnStartedAt + maxMs (+ bonus) (borne haute)
+  bonusMs: number;                  // bonus de ce tour (7 s après une explosion), sinon 0
   lives: Record<PlayerId, number>;
   maxLives: number;
   eliminatedIds: PlayerId[];
