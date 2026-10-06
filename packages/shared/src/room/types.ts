@@ -22,6 +22,8 @@ export interface Player {
   isReady: boolean;
   joinedAt: number;
   score: number;
+  /** Faux joueur ajouté depuis le panneau Admin (tests en local). */
+  isBot?: boolean;
 }
 
 /**
@@ -83,7 +85,7 @@ export type RoomErrorCode =
 // client). The engine only ever sees these.
 
 export type RoomAction =
-  | { type: "join"; playerId: PlayerId; name: string; now: number }
+  | { type: "join"; playerId: PlayerId; name: string; now: number; bot?: boolean }
   | { type: "leave"; playerId: PlayerId; now: number }
   | { type: "disconnect"; playerId: PlayerId; now: number }
   | { type: "reconnect"; playerId: PlayerId; now: number }

@@ -62,9 +62,11 @@ function connectedIds(state: RoomState): string[] {
   return state.playerOrder.filter((id) => state.players[id]?.isConnected);
 }
 
-/** First connected player in join order — used for host succession. */
+/** First connected player in join order — used for host succession. Les
+ *  bots de test ne récupèrent la couronne que s'il n'y a plus aucun humain. */
 function firstConnected(state: RoomState): string | null {
-  return connectedIds(state)[0] ?? null;
+  const ids = connectedIds(state);
+  return ids.find((id) => !state.players[id]?.isBot) ?? ids[0] ?? null;
 }
 
 function ok(state: RoomState): ReduceResult {
@@ -112,6 +114,7 @@ export function reduce(state: RoomState, action: RoomAction): ReduceResult {
         isReady: false,
         joinedAt: action.now,
         score: 0,
+        ...(action.bot ? { isBot: true } : {}),
       };
 
       return ok({

@@ -98,7 +98,14 @@ import {
   parseCustomRecoItems,
   setCustomDoublageVideos,
   parseDoublageScenes,
+  effectiveMaxPlayers,
+  botDecide,
+  newBotMemory,
+  BOT_LEVELS,
+  BOT_NAMES,
+  type BotMemory,
 } from "@subtitles-party/shared";
+import { botMedia } from "./botMedia";
 
 const PORT = Number(process.env.PORT ?? 1999);
 
@@ -416,6 +423,12 @@ interface Room {
   soiree: SoireeState | null;
   /** Partie (`gameRun`) lancée par la soirée : seule celle-ci compte au score. */
   soireeRun: number;
+  /** Bots de test (panneau Admin, en local) : id → mémoire. */
+  bots: Map<string, BotMemory>;
+  botTimer: NodeJS.Timeout | null;
+  botsPaused: boolean;
+  /** Niveau des bots : probabilité de bien jouer (0..1). */
+  botSkill: number;
 }
 
 /** Registre des jeux hébergés génériquement : source unique dans
@@ -472,6 +485,10 @@ function getRoom(code: string, allowCreate = false): Room | null {
       gameRun: 0,
       soiree: null,
       soireeRun: -1,
+      bots: new Map(),
+      botTimer: null,
+      botsPaused: false,
+      botSkill: BOT_LEVELS.normal,
     };
     rooms.set(code, room);
     stats.roomCreated();
@@ -692,7 +709,7 @@ function maybeAdvanceDrawForPresence(room: Room) {
  *  juste (« rugbi » pour « rugby ») — elle donnerait alors le mot aux autres.
  *  Dans ce cas, seul l'auteur voit son texte + « tu chauffes » ; les autres
  *  voient juste que ce joueur chauffe. */
-function relayWrongGuess(room: Room, playerId: string, name: string, text: string, word: string | null | undefined, ws: WebSocket) {
+function relayWrongGuess(room: Room, playerId: string, name: string, text: string, word: string | null | undefined, ws?: WebSocket) {
   if (!word || !isCloseGuess(text, word)) {
     relay(room, { type: "chat", from: playerId, name, text, kind: "guess" });
     return;
@@ -710,7 +727,7 @@ function relayWrongGuess(room: Room, playerId: string, name: string, text: strin
 
 /** A guess: the engine scores correct ones; the server relays chat. Correct →
  *  "a trouvé !" to all (never the word); wrong → the guess text as chat. */
-function handleDrawGuess(room: Room, playerId: string, text: string, ws: WebSocket) {
+function handleDrawGuess(room: Room, playerId: string, text: string, ws?: WebSocket) {
   if (!room.mod) return;
   const s = room.mod.state as DrawState;
   const wasGuessed = s.guessedAt[playerId] != null;
@@ -728,7 +745,7 @@ function handleDrawGuess(room: Room, playerId: string, text: string, ws: WebSock
   if (!wasGuessed && after.guessedAt[playerId] != null) maybeAdvanceDrawForPresence(room);
 }
 
-function handleRelayGuess(room: Room, playerId: string, text: string, ws: WebSocket) {
+function handleRelayGuess(room: Room, playerId: string, text: string, ws?: WebSocket) {
   if (!room.mod) return;
   const s = room.mod.state as RelayState;
   const wasGuessed = s.guessedAt[playerId] != null;
@@ -873,8 +890,8 @@ function broadcast(room: Room) {
   }
 }
 
-function sendError(sock: WebSocket, code: RoomErrorCode | SubtitlesErrorCode | string, message: string) {
-  if (sock.readyState !== WebSocket.OPEN) return;
+function sendError(sock: WebSocket | null | undefined, code: RoomErrorCode | SubtitlesErrorCode | string, message: string) {
+  if (!sock || sock.readyState !== WebSocket.OPEN) return;
   const msg: ServerMessage = { type: "error", code, message };
   sock.send(JSON.stringify(msg));
 }
@@ -1091,6 +1108,166 @@ async function handleTheme(req: IncomingMessage, res: import("node:http").Server
   }
 }
 
+// --- Bots de test (panneau Admin de l'éditeur, en local uniquement) -----------
+
+const BOT_TICK_MS = 250;
+const MAX_BOTS_PER_CALL = 11;
+
+function botView(room: Room, id: string, now: number) {
+  const { gameId, game } = projectAny(room, id);
+  return {
+    botId: id,
+    room: room.state,
+    gameId,
+    pub: game,
+    internal: room.mod ? room.mod.state : room.game,
+    now,
+    rng: Math.random,
+    skill: room.botSkill,
+    media: botMedia,
+  };
+}
+
+function botTick(room: Room) {
+  if (room.botsPaused || room.bots.size === 0) return;
+  for (const [id, mem] of room.bots) {
+    try {
+      // La vue est recalculée pour chaque bot : le précédent a pu faire avancer le jeu.
+      const out = botDecide(botView(room, id, Date.now()), mem);
+      for (const m of out) handleClientMessage(room, id, m, null);
+    } catch (err) {
+      console.error(`[bots ${room.state.code}] ${id} :`, (err as Error)?.message ?? err);
+    }
+  }
+}
+
+function syncBotTimer(room: Room) {
+  if (room.bots.size > 0 && !room.botTimer) {
+    room.botTimer = setInterval(() => botTick(room), BOT_TICK_MS);
+    room.botTimer.unref?.();
+  } else if (room.bots.size === 0 && room.botTimer) {
+    clearInterval(room.botTimer);
+    room.botTimer = null;
+  }
+}
+
+/** Ajoute `count` bots au salon (dans la limite de places). */
+function addBots(room: Room, count: number): { added: string[]; error?: string } {
+  const added: string[] = [];
+  const n = Math.max(1, Math.min(MAX_BOTS_PER_CALL, Math.floor(count) || 1));
+  for (let i = 0; i < n; i++) {
+    const now = Date.now();
+    if (connectedPlayers(room.state).length >= effectiveMaxPlayers(room.state, now)) {
+      return { added, error: `Salon complet (${effectiveMaxPlayers(room.state, now)} joueurs max).` };
+    }
+    const taken = new Set(Object.values(room.state.players).map((p) => p.name));
+    // Le prénom d'abord : il reste lisible quand la place manque (« Momo… »).
+    const base = BOT_NAMES.find((b) => !taken.has(`${b} 🤖`));
+    const name = base ? `${base} 🤖` : `Bot ${room.bots.size + 1} 🤖`;
+    let id = `bot-${Math.random().toString(36).slice(2, 8)}`;
+    while (room.state.players[id]) id = `bot-${Math.random().toString(36).slice(2, 8)}`;
+    room.bots.set(id, newBotMemory());
+    applyRoom(room, { type: "join", playerId: id, name, now, bot: true });
+    if (!room.state.players[id]) {
+      room.bots.delete(id);
+      break;
+    }
+    // Partie en cours : le bot entre directement dans la partie (comme un humain).
+    if (room.mod && room.state.phase !== "lobby") {
+      applyMod(room, { type: "presence", connectedIds: connectedPlayers(room.state).map((p) => p.id), players: gameRoster(room) });
+    }
+    added.push(id);
+  }
+  syncBotTimer(room);
+  return { added };
+}
+
+function removeBot(room: Room, id: string, quiet = false) {
+  if (!room.bots.delete(id)) return;
+  room.state = reduce(room.state, { type: "leave", playerId: id, now: Date.now() }).state;
+  if (!quiet) {
+    if (room.mod) {
+      applyMod(room, { type: "presence", connectedIds: connectedPlayers(room.state).map((p) => p.id), players: gameRoster(room) });
+    }
+    maybeAdvanceForPresence(room);
+    broadcast(room);
+  }
+  syncBotTimer(room);
+}
+
+function removeAllBots(room: Room, quiet = false) {
+  for (const id of [...room.bots.keys()]) removeBot(room, id, true);
+  if (!quiet) {
+    if (room.mod) {
+      applyMod(room, { type: "presence", connectedIds: connectedPlayers(room.state).map((p) => p.id), players: gameRoster(room) });
+    }
+    maybeAdvanceForPresence(room);
+    broadcast(room);
+  }
+  syncBotTimer(room);
+}
+
+function adminRoomInfo(room: Room) {
+  return {
+    code: room.state.code,
+    phase: room.state.phase,
+    gameId: room.state.gameId,
+    createdAt: room.state.createdAt,
+    hostId: room.state.hostId,
+    players: room.state.playerOrder
+      .map((id) => room.state.players[id])
+      .filter(Boolean)
+      .map((p) => ({ id: p.id, name: p.name, isBot: !!p.isBot, connected: p.isConnected, isHost: p.isHost, ready: p.isReady })),
+    maxPlayers: effectiveMaxPlayers(room.state, Date.now()),
+    botsPaused: room.botsPaused,
+    botLevel: (Object.entries(BOT_LEVELS).find(([, v]) => v === room.botSkill)?.[0] ?? "normal"),
+  };
+}
+
+/** Panneau Admin : liste des salons et gestion des bots. Local uniquement. */
+async function handleAdmin(req: IncomingMessage, res: import("node:http").ServerResponse, path: string) {
+  const send = (status: number, body: unknown) => res.writeHead(status, { "Content-Type": "application/json", "Cache-Control": "no-store" }).end(JSON.stringify(body));
+  if (!designAllowed(req.socket.remoteAddress, req.headers)) {
+    return send(403, { error: "Le panneau Admin ne marche qu'en local, sur ton PC (npm run dev)." });
+  }
+  if (path === "/admin/rooms" && req.method === "GET") {
+    return send(200, { rooms: [...rooms.values()].sort((a, b) => b.state.createdAt - a.state.createdAt).map(adminRoomInfo) });
+  }
+  if (path !== "/admin/bots" || req.method !== "POST") return send(404, { error: "Inconnu." });
+  try {
+    const body = JSON.parse(await readBody(req)) as { room?: string; op?: string; count?: number; id?: string; paused?: boolean; level?: string };
+    const room = rooms.get(String(body.room ?? "").toUpperCase());
+    if (!room) return send(404, { error: "Salon introuvable (ouvre d'abord un salon dans le site)." });
+    switch (body.op) {
+      case "add": {
+        const r = addBots(room, Number(body.count ?? 1));
+        if (!r.added.length) return send(409, { error: r.error ?? "Impossible d'ajouter un bot.", room: adminRoomInfo(room) });
+        return send(200, { ok: true, added: r.added, warning: r.error ?? null, room: adminRoomInfo(room) });
+      }
+      case "remove":
+        removeBot(room, String(body.id ?? ""));
+        break;
+      case "clear":
+        removeAllBots(room);
+        break;
+      case "pause":
+        room.botsPaused = !!body.paused;
+        break;
+      case "level": {
+        const lvl = BOT_LEVELS[body.level as keyof typeof BOT_LEVELS];
+        if (lvl == null) return send(400, { error: "Niveau inconnu." });
+        room.botSkill = lvl;
+        break;
+      }
+      default:
+        return send(400, { error: "Action inconnue." });
+    }
+    return send(200, { ok: true, room: adminRoomInfo(room) });
+  } catch {
+    return send(400, { error: "Requête invalide." });
+  }
+}
+
 // Serveur HTTP : santé + statistiques ; la même porte accueille le WebSocket.
 const httpServer = createServer((req, res) => {
   const url = new URL(req.url ?? "/", "http://x");
@@ -1123,6 +1300,14 @@ const httpServer = createServer((req, res) => {
     void handleTheme(req, res, url.pathname === "/theme/login");
     return;
   }
+  if (url.pathname === "/admin/rooms" || url.pathname === "/admin/bots") {
+    if (req.method === "OPTIONS") {
+      res.writeHead(204, { "Access-Control-Allow-Methods": "GET, POST", "Access-Control-Allow-Headers": "Content-Type", "Access-Control-Max-Age": "86400" }).end();
+      return;
+    }
+    void handleAdmin(req, res, url.pathname);
+    return;
+  }
   if (url.pathname === "/stats") {
     const token = process.env.STATS_TOKEN;
     if (!token || url.searchParams.get("token") !== token) {
@@ -1143,6 +1328,260 @@ process.on("SIGTERM", flushAndExit);
 process.on("uncaughtException", (err) => console.error("[serveur] erreur non gérée :", err));
 process.on("unhandledRejection", (err) => console.error("[serveur] promesse rejetée :", err));
 process.on("SIGINT", flushAndExit);
+
+/** Traite un message d'un joueur (navigateur, ou bot de test : `ws` null). */
+function handleClientMessage(room: Room, playerId: string, msg: ClientMessage, ws: WebSocket | null) {
+  const sender = ws ?? undefined;
+  const t = Date.now();
+  try {
+  switch (msg.type) {
+    case "join": {
+      applyRoom(room, { type: "join", playerId, name: msg.name, now: t }, sender);
+      stats.playerSeen(playerId);
+      // A game is already running → fold the newcomer into its roster so they
+      // can play immediately (no more "ghost player" whose guesses don't count).
+      if (room.mod && room.state.phase !== "lobby") {
+        applyMod(room, { type: "presence", connectedIds: connectedPlayers(room.state).map((p) => p.id), players: gameRoster(room) });
+      }
+      return;
+    }
+    case "redeem_pass":
+      if (ws) void redeemPass(room, playerId, msg.sessionId, ws);
+      return;
+    case "leave":
+      return applyRoom(room, { type: "leave", playerId, now: t }, sender);
+    case "set_ready":
+      return applyRoom(room, { type: "set_ready", playerId, ready: msg.ready, now: t }, sender);
+    case "set_name":
+      return applyRoom(room, { type: "set_name", playerId, name: msg.name, now: t }, sender);
+
+    case "set_avatar": {
+      // Cap the payload (~150 KB of base64) to protect the room broadcast.
+      const av = typeof msg.avatar === "string" && msg.avatar.startsWith("data:image/") && msg.avatar.length <= 150_000 ? msg.avatar : null;
+      return applyRoom(room, { type: "set_avatar", playerId, avatar: av, now: t }, sender);
+    }
+    case "set_settings": {
+      // Host only, and only before the game starts.
+      if (playerId !== room.state.hostId || room.state.phase !== "lobby") return;
+      room.settings = sanitizeSettings(msg.settings);
+      return broadcast(room);
+    }
+    case "set_pending_game": {
+      if (playerId !== room.state.hostId || room.state.phase !== "lobby") return;
+      room.pendingGame = typeof msg.gameId === "string" ? msg.gameId : null;
+      room.pendingSoiree = Array.isArray(msg.soiree) ? msg.soiree.filter((g): g is string => typeof g === "string" && !!GAME_REGISTRY[g]).slice(0, 12) : [];
+      return broadcast(room);
+    }
+    case "start_game": {
+      // Limite propre à un jeu (Mimic : 8 voix max), même avec le Pass Soirée.
+      const gameMax = GAME_REGISTRY[msg.gameId]?.meta.maxPlayers;
+      if (gameMax && connectedPlayers(room.state).length > gameMax) {
+        return sendError(sender, "too_many_players", `Ce jeu se joue à ${gameMax} joueurs maximum.`);
+      }
+      room.pendingSettings = msg.settings ?? null;
+      return applyRoom(room, { type: "start_game", playerId, gameId: msg.gameId, now: t }, sender);
+    }
+
+    case "game": {
+      // Message de jeu : toujours un objet avec un `kind` texte, sinon ignoré.
+      const raw = (msg as { action?: unknown }).action;
+      if (!raw || typeof raw !== "object" || Array.isArray(raw) || typeof (raw as { kind?: unknown }).kind !== "string") return;
+      if (room.mod) {
+        const action = msg.action as DrawClientAction;
+        if (room.mod.module.id === "draw" && action.kind === "guess") {
+          handleDrawGuess(room, playerId, action.text, sender);
+        } else if (room.mod.module.id === "relay" && action.kind === "guess") {
+          handleRelayGuess(room, playerId, action.text, sender);
+        } else {
+          applyMod(room, { type: "client", playerId, msg: action }, sender);
+        }
+        return;
+      }
+      if (!room.game) return;
+      const sub = msg.action as GameClientAction;
+      if (sub.kind === "submit") {
+        applyGame(room, { type: "submit", playerId, lines: sub.lines, now: t }, sender);
+        maybeAdvanceForPresence(room);
+        return;
+      }
+      if (sub.kind === "vote") {
+        // Map the opaque token back to the real author, server-side only.
+        const authorId = room.tokens?.byToken.get(sub.token);
+        if (!authorId) return;
+        applyGame(room, { type: "vote", playerId, authorId, now: t }, sender);
+        maybeAdvanceForPresence(room);
+        return;
+      }
+      return;
+    }
+    case "skip": {
+      if (playerId !== room.state.hostId || (!room.game && !room.mod)) return;
+      return advanceGame(room, t);
+    }
+
+    case "debug_fill": {
+      // Host-only test helper: auto-write a caption for every player who
+      // hasn't submitted yet, so a solo host can move a test game forward.
+      if (playerId !== room.state.hostId || !room.game || room.game.phase !== "writing") return;
+      const slots = clipSlots(currentClip(room.game));
+      for (const p of room.game.players) {
+        if (!Array.isArray(room.game.submissions[p.id])) {
+          const lines = slots.map((_, i) => `${p.name} — réplique ${i + 1}`);
+          applyGame(room, { type: "submit", playerId: p.id, lines, now: Date.now() });
+        }
+      }
+      return;
+    }
+
+    case "return_lobby": {
+      // Host-only: end the current game and send everyone back to the lobby.
+      // En soirée, le résultat d'un jeu terminé est déjà compté (syncSoiree).
+      if (playerId !== room.state.hostId) return;
+      syncSoiree(room);
+      stopGameToLobby(room);
+      return broadcast(room);
+    }
+
+    case "soiree_start": {
+      // Hôte, depuis le salon : lance une soirée (plusieurs jeux enchaînés).
+      if (playerId !== room.state.hostId || room.state.phase !== "lobby") return;
+      const items = sanitizeSoireeItems(msg.items);
+      if (items.length === 0) return sendError(sender, "soiree_empty", "Ajoute au moins un jeu à ta soirée.");
+      room.soiree = withPlayers(createSoiree(items, t), gameRoster(room));
+      return launchSoireeItem(room, sender);
+    }
+
+    case "soiree_next": {
+      // Hôte : jeu suivant (depuis l'écran de fin d'un jeu ou depuis le salon).
+      if (playerId !== room.state.hostId || !room.soiree || room.soiree.finished) return;
+      syncSoiree(room);
+      const s = room.soiree;
+      // Un jeu abandonné en cours de route (non terminé) est rejoué depuis le salon,
+      // mais sauté si l'hôte demande la suite pendant la partie.
+      if (room.state.phase === "in_game" || isRecorded(s, s.current)) room.soiree = nextGame(s);
+      return launchSoireeItem(room, sender, true);
+    }
+
+    case "soiree_rematch": {
+      // Hôte : revanche — même programme, scores remis à zéro.
+      if (playerId !== room.state.hostId || !room.soiree || room.state.phase !== "lobby") return;
+      room.soiree = withPlayers(createSoiree(room.soiree.items, t), gameRoster(room));
+      return launchSoireeItem(room, sender, true);
+    }
+
+    case "soiree_vote_rematch": {
+      // N'importe quel joueur : « je veux la revanche ! » (l'hôte voit le compte et lance).
+      if (!room.soiree?.finished || room.state.phase !== "lobby") return;
+      room.soiree = voteRematch(room.soiree, playerId, msg.want !== false);
+      return broadcast(room);
+    }
+
+    case "soiree_end": {
+      // Hôte : termine / abandonne la soirée.
+      if (playerId !== room.state.hostId) return;
+      room.soiree = null;
+      room.soireeRun = -1;
+      if (room.state.phase !== "lobby") stopGameToLobby(room);
+      return broadcast(room);
+    }
+
+    case "play_again": {
+      // Host-only: immediately start a fresh game with the players currently
+      // connected and the current settings — no trip back to the lobby.
+      if (playerId !== room.state.hostId || room.state.phase !== "in_game") return;
+      // En soirée, « Rejouer » est une revanche du jeu courant : son nouveau
+      // résultat remplacera l'ancien (jamais de double comptage).
+      const soireeGame = room.soiree && !room.soiree.finished && room.gameRun === room.soireeRun;
+      startGame(room);
+      if (soireeGame) room.soireeRun = room.gameRun;
+      return broadcast(room);
+    }
+
+    case "react": {
+      // Ephemeral live reaction — broadcast to everyone, never stored in state.
+      if ((!room.game && !room.mod) || !REACTION_EMOJIS.includes(msg.emoji)) return;
+      const out: ServerMessage = { type: "reaction", emoji: msg.emoji, from: playerId };
+      const data = JSON.stringify(out);
+      for (const sock of room.sockets.values()) {
+        if (sock.readyState === WebSocket.OPEN) sock.send(data);
+      }
+      return;
+    }
+
+    case "speaking": {
+      // Ephemeral "who is talking" indicator (doublage) — relay to everyone.
+      if (!room.mod) return;
+      relay(room, { type: "speaking", from: playerId, speaking: !!msg.speaking });
+      return;
+    }
+
+    case "chat": {
+      // Ephemeral discussion message (distinct from guesses), relayed to all.
+      if (!room.game && !room.mod) return;
+      const text = msg.text.trim().slice(0, 140);
+      if (!text) return;
+      const name = room.state.players[playerId]?.name ?? "?";
+      relay(room, { type: "chat", from: playerId, name, text, kind: "talk" });
+      return;
+    }
+
+    case "voice_take": {
+      // Mimic: a player's recorded take. Buffered (for playback + reconnection)
+      // and relayed to everyone. Heavy audio never enters the game state.
+      if (!room.mod || room.mod.module.id !== "mimic") return;
+      const audio = typeof msg.audio === "string" ? msg.audio : "";
+      if (!audio || audio.length > MAX_TAKE_BYTES) return;
+      const round = Number.isFinite(msg.round) ? Math.max(0, Math.floor(msg.round)) : 0;
+      room.mimicTakes.set(`${round}:${playerId}`, audio);
+      relay(room, { type: "voice_take", round, from: playerId, audio });
+      return;
+    }
+
+    case "bombe_typing": {
+      // Bombe: live preview of the active player's typing. Only relayed when it
+      // comes from the current player; the text is a preview, never validated.
+      if (!room.mod || room.mod.module.id !== "bombe") return;
+      const st = room.mod.state as { currentId?: string | null };
+      if (playerId !== st.currentId) return;
+      const text = typeof msg.text === "string" ? msg.text.slice(0, 48) : "";
+      relay(room, { type: "bombe_typing", from: playerId, text });
+      return;
+    }
+
+    case "draw_stroke": {
+      if (!canDrawNow(room, playerId)) return;
+      room.strokes.push({ kind: "stroke", stroke: msg.stroke, from: playerId });
+      if (room.strokes.length > 6000) room.strokes.shift();
+      relayDraw(room, playerId, { type: "stroke", stroke: msg.stroke, from: playerId });
+      return;
+    }
+
+    case "draw_fill": {
+      if (!canDrawNow(room, playerId)) return;
+      room.strokes.push({ kind: "fill", x: msg.x, y: msg.y, color: msg.color, from: playerId });
+      if (room.strokes.length > 6000) room.strokes.shift();
+      relayDraw(room, playerId, { type: "fill", x: msg.x, y: msg.y, color: msg.color, from: playerId });
+      return;
+    }
+
+    case "draw_clear": {
+      if (!canDrawNow(room, playerId)) return;
+      // Impostor mode = one canvas per player → only clear the author's canvas.
+      if (room.mod && room.mod.module.id === "fakeartist") {
+        room.strokes = (room.strokes as Array<{ from?: string }>).filter((s) => s.from !== playerId);
+      } else {
+        room.strokes = [];
+      }
+      relayDraw(room, playerId, { type: "draw_clear", from: playerId });
+      return;
+    }
+  }
+  } catch (err) {
+    // Un message mal formé (ou un bug d'un jeu) ne doit JAMAIS faire tomber
+    // le serveur entier : on l'ignore et on le journalise.
+    console.error(`[room ${room.state.code}] message ignoré (${(msg as { type?: string }).type}) :`, (err as Error)?.message ?? err);
+  }
+}
 
 wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
   const params = new URLSearchParams((req.url ?? "").split("?")[1] ?? "");
@@ -1203,255 +1642,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
     } catch {
       return;
     }
-    const t = Date.now();
-    try {
-    switch (msg.type) {
-      case "join": {
-        applyRoom(room, { type: "join", playerId, name: msg.name, now: t }, ws);
-        stats.playerSeen(playerId);
-        // A game is already running → fold the newcomer into its roster so they
-        // can play immediately (no more "ghost player" whose guesses don't count).
-        if (room.mod && room.state.phase !== "lobby") {
-          applyMod(room, { type: "presence", connectedIds: connectedPlayers(room.state).map((p) => p.id), players: gameRoster(room) });
-        }
-        return;
-      }
-      case "redeem_pass":
-        void redeemPass(room, playerId, msg.sessionId, ws);
-        return;
-      case "leave":
-        return applyRoom(room, { type: "leave", playerId, now: t }, ws);
-      case "set_ready":
-        return applyRoom(room, { type: "set_ready", playerId, ready: msg.ready, now: t }, ws);
-      case "set_name":
-        return applyRoom(room, { type: "set_name", playerId, name: msg.name, now: t }, ws);
-
-      case "set_avatar": {
-        // Cap the payload (~150 KB of base64) to protect the room broadcast.
-        const av = typeof msg.avatar === "string" && msg.avatar.startsWith("data:image/") && msg.avatar.length <= 150_000 ? msg.avatar : null;
-        return applyRoom(room, { type: "set_avatar", playerId, avatar: av, now: t }, ws);
-      }
-      case "set_settings": {
-        // Host only, and only before the game starts.
-        if (playerId !== room.state.hostId || room.state.phase !== "lobby") return;
-        room.settings = sanitizeSettings(msg.settings);
-        return broadcast(room);
-      }
-      case "set_pending_game": {
-        if (playerId !== room.state.hostId || room.state.phase !== "lobby") return;
-        room.pendingGame = typeof msg.gameId === "string" ? msg.gameId : null;
-        room.pendingSoiree = Array.isArray(msg.soiree) ? msg.soiree.filter((g): g is string => typeof g === "string" && !!GAME_REGISTRY[g]).slice(0, 12) : [];
-        return broadcast(room);
-      }
-      case "start_game": {
-        // Limite propre à un jeu (Mimic : 8 voix max), même avec le Pass Soirée.
-        const gameMax = GAME_REGISTRY[msg.gameId]?.meta.maxPlayers;
-        if (gameMax && connectedPlayers(room.state).length > gameMax) {
-          return sendError(ws, "too_many_players", `Ce jeu se joue à ${gameMax} joueurs maximum.`);
-        }
-        room.pendingSettings = msg.settings ?? null;
-        return applyRoom(room, { type: "start_game", playerId, gameId: msg.gameId, now: t }, ws);
-      }
-
-      case "game": {
-        // Message de jeu : toujours un objet avec un `kind` texte, sinon ignoré.
-        const raw = (msg as { action?: unknown }).action;
-        if (!raw || typeof raw !== "object" || Array.isArray(raw) || typeof (raw as { kind?: unknown }).kind !== "string") return;
-        if (room.mod) {
-          const action = msg.action as DrawClientAction;
-          if (room.mod.module.id === "draw" && action.kind === "guess") {
-            handleDrawGuess(room, playerId, action.text, ws);
-          } else if (room.mod.module.id === "relay" && action.kind === "guess") {
-            handleRelayGuess(room, playerId, action.text, ws);
-          } else {
-            applyMod(room, { type: "client", playerId, msg: action }, ws);
-          }
-          return;
-        }
-        if (!room.game) return;
-        const sub = msg.action as GameClientAction;
-        if (sub.kind === "submit") {
-          applyGame(room, { type: "submit", playerId, lines: sub.lines, now: t }, ws);
-          maybeAdvanceForPresence(room);
-          return;
-        }
-        if (sub.kind === "vote") {
-          // Map the opaque token back to the real author, server-side only.
-          const authorId = room.tokens?.byToken.get(sub.token);
-          if (!authorId) return;
-          applyGame(room, { type: "vote", playerId, authorId, now: t }, ws);
-          maybeAdvanceForPresence(room);
-          return;
-        }
-        return;
-      }
-      case "skip": {
-        if (playerId !== room.state.hostId || (!room.game && !room.mod)) return;
-        return advanceGame(room, t);
-      }
-
-      case "debug_fill": {
-        // Host-only test helper: auto-write a caption for every player who
-        // hasn't submitted yet, so a solo host can move a test game forward.
-        if (playerId !== room.state.hostId || !room.game || room.game.phase !== "writing") return;
-        const slots = clipSlots(currentClip(room.game));
-        for (const p of room.game.players) {
-          if (!Array.isArray(room.game.submissions[p.id])) {
-            const lines = slots.map((_, i) => `${p.name} — réplique ${i + 1}`);
-            applyGame(room, { type: "submit", playerId: p.id, lines, now: Date.now() });
-          }
-        }
-        return;
-      }
-
-      case "return_lobby": {
-        // Host-only: end the current game and send everyone back to the lobby.
-        // En soirée, le résultat d'un jeu terminé est déjà compté (syncSoiree).
-        if (playerId !== room.state.hostId) return;
-        syncSoiree(room);
-        stopGameToLobby(room);
-        return broadcast(room);
-      }
-
-      case "soiree_start": {
-        // Hôte, depuis le salon : lance une soirée (plusieurs jeux enchaînés).
-        if (playerId !== room.state.hostId || room.state.phase !== "lobby") return;
-        const items = sanitizeSoireeItems(msg.items);
-        if (items.length === 0) return sendError(ws, "soiree_empty", "Ajoute au moins un jeu à ta soirée.");
-        room.soiree = withPlayers(createSoiree(items, t), gameRoster(room));
-        return launchSoireeItem(room, ws);
-      }
-
-      case "soiree_next": {
-        // Hôte : jeu suivant (depuis l'écran de fin d'un jeu ou depuis le salon).
-        if (playerId !== room.state.hostId || !room.soiree || room.soiree.finished) return;
-        syncSoiree(room);
-        const s = room.soiree;
-        // Un jeu abandonné en cours de route (non terminé) est rejoué depuis le salon,
-        // mais sauté si l'hôte demande la suite pendant la partie.
-        if (room.state.phase === "in_game" || isRecorded(s, s.current)) room.soiree = nextGame(s);
-        return launchSoireeItem(room, ws, true);
-      }
-
-      case "soiree_rematch": {
-        // Hôte : revanche — même programme, scores remis à zéro.
-        if (playerId !== room.state.hostId || !room.soiree || room.state.phase !== "lobby") return;
-        room.soiree = withPlayers(createSoiree(room.soiree.items, t), gameRoster(room));
-        return launchSoireeItem(room, ws, true);
-      }
-
-      case "soiree_vote_rematch": {
-        // N'importe quel joueur : « je veux la revanche ! » (l'hôte voit le compte et lance).
-        if (!room.soiree?.finished || room.state.phase !== "lobby") return;
-        room.soiree = voteRematch(room.soiree, playerId, msg.want !== false);
-        return broadcast(room);
-      }
-
-      case "soiree_end": {
-        // Hôte : termine / abandonne la soirée.
-        if (playerId !== room.state.hostId) return;
-        room.soiree = null;
-        room.soireeRun = -1;
-        if (room.state.phase !== "lobby") stopGameToLobby(room);
-        return broadcast(room);
-      }
-
-      case "play_again": {
-        // Host-only: immediately start a fresh game with the players currently
-        // connected and the current settings — no trip back to the lobby.
-        if (playerId !== room.state.hostId || room.state.phase !== "in_game") return;
-        // En soirée, « Rejouer » est une revanche du jeu courant : son nouveau
-        // résultat remplacera l'ancien (jamais de double comptage).
-        const soireeGame = room.soiree && !room.soiree.finished && room.gameRun === room.soireeRun;
-        startGame(room);
-        if (soireeGame) room.soireeRun = room.gameRun;
-        return broadcast(room);
-      }
-
-      case "react": {
-        // Ephemeral live reaction — broadcast to everyone, never stored in state.
-        if ((!room.game && !room.mod) || !REACTION_EMOJIS.includes(msg.emoji)) return;
-        const out: ServerMessage = { type: "reaction", emoji: msg.emoji, from: playerId };
-        const data = JSON.stringify(out);
-        for (const sock of room.sockets.values()) {
-          if (sock.readyState === WebSocket.OPEN) sock.send(data);
-        }
-        return;
-      }
-
-      case "speaking": {
-        // Ephemeral "who is talking" indicator (doublage) — relay to everyone.
-        if (!room.mod) return;
-        relay(room, { type: "speaking", from: playerId, speaking: !!msg.speaking });
-        return;
-      }
-
-      case "chat": {
-        // Ephemeral discussion message (distinct from guesses), relayed to all.
-        if (!room.game && !room.mod) return;
-        const text = msg.text.trim().slice(0, 140);
-        if (!text) return;
-        const name = room.state.players[playerId]?.name ?? "?";
-        relay(room, { type: "chat", from: playerId, name, text, kind: "talk" });
-        return;
-      }
-
-      case "voice_take": {
-        // Mimic: a player's recorded take. Buffered (for playback + reconnection)
-        // and relayed to everyone. Heavy audio never enters the game state.
-        if (!room.mod || room.mod.module.id !== "mimic") return;
-        const audio = typeof msg.audio === "string" ? msg.audio : "";
-        if (!audio || audio.length > MAX_TAKE_BYTES) return;
-        const round = Number.isFinite(msg.round) ? Math.max(0, Math.floor(msg.round)) : 0;
-        room.mimicTakes.set(`${round}:${playerId}`, audio);
-        relay(room, { type: "voice_take", round, from: playerId, audio });
-        return;
-      }
-
-      case "bombe_typing": {
-        // Bombe: live preview of the active player's typing. Only relayed when it
-        // comes from the current player; the text is a preview, never validated.
-        if (!room.mod || room.mod.module.id !== "bombe") return;
-        const st = room.mod.state as { currentId?: string | null };
-        if (playerId !== st.currentId) return;
-        const text = typeof msg.text === "string" ? msg.text.slice(0, 48) : "";
-        relay(room, { type: "bombe_typing", from: playerId, text });
-        return;
-      }
-
-      case "draw_stroke": {
-        if (!canDrawNow(room, playerId)) return;
-        room.strokes.push({ kind: "stroke", stroke: msg.stroke, from: playerId });
-        if (room.strokes.length > 6000) room.strokes.shift();
-        relayDraw(room, playerId, { type: "stroke", stroke: msg.stroke, from: playerId });
-        return;
-      }
-
-      case "draw_fill": {
-        if (!canDrawNow(room, playerId)) return;
-        room.strokes.push({ kind: "fill", x: msg.x, y: msg.y, color: msg.color, from: playerId });
-        if (room.strokes.length > 6000) room.strokes.shift();
-        relayDraw(room, playerId, { type: "fill", x: msg.x, y: msg.y, color: msg.color, from: playerId });
-        return;
-      }
-
-      case "draw_clear": {
-        if (!canDrawNow(room, playerId)) return;
-        // Impostor mode = one canvas per player → only clear the author's canvas.
-        if (room.mod && room.mod.module.id === "fakeartist") {
-          room.strokes = (room.strokes as Array<{ from?: string }>).filter((s) => s.from !== playerId);
-        } else {
-          room.strokes = [];
-        }
-        relayDraw(room, playerId, { type: "draw_clear", from: playerId });
-        return;
-      }
-    }
-    } catch (err) {
-      // Un message mal formé (ou un bug d'un jeu) ne doit JAMAIS faire tomber
-      // le serveur entier : on l'ignore et on le journalise.
-      console.error(`[room ${room.state.code}] message ignoré (${(msg as { type?: string }).type}) :`, (err as Error)?.message ?? err);
-    }
+    handleClientMessage(room, playerId, msg, ws);
   });
 
   ws.on("close", () => {
@@ -1467,8 +1658,11 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
     const t = setTimeout(() => {
       applyRoom(room, { type: "leave", playerId, now: Date.now() });
       room.pruneTimers.delete(playerId);
-      if (room.sockets.size === 0 && room.state.playerOrder.length === 0) {
+      // Plus aucun humain (seulement des bots de test) : on ferme le salon.
+      if (room.sockets.size === 0 && room.state.playerOrder.every((id) => room.state.players[id]?.isBot)) {
+        removeAllBots(room, true);
         if (room.gameTimer) clearTimeout(room.gameTimer);
+        clearSwaps(room);
         rooms.delete(code);
       }
     }, GRACE_MS);

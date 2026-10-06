@@ -76,6 +76,13 @@ la synchro en direct.
   `apps/web/app/globals.css` (classes Tailwind `bg-gold`, `text-text-muted`…
   ou `rgb(var(--c-gold))` en style inline) — n'écris plus de couleur du thème
   en dur, sinon l'éditeur ne pourra pas la changer.
+- **Bots de test (onglet « Bots » de l'éditeur, en local uniquement)** : crée un
+  salon, puis ajoute 1, 3 ou autant de bots que de places. Ils se mettent prêts,
+  jouent, votent et devinent tout seuls dans tous les mini-jeux (niveau Facile /
+  Normal / Fort, pause possible). Ils dessinent des gribouillis, envoient des bips
+  au Mimic et « trichent » un peu pour trouver le mot selon leur niveau. Le serveur
+  refuse l'API `/admin/*` depuis Internet. Code : `packages/shared/src/bots/brain.ts`
+  (décisions) et `server/index.ts` (gestion des bots).
 - **Avatars** : chaque joueur peut importer une image (recadrée en carré) depuis
   le salon. Sinon, initiales colorées par défaut.
 - **Icônes d'outils** : dépose tes PNG dans `apps/web/public/tools/`
