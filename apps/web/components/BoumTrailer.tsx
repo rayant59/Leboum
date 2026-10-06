@@ -136,7 +136,7 @@ export function BoumTrailer({ onClose, onCreate }: { onClose: () => void; onCrea
             </div>
             <h2 className="bt-finaltitle">Boum<span className="bt-boom"><BoumIcon name="party" size="0.85em" color="#FFC24B" style={{ verticalAlign: "-0.05em" }} /></span></h2>
             <p className="bt-tag">2 à 10 joueurs · aucun compte requis</p>
-            <button className="bt-cta" onClick={onCreate}>Créer une partie</button>
+            <button className="bt-cta" onClick={onCreate}>Créer un salon</button>
             <Confetti n={70} />
           </div>
         )}

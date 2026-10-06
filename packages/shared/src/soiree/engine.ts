@@ -82,6 +82,18 @@ export function nextGame(s: SoireeState): SoireeState {
   return { ...s, current, finished: current >= s.items.length };
 }
 
+/** Saute le jeu courant (injouable au nombre de joueurs présents) et passe au suivant. */
+export function skipGame(s: SoireeState): SoireeState {
+  if (s.finished) return s;
+  const skipped = [...new Set([...(s.skipped ?? []), s.current])];
+  return nextGame({ ...s, skipped });
+}
+
+/** Le jeu `gameId` est-il jouable avec `count` joueurs connectés ? */
+export function soireeGameFits(minPlayers: number, maxPlayers: number, count: number): boolean {
+  return count >= minPlayers && count <= maxPlayers;
+}
+
 /** Termine la soirée tout de suite (ex. plus assez de joueurs). */
 export function finishSoiree(s: SoireeState): SoireeState {
   return s.finished ? s : { ...s, finished: true };

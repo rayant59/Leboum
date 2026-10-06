@@ -37,6 +37,8 @@ const fmtHour = (ms: number) => new Date(ms).toLocaleTimeString("fr-FR", { hour:
 export function PassCard({ state, serverNow, cfg }: { state: PublicRoomState; serverNow: () => number; cfg: PassConfig | null }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  // Replié par défaut : le Pass reste visible sans voler la vedette au « Je suis prêt ».
+  const [open, setOpen] = useState(false);
   const active = passActive(state, serverNow());
 
   if (active && state.pass) {
@@ -73,26 +75,36 @@ export function PassCard({ state, serverNow, cfg }: { state: PublicRoomState; se
   }
 
   return (
-    <section className="mb-8" style={{ borderRadius: 18, padding: "16px 18px", border: "1px solid #332A5A", background: "rgba(28,22,54,.6)" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-        <div style={{ minWidth: 0 }}>
-          <p style={{ margin: 0, fontFamily: "var(--font-display), sans-serif", fontWeight: 800, fontSize: 18, color: "#F3EEFF" }}>
+    <section className="mb-8" style={{ borderRadius: 18, padding: open ? "16px 18px" : "12px 16px", border: "1px solid #332A5A", background: "rgba(28,22,54,.6)" }}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        style={{ display: "flex", width: "100%", alignItems: "center", gap: 12, background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", color: "inherit" }}
+      >
+        <BoumIcon name="sparkle" size={18} color="#FFC24B" />
+        <span style={{ minWidth: 0, flex: 1 }}>
+          <span style={{ display: "block", fontFamily: "var(--font-display), sans-serif", fontWeight: 800, fontSize: 16, color: "#F3EEFF" }}>
             Pass Soirée <span style={{ color: "#FFC24B" }}>· {cfg.priceLabel}</span>
+          </span>
+          <span style={{ display: "block", fontSize: 12.5, color: "#A79FC7" }}>12 joueurs, tes propres questions… pour toute la tablée.</span>
+        </span>
+        <span style={{ flex: "none", fontSize: 12.5, fontWeight: 700, color: "#FFC24B" }}>{open ? "Fermer" : "Voir"}</span>
+      </button>
+      {open && (
+        <>
+          <ul style={{ margin: "12px 0 0", paddingLeft: 18, fontSize: 14, color: "#C9C2E6" }}>
+            {PASS_PERKS.map((p) => <li key={p}>{p}</li>)}
+          </ul>
+          <button onClick={buy} disabled={busy} className="arc arc-p arc-block" style={{ marginTop: 12 }}>
+            {busy ? "Ouverture du paiement…" : `Offrir le Pass à la tablée · ${cfg.priceLabel}`}
+          </button>
+          <p style={{ margin: "8px 0 0", fontSize: 12, color: "#6E6796", lineHeight: 1.5 }}>
+            Un seul paiement, toute la tablée en profite. Paiement sécurisé par Stripe. Le jeu de base reste 100 % gratuit. En payant, tu demandes l&apos;accès
+            immédiat au Pass et renonces à ton droit de rétractation pour ce contenu numérique.{" "}
+            <a href="/cgv" target="_blank" style={{ color: "#A79FC7" }}>Conditions de vente</a>
           </p>
-          <p style={{ margin: "2px 0 0", fontSize: 13, color: "#A79FC7" }}>Un seul paiement, toute la tablée en profite.</p>
-        </div>
-        <button onClick={buy} disabled={busy} className="arc arc-p" style={{ flex: "none" }}>
-          {busy ? "Ouverture du paiement…" : "Offrir le Pass à la tablée"}
-        </button>
-      </div>
-      <ul style={{ margin: "10px 0 0", paddingLeft: 18, fontSize: 14, color: "#C9C2E6" }}>
-        {PASS_PERKS.map((p) => <li key={p}>{p}</li>)}
-      </ul>
-      <p style={{ margin: "8px 0 0", fontSize: 12, color: "#6E6796", lineHeight: 1.5 }}>
-        Paiement sécurisé par Stripe. Le jeu de base reste 100 % gratuit. En payant, tu demandes l&apos;accès
-        immédiat au Pass et renonces à ton droit de rétractation pour ce contenu numérique.{" "}
-        <a href="/cgv" target="_blank" style={{ color: "#A79FC7" }}>Conditions de vente</a>
-      </p>
+        </>
+      )}
       {err && <p style={{ margin: "8px 0 0", fontSize: 13, color: "#FF8A8A" }}>{err}</p>}
     </section>
   );

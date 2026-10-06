@@ -75,6 +75,8 @@ export interface UseRoom {
   game: AnyPublicGame | null;
   settings: GameSettings;
   pendingGame: string | null;
+  /** Programme de soirée préparé par l'hôte (aperçu invités). */
+  pendingSoiree: string[];
   /** La partie en cours est terminée (écran de résultats final). */
   gameOver: boolean;
   /** Numéro de la partie en cours (change à chaque lancement / revanche). */
@@ -98,7 +100,7 @@ export interface UseRoom {
   setName: (name: string) => void;
   setAvatar: (avatar: string | null) => void;
   setSettings: (settings: GameSettings) => void;
-  selectGame: (gameId: string) => void;
+  selectGame: (gameId: string, soiree?: string[]) => void;
   startGame: (gameId?: string, settings?: unknown) => void;
   leave: () => void;
   submitLines: (lines: string[]) => void;
@@ -147,6 +149,7 @@ export function useRoom(code: string, create = false): UseRoom {
   const [game, setGame] = useState<AnyPublicGame | null>(null);
   const [settings, setSettingsState] = useState<GameSettings>(DEFAULT_GAME_SETTINGS);
   const [pendingGame, setPendingGame] = useState<string | null>(null);
+  const [pendingSoiree, setPendingSoiree] = useState<string[]>([]);
   const [gameOver, setGameOver] = useState(false);
   const [gameRun, setGameRun] = useState(0);
   const [soiree, setSoiree] = useState<SoireeState | null>(null);
@@ -179,6 +182,7 @@ export function useRoom(code: string, create = false): UseRoom {
         setGame(msg.game);
         setSettingsState(msg.settings);
         setPendingGame((msg as { pendingGame?: string | null }).pendingGame ?? null);
+        setPendingSoiree(msg.pendingSoiree ?? []);
         setGameOver(!!msg.gameOver);
         setSoiree(msg.soiree ?? null);
         const run = msg.gameRun ?? 0;
@@ -273,7 +277,7 @@ export function useRoom(code: string, create = false): UseRoom {
     [send],
   );
   const selectGame = useCallback(
-    (gameId: string) => send.current?.send({ type: "set_pending_game", gameId }),
+    (gameId: string, soiree?: string[]) => send.current?.send({ type: "set_pending_game", gameId, soiree }),
     [send],
   );
   const startGame = useCallback(
@@ -350,7 +354,7 @@ export function useRoom(code: string, create = false): UseRoom {
 
   return {
     state, gameId, game, settings, you, status, error, clearError,
-    join, setReady, setName, setAvatar, setSettings, selectGame, startGame, leave, pendingGame, gameOver, gameRun, soiree, startSoiree, soireeNext, soireeRematch, soireeVote, soireeEnd, gameAction,
+    join, setReady, setName, setAvatar, setSettings, selectGame, startGame, leave, pendingGame, pendingSoiree, gameOver, gameRun, soiree, startSoiree, soireeNext, soireeRematch, soireeVote, soireeEnd, gameAction,
     submitLines, vote, skipPhase, debugFill, returnLobby, playAgain, react, reactions, speakingIds, sendSpeaking, quizAnswer, redeemPass, bombeSubmit,
     mimicAction, sendVoiceTake, voiceTakes, sendBombeTyping, bombeTyping,
     chooseWord, guess, sendTalk, castVote, doublageAction, revealTheme, endDrawing, sendStroke, sendFill, clearCanvas, chat, strokeQueueRef, strokeResetRef, serverNow,

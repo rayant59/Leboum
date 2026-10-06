@@ -47,6 +47,8 @@ export interface SoireeState {
   players: Record<PlayerId, SoireePlayer>;
   finished: boolean;
   startedAt: number;
+  /** Index des jeux passés faute du bon nombre de joueurs (affichés comme tels). */
+  skipped?: number[];
   /** Fin de soirée : joueurs qui réclament une revanche (l'hôte la lance). */
   rematchVotes?: PlayerId[];
 }

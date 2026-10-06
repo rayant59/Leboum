@@ -1,5 +1,5 @@
 import type { GameModule } from "../../platform/types";
-import { bestBy, scoresResult } from "../../platform/result";
+import { bestBy, plural, scoresResult } from "../../platform/result";
 import { createFunny, projectFunny, reduceFunny, resolveFunnyConfig } from "./engine";
 import type { FunnyClientAction, FunnyPublic, FunnySettings, FunnyState } from "./types";
 
@@ -25,8 +25,8 @@ export const funnyModule: GameModule<FunnyState, FunnyPublic, FunnySettings, Fun
     const top = s.best.slice().sort((a, b) => b.votes - a.votes)[0];
     return scoresResult(s.players, s.scores, {
       awards: [
-        ...(pen ? [{ id: "funny_pen", label: "Plume d'or", playerId: pen, detail: `${s.votesReceived[pen]} votes` }] : []),
-        ...(champ && champ !== pen ? [{ id: "funny_champ", label: "Roi des manches", playerId: champ, detail: `${s.roundWins[champ]} manches` }] : []),
+        ...(pen ? [{ id: "funny_pen", label: "Plume d'or", playerId: pen, detail: plural(s.votesReceived[pen], "vote") }] : []),
+        ...(champ && champ !== pen ? [{ id: "funny_champ", label: "Roi des manches", playerId: champ, detail: `${plural(s.roundWins[champ], "manche")} gagnée${s.roundWins[champ] > 1 ? "s" : ""}` }] : []),
         ...(top && top.votes > 0 ? [{ id: "funny_best", label: "Réponse la plus drôle", playerId: top.authorId, detail: `« ${top.text} »` }] : []),
       ],
     });

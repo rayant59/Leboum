@@ -96,6 +96,19 @@ test("bon mot : la bombe passe au joueur suivant + nouvelle syllabe", () => {
   assert(s1.usedWords.includes(bombeNormalize(w)), "le mot est mémorisé comme utilisé");
 });
 
+test("plus long mot : gardé jusqu'à la fin, même après une explosion", () => {
+  const s0 = started(players, { lives: 3 }, ctx(1000));
+  const cur = s0.currentId!;
+  const w = wordWith(s0.syllable);
+  const s1 = reduceBombe(s0, submit(cur, w), ctx(1100)).state;
+  eq(s1.longestWord, bombeNormalize(w), "le mot devient le plus long");
+  eq(s1.longestWordBy, cur, "attribué au bon joueur");
+  const boom = reduceBombe(s1, { type: "advance" }, ctx(60000)).state;
+  eq(boom.lastWord, null, "le dernier mot s'efface à l'explosion");
+  eq(boom.longestWord, bombeNormalize(w), "le plus long mot reste");
+  eq(projectBombe(boom, cur).longestWord, bombeNormalize(w), "exposé dans la projection");
+});
+
 test("mot sans la syllabe → refusé (erreur syllable), tour inchangé", () => {
   const s0 = started(players, { lives: 3 }, ctx(1000));
   const cur = s0.currentId!;

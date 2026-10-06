@@ -3,7 +3,7 @@
 import type { GamePlayer } from "../game/types";
 import type { PlayerId } from "../room/types";
 import type { BombeState } from "../games/bombe/types";
-import { bestBy, scoresResult, type GameAward, type GameResult } from "./result";
+import { bestBy, plural, scoresResult, type GameAward, type GameResult } from "./result";
 
 /** Forme commune au Quiz, à Œil de Boum et à Pixel Panic. */
 interface QuizLike {
@@ -38,6 +38,6 @@ export function bombeResults(s: BombeState): GameResult {
   ];
   const awards: GameAward[] = [];
   const words = bestBy(s.wordsFound);
-  if (words) awards.push({ id: "most_words", label: "Dico vivant", playerId: words, detail: `${s.wordsFound[words]} mots` });
+  if (words) awards.push({ id: "most_words", label: "Dico vivant", playerId: words, detail: plural(s.wordsFound[words], "mot") });
   return scoresResult(s.players, s.wordsFound, { order, coop: s.config.mode === "coop", awards });
 }

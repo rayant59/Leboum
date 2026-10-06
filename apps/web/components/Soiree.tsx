@@ -36,10 +36,11 @@ export function SoireeBuilder({
   onRemove,
   onMoveUp,
   onClear,
-  onLaunch,
   onGenerate,
   launchDisabled,
   launchHint,
+  playerCount,
+  onPrune,
 }: {
   items: BuilderItem[];
   selectedName: string;
@@ -47,13 +48,18 @@ export function SoireeBuilder({
   onRemove: (i: number) => void;
   onMoveUp: (i: number) => void;
   onClear: () => void;
-  onLaunch: () => void;
   /** Générateur (phase 14) : remplace le programme par une proposition. */
   onGenerate?: (formatId: string) => void;
   launchDisabled: boolean;
   launchHint: string | null;
+  /** Joueurs connectés : un jeu hors de ses bornes sera sauté au lancement. */
+  playerCount: number;
+  /** Retire du programme les jeux injouables au nombre actuel de joueurs. */
+  onPrune: () => void;
 }) {
   const minutes = estimateMinutes(items);
+  const fits = (gameId: string) => { const g = gameInfo(gameId); return playerCount >= g.minPlayers && playerCount <= g.maxPlayers; };
+  const unfit = items.filter((it) => !fits(it.gameId)).length;
   const [lastFormat, setLastFormat] = useState<string | null>(null);
   return (
     <section className="mb-8 rounded-2xl border p-5" style={{ borderColor: "rgba(255,194,75,.35)", background: "linear-gradient(165deg, rgba(255,194,75,.09), rgba(28,22,54,.65) 55%)" }}>
@@ -105,13 +111,20 @@ export function SoireeBuilder({
         <ol className="mb-4 flex flex-col gap-2" style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {items.map((it, i) => {
             const g = gameInfo(it.gameId);
+            const ok = fits(it.gameId);
             return (
-              <li key={`${it.gameId}-${i}`} className="flex items-center gap-3 rounded-xl border px-3 py-2" style={{ borderColor: C.line, background: "rgba(14,11,26,.55)" }}>
+              <li key={`${it.gameId}-${i}`} className="flex items-center gap-3 rounded-xl border px-3 py-2" style={{ borderColor: ok ? C.line : "rgba(255,140,90,.45)", background: ok ? "rgba(14,11,26,.55)" : "rgba(255,107,77,.07)" }}>
                 <span style={{ width: 18, fontFamily: MONO, fontWeight: 700, fontSize: 12, color: C.faint }}>{i + 1}</span>
                 <Thumb gameId={it.gameId} size={36} />
                 <div className="min-w-0 flex-1">
                   <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 15, color: C.text }}>{g.name}</div>
-                  <div className="truncate" style={{ fontSize: 12, color: C.muted }}>{it.detail}</div>
+                  {ok ? (
+                    <div className="truncate" style={{ fontSize: 12, color: C.muted }}>{it.detail}</div>
+                  ) : (
+                    <div className="truncate" style={{ fontSize: 12, color: "#FFB27A" }}>
+                      {playerCount < g.minPlayers ? `${g.minPlayers} joueurs minimum` : `${g.maxPlayers} joueurs maximum`} · ne sera pas joué
+                    </div>
+                  )}
                 </div>
                 <button onClick={() => onMoveUp(i)} disabled={i === 0} aria-label="Monter" title="Monter" className="rounded-lg p-1.5 disabled:opacity-25" style={{ color: C.muted, background: "none", border: "none", cursor: "pointer" }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M6 15l6-6 6 6" /></svg>
@@ -129,17 +142,22 @@ export function SoireeBuilder({
         </p>
       )}
 
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <button onClick={onAdd} className="arc arc-sec arc-block" style={{ fontSize: 14 }}>
-          + Ajouter « {selectedName} »
-        </button>
-        {items.length > 0 && (
-          <button onClick={onLaunch} disabled={launchDisabled} className={`arc arc-block ${launchDisabled ? "arc-dis" : "arc-p"}`} style={{ fontSize: 14 }}>
-            Lancer la soirée · {items.length} jeu{items.length > 1 ? "x" : ""}
-          </button>
-        )}
-      </div>
+      {/* Le lancement se fait depuis le bouton principal en bas du salon
+          (un seul gros bouton : « Lancer la soirée » dès qu'un programme existe). */}
+      <button onClick={onAdd} disabled={items.length >= 12} className="arc arc-sec arc-block" style={{ fontSize: 14 }}>
+        + Ajouter « {selectedName} »
+      </button>
       {items.length > 0 && launchDisabled && launchHint && <p className="mt-2 text-xs" style={{ color: C.faint }}>{launchHint}</p>}
+      {unfit > 0 && (
+        <p className="mt-2 flex flex-wrap items-center gap-x-2 text-xs" style={{ color: "#FFB27A" }}>
+          {unfit === items.length
+            ? `Aucun de ces jeux ne se joue à ${playerCount}.`
+            : `${unfit} jeu${unfit > 1 ? "x" : ""} sur ${items.length} ${unfit > 1 ? "ne seront pas joués" : "ne sera pas joué"} à ${playerCount} joueur${playerCount > 1 ? "s" : ""}.`}
+          <button onClick={onPrune} className="font-semibold underline" style={{ color: C.gold, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+            Les retirer
+          </button>
+        </p>
+      )}
     </section>
   );
 }
@@ -174,12 +192,14 @@ function Programme({ soiree }: { soiree: SoireeState }) {
     <div className="flex flex-wrap gap-2">
       {soiree.items.map((it, i) => {
         const done = soiree.records.some((r) => r.index === i);
+        const skipped = (soiree.skipped ?? []).includes(i);
         const now = i === soiree.current && !soiree.finished;
         const g = gameInfo(it.gameId);
         return (
-          <span key={i} className="inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs" style={{ borderColor: now ? g.accent : C.line, background: now ? `${g.accent}1a` : "transparent", color: done ? C.faint : C.text, textDecoration: done ? "line-through" : "none" }}>
+          <span key={i} title={skipped ? "Passé : pas le bon nombre de joueurs" : undefined} className="inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs" style={{ borderColor: now ? g.accent : C.line, background: now ? `${g.accent}1a` : "transparent", color: done || skipped ? C.faint : C.text, textDecoration: done || skipped ? "line-through" : "none", opacity: skipped ? 0.7 : 1 }}>
             <b style={{ fontFamily: MONO, color: now ? g.accent : C.faint }}>{i + 1}</b>
             {g.name}
+            {skipped && <span style={{ color: "#FFB27A", textDecoration: "none" }}>passé</span>}
           </span>
         );
       })}

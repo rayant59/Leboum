@@ -25,6 +25,8 @@ export interface IntroSoiree {
   index: number; // 0-based
   total: number;
   leader: { name: string; total: number; tied: boolean } | null;
+  /** Jeux sautés juste avant (pas le bon nombre de joueurs). */
+  skipped?: string[];
 }
 
 export function GameIntro({
@@ -90,6 +92,11 @@ export function GameIntro({
         {soiree && (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 12px", borderRadius: 999, border: "1px solid rgba(255,194,75,.45)", background: "rgba(255,194,75,.1)", fontSize: 12, fontWeight: 800, letterSpacing: ".16em", textTransform: "uppercase", color: "#FFC24B", animation: "gi-drop .5s cubic-bezier(.2,.9,.3,1.3) both" }}>
             Soirée · jeu {soiree.index + 1}/{soiree.total}
+          </span>
+        )}
+        {soiree?.skipped && soiree.skipped.length > 0 && (
+          <span style={{ marginTop: -12, maxWidth: 460, fontSize: 13, color: "#FFB27A", fontFamily: "'Inter', system-ui, sans-serif" }}>
+            {soiree.skipped.join(" et ")} {soiree.skipped.length > 1 ? "passés" : "passé"} : pas assez de joueurs.
           </span>
         )}
         <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: ".28em", textTransform: "uppercase", color: "#A79FC7" }}>

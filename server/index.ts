@@ -71,6 +71,7 @@ import {
   createSoiree,
   recordGame,
   nextGame,
+  skipGame,
   isRecorded,
   withPlayers,
   voteRematch,
@@ -401,6 +402,7 @@ interface Room {
   relayTimers: NodeJS.Timeout[]; // active-drawer rotation timers (relay)
   settings: GameSettings; // host-chosen lobby settings, applied at start
   pendingGame: string | null; // selection previewed to guests
+  pendingSoiree: string[]; // soirée programme previewed to guests
   sockets: Map<string, WebSocket>;
   pruneTimers: Map<string, NodeJS.Timeout>;
   gameTimer: NodeJS.Timeout | null;
@@ -453,6 +455,7 @@ function getRoom(code: string, allowCreate = false): Room | null {
       relayTimers: [],
       settings: DEFAULT_GAME_SETTINGS,
       pendingGame: null,
+      pendingSoiree: [],
       sockets: new Map(),
       pruneTimers: new Map(),
       gameTimer: null,
@@ -732,8 +735,11 @@ function stopGameToLobby(room: Room) {
   room.strokes = [];
   room.mimicTakes.clear();
   clearSwaps(room);
+  // On revient de jouer ensemble : les joueurs connectés restent « prêts »
+  // (pas besoin de re-cliquer entre deux parties). Changer de jeu dans le
+  // salon les dé-prête côté client (SPEC §4).
   const players = Object.fromEntries(
-    Object.entries(room.state.players).map(([id, p]) => [id, { ...p, isReady: false }]),
+    Object.entries(room.state.players).map(([id, p]) => [id, { ...p, isReady: p.isConnected }]),
   );
   room.state = { ...room.state, phase: "lobby", gameId: null, players };
 }
@@ -753,7 +759,7 @@ function launchSoireeItem(room: Room, sender?: WebSocket, skipReady = false) {
       const info = gameInfo(item.gameId);
       relay(room, { type: "chat", from: "*", name: "LeBoum", text: `${info.name} passé : il faut ${info.minPlayers} à ${info.maxPlayers} joueurs.`, kind: "system" });
     }
-    s = nextGame(s);
+    s = skipGame(s);
   }
   room.soiree = s;
   if (s.finished) {
@@ -806,6 +812,7 @@ function stateMessageFor(room: Room, pid: string): ServerMessage {
     game,
     settings: room.settings,
     pendingGame: room.pendingGame,
+    pendingSoiree: room.pendingSoiree,
     gameOver: gameIsOver(room),
     gameRun: room.gameRun,
     soiree: publicSoiree(room),
@@ -1156,6 +1163,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
       case "set_pending_game": {
         if (playerId !== room.state.hostId || room.state.phase !== "lobby") return;
         room.pendingGame = typeof msg.gameId === "string" ? msg.gameId : null;
+        room.pendingSoiree = Array.isArray(msg.soiree) ? msg.soiree.filter((g): g is string => typeof g === "string" && !!GAME_REGISTRY[g]).slice(0, 12) : [];
         return broadcast(room);
       }
       case "start_game": {

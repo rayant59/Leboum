@@ -119,7 +119,7 @@ export function soireeHighlights(s: SoireeState): SoireeHighlight[] {
   // 1. Plus de jeux gagnés (au moins 2, sans égalité).
   const wins = Object.fromEntries(standings.map((r) => [r.id, r.wins]));
   const winner = strictTop(wins, 1);
-  if (winner) out.push({ id: "most_wins", label: "Plus de jeux gagnés", playerId: winner, detail: `${wins[winner]} victoires` });
+  if (winner) out.push({ id: "most_wins", label: "Plus de jeux gagnés", playerId: winner, detail: plural(wins[winner], "victoire") });
 
   // 2. Plus gros carton : la victoire la plus nette d'un jeu (écart relatif au 2e).
   let carton: { id: PlayerId; margin: number; record: SoireeGameRecord; score: number } | null = null;
@@ -133,7 +133,7 @@ export function soireeHighlights(s: SoireeState): SoireeHighlight[] {
     const margin = (top - (sorted[1] ?? 0)) / top;
     if (margin >= 0.25 && (!carton || margin > carton.margin)) carton = { id: w[0], margin, record: r, score: top };
   }
-  if (carton) out.push({ id: "big_win", label: "Plus gros carton", playerId: carton.id, detail: `${gameName(carton.record.gameId)} · ${fmt(carton.score)} pts` });
+  if (carton) out.push({ id: "big_win", label: "Plus gros carton", playerId: carton.id, detail: `${gameName(carton.record.gameId)} · ${fmt(carton.score)} pt${carton.score > 1 ? "s" : ""}` });
 
   // 3. Tête de quiz : le plus de points de soirée sur les jeux de culture / réflexion.
   const quiz = records.filter((r) => QUIZ_GAMES.includes(r.gameId) && !r.coop);
@@ -142,7 +142,7 @@ export function soireeHighlights(s: SoireeState): SoireeHighlight[] {
     for (const r of quiz) for (const [id, p] of Object.entries(r.points)) pts[id] = (pts[id] ?? 0) + p;
     const brain = strictTop(pts);
     if (brain) {
-      const detail = quiz.length === 1 ? `${ordinal(quiz[0].ranking.find((x) => x.id === brain)?.place ?? 1)} place à ${gameName(quiz[0].gameId)}` : `${pts[brain]} pts sur ${quiz.length} jeux de tête`;
+      const detail = quiz.length === 1 ? `${ordinal(quiz[0].ranking.find((x) => x.id === brain)?.place ?? 1)} place à ${gameName(quiz[0].gameId)}` : `${plural(pts[brain], "pt", "pts")} sur ${quiz.length} jeux de tête`;
       out.push({ id: "quiz_head", label: "Tête de quiz", playerId: brain, detail });
     }
   }

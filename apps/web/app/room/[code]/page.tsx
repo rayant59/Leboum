@@ -302,13 +302,24 @@ export default function LobbyPage() {
     window.history.replaceState(null, "", url.pathname + url.search);
   }, [room, room.status, room.you, room.state]);
 
-  // Host broadcasts the currently-selected game so guests see what's coming.
-  // Kept above any early return so hook order stays stable every render.
+  // Host broadcasts the currently-selected game (and the soirée programme) so
+  // guests see what's coming. Envoyé seulement quand l'aperçu change (ou après
+  // une reconnexion / un retour au salon) : renvoyer à chaque état provoquait
+  // un aller-retour serveur permanent. Kept above any early return.
+  const soireeKey = soireeItems.map((i) => i.gameId).join(",");
+  const sentPreview = useRef<string | null>(null);
+  const hostNow = !!(room.state && room.you && room.state.players[room.you]?.isHost);
+  const inLobby = room.state?.phase === "lobby";
   useEffect(() => {
-    const st = room.state;
-    const meNow = st && room.you ? st.players[room.you] : undefined;
-    if (meNow?.isHost) room.selectGame(selectedGame);
-  }, [room, room.state, room.you, selectedGame]);
+    if (room.status !== "open" || !hostNow || !inLobby) {
+      sentPreview.current = null;
+      return;
+    }
+    const key = `${selectedGame}|${soireeKey}`;
+    if (sentPreview.current === key) return;
+    sentPreview.current = key;
+    room.selectGame(selectedGame, soireeKey ? soireeKey.split(",") : []);
+  }, [room, room.status, hostNow, inLobby, selectedGame, soireeKey]);
 
   // SPEC §4 : un changement de jeu de l'hôte dé-« prête » automatiquement les
   // invités (ils doivent reconfirmer sur la nouvelle partie).
@@ -426,10 +437,12 @@ export default function LobbyPage() {
   const startable = !!state && canStart(state, launchId) && !tooManyForGame;
   // Soirée : le 1er jeu du programme fixe l'exigence de « prêts » ; on demande au
   // moins 2 joueurs (une soirée en solo n'a pas de sens).
-  const firstSoireeGame = soireeItems[0]?.gameId ?? null;
+  // Les jeux hors bornes seront sautés : c'est le 1er jeu JOUABLE qui compte.
+  const playableSoiree = soireeItems.filter((i) => { const g = gameInfo(i.gameId); return connectedCount >= g.minPlayers && connectedCount <= g.maxPlayers; });
+  const firstSoireeGame = playableSoiree[0]?.gameId ?? null;
   const soireeNeeded = state && firstSoireeGame ? Math.max(2, minReadyFor(state, firstSoireeGame)) : 2;
   const missingSoireeReady = Math.max(0, soireeNeeded - readyCount);
-  const soireeStartable = !!state && soireeItems.length > 0 && connectedCount >= 2 && missingSoireeReady === 0 && state.phase === "lobby";
+  const soireeStartable = !!state && playableSoiree.length > 0 && connectedCount >= 2 && missingSoireeReady === 0 && state.phase === "lobby";
 
   async function copyLink() {
     const url = window.location.href;
@@ -509,6 +522,10 @@ export default function LobbyPage() {
       case "bombe":
         return { gameId: "bombe", settings: { lives: 3, minSeconds: t, maxSeconds: t + 3, minLetters: 2, maxLetters: 3, mode }, detail: `${modeName} · 3 vies` };
     }
+  }
+  function launchSoiree() {
+    // Seuls les jeux jouables au nombre actuel partent : pas de « jeu 3/3 » surprise.
+    room.startSoiree(playableSoiree.map((i) => ({ gameId: i.gameId, settings: i.settings })));
   }
   function startSelectedGame() {
     const l = buildLaunch();
@@ -746,8 +763,26 @@ export default function LobbyPage() {
       {/* guests: read-only preview of the game the host will launch */}
       {!isHost && !soireeLive && (
         <section className="mb-8">
-          <p className="eyebrow mb-2 px-1">Jeu choisi par l'hôte</p>
-          {room.pendingGame && GAME_META[room.pendingGame] ? (
+          <p className="eyebrow mb-2 px-1">{room.pendingSoiree.length > 0 ? "Soirée prévue par l'hôte" : "Jeu choisi par l'hôte"}</p>
+          {room.pendingSoiree.length > 0 ? (
+            <div className="rounded-2xl border p-3" style={{ borderColor: "rgba(255,194,75,.4)", background: "rgba(255,194,75,.06)" }}>
+              <ol className="flex flex-col gap-2" style={{ listStyle: "none", margin: 0, padding: 0 }}>
+                {room.pendingSoiree.map((gid, i) => {
+                  const g = gameInfo(gid);
+                  const ok = connectedCount >= g.minPlayers && connectedCount <= g.maxPlayers;
+                  return (
+                    <li key={`${gid}-${i}`} className="flex items-center gap-3">
+                      <span className="w-4 text-center font-mono text-xs text-text-faint">{i + 1}</span>
+                      <img src={g.img} alt="" className="h-9 w-9 shrink-0 rounded-lg object-cover" draggable={false} />
+                      <span className="min-w-0 flex-1 truncate font-display font-bold">{g.name}</span>
+                      {!ok && <span className="text-xs" style={{ color: "#FFB27A" }}>{g.minPlayers} joueurs min.</span>}
+                    </li>
+                  );
+                })}
+              </ol>
+              <p className="mt-3 text-xs text-text-faint">Un seul classement pour toute la soirée. Mets-toi « prêt » !</p>
+            </div>
+          ) : room.pendingGame && GAME_META[room.pendingGame] ? (
             <div className="flex items-center gap-3 rounded-2xl border p-3" style={{ borderColor: `${GAME_META[room.pendingGame].tint}55`, background: `${GAME_META[room.pendingGame].tint}0f` }}>
               <img src={GAME_META[room.pendingGame].img} alt="" className="h-14 w-14 shrink-0 rounded-xl object-cover" draggable={false} />
               <div className="min-w-0">
@@ -775,9 +810,10 @@ export default function LobbyPage() {
           onRemove={(i) => setSoireeItems((p) => p.filter((_, j) => j !== i))}
           onMoveUp={(i) => setSoireeItems((p) => { if (i <= 0) return p; const n = p.slice(); [n[i - 1], n[i]] = [n[i], n[i - 1]]; return n; })}
           onClear={() => setSoireeItems(() => [])}
-          onLaunch={() => room.startSoiree(soireeItems.map((i) => ({ gameId: i.gameId, settings: i.settings })))}
           onGenerate={(id) => setSoireeItems(() => generateSoiree(id, Math.max(2, connectedCount)).map((i) => ({ gameId: i.gameId, settings: i.settings, detail: i.detail })))}
           launchDisabled={!soireeStartable}
+          playerCount={connectedCount}
+          onPrune={() => setSoireeItems((p) => p.filter((i) => { const g = gameInfo(i.gameId); return connectedCount >= g.minPlayers && connectedCount <= g.maxPlayers; }))}
           launchHint={connectedCount < 2 ? "Invite au moins un ami pour lancer une soirée." : missingSoireeReady > 0 ? `Encore ${missingSoireeReady} joueur${missingSoireeReady > 1 ? "s" : ""} prêt${missingSoireeReady > 1 ? "s" : ""}.` : null}
         />
       )}
@@ -1057,7 +1093,28 @@ export default function LobbyPage() {
       {/* action dock — l'hôte lance directement (il compte comme prêt),
           les invités basculent « prêt / pas prêt ». z-20 : au-dessus des cartes. */}
       <div className="sticky bottom-[max(1rem,env(safe-area-inset-bottom))] z-20 mt-2 flex gap-3 rounded-2xl border border-ink-border/80 bg-[rgba(20,16,42,0.92)] p-3 backdrop-blur-md">
-        {isHost ? (
+        {isHost && soireeItems.length > 0 && !soireeLive ? (
+          <div className="flex w-full flex-col gap-2">
+            <button
+              onClick={() => launchSoiree()}
+              disabled={!soireeStartable}
+              className={`arc arc-block ${soireeStartable ? "arc-p" : "arc-dis"}`}
+            >
+              {soireeStartable
+                ? `Lancer la soirée · ${playableSoiree.length} jeu${playableSoiree.length > 1 ? "x" : ""}`
+                : connectedCount < 2
+                ? "Invite au moins un ami pour lancer la soirée"
+                : playableSoiree.length === 0
+                ? `Aucun jeu du programme ne se joue à ${connectedCount}`
+                : `Encore ${missingSoireeReady} joueur${missingSoireeReady > 1 ? "s" : ""} prêt${missingSoireeReady > 1 ? "s" : ""}`}
+            </button>
+            {startable && (
+              <button onClick={() => startSelectedGame()} className="text-xs font-semibold text-text-muted underline-offset-2 hover:underline" style={{ background: "none", border: "none", cursor: "pointer" }}>
+                ou jouer seulement à « {gameInfo(launchId).name} »
+              </button>
+            )}
+          </div>
+        ) : isHost ? (
           startable ? (
             <button onClick={() => startSelectedGame()} className="arc arc-p arc-block">
               Lancer la partie
@@ -1113,7 +1170,11 @@ function introSoiree(soiree: SoireeState | null): IntroSoiree | null {
   const st = soireeStandings(soiree);
   const top = st[0];
   const leaderPlayer = top ? soiree.players[top.id] : undefined;
+  // Jeux sautés juste avant celui-ci (depuis le dernier jeu réellement joué).
+  const skipped: string[] = [];
+  for (let i = soiree.current - 1; i >= 0 && (soiree.skipped ?? []).includes(i); i--) skipped.unshift(gameInfo(soiree.items[i].gameId).name);
   return {
+    skipped,
     index: soiree.current,
     total: soiree.items.length,
     leader: top && leaderPlayer && top.total > 0 ? { name: leaderPlayer.name, total: top.total, tied: st.filter((r) => r.place === 1).length > 1 } : null,

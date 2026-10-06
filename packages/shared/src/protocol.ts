@@ -39,7 +39,7 @@ export type ClientMessage =
   | { type: "set_name"; name: string }
   | { type: "set_avatar"; avatar: string | null }
   | { type: "set_settings"; settings: GameSettings } // host only
-  | { type: "set_pending_game"; gameId: string } // host only: preview selection to guests
+  | { type: "set_pending_game"; gameId: string; soiree?: string[] } // host only: preview selection (and soirée programme) to guests
   | { type: "start_game"; gameId: string; settings?: unknown }
   | { type: "game"; action: GameClientAction | DrawClientAction | FakeArtistClientAction | DoublageClientAction | QuizClientAction | BombeClientAction | MimicClientAction | WhoisClientAction | FunnyClientAction | ImposterClientAction | PhoneClientAction | TabooClientAction | YesNoClientAction | GuessWhoClientAction | RankingClientAction }
   | { type: "voice_take"; round: number; audio: string } // mimic: my recorded take (base64 data URL), relayed to all
@@ -74,6 +74,8 @@ export type ServerMessage =
       settings: GameSettings;
       /** Game the host is about to launch (shown to guests in the lobby). */
       pendingGame: string | null;
+      /** Programme de soirée préparé par l'hôte (ids de jeux), montré aux invités. */
+      pendingSoiree?: string[];
       /** La partie en cours est terminée (moteur : `isOver`). */
       gameOver?: boolean;
       /** Numéro de la partie en cours (change à chaque lancement / revanche). */

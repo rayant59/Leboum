@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { SiteFooter } from "@/components/SiteFooter";
-import { generateRoomCode, isValidRoomCode, sanitizeName } from "@subtitles-party/shared";
+import { GAME_CATEGORIES, generateRoomCode, isValidRoomCode, listedGames, sanitizeName } from "@subtitles-party/shared";
 import { getPlayerName, setPlayerName } from "@/lib/identity";
 
 const TAGLINES = [
@@ -14,34 +14,19 @@ const TAGLINES = [
   "...imite le son le plus drôle",
 ];
 
-const ACCENTS = {
-  gold: "#FFC24B",
-  magenta: "#FF4D8D",
-  mint: "#46E0B0",
-  violet: "#8B7DF6",
-  cyan: "#4CC9F0",
-  orange: "#FF6B4D",
-} as const;
+const BASE_MAX = 8;
 
-const BORDERS = {
-  gold: "rgba(255,194,75,0.32)",
-  magenta: "rgba(255,77,141,0.32)",
-  mint: "rgba(70,224,176,0.32)",
-  violet: "rgba(139,125,246,0.4)",
-  cyan: "rgba(76,201,240,0.4)",
-  orange: "rgba(255,107,77,0.4)",
-} as const;
-
-type Accent = keyof typeof ACCENTS;
-
-const GAMES: { img: string; accent: Accent; name: string; desc: string; players: string; variants: string[] }[] = [
-  { img: "/games/draw.png", accent: "magenta", name: "Boum Dessin", desc: "Dessine le mot secret, les autres devinent — avec ses variantes.", players: "2–8", variants: [] },
-  { img: "/games/mimic.png", accent: "mint", name: "Mimic Boum", desc: "Imite un son avec ta voix — une seule prise, puis on vote pour la meilleure imitation !", players: "2–8", variants: [] },
-  { img: "/games/quiz.png", accent: "violet", name: "Ça te parle ?", desc: "Réponds aux questions et montre ta culture !", players: "1–8", variants: [] },
-  { img: "/games/reco.png", accent: "cyan", name: "Œil de Boum", desc: "Devine le personnage, le lieu, l'œuvre… sur une vraie image.", players: "1–8", variants: [] },
-  { img: "/games/pixel.png", accent: "mint", name: "Pixel Panic", desc: "Une image se dévoile pixel par pixel : devine le plus vite possible !", players: "1–8", variants: [] },
-  { img: "/games/bombe.webp", accent: "orange", name: "Boum Rush", desc: "Trouve vite un mot avec la syllabe avant que la bombe explose !", players: "2–8", variants: [] },
-];
+/** Vitrine de l'accueil : TOUS les jeux du catalogue (source unique, plus de liste recopiée). */
+const GAMES = listedGames().map((g) => ({
+  id: g.id,
+  img: g.img,
+  accent: g.accent,
+  name: g.name,
+  desc: g.tagline,
+  // Sans Pass Soirée, un salon accueille 8 joueurs : on affiche la limite de base.
+  players: `${g.minPlayers}–${Math.min(g.maxPlayers, BASE_MAX)}`,
+  family: GAME_CATEGORIES[g.category],
+}));
 
 const DOT_COLORS = ["rgba(255,194,75,0.7)", "rgba(255,77,141,0.6)", "rgba(70,224,176,0.6)", "rgba(243,238,255,0.5)"];
 const DOTS = Array.from({ length: 14 }, (_, i) => ({
@@ -181,7 +166,7 @@ export default function HomePage() {
         {/* hero */}
         <header style={{ marginBottom: 32, textAlign: "center" }}>
           <div style={{ marginBottom: 20, display: "flex", justifyContent: "center", opacity: 0, animation: "bm-fadeUp 0.6s ease 0.05s both" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 8, borderRadius: 6, background: "rgba(0,0,0,0.85)", padding: "6px 12px", fontFamily: "'Space Mono', monospace", fontSize: 14, letterSpacing: "0.03em", boxShadow: "0 2px 0 rgba(0,0,0,0.4)", minHeight: 20 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 8, borderRadius: 6, background: "rgba(0,0,0,0.85)", padding: "6px 12px", fontFamily: "'Space Mono', monospace", fontSize: 14, letterSpacing: "0.03em", boxShadow: "0 2px 0 rgba(0,0,0,0.4)", minHeight: 20, minWidth: "min(40ch, calc(100vw - 40px))", justifyContent: "flex-start" }}>
               <span style={{ color: "#F3EEFF", display: "inline-block", whiteSpace: "pre" }}>{typed}</span>
               <span style={{ display: "inline-block", height: 16, width: 2, background: "#FFC24B", animation: "bm-caretBlink 1.1s step-end infinite" }} />
             </span>
@@ -201,6 +186,9 @@ export default function HomePage() {
             </h1>
           </div>
 
+          <p style={{ margin: "18px auto 0", maxWidth: 440, fontSize: 15.5, lineHeight: 1.5, color: "#C9C2E6", opacity: 0, animation: "bm-fadeUp 0.6s ease 0.35s both" }}>
+            Le party-game français entre potes. Crée un salon, partage le code, et que le meilleur gagne la soirée.
+          </p>
         </header>
 
         {/* create / join */}
@@ -222,7 +210,7 @@ export default function HomePage() {
             onClick={onCreate}
             style={{ position: "relative", overflow: "hidden", marginTop: 16, width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", fontFamily: "'Bricolage Grotesque', system-ui, sans-serif", fontWeight: 700, fontSize: 16, lineHeight: 1, border: "none", borderRadius: 14, padding: "13px 20px", background: "#FFC24B", color: "#0E0B1A", boxShadow: "0 5px 0 #B47F16, 0 10px 18px -8px rgba(0,0,0,.6)", transition: "transform .08s ease, filter .12s ease, box-shadow .12s ease", opacity: 0, animation: "bm-fadeUp 0.5s ease 0.62s both" }}
           >
-            Créer une partie
+            Créer un salon
             <span aria-hidden style={{ position: "absolute", top: 0, bottom: 0, left: 0, width: 42, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent)", animation: "bm-sheen 4.2s ease-in-out 1.6s infinite", pointerEvents: "none" }} />
           </button>
 
@@ -257,25 +245,27 @@ export default function HomePage() {
         </div>
 
         {/* games showcase */}
-        <section style={{ marginTop: 48, width: "min(1100px, calc(100vw - 32px))", marginLeft: "50%", transform: "translateX(-50%)" }}>
+        <section style={{ marginTop: 48, width: "min(1180px, calc(100vw - 32px))", marginLeft: "50%", transform: "translateX(-50%)" }}>
+          <div style={{ marginBottom: 18, textAlign: "center", opacity: 0, animation: "bm-fadeUp 0.5s ease 0.95s both" }}>
+            <h2 style={{ margin: 0, fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 24, fontWeight: 800, color: "#F3EEFF" }}>
+              {GAMES.length} jeux, <span style={{ color: "#FFC24B" }}>une seule soirée</span>
+            </h2>
+            <p style={{ margin: "6px auto 0", maxWidth: 520, fontSize: 14, color: "#A79FC7", lineHeight: 1.5 }}>
+              Enchaîne-les dans le même salon : les points s'additionnent d'un jeu à l'autre jusqu'au grand classement de fin de soirée.
+            </p>
+          </div>
           <div className="home-games">
             {GAMES.map((g, i) => {
-              const delay = (1.05 + i * 0.08).toFixed(2) + "s";
+              const delay = (1.05 + i * 0.05).toFixed(2) + "s";
               return (
-                <div key={g.name} className="mn-card" style={{ minWidth: 0, borderRadius: 16, border: `1px solid ${BORDERS[g.accent]}`, background: "rgba(28,22,54,0.6)", padding: 12, transition: "transform 0.24s cubic-bezier(0.3,1.2,0.5,1), border-color 0.24s, box-shadow 0.24s", opacity: 0, animation: `bm-fadeUp 0.55s ease ${delay} both` }}>
-                  <div style={{ position: "relative", marginBottom: 12, borderRadius: 12, overflow: "hidden", boxShadow: `0 8px 26px -14px ${ACCENTS[g.accent]}` }}>
+                <div key={g.id} className="mn-card" style={{ minWidth: 0, borderRadius: 16, border: `1px solid ${g.accent}55`, background: "rgba(28,22,54,0.6)", padding: 12, transition: "transform 0.24s cubic-bezier(0.3,1.2,0.5,1), border-color 0.24s, box-shadow 0.24s", opacity: 0, animation: `bm-fadeUp 0.55s ease ${delay} both` }}>
+                  <div style={{ position: "relative", marginBottom: 12, borderRadius: 12, overflow: "hidden", boxShadow: `0 8px 26px -14px ${g.accent}` }}>
                     <img className="mn-card-img" src={g.img} alt={g.name} draggable={false} style={{ display: "block", width: "100%", aspectRatio: "1 / 1", objectFit: "cover", transition: "transform 0.5s cubic-bezier(0.2,0.8,0.2,1)" }} />
                     <span style={{ position: "absolute", top: 8, right: 8, borderRadius: 999, background: "rgba(14,11,26,0.75)", backdropFilter: "blur(4px)", border: "1px solid rgba(255,255,255,0.12)", padding: "2px 8px", fontSize: 11, color: "#F3EEFF" }}>{g.players} joueurs</span>
                   </div>
+                  <span style={{ display: "block", margin: "0 4px 2px", fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", color: g.family.tint }}>{g.family.label}</span>
                   <h3 style={{ margin: "0 4px", fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 17, fontWeight: 700, color: "#F3EEFF" }}>{g.name}</h3>
                   <p style={{ margin: "4px 4px 0", fontSize: 13.5, color: "#A79FC7", lineHeight: 1.45 }}>{g.desc}</p>
-                  {g.variants.length > 0 && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, margin: "10px 4px 2px" }}>
-                      {g.variants.map((v) => (
-                        <span key={v} style={{ borderRadius: 999, border: "1px solid #332A5A", background: "#0E0B1A", padding: "2px 8px", fontSize: 11, color: "#A79FC7" }}>{v}</span>
-                      ))}
-                    </div>
-                  )}
                 </div>
               );
             })}

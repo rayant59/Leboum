@@ -442,8 +442,8 @@ export function BombeView({ room }: { room: UseRoom }) {
             <div style={{ padding: "0 clamp(16px,4vw,40px) 34px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", padding: "22px 26px", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 1px ${C.line}, inset 0 1px 0 rgba(243,238,255,.04)` }}>
                 <span style={{ flex: 1, minWidth: 180, display: "flex", flexDirection: "column", gap: 3 }}>
-                  <span style={{ fontFamily: DISPLAY, fontSize: 17, fontWeight: 700 }}>Dernier mot de la partie</span>
-                  <span style={{ fontSize: 13, color: C.muted }}>{game.lastWord ? <><span style={{ color: C.mint }}>{game.lastWord}</span>{game.lastWordBy ? ` — ${nameOf(game.lastWordBy)}` : ""}</> : "—"}</span>
+                  <span style={{ fontFamily: DISPLAY, fontSize: 17, fontWeight: 700 }}>Plus long mot de la partie</span>
+                  <span style={{ fontSize: 13, color: C.muted }}>{game.longestWord ? <><span style={{ color: C.mint, fontWeight: 700 }}>{game.longestWord}</span>{game.longestWordBy ? ` — ${nameOf(game.longestWordBy)}` : ""}</> : "Aucun mot trouvé… la bombe a gagné."}</span>
                 </span>
                 {isHost && <button onClick={() => room.returnLobby()} style={btnGhost}>Salon</button>}
                 {isHost && <button onClick={() => room.playAgain()} style={btnGold}>Rejouer</button>}

@@ -147,6 +147,8 @@ export function createBombe(players: GamePlayer[], settings: BombeSettings, ctx:
     turnsSurvived: rec0(players),
     lastWord: null,
     lastWordBy: null,
+    longestWord: null,
+    longestWordBy: null,
     justExploded: null,
     explodePause: false,
     pendingNext: null,
@@ -251,6 +253,7 @@ export function reduceBombe(
         turnsSurvived: { ...state.turnsSurvived, [playerId]: (state.turnsSurvived[playerId] ?? 0) + 1 },
         lastWord: w,
         lastWordBy: playerId,
+        ...(w.length > (state.longestWord?.length ?? 0) ? { longestWord: w, longestWordBy: playerId } : {}),
         justExploded: null,
       };
       if (next == null) return ok(checkOver(advanced));
@@ -428,6 +431,8 @@ export function projectBombe(state: BombeState, viewerId: PlayerId): BombePublic
     ranking,
     lastWord: state.lastWord,
     lastWordBy: state.lastWordBy,
+    longestWord: state.longestWord ?? null,
+    longestWordBy: state.longestWordBy ?? null,
     justExploded: state.justExploded,
     usedCount: state.usedWords.length,
     aliveCount: alive.length,

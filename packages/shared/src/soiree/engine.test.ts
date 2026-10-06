@@ -1,6 +1,6 @@
 // Run: npx tsx src/soiree/engine.test.ts
 import type { GamePlayer } from "../game/types";
-import { createSoiree, currentItem, finishSoiree, isRecorded, nextGame, recordGame, soireeStandings, withPlayers } from "./engine";
+import { createSoiree, currentItem, finishSoiree, isRecorded, nextGame, recordGame, skipGame, soireeStandings, withPlayers } from "./engine";
 import { COOP_POINTS, pointsForPlace, soireePoints } from "./score";
 import { assert, done, test } from "../testing";
 
@@ -93,6 +93,13 @@ test("un joueur arrivé en cours démarre à 0", () => {
 
 test("finishSoiree termine immédiatement", () => {
   assert(finishSoiree(createSoiree(items, 0)).finished, "fini");
+});
+
+test("skipGame : le jeu passé est noté et la soirée avance", () => {
+  const s = skipGame(skipGame(createSoiree(items, 0)));
+  assert(s.current === 2 && !s.finished && (s.skipped ?? []).join() === "0,1", JSON.stringify(s.skipped));
+  const end = skipGame(s);
+  assert(end.finished && (end.skipped ?? []).length === 3, "fin après le dernier jeu passé");
 });
 
 done();

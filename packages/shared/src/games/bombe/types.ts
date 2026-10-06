@@ -63,6 +63,9 @@ export interface BombeState {
   turnsSurvived: Record<PlayerId, number>; // stats
   lastWord: string | null;                 // dernier mot validé (affichage)
   lastWordBy: PlayerId | null;
+  /** Plus long mot validé de la partie (écran de fin) — jamais remis à zéro. */
+  longestWord?: string | null;
+  longestWordBy?: PlayerId | null;
   justExploded: PlayerId | null;           // victime de la dernière explosion (animation)
   explodePause: boolean;                    // true pendant la pause « la bombe a sauté »
   pendingNext: PlayerId | null;             // joueur à qui armer le tour après la pause
@@ -105,6 +108,8 @@ export interface BombePublic {
   ranking: BombeRankRow[];
   lastWord: string | null;
   lastWordBy: PlayerId | null;
+  longestWord: string | null;
+  longestWordBy: PlayerId | null;
   justExploded: PlayerId | null;
   usedCount: number;
   aliveCount: number;

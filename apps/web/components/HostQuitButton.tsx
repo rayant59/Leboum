@@ -6,13 +6,13 @@ import { BoumIcon } from "@/components/BoumIcon";
 /**
  * Bouton commun à tous les jeux : l'hôte peut arrêter la partie en cours et
  * ramener tout le monde au salon (sans attendre la fin du jeu).
- * Double clic de sécurité : « Quitter » → « Sûr ? » (4 s pour confirmer).
+ * Double clic de sécurité : « Quitter » → « Sûr ? » (6 s pour confirmer).
  */
 export function HostQuitButton({ onQuit }: { onQuit: () => void }) {
   const [armed, setArmed] = useState(false);
   useEffect(() => {
     if (!armed) return;
-    const t = window.setTimeout(() => setArmed(false), 4000);
+    const t = window.setTimeout(() => setArmed(false), 6000);
     return () => window.clearTimeout(t);
   }, [armed]);
 
@@ -37,16 +37,16 @@ export function HostQuitButton({ onQuit }: { onQuit: () => void }) {
         backdropFilter: "blur(6px)",
         color: armed ? "#FF8A8A" : "#A79FC7",
         borderRadius: "0 0 10px 10px",
-        padding: "3px 12px 4px",
-        fontSize: 11,
-        lineHeight: "14px",
+        padding: "6px 16px 7px",
+        fontSize: 13,
+        lineHeight: "16px",
         fontWeight: 600,
         cursor: "pointer",
-        opacity: armed ? 1 : 0.75,
+        opacity: armed ? 1 : 0.9,
       }}
     >
-      <BoumIcon name={armed ? "warning" : "cross"} size={14} />
-      {armed ? "Arrêter pour tout le monde ?" : "Retour au salon"}
+      <BoumIcon name={armed ? "warning" : "cross"} size={15} />
+      {armed ? "Arrêter pour tout le monde ? Clique encore" : "Retour au salon"}
     </button>
   );
 }
