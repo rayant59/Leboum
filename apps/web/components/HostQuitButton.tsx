@@ -24,8 +24,10 @@ export function HostQuitButton({ onQuit }: { onQuit: () => void }) {
       style={{
         position: "fixed",
         top: 0,
-        left: "50%",
-        transform: "translateX(-50%)",
+        left: 0,
+        right: 0,
+        margin: "0 auto",
+        width: "fit-content",
         zIndex: 60,
         display: "inline-flex",
         alignItems: "center",

@@ -162,7 +162,8 @@ export default function HomePage() {
         ))}
       </div>
 
-      <main style={{ position: "relative", zIndex: 1, maxWidth: 768, margin: "0 auto", padding: "40px 20px" }}>
+      <main style={{ position: "relative", zIndex: 1, padding: "40px 16px" }}>
+        <div style={{ maxWidth: 728, margin: "0 auto" }}>
         {/* hero */}
         <header style={{ marginBottom: 32, textAlign: "center" }}>
           <div style={{ marginBottom: 20, display: "flex", justifyContent: "center", opacity: 0, animation: "bm-fadeUp 0.6s ease 0.05s both" }}>
@@ -245,7 +246,10 @@ export default function HomePage() {
         </div>
 
         {/* games showcase */}
-        <section style={{ marginTop: 48, width: "min(1180px, calc(100vw - 32px))", marginLeft: "50%", transform: "translateX(-50%)" }}>
+        </div>
+        {/* Vitrine : centrée par marges automatiques (plus de translateX(-50%),
+            qui tombait sur un demi-pixel à certaines largeurs → texte flou qui « vibre »). */}
+        <section style={{ maxWidth: 1180, margin: "48px auto 0" }}>
           <div style={{ marginBottom: 18, textAlign: "center", opacity: 0, animation: "bm-fadeUp 0.5s ease 0.95s both" }}>
             <h2 style={{ margin: 0, fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 24, fontWeight: 800, color: "#F3EEFF" }}>
               {GAMES.length} jeux, <span style={{ color: "#FFC24B" }}>une seule soirée</span>
