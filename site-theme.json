@@ -28,8 +28,516 @@
         "style": {
           "hidden": true
         }
+      },
+      {
+        "id": "yutha433",
+        "route": "/",
+        "path": "div:nth-child(1) > main:nth-child(4) > section:nth-child(2) > div:nth-child(2) > div:nth-child(7) > p:nth-child(4)",
+        "tag": "p",
+        "fp": "Classe 5 trucs dans le bon ordre. Plus tu colles, plus tu marques.",
+        "style": {
+          "fontSize": 14,
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "7cpqstpz",
+        "route": "/",
+        "path": "div:nth-child(1) > main:nth-child(4) > section:nth-child(2) > div:nth-child(2) > div:nth-child(6) > p:nth-child(4)",
+        "tag": "p",
+        "fp": "Une personne mystère, 20 questions oui/non pour la démasquer.",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "zmhqacv6",
+        "route": "/",
+        "path": "div:nth-child(1) > main:nth-child(4) > section:nth-child(2) > div:nth-child(2) > div:nth-child(5) > p:nth-child(4)",
+        "tag": "p",
+        "fp": "Fais deviner le mot… sans jamais dire les mots interdits.",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "s783dfo0",
+        "route": "/",
+        "path": "div:nth-child(1) > main:nth-child(4) > section:nth-child(2) > div:nth-child(2) > div:nth-child(4) > p:nth-child(4)",
+        "tag": "p",
+        "fp": "Réponds vite et montre ta culture.",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "c2mxqmyu",
+        "route": "/",
+        "path": "div:nth-child(1) > main:nth-child(4) > section:nth-child(2) > div:nth-child(2) > div:nth-child(3) > p:nth-child(4)",
+        "tag": "p",
+        "fp": "Devine le personnage, le film, le lieu…",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "l5cd1sm9",
+        "route": "/",
+        "path": "div:nth-child(1) > main:nth-child(4) > section:nth-child(2) > div:nth-child(2) > div:nth-child(2) > p:nth-child(4)",
+        "tag": "p",
+        "fp": "Une phrase, un dessin, une description… et tout part en vrille.",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "aiq6tj4e",
+        "route": "/",
+        "path": "div:nth-child(1) > main:nth-child(4) > section:nth-child(2) > div:nth-child(2) > div:nth-child(1) > p:nth-child(4)",
+        "tag": "p",
+        "fp": "Dessine le mot secret, les autres devinent.",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "4zv1f8f9",
+        "route": "/",
+        "path": "div:nth-child(1) > main:nth-child(4) > section:nth-child(2) > div:nth-child(2) > div:nth-child(8) > p:nth-child(4)",
+        "tag": "p",
+        "fp": "Qui est le plus susceptible de… ? Votez !",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "sadqa1hi",
+        "route": "/",
+        "path": "div:nth-child(1) > main:nth-child(4) > section:nth-child(2) > div:nth-child(2) > div:nth-child(9) > p:nth-child(4)",
+        "tag": "p",
+        "fp": "Complète la phrase. La table vote pour la meilleure.",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "h7o179gp",
+        "route": "/",
+        "path": "div:nth-child(1) > main:nth-child(4) > section:nth-child(2) > div:nth-child(2) > div:nth-child(10) > p:nth-child(4)",
+        "tag": "p",
+        "fp": "Un seul n'a pas le mot. Trouvez-le avant qu'il vous enfume.",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "baees8jf",
+        "route": "/",
+        "path": "div:nth-child(1) > main:nth-child(4) > section:nth-child(2) > div:nth-child(2) > div:nth-child(11) > p:nth-child(4)",
+        "tag": "p",
+        "fp": "Bombarde la cible de questions jusqu'à ce qu'elle craque.",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "u0n7xsas",
+        "route": "/",
+        "path": "div:nth-child(1) > main:nth-child(4) > section:nth-child(2) > div:nth-child(2) > div:nth-child(12) > p:nth-child(4)",
+        "tag": "p",
+        "fp": "Trouve un mot avec la syllabe avant l'explosion.",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "r1muyf9r",
+        "route": "/",
+        "path": "div:nth-child(1) > main:nth-child(4) > section:nth-child(2) > div:nth-child(2) > div:nth-child(13) > p:nth-child(4)",
+        "tag": "p",
+        "fp": "L'image se dévoile pixel par pixel.",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "ugpm21la",
+        "route": "/",
+        "path": "div:nth-child(1) > main:nth-child(4) > section:nth-child(2) > div:nth-child(2) > div:nth-child(14) > p:nth-child(4)",
+        "tag": "p",
+        "fp": "Imite un son avec ta voix, une seule prise.",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "xl6j85jv",
+        "route": "/room/*",
+        "path": "div:nth-child(1) > div:nth-child(3)",
+        "tag": "div",
+        "fp": "#Retour au salonRejouer",
+        "style": {
+          "textAlign": "center",
+          "x": -3,
+          "y": -10
+        }
+      },
+      {
+        "id": "7rw1qh0t",
+        "route": "/room/*",
+        "path": "div:nth-child(1) > div:nth-child(3) > button:nth-child(1)",
+        "tag": "button",
+        "fp": "Retour au salon",
+        "style": {
+          "x": -35,
+          "y": -5
+        }
+      },
+      {
+        "id": "ozjo7clm",
+        "route": "/room/*",
+        "path": "div:nth-child(1) > div:nth-child(3) > button:nth-child(2)",
+        "tag": "button",
+        "fp": "Rejouer",
+        "style": {
+          "x": 26,
+          "y": -1
+        }
+      },
+      {
+        "id": "9dhkl2pa",
+        "route": "/room/*",
+        "path": "div:nth-child(3) > div:nth-child(1) > div:nth-child(4) > svg:nth-child(2)",
+        "tag": "svg",
+        "fp": "#",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "2qk42f43",
+        "route": "/room/*",
+        "path": "div:nth-child(3) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(1)",
+        "tag": "li",
+        "fp": "Chacun reçoit un personnage.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "c0tbj6qd",
+        "route": "/room/*",
+        "path": "div:nth-child(3) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(2)",
+        "tag": "li",
+        "fp": "Doublez la scène en direct.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "tqw9k4nb",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(2)",
+        "tag": "li",
+        "fp": "Tape un mot contenant la syllabe.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "spzlhhyi",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(3)",
+        "tag": "li",
+        "fp": "Si elle explose sur toi, tu perds une vie.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "vezienry",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(1)",
+        "tag": "li",
+        "fp": "La bombe passe de main en main.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "iw6wws3h",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(3)",
+        "tag": "li",
+        "fp": "Le premier qui la trouve : +100, et +10 par question restante.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "sbye1s61",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(2)",
+        "tag": "li",
+        "fp": "Un imposteur a un mot voisin sans le savoir.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "0coe9ktr",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(1)",
+        "tag": "li",
+        "fp": "Tout le monde dessine le même mot.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "cuksj735",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(3)",
+        "tag": "li",
+        "fp": "Votez pour le démasquer.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "4ue6broa",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(3)",
+        "tag": "li",
+        "fp": "Vote comme la majorité : +100. L'élu : +50.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "mjxejdf0",
+        "route": "/room/*",
+        "path": "div:nth-child(3) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(2)",
+        "tag": "li",
+        "fp": "Écris le sous-titre le plus drôle.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "fagw3mg4",
+        "route": "/room/*",
+        "path": "div:nth-child(3) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(3)",
+        "tag": "li",
+        "fp": "Votez anonymement.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "tlcoxpyz",
+        "route": "/room/*",
+        "path": "div:nth-child(3) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(1)",
+        "tag": "li",
+        "fp": "Un extrait muet passe.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "9g1d6e5p",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(3)",
+        "tag": "li",
+        "fp": "À la fin, on dévoile chaque chaîne. Chaque « j'adore » reçu = +100.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "imjvhout",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(2)",
+        "tag": "li",
+        "fp": "Elle passe de main en main : on dessine ce qu'on lit, on décrit ce qu'on voit.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "3ulf4l3v",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(1)",
+        "tag": "li",
+        "fp": "Écris une phrase de départ.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "11omcxp3",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(2)",
+        "tag": "li",
+        "fp": "Les autres devinent le mot.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "bhwelrt7",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(1)",
+        "tag": "li",
+        "fp": "Deux dessinateurs se passent le crayon.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "qird9yoq",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(3)",
+        "tag": "li",
+        "fp": "Elle marque à chaque seconde tenue ; celui qui la fait craquer : +150.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "5fktuhi2",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(3) > div:nth-child(3) > div:nth-child(2) > span:nth-child(1) > span:nth-child(2)",
+        "tag": "span",
+        "fp": "— Riri 🤖",
+        "texts": [
+          " - Riri 🤖"
+        ]
+      },
+      {
+        "id": "9ms7duvi",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(2)",
+        "tag": "li",
+        "fp": "Bonne réponse = points, rapidité = bonus.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "q3g0hnzt",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(1)",
+        "tag": "li",
+        "fp": "Une question, un chrono.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "i30jittc",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(2)",
+        "tag": "li",
+        "fp": "Posez-lui des questions : il répond oui, non ou je ne sais pas.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "n5zi5bwx",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(1)",
+        "tag": "li",
+        "fp": "Le Maître du secret connaît une personne mystère.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "y62vlk6k",
+        "route": "/room/*",
+        "path": "main:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div:nth-child(1) > button:nth-child(2)",
+        "tag": "button",
+        "fp": "Autoriser le micro",
+        "style": {
+          "padding": 7,
+          "margin": 0
+        }
+      },
+      {
+        "id": "c4m7c1dn",
+        "route": "/room/*",
+        "path": "main:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div:nth-child(1) > button:nth-child(2)",
+        "tag": "button",
+        "fp": "Autoriser le micro",
+        "href": "/",
+        "add": {
+          "kind": "button",
+          "where": "after"
+        }
+      },
+      {
+        "id": "u2j6ktcq",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(2)",
+        "tag": "li",
+        "fp": "Les autres le devinent au chat.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "9twcz4x1",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(3)",
+        "tag": "li",
+        "fp": "Plus tu trouves vite, plus tu marques.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "huvsy3qa",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(1)",
+        "tag": "li",
+        "fp": "Un joueur dessine un mot secret.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "eyb6k2qn",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(1)",
+        "tag": "li",
+        "fp": "Une consigne : du plus lourd au plus léger, du plus ancien au plus récent…",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "7wm3bjw6",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(2)",
+        "tag": "li",
+        "fp": "Range les 5 éléments avant la fin du chrono.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "0lmu8kmw",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(3)",
+        "tag": "li",
+        "fp": "Bonne place : +100, à une place près : +50. Sans faute : bonus !",
+        "style": {
+          "hidden": true
+        }
       }
     ]
   },
-  "updatedAt": 1791304708856
+  "updatedAt": 1791319363364
 }
