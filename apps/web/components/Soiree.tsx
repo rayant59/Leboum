@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { SOIREE_FORMATS, estimateMinutes, gameInfo, playerSummary, soireeHighlights, soireeRecap, soireeStandings, type SoireePlayerSummary, type SoireeState } from "@subtitles-party/shared";
 import { playSound } from "@/lib/sound";
 import { Avatar } from "@/components/Avatar";
+import { NeonIcon, type NeonIconName } from "@/components/NeonIcon";
 import { ResultsScreen, type RankRow } from "@/components/ResultsScreen";
 
 const DISPLAY = "'Bricolage Grotesque', system-ui, sans-serif";
@@ -64,9 +65,7 @@ export function SoireeBuilder({
   return (
     <section className="mb-8 rounded-2xl border p-5" style={{ borderColor: "rgba(255,194,75,.35)", background: "linear-gradient(165deg, rgba(255,194,75,.09), rgba(28,22,54,.65) 55%)" }}>
       <div className="mb-4 flex items-start gap-3">
-        <span aria-hidden style={{ display: "grid", placeItems: "center", width: 40, height: 40, borderRadius: 12, background: "rgba(255,194,75,.14)", border: "1px solid rgba(255,194,75,.4)", flex: "none" }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z" /><path d="M17 6h3v1.5a3 3 0 0 1-3 3M7 6H4v1.5a3 3 0 0 0 3 3" /></svg>
-        </span>
+        <NeonIcon name="trophy" size={44} style={{ marginTop: -4, filter: "drop-shadow(0 4px 12px rgba(255,194,75,.35))" }} />
         <div className="min-w-0 flex-1">
           <h2 className="cfg-tt">Soirée LeBoum</h2>
           <span className="cfg-sub">{items.length ? `${items.length} jeu${items.length > 1 ? "x" : ""} · ~${minutes} min · un seul classement` : "Enchaîne plusieurs jeux, un seul classement"}</span>
@@ -351,7 +350,7 @@ export function SoireeFinal({ soiree, you, isHost, onRematch, onEnd, onVote }: {
                   <div key={a.id} className="flex items-center gap-3 rounded-2xl border px-3 py-2.5" style={{ borderColor: isYou ? "rgba(255,194,75,.5)" : C.line, background: isYou ? "rgba(255,194,75,.08)" : "rgba(28,22,54,.6)", animation: `pop-in .3s ease-out ${(0.5 + i * 0.1).toFixed(2)}s both` }}>
                     <span style={{ position: "relative", flex: "none" }}>
                       <Avatar name={p.name} color={p.color} avatar={p.avatar} size={38} />
-                      <span style={{ position: "absolute", right: -6, bottom: -6, width: 22, height: 22, display: "grid", placeItems: "center", borderRadius: 999, background: C.deep, border: `1px solid ${C.gold}` }}>
+                      <span style={{ position: "absolute", right: -9, bottom: -9, display: "grid", placeItems: "center" }}>
                         <HighlightIcon id={a.id} />
                       </span>
                     </span>
@@ -452,27 +451,35 @@ function MySoiree({ s, total, shared }: { s: SoireePlayerSummary; total: number;
   );
 }
 
-/** Petites icônes dessinées (pas d'emoji) pour les distinctions. */
+/** Icône illustrée de chaque distinction (planche néon LeBoum). */
+const HIGHLIGHT_ICONS: Record<string, NeonIconName> = {
+  most_wins: "trophy",
+  big_win: "bolt",
+  quiz_head: "bulb",
+  brain: "bulb",
+  streak: "fire",
+  best_drawer: "palette",
+  best_liar: "ghost",
+  detective: "magnifier",
+  funny_best: "laughing",
+  funny_pen: "love-letter",
+  funny_champ: "crown",
+  comeback: "rocket",
+  always_podium: "medal",
+  most_words: "diamond",
+  best_mimic: "mic",
+  best_orator: "megaphone",
+  best_finder: "target",
+  whois_star: "star",
+  whois_mind: "thinking",
+  yesno_wall: "cool",
+  yesno_trap: "skull",
+  guesswho_sherlock: "magnifier",
+  guesswho_oracle: "magic-wand",
+  best_writer: "chat",
+  fastest: "stopwatch",
+  ranking_perfect: "laurel",
+};
 function HighlightIcon({ id }: { id: string }) {
-  const p = { width: 13, height: 13, viewBox: "0 0 24 24", fill: "none", stroke: C.gold, strokeWidth: 2.2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
-  switch (id) {
-    case "most_wins":
-      return <svg {...p}><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z" /><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 14v4M8 20h8" /></svg>;
-    case "big_win":
-      return <svg {...p}><path d="M13 2 4 14h6l-1 8 10-13h-6l1-7z" /></svg>;
-    case "quiz_head":
-      return <svg {...p}><circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01" /></svg>;
-    case "best_drawer":
-      return <svg {...p}><path d="M4 20l4-1 11-11-3-3L5 16l-1 4Z" /><path d="M14 6l3 3" /></svg>;
-    case "best_liar":
-      return <svg {...p}><path d="M3 8c3-2 15-2 18 0 0 6-4 9-9 9S3 14 3 8Z" /><path d="M8 11h2M14 11h2" /></svg>;
-    case "funny_best":
-      return <svg {...p}><circle cx="12" cy="12" r="9" /><path d="M8 14c1.2 2 6.8 2 8 0M9 9.5v.01M15 9.5v.01" /></svg>;
-    case "comeback":
-      return <svg {...p}><path d="M4 18l6-6 4 4 6-8" /><path d="M15 8h5v5" /></svg>;
-    case "always_podium":
-      return <svg {...p}><path d="M3 20h18M5 20v-6h4v6M10 20V9h4v11M15 20v-8h4v8" /></svg>;
-    default:
-      return <svg {...p}><path d="m12 3 2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7L12 3Z" /></svg>;
-  }
+  return <NeonIcon name={HIGHLIGHT_ICONS[id] ?? "star"} size={26} style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,.6))" }} />;
 }

@@ -2,6 +2,7 @@
 
 import { type ReactNode } from "react";
 import { Avatar } from "@/components/Avatar";
+import { NeonIcon } from "@/components/NeonIcon";
 
 export interface RankRow {
   id: string;
@@ -109,13 +110,7 @@ export function ResultsScreen({
       {/* héros */}
       <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, paddingTop: 14, textAlign: "center" }}>
         <span style={{ fontFamily: DISPLAY, fontSize: 11, fontWeight: 700, letterSpacing: ".18em", textTransform: "uppercase", color: "#6E6796" }}>{eyebrow}</span>
-        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" style={{ filter: "drop-shadow(0 6px 20px rgba(255,194,75,.55))", animation: "rs-float 4s ease-in-out infinite" }}>
-          <path d="M6 4h12v5a6 6 0 0 1-12 0V4Z" fill="rgba(255,194,75,.16)" />
-          <path d="M6 6H3.5v1.5a3 3 0 0 0 3 3" />
-          <path d="M18 6h2.5v1.5a3 3 0 0 1-3 3" />
-          <path d="M9.5 15.2 9 19h6l-.5-3.8" />
-          <path d="M7.5 21h9" />
-        </svg>
+        <NeonIcon name="trophy" size={76} style={{ filter: "drop-shadow(0 6px 20px rgba(255,194,75,.45))", animation: "rs-float 4s ease-in-out infinite" }} />
         <h1 className="font-display" style={{ margin: 0, fontSize: 44, fontWeight: 800, letterSpacing: "-.02em", color: GOLD, animation: "rs-pop .7s cubic-bezier(.2,.9,.3,1.3) both, rs-glow 3s ease-in-out .7s infinite" }}>{winner && coLeaders.some((r) => r.id === you) ? (coLeaders.length > 1 ? "Ex æquo\u202f!" : "Victoire\u202f!") : endTitle}</h1>
         {winner && (
           <p style={{ margin: 0, fontSize: 15, color: "#A79FC7" }}>
@@ -154,13 +149,13 @@ export function ResultsScreen({
       {stats && (stats.fastest || stats.brain || stats.streak) && (
         <div style={{ position: "relative", display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 10, marginTop: 20 }}>
           {stats.fastest && (
-            <Chip value={stats.fastest} label="Plus rapide" icon={<svg width="15" height="15" viewBox="0 0 24 24" fill={GOLD}><path d="M13 2 4 14h6l-1 8 10-13h-6l1-7z" /></svg>} />
+            <Chip value={stats.fastest} label="Plus rapide" icon={<NeonIcon name="bolt" size={22} />} />
           )}
           {stats.brain && (
-            <Chip value={stats.brain} label="Le cerveau" icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF4D8D" strokeWidth="1.7" strokeLinejoin="round"><path d="M9.5 4a3 3 0 0 0-3 3 3 3 0 0 0-1.5 5.5A3 3 0 0 0 7 18a2.5 2.5 0 0 0 5 .2V4.5A2 2 0 0 0 9.5 4Z" fill="rgba(255,77,141,.16)" /><path d="M14.5 4a3 3 0 0 1 3 3 3 3 0 0 1 1.5 5.5A3 3 0 0 1 17 18a2.5 2.5 0 0 1-5 .2" fill="rgba(255,77,141,.16)" /></svg>} />
+            <Chip value={stats.brain} label="Le cerveau" icon={<NeonIcon name="bulb" size={22} />} />
           )}
           {stats.streak && (
-            <Chip value={stats.streak} label="Meilleure série" icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8B7DF6" strokeWidth="1.7" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="3" fill="rgba(139,125,246,.16)" /><circle cx="9" cy="9" r="1.4" fill="#8B7DF6" stroke="none" /><circle cx="15" cy="15" r="1.4" fill="#8B7DF6" stroke="none" /><circle cx="15" cy="9" r="1.4" fill="#8B7DF6" stroke="none" /><circle cx="9" cy="15" r="1.4" fill="#8B7DF6" stroke="none" /></svg>} />
+            <Chip value={stats.streak} label="Meilleure série" icon={<NeonIcon name="fire" size={22} />} />
           )}
         </div>
       )}
@@ -205,10 +200,7 @@ function PodiumCol({
   return (
     <div style={{ flex: winner ? 1.14 : 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 10, animation: `rs-rise .6s cubic-bezier(.2,.9,.3,1.15) ${rise} both` }}>
       {winner && (
-        <svg width="34" height="34" viewBox="0 0 24 24" fill={GOLD} style={{ filter: "drop-shadow(0 4px 12px rgba(255,194,75,.7))", animation: "rs-crown 3.2s ease-in-out infinite" }}>
-          <path d="M3 7l4.5 3L12 4l4.5 6L21 7l-1.6 11H4.6L3 7z" />
-          <circle cx="3" cy="7" r="1.4" /><circle cx="12" cy="4" r="1.5" /><circle cx="21" cy="7" r="1.4" />
-        </svg>
+        <NeonIcon name="crown" size={44} style={{ filter: "drop-shadow(0 4px 12px rgba(255,194,75,.6))", animation: "rs-crown 3.2s ease-in-out infinite" }} />
       )}
       <div style={{ position: "relative", display: "grid", placeItems: "center" }}>
         {winner && (

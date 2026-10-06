@@ -7,6 +7,7 @@ import { Avatar } from "@/components/Avatar";
 import { DrawCanvas, GuessBar, ChatPanel, MaskedWord, SkipButton } from "@/components/DrawGameView";
 import { LB, DISPLAY, MONO, hexA, Aurora, Rail, type RailRow, lbShell, lbCard, lbGoldBtn, lbGhostBtn, topBar, useCountdown, LB_SCOPED_CSS } from "@/components/leboum";
 import { BoumIcon, PlaceMedal } from "@/components/BoumIcon";
+import { NeonIcon } from "@/components/NeonIcon";
 import { WaitHost } from "@/lib/voice";
 
 export function RelayView({ room }: { room: UseRoom }) {
@@ -35,7 +36,7 @@ export function RelayView({ room }: { room: UseRoom }) {
             <div style={{ flex: 1, display: "grid", placeItems: "center", padding: 28 }}>
               <div style={{ width: "100%", maxWidth: 440, textAlign: "center" }}>
                 <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: LB.faint }}>Classement final</span>
-                <div style={{ margin: "8px 0 18px" }}><BoumIcon name="trophy" size={44} color={LB.gold} /></div>
+                <div style={{ margin: "8px 0 18px" }}><NeonIcon name="trophy" size={64} /></div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10, textAlign: "left" }}>
                   {ranking.map((p, i) => (
                     <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, background: i === 0 ? hexA(LB.gold, 0.1) : LB.surface, boxShadow: i === 0 ? `0 0 0 1px ${hexA(LB.gold, 0.55)}` : `0 0 0 1px ${LB.line}` }}>

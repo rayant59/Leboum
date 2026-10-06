@@ -8,6 +8,7 @@ import { VideoStage } from "./VideoStage";
 import { playTick, playChime, playFanfare, SoundToggle } from "@/lib/sound";
 import { BoumBackdrop } from "@/components/BoumBackdrop";
 import { BoumIcon, PlaceMedal } from "@/components/BoumIcon";
+import { NeonIcon } from "@/components/NeonIcon";
 import { WaitHost } from "@/lib/voice";
 import { useCountdown } from "@/lib/countdown";
 
@@ -689,7 +690,7 @@ function Scoreboard({
         <h1 className="mb-4 font-display text-3xl font-extrabold">Classement final</h1>
         {hasWinner && (
           <div className="mb-5 animate-pop">
-            <BoumIcon name="trophy" size={44} color="#FFC24B" />
+            <NeonIcon name="trophy" size={64} />
             <div className="font-display text-lg font-extrabold text-gold">
               {champion.name}
               {champion.id === you && " (toi)"} !

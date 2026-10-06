@@ -9,6 +9,7 @@ import { SoundToggle, playSound } from "@/lib/sound";
 import { ChatPanel } from "@/components/DrawGameView";
 import { LB, DISPLAY, MONO, hexA, Aurora, type RailRow, lbShell, lbCard, lbGoldBtn, lbGhostBtn, topBar, LB_SCOPED_CSS } from "@/components/leboum";
 import { BoumIcon } from "@/components/BoumIcon";
+import { NeonIcon } from "@/components/NeonIcon";
 import { WaitHost } from "@/lib/voice";
 import { useCountdown } from "@/lib/countdown";
 
@@ -722,7 +723,7 @@ function Recording({ room, game, mic, isHost }: { room: UseRoom; game: MimicPubl
         : "Enregistrement en cours…";
     return (
       <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 34, textAlign: "center" }}>
-        <BoumIcon name="headphones" size={44} color={LB.mint} />
+        <NeonIcon name="headphones" size={60} />
         <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 24, color: LB.text }}>{who}</span>
         <span style={{ fontSize: 14, color: LB.muted }}>
           {game.mode === "duel" ? "Écoute bien : c'est toi qui votes pour la meilleure imitation." : "Écoute : la chaîne se transmet une voix après l'autre."}
