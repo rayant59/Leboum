@@ -973,7 +973,11 @@ function scheduleGameTick(room: Room) {
   const delay = Math.max(0, deadline - Date.now());
   room.gameTimer = setTimeout(() => {
     room.gameTimer = null;
-    advanceGame(room, Date.now());
+    try {
+      advanceGame(room, Date.now());
+    } catch (err) {
+      console.error(`[room ${room.state.code}] minuteur :`, (err as Error)?.message ?? err);
+    }
   }, delay);
 }
 
@@ -1058,6 +1062,10 @@ const wss = new WebSocketServer({ server: httpServer });
 httpServer.listen(PORT);
 const flushAndExit = () => { stats.flush(); process.exit(0); };
 process.on("SIGTERM", flushAndExit);
+// Filet de sécurité : une erreur imprévue (minuteur, jeu…) est journalisée sans
+// faire tomber le serveur — sinon tous les salons en cours seraient perdus.
+process.on("uncaughtException", (err) => console.error("[serveur] erreur non gérée :", err));
+process.on("unhandledRejection", (err) => console.error("[serveur] promesse rejetée :", err));
 process.on("SIGINT", flushAndExit);
 
 wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
@@ -1128,6 +1136,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
       return;
     }
     const t = Date.now();
+    try {
     switch (msg.type) {
       case "join": {
         applyRoom(room, { type: "join", playerId, name: msg.name, now: t }, ws);
@@ -1177,6 +1186,9 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
       }
 
       case "game": {
+        // Message de jeu : toujours un objet avec un `kind` texte, sinon ignoré.
+        const raw = (msg as { action?: unknown }).action;
+        if (!raw || typeof raw !== "object" || Array.isArray(raw) || typeof (raw as { kind?: unknown }).kind !== "string") return;
         if (room.mod) {
           const action = msg.action as DrawClientAction;
           if (room.mod.module.id === "draw" && action.kind === "guess") {
@@ -1366,6 +1378,11 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
         relay(room, { type: "draw_clear", from: playerId });
         return;
       }
+    }
+    } catch (err) {
+      // Un message mal formé (ou un bug d'un jeu) ne doit JAMAIS faire tomber
+      // le serveur entier : on l'ignore et on le journalise.
+      console.error(`[room ${room.state.code}] message ignoré (${(msg as { type?: string }).type}) :`, (err as Error)?.message ?? err);
     }
   });
 

@@ -36,7 +36,7 @@ export interface RecoItem {
 
 /** Normalize: lowercase, strip accents/punctuation, collapse spaces. */
 export function recoNormalize(s: string): string {
-  return (s || "")
+  return (typeof s === "string" ? s : s == null ? "" : String(s))
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()

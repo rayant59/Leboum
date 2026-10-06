@@ -70,6 +70,8 @@ export function ResultsScreen({
   const places: number[] = [];
   ranking.forEach((r, i) => places.push(i > 0 && r.score === ranking[i - 1].score ? places[i - 1] : i + 1));
   const medal = (place: number) => (place === 1 ? GOLD : place === 2 ? SILVER : BRONZE);
+  // Personne n'a marqué : pas de faux podium « tout le monde 1er ».
+  const nobody = ranking.length > 1 && ranking.every((r) => r.score === 0);
 
   return (
     <div className="animate-pop" style={{ position: "relative", overflow: "hidden" }}>
@@ -89,7 +91,7 @@ export function ResultsScreen({
       `}</style>
 
       {/* effet de victoire LeBoum : onde de choc + « BOUM ! » tamponné, pour le(s) vainqueur(s) */}
-      {winner && coLeaders.some((r) => r.id === you) && (
+      {winner && !nobody && coLeaders.some((r) => r.id === you) && (
         <div aria-hidden className="rs-boom" style={{ position: "absolute", left: "50%", top: 92, width: 0, height: 0, pointerEvents: "none" }}>
           <span style={{ position: "absolute", left: 0, top: 0, width: 120, height: 120, borderRadius: "50%", border: `3px solid ${GOLD}`, animation: "rs-wave 1.1s cubic-bezier(.1,.7,.3,1) .15s both" }} />
           <span style={{ position: "absolute", left: 0, top: 0, width: 120, height: 120, borderRadius: "50%", border: "2px solid #FF4D8D", animation: "rs-wave 1.3s cubic-bezier(.1,.7,.3,1) .35s both" }} />
@@ -102,7 +104,7 @@ export function ResultsScreen({
 
       {/* confettis */}
       <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
-        {CONFETTI.map((c, i) => (
+        {!nobody && CONFETTI.map((c, i) => (
           <span key={i} style={{ position: "absolute", top: 0, left: `${c.x}%`, width: c.w, height: c.h, borderRadius: c.r, background: c.color, animation: `rs-fall ${c.d}s linear ${c.delay}s infinite` }} />
         ))}
       </div>
@@ -111,8 +113,9 @@ export function ResultsScreen({
       <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, paddingTop: 14, textAlign: "center" }}>
         <span style={{ fontFamily: DISPLAY, fontSize: 11, fontWeight: 700, letterSpacing: ".18em", textTransform: "uppercase", color: "#6E6796" }}>{eyebrow}</span>
         <NeonIcon name="trophy" size={76} style={{ filter: "drop-shadow(0 6px 20px rgba(255,194,75,.45))", animation: "rs-float 4s ease-in-out infinite" }} />
-        <h1 className="font-display" style={{ margin: 0, fontSize: 44, fontWeight: 800, letterSpacing: "-.02em", color: GOLD, animation: "rs-pop .7s cubic-bezier(.2,.9,.3,1.3) both, rs-glow 3s ease-in-out .7s infinite" }}>{winner && coLeaders.some((r) => r.id === you) ? (coLeaders.length > 1 ? "Ex æquo\u202f!" : "Victoire\u202f!") : endTitle}</h1>
-        {winner && (
+        <h1 className="font-display" style={{ margin: 0, fontSize: nobody ? 34 : 44, fontWeight: 800, letterSpacing: "-.02em", color: GOLD, animation: "rs-pop .7s cubic-bezier(.2,.9,.3,1.3) both, rs-glow 3s ease-in-out .7s infinite" }}>{nobody ? "Personne n'a marqué" : winner && coLeaders.some((r) => r.id === you) ? (coLeaders.length > 1 ? "Ex æquo\u202f!" : "Victoire\u202f!") : endTitle}</h1>
+        {nobody && <p style={{ margin: 0, fontSize: 15, color: "#A79FC7" }}>Zéro partout… la revanche s'impose.</p>}
+        {winner && !nobody && (
           <p style={{ margin: 0, fontSize: 15, color: "#A79FC7" }}>
             {coLeaders.length > 1 ? (
               <><b style={{ color: "#F3EEFF" }}>{coLeaders.map((r) => r.name + (r.id === you ? " (toi)" : "")).join(" & ")}</b> à égalité en tête !</>
@@ -125,14 +128,14 @@ export function ResultsScreen({
       </div>
 
       {/* podium */}
-      <div style={{ position: "relative", display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 16, marginTop: 20, maxWidth: 520, marginInline: "auto" }}>
+      {!nobody && <div style={{ position: "relative", display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 16, marginTop: 20, maxWidth: 520, marginInline: "auto" }}>
         {second && <PodiumCol row={second} you={you} place={places[1]} color={medal(places[1])} h={96} font={30} avatar={56} rise=".2s" />}
         {winner && <PodiumCol row={winner} you={you} place={places[0]} color={medal(places[0])} h={134} font={40} avatar={74} rise=".05s" winner />}
         {third && <PodiumCol row={third} you={you} place={places[2]} color={medal(places[2])} h={76} font={28} avatar={56} rise=".32s" />}
-      </div>
+      </div>}
 
       {/* rangs 4+ */}
-      {rest.length > 0 && (
+      {rest.length > 0 && !nobody && (
         <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 8, marginTop: 20, maxWidth: 460, marginInline: "auto" }}>
           {rest.map((r, i) => (
             <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 14, border: "1px solid #332A5A", background: "linear-gradient(180deg, rgba(37,28,69,.6), rgba(28,22,54,.6))" }}>

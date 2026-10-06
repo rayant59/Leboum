@@ -42,7 +42,7 @@ export type Question = MCQQuestion | TFQuestion | FreeQuestion;
 
 /** Normalize a free-text answer: lowercase, strip accents/punctuation, collapse spaces. */
 export function normalizeAnswer(s: string): string {
-  return (s || "")
+  return (typeof s === "string" ? s : s == null ? "" : String(s))
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()

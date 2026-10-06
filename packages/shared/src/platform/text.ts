@@ -4,7 +4,7 @@ import { typoDistance } from "../room/util";
 
 /** Minuscules, sans accents, œ → oe, ponctuation → espace, sans article en tête. */
 export function normalizeWord(s: string): string {
-  return (s || "")
+  return (typeof s === "string" ? s : s == null ? "" : String(s))
     .toLowerCase()
     .replace(/œ/g, "oe")
     .replace(/æ/g, "ae")

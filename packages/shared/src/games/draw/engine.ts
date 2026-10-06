@@ -19,7 +19,7 @@ import { typoDistance } from "../../room/util";
  *  treated as spaces, single-spaced — so compound words match loosely
  *  ("Casse-Noisette" == "casse noisette"). */
 export function normalize(s: string): string {
-  return s
+  return String(s ?? "")
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -174,7 +174,8 @@ function reduceClient(
     return ok({ ...state, finished: !state.finished });
   }
 
-  // guess
+  // guess (tout autre message inconnu ou mal formé est ignoré)
+  if (msg.kind !== "guess" || typeof msg.text !== "string") return ok(state);
   if (state.phase !== "drawing") return ok(state); // ignore stray guesses
   if (playerId === state.drawerId) return ok(state); // the drawer can't guess
   if (state.guessedAt[playerId] != null) return ok(state); // already found it

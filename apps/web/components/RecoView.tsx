@@ -282,6 +282,7 @@ const SCOPED_CSS = `
 @media (max-width:899px){
   .rc-scope .rc-rail{display:none !important}
   .rc-scope .rc-mobilehead{display:flex !important}
+  .rc-scope .rc-deskonly{display:none !important}
   .rc-scope .rc-pad{padding-left:18px !important;padding-right:18px !important}
 }
 @media (min-width:900px){ .rc-scope .rc-mobilehead{display:none} }
@@ -407,13 +408,13 @@ export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boole
           {/* En-tête de la zone de contenu */}
           <div className="rc-pad" style={{ flex: "none", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "16px 40px" }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-              <span className="rc-mobilehead" style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: game.phase === "reveal" ? C.mint : C.faint }}>
+              <span className="rc-mobilehead" style={{ whiteSpace: "nowrap", fontFamily: DISPLAY, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: game.phase === "reveal" ? C.mint : C.faint }}>
                 {(pixel ? "Pixel Panic" : "Œil de Boum") + ` · ${game.index + 1} / ${game.total}`}
               </span>
               {game.phase === "reveal" ? (
                 <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: C.mint }}>C'était</span>
               ) : (
-                <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: C.faint }}>Image {game.index + 1}</span>
+                <span className="rc-deskonly" style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: C.faint }}>Image {game.index + 1}</span>
               )}
               {game.phase !== "reveal" && item && (
                 <span style={{ padding: "5px 10px", borderRadius: 8, background: hexA(chip, 0.14), boxShadow: `inset 0 0 0 1px ${hexA(chip, 0.45)}`, fontFamily: DISPLAY, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".14em", color: chip }}>
@@ -432,7 +433,7 @@ export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boole
               {game.phase === "question" && pixel && secs != null && (
                 <span style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}>
                   <span style={{ fontFamily: DISPLAY, fontSize: 22, fontWeight: 800, color: C.mint, fontVariantNumeric: "tabular-nums" }}>{secs >= 60 ? `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}` : `${secs}s`}</span>
-                  <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: C.faint }}>{game.mode === "coop" ? "chrono commun" : "restantes"}</span>
+                  {game.mode === "coop" && <span className="rc-deskonly" style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: C.faint }}>chrono commun</span>}
                 </span>
               )}
               <SoundToggle />

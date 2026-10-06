@@ -61,7 +61,7 @@ const FA_CSS = `
   .fa-draw{flex-direction:column}
   .fa-others{width:100%;flex:none}
   .fa-others-list{flex-direction:row;overflow-x:auto;overflow-y:hidden}
-  .fa-others-list > *{width:120px;flex:none}
+  .fa-others-list > *{width:calc((100% - 20px) / 3);min-width:96px;flex:none}
   .fa-vote-grid{flex-direction:column}
   .fa-vote-buttons{width:100%}
   .fa-word{font-size:38px !important}

@@ -172,7 +172,7 @@ function ColorPalette({ color, setColor, locked, noVariants }: { color: string; 
   const famOf = (c: string) => COLOR_FAMILIES.findIndex((f) => f.variants.some((v) => v.toLowerCase() === c.toLowerCase()));
   const activeFam = famOf(color);
   return (
-    <div className="relative flex flex-wrap gap-1.5">
+    <div className="dc-swatches relative flex flex-wrap gap-1.5">
       {open !== null && !noVariants && <div className="fixed inset-0 z-10" onClick={() => setOpen(null)} />}
       {COLOR_FAMILIES.map((fam, i) => {
         const disabled = locked && i !== activeFam;
@@ -764,13 +764,13 @@ export function DrawCanvas({
       {/* Barre du bas : CTA « J'ai fini » + palette + tailles (pleine largeur) */}
       {drawable && (
         <div className="dc-bottombar" style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 18, padding: "14px 2px 2px" }}>
-          {ctaSlot}
-          {ctaSlot && <span style={{ width: 1, height: 32, background: LB.line, flex: "none" }} />}
-          <div style={{ flex: "1 1 auto", minWidth: 0 }}>
+          {ctaSlot && <div className="dc-cta" style={{ flex: "none", display: "flex" }}>{ctaSlot}</div>}
+          {ctaSlot && <span className="dc-div" style={{ width: 1, height: 32, background: LB.line, flex: "none" }} />}
+          <div className="dc-palette" style={{ flex: "1 1 auto", minWidth: 0 }}>
             <ColorPalette color={color} setColor={setColor} locked={paletteLocked} noVariants={oneColor} />
           </div>
-          <span style={{ width: 1, height: 32, background: LB.line, flex: "none" }} />
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: "none" }}>
+          <span className="dc-div" style={{ width: 1, height: 32, background: LB.line, flex: "none" }} />
+          <div className="dc-sizes" style={{ display: "flex", alignItems: "center", gap: 8, flex: "none" }}>
             <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".16em", color: LB.faint }}>Taille</span>
             {[4, 8, 16, 28].map((w, i) => {
               const dot = [4, 6, 10, 16][i];
@@ -866,7 +866,7 @@ export function ChatPanel({ room }: { room: UseRoom }) {
           if (m.kind === "guess")
             return (
               <p key={m.id} className="text-text-faint">
-                🔤 <span className="font-medium">{m.name}</span> : <span className="italic">{m.text}</span>
+                <span className="font-medium">{m.name}</span> : <span className="italic">{m.text}</span>
               </p>
             );
           return (

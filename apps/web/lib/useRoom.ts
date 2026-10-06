@@ -352,11 +352,14 @@ export function useRoom(code: string, create = false): UseRoom {
   const clearError = useCallback(() => setError(null), []);
   const serverNow = useCallback(() => Date.now() + clockOffset.current, []);
 
-  return {
+  const api = {
     state, gameId, game, settings, you, status, error, clearError,
     join, setReady, setName, setAvatar, setSettings, selectGame, startGame, leave, pendingGame, pendingSoiree, gameOver, gameRun, soiree, startSoiree, soireeNext, soireeRematch, soireeVote, soireeEnd, gameAction,
     submitLines, vote, skipPhase, debugFill, returnLobby, playAgain, react, reactions, speakingIds, sendSpeaking, quizAnswer, redeemPass, bombeSubmit,
     mimicAction, sendVoiceTake, voiceTakes, sendBombeTyping, bombeTyping,
     chooseWord, guess, sendTalk, castVote, doublageAction, revealTheme, endDrawing, sendStroke, sendFill, clearCanvas, chat, strokeQueueRef, strokeResetRef, serverNow,
   };
+  // Développement uniquement : accès console / tests automatisés (`window.__room`).
+  if (process.env.NODE_ENV !== "production" && typeof window !== "undefined") (window as unknown as { __room: UseRoom }).__room = api;
+  return api;
 }

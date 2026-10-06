@@ -138,6 +138,9 @@ export const LB_SCOPED_CSS = `
   .lb-scope .lb-pad{padding-left:18px !important;padding-right:18px !important}
 }
 @media (min-width:900px){ .lb-scope .lb-mobilehead{display:none} }
+/* Rail (joueurs + discussion) : jamais plus haut que l'écran — la discussion
+   défile à l'intérieur au lieu d'allonger la page et de pousser la toile. */
+@media (min-width:900px){ .lb-scope .lb-rail{position:sticky !important;top:0;height:100dvh;max-height:100dvh;align-self:flex-start} }
 
 /* ── Toile de dessin qui tient dans la hauteur de page (desktop) ──────────
    Par défaut (mobile) la toile garde sa largeur pleine et la page défile ;
@@ -149,9 +152,15 @@ export const LB_SCOPED_CSS = `
   .lb-scope .dv-head{flex-wrap:wrap;gap:8px 10px}
   .lb-scope .dv-word{font-size:22px !important}
   .lb-scope .dv-stage{padding-left:14px !important;padding-right:14px !important}
-  .lb-scope .dc-tools{gap:6px !important;order:2 !important}
-  .lb-scope .dc-toolbtn{width:38px !important;height:38px !important;border-radius:11px}
+  .lb-scope .dc-tools{gap:4px !important;order:2 !important;flex-wrap:nowrap !important;overflow-x:auto;scrollbar-width:none}
+  .lb-scope .dc-toolbtn{width:34px !important;height:34px !important;border-radius:10px}
   .lb-scope .dc-bottombar{gap:10px !important}
+  .lb-scope .dc-bottombar .dc-div{display:none !important}
+  .lb-scope .dc-swatches{gap:4px !important}
+  .lb-scope .dc-swatches button{width:24px !important;height:24px !important}
+  .lb-scope .dc-bottombar .dc-palette{flex:1 1 100% !important}
+  .lb-scope .dc-bottombar .dc-cta{order:3;flex:1 1 100% !important}
+  .lb-scope .dc-bottombar .dc-cta > button{flex:1 !important;justify-content:center}
   .lb-scope .dv-stencil span{font-size:20px !important;letter-spacing:.3em !important}
   .lb-scope .dv-choicecards{flex-direction:column !important;align-items:stretch !important}
   .lb-scope .dv-choicecards button{flex:none !important}
@@ -163,7 +172,7 @@ export const LB_SCOPED_CSS = `
   .lb-scope .dv-grid{flex-direction:row;flex:1;min-height:0;gap:24px}
   .lb-scope .dv-canvascol{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
   .lb-scope .dv-canvasfill{flex:1;min-height:0}
-  .lb-scope .dv-chatcol{width:320px;flex:none;min-height:0;display:flex;flex-direction:column}
+  .lb-scope .dv-chatcol{width:320px;flex:none;min-height:0;max-height:calc(100dvh - 150px);display:flex;flex-direction:column}
   .lb-scope .dc-fit .dc-row{flex:1;min-height:0;align-items:stretch}
   .lb-scope .dc-fit .dc-tools{align-self:flex-start;max-height:100%;overflow-y:auto}
   .lb-scope .dc-fit .dc-col{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}

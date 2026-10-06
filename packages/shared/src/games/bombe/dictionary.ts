@@ -12,7 +12,7 @@
 
 /** Normalise un mot : minuscules, sans accents, lettres a-z uniquement. */
 export function bombeNormalize(s: string): string {
-  return (s || "")
+  return (typeof s === "string" ? s : s == null ? "" : String(s))
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
     .toLowerCase()

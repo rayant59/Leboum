@@ -686,7 +686,7 @@ export default function LobbyPage() {
                 ? `Mode Aveugle : +25 % de temps automatiquement (${Math.round(turnSeconds * 1.25)}s).`
                 : selectedGame === "pixel" && curMode === "rush"
                   ? `Mode Rush : révélation deux fois plus rapide (~${Math.round(turnSeconds / 2)}s réels).`
-                  : `S'applique à « ${GAME_META[selectedGame].label} ». Chaque jeu garde son propre réglage.`;
+                  : "";
             return (
               <div className="cfg-grp">
                 <div className="cfg-time" style={{ opacity: hardcoreLocked ? 0.55 : undefined }}>
@@ -718,7 +718,7 @@ export default function LobbyPage() {
                       Perso
                     </button>
                   </div>
-                  <div className="cfg-time-hint">{hint}</div>
+                  {hint && <div className="cfg-time-hint">{hint}</div>}
                 </div>
               </div>
             );
@@ -889,7 +889,6 @@ export default function LobbyPage() {
           <span className="cfg-ic"><img src={UI.groupViolet} alt="" width={22} height={22} className="select-none" draggable={false} aria-hidden /></span>
           <div>
             <h2 className="cfg-tt">Joueurs <span style={{ fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 14, color: "#6E6796" }}>{players.length}/{maxPlayers}</span></h2>
-            <span className="cfg-sub">En attente dans le salon</span>
           </div>
           <span className={`pl-readypill${readyCount > 0 ? " some" : ""}`}><span className="d" />{readyCount}/{connectedCount} prêt{readyCount > 1 ? "s" : ""}</span>
         </div>
@@ -1085,21 +1084,21 @@ export default function LobbyPage() {
                   }}
                 >
                   {/* decorative sparkles */}
-                  <svg aria-hidden width="12" height="12" viewBox="0 0 24 24" className="pointer-events-none absolute" style={{ top: 30, left: 92, color: sel ? c.tint : "#6E6796", opacity: sel ? 0.55 : 0.3 }}><path fill="currentColor" d="M12 2l1.5 8.5L22 12l-8.5 1.5L12 22l-1.5-8.5L2 12l8.5-1.5z" /></svg>
-                  <svg aria-hidden width="9" height="9" viewBox="0 0 24 24" className="pointer-events-none absolute" style={{ top: 56, right: 22, color: sel ? c.tint : "#6E6796", opacity: sel ? 0.5 : 0.25 }}><path fill="currentColor" d="M12 2l1.5 8.5L22 12l-8.5 1.5L12 22l-1.5-8.5L2 12l8.5-1.5z" /></svg>
-                  <div className="mb-2.5 flex items-start justify-between">
+                  <svg aria-hidden width="12" height="12" viewBox="0 0 24 24" className="gc-spark pointer-events-none absolute" style={{ top: 30, left: 92, color: sel ? c.tint : "#6E6796", opacity: sel ? 0.55 : 0.3 }}><path fill="currentColor" d="M12 2l1.5 8.5L22 12l-8.5 1.5L12 22l-1.5-8.5L2 12l8.5-1.5z" /></svg>
+                  <svg aria-hidden width="9" height="9" viewBox="0 0 24 24" className="gc-spark pointer-events-none absolute" style={{ top: 56, right: 22, color: sel ? c.tint : "#6E6796", opacity: sel ? 0.5 : 0.25 }}><path fill="currentColor" d="M12 2l1.5 8.5L22 12l-8.5 1.5L12 22l-1.5-8.5L2 12l8.5-1.5z" /></svg>
+                  <div className="gc-head mb-2.5 flex items-start justify-between">
                     <span
-                      className="inline-flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl transition-transform group-hover:scale-105"
+                      className="gc-img inline-flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl transition-transform group-hover:scale-105"
                       style={{ border: `1px solid ${sel ? c.tintBorder : "#332A5A"}`, boxShadow: sel ? `0 0 16px -4px ${c.tint}` : "none" }}
                     >
                       <img src={c.img} alt="" className="h-full w-full object-cover" draggable={false} />
                     </span>
-                    <span className="rounded-full border px-2.5 py-0.5 text-[11px] tabular-nums" style={{ borderColor: sel ? `${c.tint}66` : "#332A5A", color: sel ? c.tint : "#8078a8" }}>
+                    <span className="gc-pill rounded-full border px-2.5 py-0.5 text-[11px] tabular-nums" style={{ borderColor: sel ? `${c.tint}66` : "#332A5A", color: sel ? c.tint : "#8078a8" }}>
                       {`${c.min}–${Math.min(c.max, maxPlayers)}`}
                     </span>
                   </div>
-                  <div className="font-display text-base font-bold text-text">{c.label}</div>
-                  <p className="mt-1 text-sm leading-snug text-text-muted">{c.desc}</p>
+                  <div className="gc-name font-display text-base font-bold text-text">{c.label}</div>
+                  <p className="gc-desc mt-1 text-sm leading-snug text-text-muted">{c.desc}</p>
                 </button>
               );
                     })}

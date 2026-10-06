@@ -93,17 +93,16 @@ export function SoireeBuilder({
                 <button
                   key={f.id}
                   onClick={() => { setLastFormat(f.id); onGenerate(f.id); }}
-                  className="rounded-xl border px-3 py-2 text-left transition-colors"
-                  style={{ borderColor: on ? C.gold : C.line, background: on ? "rgba(255,194,75,.12)" : "rgba(14,11,26,.45)", cursor: "pointer" }}
+                  className="rounded-full border px-3 py-1.5 transition-colors"
+                  style={{ borderColor: on ? C.gold : C.line, background: on ? "rgba(255,194,75,.12)" : "rgba(14,11,26,.45)", cursor: "pointer", fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: on ? C.gold : C.text }}
                   title={f.blurb}
                 >
-                  <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: on ? C.gold : C.text }}>{f.name}</div>
-                  <div style={{ fontSize: 11, color: C.muted }}>{f.blurb}</div>
+                  {f.name}
                 </button>
               );
             })}
           </div>
-          {items.length > 0 && lastFormat && <p className="mt-2 text-xs" style={{ color: C.faint }}>Proposition modifiable : retire, réordonne ou ajoute des jeux ci-dessous.</p>}
+          {lastFormat && <p className="mt-2 text-xs" style={{ color: C.faint }}>{SOIREE_FORMATS.find((f) => f.id === lastFormat)?.blurb}</p>}
         </div>
       )}
 
@@ -137,9 +136,7 @@ export function SoireeBuilder({
           })}
         </ol>
       ) : (
-        <p className="mb-4 text-sm" style={{ color: C.muted }}>
-          Choisis un jeu et ses réglages plus bas, puis ajoute-le ici. Répète pour composer ta soirée : les points s'additionnent d'un jeu à l'autre.
-        </p>
+        <p className="mb-4 text-sm" style={{ color: C.muted }}>Tire une soirée toute faite, ou ajoute tes jeux un par un.</p>
       )}
 
       {/* Le lancement se fait depuis le bouton principal en bas du salon

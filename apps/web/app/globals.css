@@ -327,7 +327,7 @@
 .game-picker-grid > * { flex: 0 1 calc(33.333% - 11px); min-width: 190px; }
 /* Cartes de jeu : effet tactile « relevé » (maquette). */
 .lb-gamecard { transition: transform .12s cubic-bezier(.3,1.2,.5,1), border-color .2s, box-shadow .2s, background .2s; }
-.lb-gamecard:hover { transform: translateY(-3px); }
+.lb-gamecard:hover { filter: brightness(1.08); } /* pas de déplacement au survol : évite que la carte « tremble » sous la souris */
 .lb-gamecard:active { transform: translateY(2px); }
 /* Bouton « Copier le lien » doré 3D (maquette). */
 .lb-copy { transition: box-shadow .12s, border-color .2s, background .2s, color .2s, transform .06s, filter .2s; }
@@ -380,7 +380,18 @@
 @keyframes bombBreak { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.35); opacity: 0; } }
 
 /* Téléphone : 2 jeux par ligne (déclaré après .game-picker-grid pour primer). */
-@media (max-width: 520px) { .game-picker-grid { gap: 12px; } .game-picker-grid > * { flex: 0 1 calc(50% - 6px); min-width: 0; } }
+/* Téléphone : liste compacte (icône à gauche, nom + accroche à droite) — 2× moins haute. */
+@media (max-width: 520px) {
+  .game-picker-grid { gap: 8px; }
+  .game-picker-grid > * { flex: 1 1 100%; min-width: 0; }
+  .lb-gamecard { display: grid !important; grid-template-columns: 48px 1fr; column-gap: 12px; align-items: center; padding: 10px 12px !important; }
+  .lb-gamecard .gc-head { display: contents; }
+  .lb-gamecard .gc-img { grid-row: 1 / span 2; width: 48px !important; height: 48px !important; }
+  .lb-gamecard .gc-pill { position: absolute; top: 10px; right: 12px; }
+  .lb-gamecard .gc-name { grid-column: 2; padding-right: 48px; font-size: 15px; }
+  .lb-gamecard .gc-desc { grid-column: 2; margin-top: 2px !important; font-size: 12.5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .lb-gamecard .gc-spark { display: none; }
+}
 
 /* ── Salon en 2 colonnes (hôte, grand écran uniquement) ──────────────────
    En dessous de 1100px, les enveloppes .lobby-left / .lobby-right sont en

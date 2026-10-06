@@ -151,9 +151,9 @@ export const DrawPad = forwardRef<DrawPadHandle, { accent?: string; disabled?: b
   };
 
   const toolBtn = (active: boolean): React.CSSProperties => ({
-    width: 44,
-    height: 44,
-    padding: 4,
+    width: 40,
+    height: 40,
+    padding: 3,
     borderRadius: 12,
     border: "none",
     cursor: disabled ? "default" : "pointer",
@@ -177,7 +177,7 @@ export const DrawPad = forwardRef<DrawPadHandle, { accent?: string; disabled?: b
         aria-label="Zone de dessin"
         style={{ width: "100%", aspectRatio: "4 / 3", borderRadius: 18, background: "#fff", touchAction: "none", cursor: disabled ? "not-allowed" : "crosshair", boxShadow: `0 0 0 2px ${accent}55, 0 20px 40px -24px rgba(0,0,0,.9)`, opacity: disabled ? 0.85 : 1 }}
       />
-      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, justifyContent: "center" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, justifyContent: "center" }}>
         <button type="button" title="Pinceau" aria-label="Pinceau" style={toolBtn(!eraser)} onClick={() => setEraser(false)} disabled={disabled}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/tools/brush.png" alt="" width={32} height={32} draggable={false} />
@@ -202,7 +202,7 @@ export const DrawPad = forwardRef<DrawPadHandle, { accent?: string; disabled?: b
           <img src="/tools/clear.png" alt="" width={32} height={32} draggable={false} />
         </button>
       </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, justifyContent: "center" }}>
         {COLORS.map((c) => {
           const on = !eraser && color === c;
           return (
@@ -212,7 +212,7 @@ export const DrawPad = forwardRef<DrawPadHandle, { accent?: string; disabled?: b
               aria-label={`Couleur ${c}`}
               onClick={() => { setColor(c); setEraser(false); }}
               disabled={disabled}
-              style={{ width: 30, height: 30, borderRadius: 999, border: "none", cursor: "pointer", background: c, boxShadow: on ? "0 0 0 3px #14102A, 0 0 0 5px #FFC24B" : "inset 0 0 0 1px rgba(255,255,255,.25)", transform: on ? "scale(1.08)" : "none", transition: "transform .1s" }}
+              style={{ width: 26, height: 26, borderRadius: 999, border: "none", cursor: "pointer", background: c, boxShadow: on ? "0 0 0 3px #14102A, 0 0 0 5px #FFC24B" : "inset 0 0 0 1px rgba(255,255,255,.25)", transform: on ? "scale(1.08)" : "none", transition: "transform .1s" }}
             />
           );
         })}
