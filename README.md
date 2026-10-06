@@ -70,6 +70,9 @@ la synchro en direct.
   brouillon n'est visible que par toi jusqu'à **Publier**, puis tous les joueurs
   reçoivent le nouveau design (sans redéployer le site). « Revenir au design
   d'origine » annule tout. En local, sans code configuré, laisse le champ vide.
+  **En local, « Publier » enregistre dans `site-theme.json`** (à la racine, suivi
+  par git) : un simple commit + push envoie ton design en ligne avec le code.
+  Si un design a aussi été publié depuis le site en ligne, le plus récent gagne.
   Côté code : toutes les couleurs passent par les variables `--c-*` de
   `apps/web/app/globals.css` (classes Tailwind `bg-gold`, `text-text-muted`…
   ou `rgb(var(--c-gold))` en style inline) — n'écris plus de couleur du thème
@@ -159,7 +162,7 @@ Tout est désactivé par défaut ; chaque brique s'allume avec une variable d'en
 |---|---|
 | `STATS_TOKEN` | Code d'accès de la page `/stats` (fréquentation anonyme) |
 | `DESIGN_TOKEN` | Code d'accès de l'éditeur de design `/design` (à défaut : `STATS_TOKEN`) |
-| `THEME_FILE` | Fichier du design publié (par défaut `data/theme.json`, à placer sur un disque persistant) |
+| `THEME_FILE` | Fichier du design publié depuis le site en ligne (disque persistant). Sans lui, c'est `site-theme.json` du dépôt |
 | `STRIPE_SECRET_KEY` + `STRIPE_PASS_PRICE` | Active le **Pass Soirée** (Stripe Checkout) |
 | `PASS_PRICE_LABEL` | Prix affiché, ex. `2,99 €` (doit correspondre au prix Stripe) |
 | `PUBLIC_SITE_URL` | `https://leboum.fr` (retour après paiement) |

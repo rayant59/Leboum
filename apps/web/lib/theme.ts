@@ -72,7 +72,7 @@ export async function fetchPublished(): Promise<{ theme: SiteTheme; updatedAt: n
   }
 }
 
-export async function publishTheme(token: string, theme: SiteTheme): Promise<{ ok: true } | { ok: false; error: string; status: number }> {
+export async function publishTheme(token: string, theme: SiteTheme): Promise<{ ok: true; updatedAt: number | null } | { ok: false; error: string; status: number }> {
   try {
     const res = await fetch(serverHttpUrl("/theme"), {
       method: "POST",
@@ -81,7 +81,8 @@ export async function publishTheme(token: string, theme: SiteTheme): Promise<{ o
     });
     if (res.ok) {
       put(K.published, JSON.stringify(theme));
-      return { ok: true };
+      const data = (await res.json().catch(() => ({}))) as { updatedAt?: number | null };
+      return { ok: true, updatedAt: data.updatedAt ?? null };
     }
     const data = (await res.json().catch(() => ({}))) as { error?: string };
     return { ok: false, status: res.status, error: data.error ?? "Publication impossible." };
@@ -115,9 +116,21 @@ export function designLogout() {
   put(K.token, null);
 }
 
-export function loadDraft(): SiteTheme | null {
-  try { return sanitizeTheme(JSON.parse(get(K.draft) ?? "null")); } catch { return null; }
+/**
+ * Brouillon de l'éditeur, lié à la version publiée sur laquelle il a été fait
+ * (`base`) : si le design publié a changé entre-temps (push d'un nouveau
+ * site-theme.json…), l'ancien brouillon n'est pas ré-appliqué par-dessus.
+ */
+export function loadDraft(base: number | null): SiteTheme | null {
+  try {
+    const raw = JSON.parse(get(K.draft) ?? "null") as { base?: unknown; theme?: unknown } | null;
+    if (!raw || raw.base !== (base ?? 0)) return null;
+    return sanitizeTheme(raw.theme);
+  } catch { return null; }
 }
-export function saveDraft(theme: SiteTheme | null) {
-  put(K.draft, theme ? JSON.stringify(theme) : null);
+export function hasDraft(): boolean {
+  return !!get(K.draft);
+}
+export function saveDraft(theme: SiteTheme | null, base: number | null) {
+  put(K.draft, theme ? JSON.stringify({ base: base ?? 0, theme }) : null);
 }

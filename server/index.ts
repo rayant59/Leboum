@@ -433,7 +433,9 @@ const stats = new Stats(process.env.STATS_FILE ?? resolve(process.cwd(), "data/s
 setInterval(() => stats.flush(), 60_000).unref();
 
 // Thème du site, réglé depuis /design (voir server/theme.ts).
-const themeStore = new ThemeStore(process.env.THEME_FILE ?? resolve(process.cwd(), "data/theme.json"));
+// site-theme.json (suivi par git) : en local, « Publier » écrit dedans → commit + push.
+const SITE_THEME_FILE = resolve(__dirname, "..", "site-theme.json");
+const themeStore = new ThemeStore(process.env.THEME_FILE || SITE_THEME_FILE, SITE_THEME_FILE);
 
 // Pass Soirée (voir server/pass.ts). Désactivé tant que Stripe n'est pas configuré.
 const pass = passConfigFromEnv(process.env);

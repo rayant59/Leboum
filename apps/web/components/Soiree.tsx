@@ -102,7 +102,6 @@ export function SoireeBuilder({
               );
             })}
           </div>
-          {lastFormat && <p className="mt-2 text-xs" style={{ color: C.faint }}>{SOIREE_FORMATS.find((f) => f.id === lastFormat)?.blurb}</p>}
         </div>
       )}
 
@@ -135,13 +134,11 @@ export function SoireeBuilder({
             );
           })}
         </ol>
-      ) : (
-        <p className="mb-4 text-sm" style={{ color: C.muted }}>Tire une soirée toute faite, ou ajoute tes jeux un par un.</p>
-      )}
+      ) : null}
 
       {/* Le lancement se fait depuis le bouton principal en bas du salon
           (un seul gros bouton : « Lancer la soirée » dès qu'un programme existe). */}
-      <button onClick={onAdd} disabled={items.length >= 12} className="arc arc-sec arc-block" style={{ fontSize: 14 }}>
+      <button onClick={onAdd} disabled={items.length >= 12} className="arc arc-sec arc-block" style={{ fontSize: 14, translate: "0 14px" }}>
         + Ajouter « {selectedName} »
       </button>
       {items.length > 0 && launchDisabled && launchHint && <p className="mt-2 text-xs" style={{ color: C.faint }}>{launchHint}</p>}

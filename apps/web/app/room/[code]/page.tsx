@@ -630,7 +630,7 @@ export default function LobbyPage() {
           <div className="cfg-grp">
             <div className="cfg-head">
               <span className="cfg-ic-img"><img src="/ui/modejeu.png" alt="" draggable={false} /></span>
-              <div><h2 className="cfg-tt">Mode de jeu</h2><span className="cfg-sub">{`Pour « ${GAME_META[selectedGame].label} » — ${MODE_SETS[selectedGame].length} modes`}</span></div>
+              <div><h2 className="cfg-tt" style={{ translate: "-1px -3px" }}>Mode de jeu</h2></div>
             </div>
             <div className="cfg-modes">
               {MODE_SETS[selectedGame].map((m) => {
@@ -819,14 +819,7 @@ export default function LobbyPage() {
       <main className={`relative z-[1] mx-auto max-w-2xl px-5 py-7${isHost ? " lobby-split" : ""}`} style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
       {/* Colonne gauche (écran large, hôte) : code, joueurs. Sur téléphone ces
           enveloppes sont neutres (display: contents) : rien ne bouge. */}
-      <div className="lobby-left">
-      {/* brand + connection */}
-      <header className="mb-6 flex items-center justify-end">
-        <span className="flex items-center gap-2 text-xs text-text-muted">
-          <span className={`h-2 w-2 rounded-full ${online ? "bg-mint" : "bg-gold animate-bulb"}`} />
-          {online ? "Connecté" : "Connexion…"}
-        </span>
-      </header>
+      <div className="lobby-left" style={{ translate: "3px 0" }}>
 
       {!online && connWaking && (
         <div className="mb-6 rounded-xl border border-gold/40 bg-gold/[0.06] p-4 text-sm">
@@ -890,6 +883,11 @@ export default function LobbyPage() {
           <div>
             <h2 className="cfg-tt">Joueurs <span style={{ fontFamily: "var(--font-mono), monospace", fontWeight: 700, fontSize: 14, color: "rgb(var(--c-text-faint))" }}>{players.length}/{maxPlayers}</span></h2>
           </div>
+          {/* État de la connexion, à côté du titre des joueurs. */}
+          <span className="lobby-conn ml-auto flex items-center gap-2 text-xs text-text-muted">
+            <span className={`h-2 w-2 rounded-full ${online ? "bg-mint" : "bg-gold animate-bulb"}`} />
+            {online ? "Connecté" : "Connexion…"}
+          </span>
           <span className={`pl-readypill${readyCount > 0 ? " some" : ""}`}><span className="d" />{readyCount}/{connectedCount} prêt{readyCount > 1 ? "s" : ""}</span>
         </div>
 
@@ -949,7 +947,6 @@ export default function LobbyPage() {
             </span>
             <span className="pl-invite-txt">
               <span className="t">{maxPlayers - players.length} place{maxPlayers - players.length > 1 ? "s" : ""} libre{maxPlayers - players.length > 1 ? "s" : ""}</span>
-              <span className="s">Envoie le lien à tes amis pour les remplir</span>
             </span>
             <span className="pl-invite-cta"><img src={UI.addPlayer} alt="" width={15} height={15} className="select-none" draggable={false} aria-hidden />{copied ? "Lien copié ✓" : "Inviter"}</span>
           </button>
@@ -1015,7 +1012,7 @@ export default function LobbyPage() {
           launchDisabled={!soireeStartable}
           playerCount={connectedCount}
           onPrune={() => setSoireeItems((p) => p.filter((i) => { const g = gameInfo(i.gameId); return connectedCount >= g.minPlayers && connectedCount <= g.maxPlayers; }))}
-          launchHint={connectedCount < 2 ? "Invite au moins un ami pour lancer une soirée." : missingSoireeReady > 0 ? `Encore ${missingSoireeReady} joueur${missingSoireeReady > 1 ? "s" : ""} prêt${missingSoireeReady > 1 ? "s" : ""}.` : null}
+          launchHint={connectedCount < 2 ? "\u00a0" : missingSoireeReady > 0 ? `Encore ${missingSoireeReady} joueur${missingSoireeReady > 1 ? "s" : ""} prêt${missingSoireeReady > 1 ? "s" : ""}.` : null}
         />
       )}
 
@@ -1026,21 +1023,19 @@ export default function LobbyPage() {
             <button
               onClick={() => { setJustAdded(false); setSettingsOpen(true); }}
               className="mb-4 flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors hover:brightness-110"
-              style={{ borderColor: `color-mix(in srgb, ${GAME_META[selectedGame].tint} 40%, transparent)`, background: `color-mix(in srgb, ${GAME_META[selectedGame].tint} 7.1%, transparent)` }}
+              style={{ translate: "0 -7px", borderColor: `color-mix(in srgb, ${GAME_META[selectedGame].tint} 40%, transparent)`, background: `color-mix(in srgb, ${GAME_META[selectedGame].tint} 7.1%, transparent)` }}
             >
               <img src={GAME_META[selectedGame].img} alt="" className="h-12 w-12 shrink-0 rounded-xl object-cover" draggable={false} />
               <span className="min-w-0 flex-1">
                 <span className="block text-[11px] font-bold uppercase tracking-[.14em] text-text-faint">Jeu choisi</span>
                 <span className="block truncate font-display text-base font-bold">{gameInfo(curLaunch.gameId).name}</span>
-                <span className="block truncate text-xs text-text-muted">{curLaunch.detail}</span>
               </span>
               <span className="shrink-0 rounded-full border px-3 py-1.5 text-xs font-bold" style={{ borderColor: `color-mix(in srgb, ${GAME_META[selectedGame].tint} 53.3%, transparent)`, color: GAME_META[selectedGame].tint }}>
                 Modes &amp; réglages
               </span>
             </button>
           )}
-          <div className="mb-3 flex flex-wrap items-center gap-2 px-1">
-            <p className="eyebrow mr-1">Jeu</p>
+          <div className="mb-3 flex flex-wrap items-center gap-2 px-1 text-left">
             {([["all", "Tous", "rgb(var(--c-text))"]] as [string, string, string][]).concat(gamesByCategory(pickerGames).map((f) => [f.category, f.label, f.tint])).map(([id, label, tint]) => {
               const on = familyFilter === id;
               const count = id === "all" ? pickerGames.length : pickerGames.filter((g) => g.category === id).length;
@@ -1052,7 +1047,7 @@ export default function LobbyPage() {
                   className="rounded-full border px-3 py-1 text-xs font-semibold transition-colors"
                   style={{ borderColor: on ? tint : "rgb(var(--c-ink-border))", background: on ? `color-mix(in srgb, ${tint} 13.3%, transparent)` : "transparent", color: on ? tint : "rgb(var(--c-text-muted))" }}
                 >
-                  {label} <span style={{ opacity: 0.6 }}>{count}</span>
+                  {label}{id === "all" && <> <span style={{ opacity: 0.6 }}>{count}</span></>}
                 </button>
               );
             })}
@@ -1063,7 +1058,6 @@ export default function LobbyPage() {
               <div key={f.category} className="mb-6">
                 <div className="mb-3 flex items-baseline gap-2 px-1">
                   <span className="font-display text-lg font-bold" style={{ color: f.tint }}>{f.label}</span>
-                  <span className="text-sm text-text-muted">{f.blurb}</span>
                 </div>
                 <div className="game-picker-grid">
                   {f.games

@@ -5,6 +5,9 @@
 @layer base {
   :root {
     color-scheme: dark;
+    /* Polices : tout le site est en Bricolage Grotesque (titres, texte, étiquettes). */
+    --font-body: var(--font-display);
+    --font-mono: var(--font-display);
     /* ── Thème ── Couleurs du site (R G B). Valeurs par défaut : l'éditeur
        de design (/design) peut les remplacer en direct. Ne pas écrire de
        couleur en dur ailleurs : utiliser rgb(var(--c-…)) ou les classes Tailwind. */

@@ -132,7 +132,7 @@ export const GAME_CATALOG: Record<string, GameModeInfo> = {
     listed: true,
   }),
   mimic: G({
-    id: "mimic", name: "Mimic Boum", tagline: "Imite un son avec ta voix — une seule prise.",
+    id: "mimic", name: "Mimic Boum", tagline: "Imite un son avec ta voix, une seule prise.",
     img: "/games/mimic.png", accent: "#46E0B0", category: "culture", minPlayers: 2, maxPlayers: 8, durationMin: 8,
     rules: ["Écoute un son culte.", "Imite-le en une seule prise.", "Votez pour la meilleure imitation."],
     listed: true,

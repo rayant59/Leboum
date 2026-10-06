@@ -28,6 +28,25 @@ test("le thème publié survit à un redémarrage", () => {
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+test("design du code (site-theme.json) contre design publié en ligne : le plus récent gagne", () => {
+  const dir = mkdtempSync(join(tmpdir(), "lb-theme-"));
+  const online = join(dir, "online.json");
+  const code = join(dir, "site-theme.json");
+  try {
+    writeFileSync(code, JSON.stringify({ theme: { colors: { gold: "#111111" } }, updatedAt: 2000 }));
+    writeFileSync(online, JSON.stringify({ theme: { colors: { gold: "#222222" } }, updatedAt: 1000 }));
+    assert(new ThemeStore(online, code).get().theme.colors.gold === "#111111", "code plus récent → code");
+    writeFileSync(online, JSON.stringify({ theme: { colors: { gold: "#222222" } }, updatedAt: 3000 }));
+    assert(new ThemeStore(online, code).get().theme.colors.gold === "#222222", "publié en ligne plus récent → en ligne");
+    // Publier écrit dans le premier fichier, jamais dans le design du code.
+    new ThemeStore(online, code).set({ colors: { gold: "#333333" } }, 4000);
+    assert(JSON.parse(readFileSync(code, "utf8")).theme.colors.gold === "#111111", "site-theme.json intact");
+    // En local : un seul et même fichier.
+    new ThemeStore(code, code).set({ colors: { gold: "#444444" } }, 5000);
+    assert(new ThemeStore(code, code).get().theme.colors.gold === "#444444", "local : publié dans site-theme.json");
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 test("fichier abîmé : thème d'origine, pas de plantage", () => {
   const dir = mkdtempSync(join(tmpdir(), "lb-theme-"));
   const file = join(dir, "theme.json");

@@ -24,7 +24,7 @@ import {
   type ThemeColorGroup,
   type ThemeFontRole,
 } from "@subtitles-party/shared";
-import { applyTheme, cachedPublished, designLogout, fetchPublished, loadDraft, publishTheme, saveDraft } from "@/lib/theme";
+import { applyTheme, cachedPublished, designLogout, fetchPublished, hasDraft, loadDraft, publishTheme, saveDraft } from "@/lib/theme";
 
 type Tab = "content" | "colors" | "fonts" | "css";
 type Status = { kind: "ok" | "err" | "info"; text: string } | null;
@@ -45,7 +45,8 @@ const defaultHex = (name: string) => THEME_COLORS.find((t) => t.name === name)?.
 
 export function DesignPanel({ token }: { token: string }) {
   const [published, setPublished] = useState<SiteTheme>(() => cachedPublished());
-  const [draft, setDraftState] = useState<SiteTheme>(() => loadDraft() ?? cachedPublished());
+  const [draft, setDraftState] = useState<SiteTheme>(() => cachedPublished());
+  const [loaded, setLoaded] = useState(false);
   const [tab, setTab] = useState<Tab>("content");
   // Historique pour Annuler / Rétablir (Ctrl+Z / Ctrl+Maj+Z).
   const draftRef = useRef(draft);
@@ -103,8 +104,15 @@ export function DesignPanel({ token }: { token: string }) {
       if (!r) { setStatus({ kind: "err", text: "Serveur de jeu injoignable : tu peux modifier, mais pas publier pour l'instant." }); return; }
       setPublished(r.theme);
       setUpdatedAt(r.updatedAt);
-      if (!loadDraft()) setDraft(r.theme);
-      else setStatus({ kind: "info", text: "Brouillon repris là où tu l'avais laissé." });
+      const d = loadDraft(r.updatedAt);
+      if (d) {
+        setDraft(d);
+        setStatus({ kind: "info", text: "Brouillon repris là où tu l'avais laissé." });
+      } else {
+        if (hasDraft()) setStatus({ kind: "info", text: "Le design publié a changé depuis ton dernier brouillon : on repart du design publié." });
+        setDraft(r.theme);
+      }
+      setLoaded(true);
     });
     return () => { alive = false; };
   }, []);
@@ -112,8 +120,8 @@ export function DesignPanel({ token }: { token: string }) {
   // Chaque changement s'applique tout de suite à la page.
   useEffect(() => {
     applyTheme(draft);
-    saveDraft(same(draft, published) ? null : draft);
-  }, [draft, published]);
+    if (loaded) saveDraft(same(draft, published) ? null : draft, updatedAt);
+  }, [draft, published, loaded, updatedAt]);
 
   useEffect(() => {
     const onKey = (ev: KeyboardEvent) => {
@@ -172,8 +180,11 @@ export function DesignPanel({ token }: { token: string }) {
     setBusy(false);
     if (r.ok) {
       setPublished(draft);
-      setUpdatedAt(Date.now());
-      setStatus({ kind: "ok", text: "Publié ! Tout le monde voit le nouveau design (au plus tard dans une minute)." });
+      setUpdatedAt(r.updatedAt ?? Date.now());
+      const local = /^(localhost|127\.|192\.168\.|10\.|\[::1\])/.test(window.location.hostname);
+      setStatus({ kind: "ok", text: local
+        ? "Publié en local ! C'est enregistré dans site-theme.json : fais un commit + push pour l'envoyer en ligne."
+        : "Publié ! Tout le monde voit le nouveau design (au plus tard dans une minute)." });
     } else {
       setStatus({ kind: "err", text: r.status === 403 ? `${r.error} Quitte l'éditeur et reconnecte-toi sur /design.` : r.error });
     }

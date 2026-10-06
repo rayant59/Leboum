@@ -1,0 +1,21 @@
+{
+  "theme": {
+    "v": 1,
+    "colors": {},
+    "fonts": {},
+    "css": "",
+    "edits": [
+      {
+        "id": "c89gv7t1",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(4) > svg:nth-child(2)",
+        "tag": "svg",
+        "fp": "#",
+        "style": {
+          "hidden": true
+        }
+      }
+    ]
+  },
+  "updatedAt": 1791281253108
+}

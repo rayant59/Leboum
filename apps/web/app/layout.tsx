@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Inter, Space_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { ThemeRuntime } from "@/components/ThemeRuntime";
@@ -12,11 +12,8 @@ const display = Bricolage_Grotesque({
 });
 // Inter reste chargé en secours : Bricolage n'a pas d'italique.
 const body = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const mono = Space_Mono({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-mono",
-});
+// Texte courant et étiquettes « mono » utilisent aussi Bricolage (voir
+// --font-body / --font-mono dans globals.css).
 
 export const metadata: Metadata = {
   title: "Boum — le party-game entre amis",
@@ -33,7 +30,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`${display.variable} ${body.variable} ${mono.variable}`}>
+    <html lang="fr" className={`${display.variable} ${body.variable}`}>
       <head>
         {/* Remet le thème personnalisé avant l'affichage (pas de flash de couleurs). */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />

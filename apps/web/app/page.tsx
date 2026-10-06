@@ -251,12 +251,9 @@ export default function HomePage() {
             qui tombait sur un demi-pixel à certaines largeurs → texte flou qui « vibre »). */}
         <section style={{ maxWidth: 1180, margin: "48px auto 0" }}>
           <div style={{ marginBottom: 18, textAlign: "center", opacity: 0, animation: "bm-fadeUp 0.5s ease 0.95s both" }}>
-            <h2 style={{ margin: 0, fontFamily: "var(--font-display), sans-serif", fontSize: 24, fontWeight: 800, color: "rgb(var(--c-text))" }}>
+            <h2 style={{ margin: 0, translate: "7px -15px", fontFamily: "var(--font-display), sans-serif", fontSize: 24, fontWeight: 800, color: "rgb(var(--c-text))" }}>
               {GAMES.length} jeux, <span style={{ color: "rgb(var(--c-gold))" }}>une seule soirée</span>
             </h2>
-            <p style={{ margin: "6px auto 0", maxWidth: 520, fontSize: 14, color: "rgb(var(--c-text-muted))", lineHeight: 1.5 }}>
-              Enchaîne-les dans le même salon : les points s'additionnent d'un jeu à l'autre jusqu'au grand classement de fin de soirée.
-            </p>
           </div>
           <div className="home-games">
             {GAMES.map((g, i) => {
@@ -265,7 +262,6 @@ export default function HomePage() {
                 <div key={g.id} className="mn-card" style={{ minWidth: 0, borderRadius: 16, border: `1px solid color-mix(in srgb, ${g.accent} 33.3%, transparent)`, background: "rgb(var(--c-ink-surface) / 0.6)", padding: 12, transition: "transform 0.24s cubic-bezier(0.3,1.2,0.5,1), border-color 0.24s, box-shadow 0.24s", opacity: 0, animation: `bm-fadeUp 0.55s ease ${delay} both` }}>
                   <div style={{ position: "relative", marginBottom: 12, borderRadius: 12, overflow: "hidden", boxShadow: `0 8px 26px -14px ${g.accent}` }}>
                     <img className="mn-card-img" src={g.img} alt={g.name} draggable={false} style={{ display: "block", width: "100%", aspectRatio: "1 / 1", objectFit: "cover", transition: "transform 0.5s cubic-bezier(0.2,0.8,0.2,1)" }} />
-                    <span style={{ position: "absolute", top: 8, right: 8, borderRadius: 999, background: "rgb(var(--c-ink-deep) / 0.75)", backdropFilter: "blur(4px)", border: "1px solid rgba(255,255,255,0.12)", padding: "2px 8px", fontSize: 11, color: "rgb(var(--c-text))" }}>{g.players} joueurs</span>
                   </div>
                   <span style={{ display: "block", margin: "0 4px 2px", fontFamily: "var(--font-mono), monospace", fontSize: 10, fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", color: g.family.tint }}>{g.family.label}</span>
                   <h3 style={{ margin: "0 4px", fontFamily: "var(--font-display), sans-serif", fontSize: 17, fontWeight: 700, color: "rgb(var(--c-text))" }}>{g.name}</h3>
@@ -276,7 +272,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <SiteFooter />
+        <SiteFooter tagline={false} />
       </main>
 
     </div>
