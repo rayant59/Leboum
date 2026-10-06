@@ -176,6 +176,15 @@ export default function LobbyPage() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [themesOpen, setThemesOpen] = useState(false);
   const [selectedGame, setSelectedGame] = useState<GameId>("draw");
+  /** Fenêtre des réglages du jeu (ouverte au clic sur un jeu). */
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [justAdded, setJustAdded] = useState(false);
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setSettingsOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [settingsOpen]);
   /** Filtre « famille » du choix de jeu (phase 13 : Créatif, Réflexion, Social, Chaos, Culture pop). */
   const [familyFilter, setFamilyFilter] = useState<GameCategory | "all">("all");
   // Modèle unifié (SPEC §1) : nombre de manches partagé + mémoire du mode et du
@@ -612,6 +621,197 @@ export default function LobbyPage() {
   }
   const soireeLive = !!room.soiree && !room.soiree.finished;
 
+  // Réglages du jeu sélectionné (mode, manches, temps, thèmes) : affichés dans
+  // une fenêtre qui s'ouvre au clic sur un jeu — plus besoin de descendre.
+  const settingsBody = (
+        <div className="space-y-8">
+          {/* MODE DE JEU — grille propre au jeu sélectionné (SPEC §4) */}
+          <div className="cfg-grp">
+            <div className="cfg-head">
+              <span className="cfg-ic-img"><img src="/ui/modejeu.png" alt="" draggable={false} /></span>
+              <div><h2 className="cfg-tt">Mode de jeu</h2><span className="cfg-sub">{`Pour « ${GAME_META[selectedGame].label} » — ${MODE_SETS[selectedGame].length} modes`}</span></div>
+            </div>
+            <div className="cfg-modes">
+              {MODE_SETS[selectedGame].map((m) => {
+                const on = curMode === m.id;
+                const locked = m.min != null && players.length < m.min;
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => !locked && setMode(selectedGame, m.id)}
+                    disabled={!isHost || locked}
+                    className={`cfg-mode${on ? " on" : ""}`}
+                    style={{ ["--c" as any]: m.c, opacity: locked ? 0.55 : undefined }}
+                    title={locked ? `${m.min} joueurs minimum` : undefined}
+                  >
+                    <span className="cfg-check"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg></span>
+                    <span className="cfg-mic" style={{ padding: 0, overflow: "hidden" }}><img src={m.img ?? GAME_META[selectedGame].img} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /></span>
+                    <span><span className="cfg-mnm">{m.nm}</span><p className="cfg-mds">{locked ? `${m.min} joueurs minimum` : m.ds}</p></span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* NOMBRE DE TOURS — libellé et bornes propres à chaque jeu (manches, questions, images) */}
+          {ROUNDS[selectedGame] && (() => { const rc = ROUNDS[selectedGame]!; return (
+          <div className="cfg-grp">
+            <div className="cfg-head">
+              <span className="cfg-ic-img"><img src="/ui/manche.png" alt="" draggable={false} /></span>
+              <div><h2 className="cfg-tt">{rc.headTitle}</h2><span className="cfg-sub">Réglage de la partie</span></div>
+            </div>
+            <div className="cfg-rounds">
+              <div className="cfg-rlab"><b>{rc.rowTitle}</b>{rc.rowSub}</div>
+              <div className="cfg-stepper">
+                <button className="cfg-sbtn" onClick={() => bumpRounds(selectedGame, -1)} disabled={!isHost || curRounds <= rc.min} aria-label="Moins"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M5 12h14" /></svg></button>
+                <div className="cfg-sval"><div className="cfg-svaln">{curRounds}</div><div className="cfg-svalu">{rc.unit}</div></div>
+                <button className="cfg-sbtn" onClick={() => bumpRounds(selectedGame, 1)} disabled={!isHost || curRounds >= rc.max} aria-label="Plus"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg></button>
+              </div>
+            </div>
+          </div>
+          ); })()}
+
+          {/* TEMPS PAR TOUR — presets + saisie libre 5–300 s, mémoire par jeu (SPEC §3) */}
+          {(() => {
+            const tCfg = TIMES[selectedGame];
+            const custom = !tCfg.opts.includes(turnSeconds);
+            const hardcoreLocked = (selectedGame === "bombe" && curMode === "hardcore") || (selectedGame === "funny" && curMode === "express");
+            const timeLocked = !isHost || hardcoreLocked;
+            const hint = selectedGame === "funny" && curMode === "express"
+              ? "Imposé en Express : 30 secondes pour écrire."
+              : hardcoreLocked
+              ? "Imposé en Hardcore : chrono partagé de 15 s, +2 s par bonne réponse."
+              : selectedGame === "draw" && curMode === "blind"
+                ? `Mode Aveugle : +25 % de temps automatiquement (${Math.round(turnSeconds * 1.25)}s).`
+                : selectedGame === "pixel" && curMode === "rush"
+                  ? `Mode Rush : révélation deux fois plus rapide (~${Math.round(turnSeconds / 2)}s réels).`
+                  : `S'applique à « ${GAME_META[selectedGame].label} ». Chaque jeu garde son propre réglage.`;
+            return (
+              <div className="cfg-grp">
+                <div className="cfg-time" style={{ opacity: hardcoreLocked ? 0.55 : undefined }}>
+                  <div className="cfg-time-head">
+                    <div className="cfg-rlab"><b>{tCfg.title}</b>{tCfg.sub}</div>
+                    <div className="cfg-time-val"><span className="n">{hardcoreLocked ? (selectedGame === "funny" ? 30 : 15) : turnSeconds}</span><span className="u">sec</span></div>
+                  </div>
+                  <div className="cfg-time-opts">
+                    {tCfg.opts.map((v) => (
+                      <button
+                        key={v}
+                        onClick={() => setTime(selectedGame, v)}
+                        disabled={timeLocked}
+                        className={`cfg-timebtn${!hardcoreLocked && v === turnSeconds ? " on" : ""}`}
+                      >
+                        {v}s
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => {
+                        const raw = window.prompt("Temps par tour, en secondes (5 – 300)", String(turnSeconds));
+                        if (raw == null) return;
+                        const n = Math.max(5, Math.min(300, Math.round(Number(raw) || 0)));
+                        if (n) setTime(selectedGame, n);
+                      }}
+                      disabled={timeLocked}
+                      className={`cfg-timebtn perso${!hardcoreLocked && custom ? " on" : ""}`}
+                    >
+                      Perso
+                    </button>
+                  </div>
+                  <div className="cfg-time-hint">{hint}</div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* THÈMES — Boum Dessin uniquement, hors Faux-artiste / Relais */}
+          {/* PASS SOIRÉE — questions écrites par l'hôte pour « Ça te parle ? » */}
+          {selectedGame === "quiz" && isHost && (
+            <div className="cfg-grp">
+              <div className="cfg-head">
+                <div className="min-w-0 flex-1">
+                  <h2 className="cfg-tt">Tes questions {!hasPass && <span style={{ fontSize: 12, color: "#FFC24B" }}>· Pass Soirée</span>}</h2>
+                  <span className="cfg-sub">{hasPass ? "Jouées en priorité, la banque complète" : "Personnalise le quiz pour ta bande"}</span>
+                </div>
+              </div>
+              {hasPass ? (
+                <>
+                  <textarea
+                    value={roomQuestions}
+                    onChange={(e) => saveRoomQuestions(e.target.value.slice(0, 6000))}
+                    rows={5}
+                    spellCheck={false}
+                    placeholder={"Une question par ligne, la réponse après « = » :\nLe surnom de Karim au lycée ? = Le Boss | boss\nLa ville de nos dernières vacances ? = Marseille"}
+                    style={{ width: "100%", boxSizing: "border-box", borderRadius: 14, border: "1px solid #332A5A", background: "#0E0B1A", color: "#F3EEFF", padding: "12px 14px", fontSize: 14, lineHeight: 1.5, resize: "vertical" }}
+                  />
+                  <span className="cfg-sub" style={{ textTransform: "none", letterSpacing: 0 }}>
+                    {(() => { const n = roomQuestions.split(/\r?\n/).filter((l) => l.includes("=") && l.split("=")[1]?.trim()).length; return `${n} question${n > 1 ? "s" : ""} prête${n > 1 ? "s" : ""} · « | » pour accepter plusieurs réponses`; })()}
+                  </span>
+                </>
+              ) : (
+                <p style={{ margin: 0, fontSize: 14, color: "#A79FC7" }}>
+                  Les private jokes de ta bande dans le quiz : débloque-les avec le Pass Soirée{passCfg?.enabled ? " (juste au-dessus)" : " (bientôt disponible)"}.
+                </p>
+              )}
+            </div>
+          )}
+
+          {selectedGame === "draw" && curMode !== "fakeartist" && curMode !== "relay" && (() => {
+            const selCount = drawThemes.length === 0 ? DRAW_THEMES.length : drawThemes.length;
+            const allOn = drawThemes.length === 0;
+            return (
+              <div className="cfg-grp">
+                <button
+                  onClick={() => setThemesOpen((o) => !o)}
+                  className="cfg-collapse"
+                  aria-expanded={themesOpen}
+                >
+                  <span className="cfg-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11.5V5a2 2 0 0 1 2-2h6.5a2 2 0 0 1 1.4.6l7.5 7.5a2 2 0 0 1 0 2.8l-6.6 6.6a2 2 0 0 1-2.8 0L3.6 12.9A2 2 0 0 1 3 11.5Z" /><circle cx="7.5" cy="7.5" r="1.3" fill="currentColor" /></svg></span>
+                  <div className="min-w-0 flex-1"><h2 className="cfg-tt">Thèmes</h2><span className="cfg-sub">{themesOpen ? "Ce qui peut tomber" : `${selCount} sur ${DRAW_THEMES.length} sélectionnés`}</span></div>
+                  <span className={`cfg-choose${themesOpen ? "" : " pulse"}`}>
+                    {themesOpen ? "Fermer" : "Choisir"}
+                    <svg className="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" style={{ transform: themesOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
+                  </span>
+                </button>
+                {themesOpen && (
+                  <div className="mt-3">
+                    <div className="cfg-themesbar">
+                      <button className="cfg-toggleall" onClick={() => setDrawThemes([])} disabled={!isHost}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>
+                        Tout sélectionner
+                      </button>
+                      <span className="cfg-selnote"><b>{selCount}</b> thèmes sur {DRAW_THEMES.length}</span>
+                    </div>
+                    <div className="cfg-tags">
+                      {DRAW_THEMES.map((t) => {
+                        const on = allOn || drawThemes.includes(t);
+                        return (
+                          <button
+                            key={t}
+                            disabled={!isHost}
+                            onClick={() =>
+                              setDrawThemes((prev) => {
+                                const base = prev.length === 0 ? [...DRAW_THEMES] : prev;
+                                const next = base.includes(t) ? base.filter((x) => x !== t) : [...base, t];
+                                return next.length === DRAW_THEMES.length ? [] : next;
+                              })
+                            }
+                            className={`cfg-tag${on ? " on" : ""}`}
+                          >
+                            {on && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>}
+                            {t}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </div>
+  );
+  const curLaunch = isHost ? buildLaunch() : null;
+
   return (
     <>
       <BoumBackdrop />
@@ -821,6 +1021,23 @@ export default function LobbyPage() {
       {/* game picker (host) */}
       {isHost && (
         <section className="mb-8">
+          {curLaunch && (
+            <button
+              onClick={() => { setJustAdded(false); setSettingsOpen(true); }}
+              className="mb-4 flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors hover:brightness-110"
+              style={{ borderColor: `${GAME_META[selectedGame].tint}66`, background: `${GAME_META[selectedGame].tint}12` }}
+            >
+              <img src={GAME_META[selectedGame].img} alt="" className="h-12 w-12 shrink-0 rounded-xl object-cover" draggable={false} />
+              <span className="min-w-0 flex-1">
+                <span className="block text-[11px] font-bold uppercase tracking-[.14em] text-text-faint">Jeu choisi</span>
+                <span className="block truncate font-display text-base font-bold">{gameInfo(curLaunch.gameId).name}</span>
+                <span className="block truncate text-xs text-text-muted">{curLaunch.detail}</span>
+              </span>
+              <span className="shrink-0 rounded-full border px-3 py-1.5 text-xs font-bold" style={{ borderColor: `${GAME_META[selectedGame].tint}88`, color: GAME_META[selectedGame].tint }}>
+                Modes &amp; réglages
+              </span>
+            </button>
+          )}
           <div className="mb-3 flex flex-wrap items-center gap-2 px-1">
             <p className="eyebrow mr-1">Jeu</p>
             {([["all", "Tous", "#F3EEFF"]] as [string, string, string][]).concat(gamesByCategory(pickerGames).map((f) => [f.category, f.label, f.tint])).map(([id, label, tint]) => {
@@ -855,7 +1072,7 @@ export default function LobbyPage() {
               return (
                 <button
                   key={c.id}
-                  onClick={() => setSelectedGame(c.id)}
+                  onClick={() => { setSelectedGame(c.id); setJustAdded(false); setSettingsOpen(true); }}
                   className="lb-gamecard group relative flex flex-col overflow-hidden rounded-2xl border p-4 text-left"
                   style={{
                     borderColor: sel ? c.tint : "#332A5A",
@@ -890,198 +1107,6 @@ export default function LobbyPage() {
         </section>
       )}
 
-      {/* settings — réservé à l'hôte : les invités voient seulement la carte
-          « Jeu choisi par l'hôte » plus haut, jamais le choix des modes/réglages. */}
-      {isHost && (
-      <section className="mb-8">
-        <p className="eyebrow mb-2 px-1">Réglages</p>
-        <div className="space-y-8">
-          {/* MODE DE JEU — grille propre au jeu sélectionné (SPEC §4) */}
-          <div className="cfg-grp">
-            <div className="cfg-head">
-              <span className="cfg-ic-img"><img src="/ui/modejeu.png" alt="" draggable={false} /></span>
-              <div><h2 className="cfg-tt">Mode de jeu</h2><span className="cfg-sub">{`Pour « ${GAME_META[selectedGame].label} » — ${MODE_SETS[selectedGame].length} modes`}</span></div>
-            </div>
-            <div className="cfg-modes">
-              {MODE_SETS[selectedGame].map((m) => {
-                const on = curMode === m.id;
-                const locked = m.min != null && players.length < m.min;
-                return (
-                  <button
-                    key={m.id}
-                    onClick={() => !locked && setMode(selectedGame, m.id)}
-                    disabled={!isHost || locked}
-                    className={`cfg-mode${on ? " on" : ""}`}
-                    style={{ ["--c" as any]: m.c, opacity: locked ? 0.55 : undefined }}
-                    title={locked ? `${m.min} joueurs minimum` : undefined}
-                  >
-                    <span className="cfg-check"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg></span>
-                    <span className="cfg-mic" style={{ padding: 0, overflow: "hidden" }}><img src={m.img ?? GAME_META[selectedGame].img} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /></span>
-                    <span><span className="cfg-mnm">{m.nm}</span><p className="cfg-mds">{locked ? `${m.min} joueurs minimum` : m.ds}</p></span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* NOMBRE DE TOURS — libellé et bornes propres à chaque jeu (manches, questions, images) */}
-          {ROUNDS[selectedGame] && (() => { const rc = ROUNDS[selectedGame]!; return (
-          <div className="cfg-grp">
-            <div className="cfg-head">
-              <span className="cfg-ic-img"><img src="/ui/manche.png" alt="" draggable={false} /></span>
-              <div><h2 className="cfg-tt">{rc.headTitle}</h2><span className="cfg-sub">Réglage de la partie</span></div>
-            </div>
-            <div className="cfg-rounds">
-              <div className="cfg-rlab"><b>{rc.rowTitle}</b>{rc.rowSub}</div>
-              <div className="cfg-stepper">
-                <button className="cfg-sbtn" onClick={() => bumpRounds(selectedGame, -1)} disabled={!isHost || curRounds <= rc.min} aria-label="Moins"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M5 12h14" /></svg></button>
-                <div className="cfg-sval"><div className="cfg-svaln">{curRounds}</div><div className="cfg-svalu">{rc.unit}</div></div>
-                <button className="cfg-sbtn" onClick={() => bumpRounds(selectedGame, 1)} disabled={!isHost || curRounds >= rc.max} aria-label="Plus"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg></button>
-              </div>
-            </div>
-          </div>
-          ); })()}
-
-          {/* TEMPS PAR TOUR — presets + saisie libre 5–300 s, mémoire par jeu (SPEC §3) */}
-          {(() => {
-            const tCfg = TIMES[selectedGame];
-            const custom = !tCfg.opts.includes(turnSeconds);
-            const hardcoreLocked = (selectedGame === "bombe" && curMode === "hardcore") || (selectedGame === "funny" && curMode === "express");
-            const timeLocked = !isHost || hardcoreLocked;
-            const hint = selectedGame === "funny" && curMode === "express"
-              ? "Imposé en Express : 30 secondes pour écrire."
-              : hardcoreLocked
-              ? "Imposé en Hardcore : chrono partagé de 15 s, +2 s par bonne réponse."
-              : selectedGame === "draw" && curMode === "blind"
-                ? `Mode Aveugle : +25 % de temps automatiquement (${Math.round(turnSeconds * 1.25)}s).`
-                : selectedGame === "pixel" && curMode === "rush"
-                  ? `Mode Rush : révélation deux fois plus rapide (~${Math.round(turnSeconds / 2)}s réels).`
-                  : `S'applique à « ${GAME_META[selectedGame].label} ». Chaque jeu garde son propre réglage.`;
-            return (
-              <div className="cfg-grp">
-                <div className="cfg-time" style={{ opacity: hardcoreLocked ? 0.55 : undefined }}>
-                  <div className="cfg-time-head">
-                    <div className="cfg-rlab"><b>{tCfg.title}</b>{tCfg.sub}</div>
-                    <div className="cfg-time-val"><span className="n">{hardcoreLocked ? (selectedGame === "funny" ? 30 : 15) : turnSeconds}</span><span className="u">sec</span></div>
-                  </div>
-                  <div className="cfg-time-opts">
-                    {tCfg.opts.map((v) => (
-                      <button
-                        key={v}
-                        onClick={() => setTime(selectedGame, v)}
-                        disabled={timeLocked}
-                        className={`cfg-timebtn${!hardcoreLocked && v === turnSeconds ? " on" : ""}`}
-                      >
-                        {v}s
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => {
-                        const raw = window.prompt("Temps par tour, en secondes (5 – 300)", String(turnSeconds));
-                        if (raw == null) return;
-                        const n = Math.max(5, Math.min(300, Math.round(Number(raw) || 0)));
-                        if (n) setTime(selectedGame, n);
-                      }}
-                      disabled={timeLocked}
-                      className={`cfg-timebtn perso${!hardcoreLocked && custom ? " on" : ""}`}
-                    >
-                      Perso
-                    </button>
-                  </div>
-                  <div className="cfg-time-hint">{hint}</div>
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* THÈMES — Boum Dessin uniquement, hors Faux-artiste / Relais */}
-          {/* PASS SOIRÉE — questions écrites par l'hôte pour « Ça te parle ? » */}
-          {selectedGame === "quiz" && isHost && (
-            <div className="cfg-grp">
-              <div className="cfg-head">
-                <div className="min-w-0 flex-1">
-                  <h2 className="cfg-tt">Tes questions {!hasPass && <span style={{ fontSize: 12, color: "#FFC24B" }}>· Pass Soirée</span>}</h2>
-                  <span className="cfg-sub">{hasPass ? "Jouées en priorité, la banque complète" : "Personnalise le quiz pour ta bande"}</span>
-                </div>
-              </div>
-              {hasPass ? (
-                <>
-                  <textarea
-                    value={roomQuestions}
-                    onChange={(e) => saveRoomQuestions(e.target.value.slice(0, 6000))}
-                    rows={5}
-                    spellCheck={false}
-                    placeholder={"Une question par ligne, la réponse après « = » :\nLe surnom de Karim au lycée ? = Le Boss | boss\nLa ville de nos dernières vacances ? = Marseille"}
-                    style={{ width: "100%", boxSizing: "border-box", borderRadius: 14, border: "1px solid #332A5A", background: "#0E0B1A", color: "#F3EEFF", padding: "12px 14px", fontSize: 14, lineHeight: 1.5, resize: "vertical" }}
-                  />
-                  <span className="cfg-sub" style={{ textTransform: "none", letterSpacing: 0 }}>
-                    {(() => { const n = roomQuestions.split(/\r?\n/).filter((l) => l.includes("=") && l.split("=")[1]?.trim()).length; return `${n} question${n > 1 ? "s" : ""} prête${n > 1 ? "s" : ""} · « | » pour accepter plusieurs réponses`; })()}
-                  </span>
-                </>
-              ) : (
-                <p style={{ margin: 0, fontSize: 14, color: "#A79FC7" }}>
-                  Les private jokes de ta bande dans le quiz : débloque-les avec le Pass Soirée{passCfg?.enabled ? " (juste au-dessus)" : " (bientôt disponible)"}.
-                </p>
-              )}
-            </div>
-          )}
-
-          {selectedGame === "draw" && curMode !== "fakeartist" && curMode !== "relay" && (() => {
-            const selCount = drawThemes.length === 0 ? DRAW_THEMES.length : drawThemes.length;
-            const allOn = drawThemes.length === 0;
-            return (
-              <div className="cfg-grp">
-                <button
-                  onClick={() => setThemesOpen((o) => !o)}
-                  className="cfg-collapse"
-                  aria-expanded={themesOpen}
-                >
-                  <span className="cfg-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11.5V5a2 2 0 0 1 2-2h6.5a2 2 0 0 1 1.4.6l7.5 7.5a2 2 0 0 1 0 2.8l-6.6 6.6a2 2 0 0 1-2.8 0L3.6 12.9A2 2 0 0 1 3 11.5Z" /><circle cx="7.5" cy="7.5" r="1.3" fill="currentColor" /></svg></span>
-                  <div className="min-w-0 flex-1"><h2 className="cfg-tt">Thèmes</h2><span className="cfg-sub">{themesOpen ? "Ce qui peut tomber" : `${selCount} sur ${DRAW_THEMES.length} sélectionnés`}</span></div>
-                  <span className={`cfg-choose${themesOpen ? "" : " pulse"}`}>
-                    {themesOpen ? "Fermer" : "Choisir"}
-                    <svg className="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" style={{ transform: themesOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
-                  </span>
-                </button>
-                {themesOpen && (
-                  <div className="mt-3">
-                    <div className="cfg-themesbar">
-                      <button className="cfg-toggleall" onClick={() => setDrawThemes([])} disabled={!isHost}>
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>
-                        Tout sélectionner
-                      </button>
-                      <span className="cfg-selnote"><b>{selCount}</b> thèmes sur {DRAW_THEMES.length}</span>
-                    </div>
-                    <div className="cfg-tags">
-                      {DRAW_THEMES.map((t) => {
-                        const on = allOn || drawThemes.includes(t);
-                        return (
-                          <button
-                            key={t}
-                            disabled={!isHost}
-                            onClick={() =>
-                              setDrawThemes((prev) => {
-                                const base = prev.length === 0 ? [...DRAW_THEMES] : prev;
-                                const next = base.includes(t) ? base.filter((x) => x !== t) : [...base, t];
-                                return next.length === DRAW_THEMES.length ? [] : next;
-                              })
-                            }
-                            className={`cfg-tag${on ? " on" : ""}`}
-                          >
-                            {on && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>}
-                            {t}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-        </div>
-      </section>
-      )}
 
       </div>
       {room.error && (
@@ -1148,6 +1173,43 @@ export default function LobbyPage() {
           </button>
         )}
       </div>
+
+      {isHost && settingsOpen && curLaunch && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label={`Réglages de ${GAME_META[selectedGame].label}`}>
+          <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" onClick={() => setSettingsOpen(false)} />
+          <div
+            className="relative flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border border-ink-border sm:rounded-3xl"
+            style={{ backgroundImage: "linear-gradient(165deg, rgba(37,28,69,.98), rgba(18,14,36,.99))", boxShadow: "0 30px 80px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.05)", animation: "pop-in .2s ease-out both" }}
+          >
+            <div className="flex items-center gap-3 border-b border-ink-border px-5 py-4">
+              <img src={GAME_META[selectedGame].img} alt="" className="h-12 w-12 shrink-0 rounded-xl object-cover" draggable={false} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-display text-xl font-bold">{GAME_META[selectedGame].label}</p>
+                <p className="truncate text-xs text-text-muted">{gameInfo(selectedGame).tagline}</p>
+              </div>
+              <button onClick={() => setSettingsOpen(false)} aria-label="Fermer" className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-ink-border text-text-muted hover:text-text">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-5 py-5">{settingsBody}</div>
+            <div className="flex flex-col gap-2 border-t border-ink-border px-5 py-4 sm:flex-row">
+              {!soireeLive && (
+                <button
+                  onClick={() => { const l = buildLaunch(); setSoireeItems((p) => [...p, l]); setJustAdded(true); window.setTimeout(() => setSettingsOpen(false), 450); }}
+                  disabled={soireeItems.length >= 12}
+                  className="arc arc-sec arc-block"
+                  style={{ fontSize: 14 }}
+                >
+                  {justAdded ? "Ajouté à la soirée ✓" : "+ Ajouter à la soirée"}
+                </button>
+              )}
+              <button onClick={() => setSettingsOpen(false)} className="arc arc-p arc-block" style={{ fontSize: 14 }}>
+                Valider
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {profileOpen && me && (
         <ProfileModal
