@@ -11,7 +11,7 @@
 /** ☕ Ton lien de dons — colle-le entre les guillemets, par ex.
  *  "https://ko-fi.com/leboum". Tant qu'il est vide, le bouton reste caché.
  *  (La variable NEXT_PUBLIC_SUPPORT_URL, si elle est définie au build, a la priorité.) */
-const DONATION_URL = "";
+const DONATION_URL = "https://ko-fi.com/leboum";
 
 /** N'accepte qu'un vrai lien https (évite un bouton cassé en ligne). */
 const safeUrl = (u: string | undefined) => (u && /^https:\/\/\S+$/.test(u.trim()) ? u.trim() : "");
