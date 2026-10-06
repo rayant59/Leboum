@@ -62,7 +62,7 @@ export function BoumIcon({
   style?: CSSProperties;
   className?: string;
 }) {
-  const tint = fill ?? (color.startsWith("#") && color.length === 7 ? `${color}2e` : "none");
+  const tint = fill ?? ((color.startsWith("#") && color.length === 7) || color.startsWith("rgb(var(") ? `color-mix(in srgb, ${color} 18%, transparent)` : "none");
   const a11y = label ? { role: "img", "aria-label": label } : { "aria-hidden": true as const };
   return (
     <svg
@@ -268,14 +268,14 @@ function paths(name: BoumIconName, c: string, t: string) {
 
 /** Médaille de place (1, 2, 3) aux couleurs du podium. */
 export function PlaceMedal({ place, size = 22 }: { place: number; size?: number }) {
-  const color = place === 1 ? "#FFC24B" : place === 2 ? "#C9C3E6" : place === 3 ? "#E39A5B" : "#6E6796";
+  const color = place === 1 ? "rgb(var(--c-gold))" : place === 2 ? "#C9C3E6" : place === 3 ? "#E39A5B" : "rgb(var(--c-text-faint))";
   return (
     <span style={{ position: "relative", display: "inline-grid", placeItems: "center", width: size, height: size, flex: "none" }} aria-label={`${place}e place`} role="img">
       <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
         <path d="M8 1.5 10.5 7M16 1.5 13.5 7" stroke={color} strokeWidth={2} strokeLinecap="round" fill="none" />
         <circle cx="12" cy="14.5" r="7.5" fill={color} />
       </svg>
-      <span style={{ position: "absolute", top: "38%", left: 0, right: 0, textAlign: "center", fontFamily: "'Bricolage Grotesque', system-ui, sans-serif", fontWeight: 800, fontSize: size * 0.42, lineHeight: 1, color: "#14102A" }}>{place}</span>
+      <span style={{ position: "absolute", top: "38%", left: 0, right: 0, textAlign: "center", fontFamily: "var(--font-display), system-ui, sans-serif", fontWeight: 800, fontSize: size * 0.42, lineHeight: 1, color: "rgb(var(--c-ink))" }}>{place}</span>
     </span>
   );
 }

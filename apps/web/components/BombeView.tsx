@@ -14,24 +14,24 @@ import { NeonIcon } from "@/components/NeonIcon";
 
 // ── Palette « LeBoum » (identité or / menthe / rose) ────────────────────────
 const C = {
-  bg: "#14102A",
-  aside: "rgba(28,22,54,.72)",
-  ink: "#0E0B1A",
-  line: "#332A5A",
+  bg: "rgb(var(--c-ink))",
+  aside: "rgb(var(--c-ink-surface) / .72)",
+  ink: "rgb(var(--c-ink-deep))",
+  line: "rgb(var(--c-ink-border))",
   lineFaint: "#241D45",
-  text: "#F3EEFF",
-  muted: "#A79FC7",
-  faint: "#6E6796",
+  text: "rgb(var(--c-text))",
+  muted: "rgb(var(--c-text-muted))",
+  faint: "rgb(var(--c-text-faint))",
   dim: "#4A4370",
-  gold: "#FFC24B",
-  goldSh: "#B47F16",
-  mint: "#46E0B0",
-  pink: "#FF4D8D",
+  gold: "rgb(var(--c-gold))",
+  goldSh: "rgb(var(--c-gold-dark))",
+  mint: "rgb(var(--c-mint))",
+  pink: "rgb(var(--c-magenta))",
   fuse: "#FF8A3D",
-  violet: "#8B7DF6",
+  violet: "rgb(var(--c-violet))",
 };
-const DISPLAY = "'Bricolage Grotesque', system-ui, sans-serif";
-const MONO = "'Bricolage Grotesque', system-ui, sans-serif";
+const DISPLAY = "var(--font-display), system-ui, sans-serif";
+const MONO = "var(--font-display), system-ui, sans-serif";
 const BODY = "'Inter', system-ui, sans-serif";
 const RING = 112;
 const RING_C = 2 * Math.PI * RING; // ≈ 703.7
@@ -90,7 +90,7 @@ function Hearts({ lives, max }: { lives: number; max: number }) {
 }
 
 // Aurores animées en fond.
-function Aurora({ tint = "rgba(255,138,61,.13)", tint2 = "rgba(255,77,141,.10)" }: { tint?: string; tint2?: string }) {
+function Aurora({ tint = "rgba(255,138,61,.13)", tint2 = "rgb(var(--c-magenta) / .10)" }: { tint?: string; tint2?: string }) {
   return (
     <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
       <div data-bmb-anim style={{ position: "absolute", top: "-18%", left: "34%", width: 520, height: 520, borderRadius: "50%", filter: "blur(80px)", background: `radial-gradient(circle, ${tint}, transparent 62%)`, animation: "bmbAuroraA 18s ease-in-out infinite" }} />
@@ -106,13 +106,13 @@ function Bomb({ syllable, secs, frac, color, exploded }: { syllable: string; sec
     <div style={{ position: "relative", width: 238, height: 238, display: "grid", placeItems: "center" }}>
       {exploded ? (
         <>
-          <div data-bmb-anim style={{ position: "absolute", inset: 0, borderRadius: "50%", boxShadow: `0 0 0 3px ${C.pink}b3`, animation: "bmbBlast .9s ease-out infinite" }} />
-          <div style={{ position: "absolute", inset: 22, borderRadius: "50%", background: `radial-gradient(circle, rgba(255,77,141,.28), transparent 68%)` }} />
+          <div data-bmb-anim style={{ position: "absolute", inset: 0, borderRadius: "50%", boxShadow: `0 0 0 3px color-mix(in srgb, ${C.pink} 70.2%, transparent)`, animation: "bmbBlast .9s ease-out infinite" }} />
+          <div style={{ position: "absolute", inset: 22, borderRadius: "50%", background: `radial-gradient(circle, rgb(var(--c-magenta) / .28), transparent 68%)` }} />
           <svg width="238" height="238" viewBox="0 0 238 238" style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
-            <circle cx="119" cy="119" r={RING} fill="none" stroke="rgba(255,77,141,.35)" strokeWidth="6" strokeDasharray="14 24" />
+            <circle cx="119" cy="119" r={RING} fill="none" stroke="rgb(var(--c-magenta) / .35)" strokeWidth="6" strokeDasharray="14 24" />
           </svg>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-            <NeonIcon name="fire" size={48} style={{ filter: "drop-shadow(0 0 14px rgba(255,77,141,.55))" }} />
+            <NeonIcon name="fire" size={48} style={{ filter: "drop-shadow(0 0 14px rgb(var(--c-magenta) / .55))" }} />
             <span style={{ fontFamily: DISPLAY, fontSize: 44, fontWeight: 800, lineHeight: 1, color: C.pink }}>0s</span>
             <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 12, textTransform: "uppercase", letterSpacing: ".16em", color: C.muted }}>{syllable}</span>
           </div>
@@ -123,10 +123,10 @@ function Bomb({ syllable, secs, frac, color, exploded }: { syllable: string; sec
             <circle cx="119" cy="119" r={RING} fill="none" stroke={C.lineFaint} strokeWidth="6" />
             <circle cx="119" cy="119" r={RING} fill="none" stroke={color} strokeWidth="6" strokeLinecap="round" strokeDasharray={RING_C} strokeDashoffset={off} />
           </svg>
-          <div data-bmb-anim style={{ position: "absolute", inset: 26, borderRadius: "50%", background: `radial-gradient(circle at 50% 42%, ${color}33, transparent 70%)`, animation: "bmbFuseGlow 1.1s ease-in-out infinite" }} />
+          <div data-bmb-anim style={{ position: "absolute", inset: 26, borderRadius: "50%", background: `radial-gradient(circle at 50% 42%, color-mix(in srgb, ${color} 20%, transparent), transparent 70%)`, animation: "bmbFuseGlow 1.1s ease-in-out infinite" }} />
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-            <NeonIcon name="bomb" size={46} style={{ filter: `drop-shadow(0 0 12px ${color}66)` }} />
-            <span style={{ fontFamily: DISPLAY, fontSize: 62, fontWeight: 800, letterSpacing: ".05em", lineHeight: 1, textShadow: `0 2px 20px ${color}80` }}>{syllable.toUpperCase()}</span>
+            <NeonIcon name="bomb" size={46} style={{ filter: `drop-shadow(0 0 12px color-mix(in srgb, ${color} 40%, transparent))` }} />
+            <span style={{ fontFamily: DISPLAY, fontSize: 62, fontWeight: 800, letterSpacing: ".05em", lineHeight: 1, textShadow: `0 2px 20px color-mix(in srgb, ${color} 50.2%, transparent)` }}>{syllable.toUpperCase()}</span>
             <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 13, letterSpacing: ".14em", color }}>{Math.ceil(secs)}s</span>
           </div>
         </>
@@ -312,11 +312,11 @@ export function BombeView({ room }: { room: UseRoom }) {
         <span style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 800, letterSpacing: "-.01em" }}>{game.phase === "gameover" ? "Partie terminée" : `${alive} en jeu`}</span>
         <span style={{ fontSize: 12, color: C.faint }}>{game.usedCount} mots joués{game.phase !== "gameover" && game.usedLetters.length ? "" : ""}</span>
       </div>
-      <div className="bmb-sep" style={{ height: 1, background: `linear-gradient(90deg,transparent,rgba(243,238,255,.14) 18%,rgba(243,238,255,.14) 82%,transparent)` }} />
+      <div className="bmb-sep" style={{ height: 1, background: `linear-gradient(90deg,transparent,rgb(var(--c-text) / .14) 18%,rgb(var(--c-text) / .14) 82%,transparent)` }} />
       <div className="bmb-rows" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {game.ranking.map((row, i) => (
           game.phase === "gameover" ? (
-            <div key={row.id} style={{ position: "relative", display: "flex", alignItems: "center", gap: 12, padding: i === 0 ? "12px 14px 12px 16px" : "12px 14px", borderRadius: 14, ...(i === 0 ? { background: `${C.gold}1a`, boxShadow: `0 0 0 1px ${C.gold}8c` } : row.eliminated ? { boxShadow: `0 0 0 1px ${C.lineFaint}`, opacity: 0.5 } : { boxShadow: `0 0 0 1px ${C.line}` }) }}>
+            <div key={row.id} style={{ position: "relative", display: "flex", alignItems: "center", gap: 12, padding: i === 0 ? "12px 14px 12px 16px" : "12px 14px", borderRadius: 14, ...(i === 0 ? { background: `color-mix(in srgb, ${C.gold} 10.2%, transparent)`, boxShadow: `0 0 0 1px color-mix(in srgb, ${C.gold} 54.9%, transparent)` } : row.eliminated ? { boxShadow: `0 0 0 1px ${C.lineFaint}`, opacity: 0.5 } : { boxShadow: `0 0 0 1px ${C.line}` }) }}>
               {i === 0 && <span style={{ position: "absolute", left: 0, top: 13, bottom: 13, width: 3, borderRadius: 3, background: C.gold }} />}
               <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 12, color: i === 0 ? C.gold : C.faint, width: 14 }}>{i + 1}</span>
               <Plate name={row.name} color={row.color} />
@@ -332,7 +332,7 @@ export function BombeView({ room }: { room: UseRoom }) {
         <div className="bmb-extras" style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Mots à apprendre — persistants jusqu'à la prochaine explosion. */}
           {game.exampleWords.length > 0 && (
-            <div className="bmb-learn" style={{ display: "flex", flexDirection: "column", gap: 8, padding: "12px 13px", borderRadius: 12, background: "rgba(255,77,141,.07)", boxShadow: "inset 0 0 0 1px rgba(255,77,141,.28)" }}>
+            <div className="bmb-learn" style={{ display: "flex", flexDirection: "column", gap: 8, padding: "12px 13px", borderRadius: 12, background: "rgb(var(--c-magenta) / .07)", boxShadow: "inset 0 0 0 1px rgb(var(--c-magenta) / .28)" }}>
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
                 <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".18em", color: C.pink }}>À apprendre</span>
                 <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, color: C.faint }}>{game.exampleSyllable.toUpperCase()}</span>
@@ -340,7 +340,7 @@ export function BombeView({ room }: { room: UseRoom }) {
               <span style={{ fontSize: 11, color: C.faint, lineHeight: 1.35 }}>{nameOf(game.exampleVictimId)} aurait pu jouer&nbsp;:</span>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                 {game.exampleWords.map((w, i) => (
-                  <span key={i} style={{ fontFamily: DISPLAY, fontSize: 13, fontWeight: 700, padding: "3px 9px", borderRadius: 8, background: "rgba(70,224,176,.10)", color: C.text, boxShadow: "inset 0 0 0 1px rgba(70,224,176,.3)" }}>
+                  <span key={i} style={{ fontFamily: DISPLAY, fontSize: 13, fontWeight: 700, padding: "3px 9px", borderRadius: 8, background: "rgb(var(--c-mint) / .10)", color: C.text, boxShadow: "inset 0 0 0 1px rgb(var(--c-mint) / .3)" }}>
                     <Highlighted text={w} syllable={game.exampleSyllable} tint={C.mint} />
                   </span>
                 ))}
@@ -359,7 +359,7 @@ export function BombeView({ room }: { room: UseRoom }) {
                 {BOMBE_ALPHABET.map((l) => {
                   const on = game.usedLetters.includes(l);
                   return (
-                    <span key={l} style={{ display: "grid", placeItems: "center", width: 23, height: 23, borderRadius: 6, fontFamily: DISPLAY, fontSize: 11, fontWeight: 700, color: on ? C.mint : C.dim, background: on ? "rgba(70,224,176,.14)" : "transparent", boxShadow: on ? "inset 0 0 0 1px rgba(70,224,176,.5)" : "none" }}>{l}</span>
+                    <span key={l} style={{ display: "grid", placeItems: "center", width: 23, height: 23, borderRadius: 6, fontFamily: DISPLAY, fontSize: 11, fontWeight: 700, color: on ? C.mint : C.dim, background: on ? "rgb(var(--c-mint) / .14)" : "transparent", boxShadow: on ? "inset 0 0 0 1px rgb(var(--c-mint) / .5)" : "none" }}>{l}</span>
                   );
                 })}
               </div>
@@ -375,7 +375,7 @@ export function BombeView({ room }: { room: UseRoom }) {
     const active = !!badge;
     const tint = badge?.color ?? C.line;
     return (
-      <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 12, padding: active ? "12px 14px 12px 16px" : "12px 14px", borderRadius: 14, ...(active ? { background: `${tint}1a`, boxShadow: `0 0 0 1px ${tint}8c, 0 0 26px -12px ${tint}` } : row.eliminated ? { boxShadow: `0 0 0 1px ${C.lineFaint}`, opacity: 0.45 } : { boxShadow: `0 0 0 1px ${C.line}` }) }}>
+      <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 12, padding: active ? "12px 14px 12px 16px" : "12px 14px", borderRadius: 14, ...(active ? { background: `color-mix(in srgb, ${tint} 10.2%, transparent)`, boxShadow: `0 0 0 1px color-mix(in srgb, ${tint} 54.9%, transparent), 0 0 26px -12px ${tint}` } : row.eliminated ? { boxShadow: `0 0 0 1px ${C.lineFaint}`, opacity: 0.45 } : { boxShadow: `0 0 0 1px ${C.line}` }) }}>
         {active && <span style={{ position: "absolute", left: 0, top: 13, bottom: 13, width: 3, borderRadius: 3, background: tint }} />}
         <Plate name={row.name} color={row.eliminated ? C.muted : row.color} />
         <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 3 }}>
@@ -410,7 +410,7 @@ export function BombeView({ room }: { room: UseRoom }) {
     return (
       <main style={shell}>
         <div className="bmb-wrap" style={{ display: "flex", ...card }}>
-          <Aurora tint="rgba(255,194,75,.14)" tint2="rgba(139,125,246,.10)" />
+          <Aurora tint="rgb(var(--c-gold) / .14)" tint2="rgb(var(--c-violet) / .10)" />
           {Sidebar}
           <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ height: 3, background: `linear-gradient(90deg,transparent,${C.gold} 5%,${C.gold} 95%,transparent)` }} />
@@ -418,7 +418,7 @@ export function BombeView({ room }: { room: UseRoom }) {
               <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 22, padding: 24 }}>
                 <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: C.faint }}>Score de la table</span>
                 <BoumIcon name="handshake" size={56} color={C.mint} />
-                <span style={{ fontFamily: DISPLAY, fontSize: 84, fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1, color: C.mint, textShadow: "0 0 40px rgba(70,224,176,.5)" }}>{game.coopScore}</span>
+                <span style={{ fontFamily: DISPLAY, fontSize: 84, fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1, color: C.mint, textShadow: "0 0 40px rgb(var(--c-mint) / .5)" }}>{game.coopScore}</span>
                 <span style={{ fontFamily: DISPLAY, fontSize: 18, fontWeight: 700, color: C.text }}>mots tenus ensemble avant l'explosion</span>
                 <span style={{ fontSize: 13, color: C.faint }}>{game.players.length} joueur·euses · battez votre record du salon !</span>
               </div>
@@ -433,15 +433,15 @@ export function BombeView({ room }: { room: UseRoom }) {
                 </div>
                 <div style={{ display: "flex", alignItems: "stretch" }}>
                   <Stat n={winner?.wordsFound ?? 0} label="mots" />
-                  <div style={{ width: 1, background: `linear-gradient(180deg,transparent,rgba(243,238,255,.16),transparent)` }} />
+                  <div style={{ width: 1, background: `linear-gradient(180deg,transparent,rgb(var(--c-text) / .16),transparent)` }} />
                   <Stat n={winner?.lives ?? 0} label="vies restantes" />
-                  <div style={{ width: 1, background: `linear-gradient(180deg,transparent,rgba(243,238,255,.16),transparent)` }} />
+                  <div style={{ width: 1, background: `linear-gradient(180deg,transparent,rgb(var(--c-text) / .16),transparent)` }} />
                   <Stat n={wLetters} label="lettres" />
                 </div>
               </div>
             )}
             <div style={{ padding: "0 clamp(16px,4vw,40px) 34px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", padding: "22px 26px", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 1px ${C.line}, inset 0 1px 0 rgba(243,238,255,.04)` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", padding: "22px 26px", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 1px ${C.line}, inset 0 1px 0 rgb(var(--c-text) / .04)` }}>
                 <span style={{ flex: 1, minWidth: 180, display: "flex", flexDirection: "column", gap: 3 }}>
                   <span style={{ fontFamily: DISPLAY, fontSize: 17, fontWeight: 700 }}>Plus long mot de la partie</span>
                   <span style={{ fontSize: 13, color: C.muted }}>{game.longestWord ? <><span style={{ color: C.mint, fontWeight: 700 }}>{game.longestWord}</span>{game.longestWordBy ? ` — ${nameOf(game.longestWordBy)}` : ""}</> : "Aucun mot trouvé… la bombe a gagné."}</span>
@@ -468,8 +468,8 @@ export function BombeView({ room }: { room: UseRoom }) {
           <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 22 }}>
             <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: C.faint }}>La partie démarre</span>
             <div key={left} data-bmb-anim style={{ position: "relative", width: 238, height: 238, display: "grid", placeItems: "center", animation: "bmbCountPop .5s ease-out" }}>
-              <div style={{ position: "absolute", inset: 26, borderRadius: "50%", background: `radial-gradient(circle at 50% 42%, ${C.gold}33, transparent 70%)` }} />
-              <span style={{ fontFamily: DISPLAY, fontSize: 120, fontWeight: 800, lineHeight: 1, color: C.gold, textShadow: `0 4px 30px ${C.gold}66` }}>{left}</span>
+              <div style={{ position: "absolute", inset: 26, borderRadius: "50%", background: `radial-gradient(circle at 50% 42%, color-mix(in srgb, ${C.gold} 20%, transparent), transparent 70%)` }} />
+              <span style={{ fontFamily: DISPLAY, fontSize: 120, fontWeight: 800, lineHeight: 1, color: C.gold, textShadow: `0 4px 30px color-mix(in srgb, ${C.gold} 40%, transparent)` }}>{left}</span>
             </div>
             <span style={{ fontSize: 14, color: C.muted }}>Prépare-toi… ça va péter.</span>
           </div>
@@ -487,11 +487,11 @@ export function BombeView({ room }: { room: UseRoom }) {
   return (
     <main style={shell}>
       <div className="bmb-wrap" style={card}>
-        <Aurora tint={exploded ? "rgba(255,77,141,.18)" : game.youAreCurrent ? "rgba(255,138,61,.13)" : "rgba(139,125,246,.12)"} tint2={exploded ? "rgba(255,77,141,.10)" : "rgba(255,77,141,.10)"} />
+        <Aurora tint={exploded ? "rgb(var(--c-magenta) / .18)" : game.youAreCurrent ? "rgba(255,138,61,.13)" : "rgb(var(--c-violet) / .12)"} tint2={exploded ? "rgb(var(--c-magenta) / .10)" : "rgb(var(--c-magenta) / .10)"} />
         {Sidebar}
 
         <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-          <div style={{ height: 3, background: exploded ? C.pink : `linear-gradient(90deg,transparent,${railColor} 5%,${railColor} ${railW.replace("%", "")}%,${railColor}00 calc(${railW} + 1%))` }} />
+          <div style={{ height: 3, background: exploded ? C.pink : `linear-gradient(90deg,transparent,${railColor} 5%,${railColor} ${railW.replace("%", "")}%,color-mix(in srgb, ${railColor} 0%, transparent) calc(${railW} + 1%))` }} />
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 28px" }}>
             <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: exploded ? C.pink : C.faint }}>{exploded ? "La bombe a sauté" : "Manche en cours"}</span>
             <div style={{ display: "flex", gap: 8 }}>
@@ -523,7 +523,7 @@ export function BombeView({ room }: { room: UseRoom }) {
                   </span>
                 </div>
                 {/* Plaque « temps écoulé » — les mots à apprendre sont dans la barre latérale. */}
-                <div style={{ display: "flex", alignItems: "center", gap: 20, padding: "clamp(16px,3vw,24px) clamp(16px,3vw,28px)", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 2px rgba(255,77,141,.6), 0 0 50px -26px rgba(255,77,141,.9)` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 20, padding: "clamp(16px,3vw,24px) clamp(16px,3vw,28px)", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 2px rgb(var(--c-magenta) / .6), 0 0 50px -26px rgb(var(--c-magenta) / .9)` }}>
                   <span style={{ flex: 1, minWidth: 0, fontFamily: DISPLAY, fontSize: "clamp(20px,6vw,52px)", fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.2, color: C.faint }}>
                     Temps écoulé pour <span style={{ color: C.pink }}>{game.syllable.toLowerCase()}</span>
                   </span>
@@ -538,7 +538,7 @@ export function BombeView({ room }: { room: UseRoom }) {
                     <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: C.gold }}>Ton mot</span>
                   </span>
                 </div>
-                <div onClick={() => inputRef.current?.focus()} style={{ position: "relative", display: "flex", alignItems: "center", gap: 20, padding: "clamp(16px,3vw,24px) clamp(16px,3vw,28px)", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 1px #332A5A, inset 0 1px 0 rgba(243,238,255,.04), 0 20px 44px -28px rgba(0,0,0,.9)`, cursor: "text" }}>
+                <div onClick={() => inputRef.current?.focus()} style={{ position: "relative", display: "flex", alignItems: "center", gap: 20, padding: "clamp(16px,3vw,24px) clamp(16px,3vw,28px)", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 1px rgb(var(--c-ink-border)), inset 0 1px 0 rgb(var(--c-text) / .04), 0 20px 44px -28px rgba(0,0,0,.9)`, cursor: "text" }}>
                   <span style={{ flex: 1, minWidth: 0, fontFamily: DISPLAY, fontSize: "clamp(22px,6vw,52px)", fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", padding: "4px 8px 4px 0" }}>
                     {text ? <Highlighted text={text} syllable={game.syllable} tint={C.gold} /> : <span style={{ color: C.faint }}>un mot avec {game.syllable.toLowerCase()}…</span>}
                     <Caret tint={C.gold} />
@@ -565,7 +565,7 @@ export function BombeView({ room }: { room: UseRoom }) {
                     <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: C.mint }}>{currentName} écrit</span>
                   </span>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 20, padding: "clamp(16px,3vw,24px) clamp(16px,3vw,28px)", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 2px ${C.mint}73, inset 0 1px 0 rgba(243,238,255,.04)` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 20, padding: "clamp(16px,3vw,24px) clamp(16px,3vw,28px)", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 2px color-mix(in srgb, ${C.mint} 45.1%, transparent), inset 0 1px 0 rgb(var(--c-text) / .04)` }}>
                   <span style={{ flex: 1, minWidth: 0, fontFamily: DISPLAY, fontSize: "clamp(22px,6vw,52px)", fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", padding: "4px 8px 4px 0", color: C.text }}>
                     {liveTyping ? <><Highlighted text={liveTyping} syllable={game.syllable} tint={C.mint} /><Caret tint={C.mint} /></> : <span style={{ color: C.faint }}>…</span>}
                   </span>

@@ -61,6 +61,16 @@ la synchro en direct.
 
 ## 🧩 Personnalisation
 
+- **Design en direct (`/design`)** : ouvre `/design`, entre le code d'accès, et
+  un panneau s'affiche par-dessus le vrai site. Couleurs, thèmes tout prêts,
+  polices (Google Fonts) et CSS libre s'appliquent **instantanément** ; ton
+  brouillon n'est visible que par toi jusqu'à **Publier**, puis tous les joueurs
+  reçoivent le nouveau design (sans redéployer le site). « Revenir au design
+  d'origine » annule tout. En local, sans code configuré, laisse le champ vide.
+  Côté code : toutes les couleurs passent par les variables `--c-*` de
+  `apps/web/app/globals.css` (classes Tailwind `bg-gold`, `text-text-muted`…
+  ou `rgb(var(--c-gold))` en style inline) — n'écris plus de couleur du thème
+  en dur, sinon l'éditeur ne pourra pas la changer.
 - **Avatars** : chaque joueur peut importer une image (recadrée en carré) depuis
   le salon. Sinon, initiales colorées par défaut.
 - **Icônes d'outils** : dépose tes PNG dans `apps/web/public/tools/`
@@ -145,6 +155,8 @@ Tout est désactivé par défaut ; chaque brique s'allume avec une variable d'en
 | Variable | Effet |
 |---|---|
 | `STATS_TOKEN` | Code d'accès de la page `/stats` (fréquentation anonyme) |
+| `DESIGN_TOKEN` | Code d'accès de l'éditeur de design `/design` (à défaut : `STATS_TOKEN`) |
+| `THEME_FILE` | Fichier du design publié (par défaut `data/theme.json`, à placer sur un disque persistant) |
 | `STRIPE_SECRET_KEY` + `STRIPE_PASS_PRICE` | Active le **Pass Soirée** (Stripe Checkout) |
 | `PASS_PRICE_LABEL` | Prix affiché, ex. `2,99 €` (doit correspondre au prix Stripe) |
 | `PUBLIC_SITE_URL` | `https://leboum.fr` (retour après paiement) |

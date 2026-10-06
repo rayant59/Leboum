@@ -12,20 +12,20 @@ export interface RankRow {
   score: number;
 }
 
-const GOLD = "#FFC24B", SILVER = "#C7CEDD", BRONZE = "#CD7F32";
-const DISPLAY = "'Bricolage Grotesque', system-ui, sans-serif";
+const GOLD = "rgb(var(--c-gold))", SILVER = "#C7CEDD", BRONZE = "#CD7F32";
+const DISPLAY = "var(--font-display), system-ui, sans-serif";
 
 const CONFETTI: { x: number; w: number; h: number; r: number; color: string; d: number; delay: number }[] = [
-  { x: 8,  w: 7, h: 11, r: 2, color: "#FFC24B", d: 5.2, delay: -0.4 },
-  { x: 18, w: 7, h: 7,  r: 9, color: "#46E0B0", d: 6.4, delay: -2.1 },
-  { x: 29, w: 6, h: 10, r: 2, color: "#FF4D8D", d: 5.8, delay: -3.3 },
-  { x: 39, w: 8, h: 8,  r: 2, color: "#8B7DF6", d: 7.0, delay: -1.2 },
+  { x: 8,  w: 7, h: 11, r: 2, color: "rgb(var(--c-gold))", d: 5.2, delay: -0.4 },
+  { x: 18, w: 7, h: 7,  r: 9, color: "rgb(var(--c-mint))", d: 6.4, delay: -2.1 },
+  { x: 29, w: 6, h: 10, r: 2, color: "rgb(var(--c-magenta))", d: 5.8, delay: -3.3 },
+  { x: 39, w: 8, h: 8,  r: 2, color: "rgb(var(--c-violet))", d: 7.0, delay: -1.2 },
   { x: 48, w: 6, h: 6,  r: 9, color: "#4FC3F7", d: 6.0, delay: -4.5 },
-  { x: 57, w: 7, h: 11, r: 2, color: "#FFC24B", d: 5.5, delay: -2.8 },
-  { x: 67, w: 7, h: 7,  r: 9, color: "#FF4D8D", d: 6.8, delay: -0.9 },
-  { x: 76, w: 6, h: 9,  r: 2, color: "#46E0B0", d: 6.2, delay: -3.9 },
-  { x: 85, w: 8, h: 8,  r: 2, color: "#8B7DF6", d: 5.6, delay: -1.7 },
-  { x: 92, w: 6, h: 10, r: 2, color: "#FFC24B", d: 7.2, delay: -5.1 },
+  { x: 57, w: 7, h: 11, r: 2, color: "rgb(var(--c-gold))", d: 5.5, delay: -2.8 },
+  { x: 67, w: 7, h: 7,  r: 9, color: "rgb(var(--c-magenta))", d: 6.8, delay: -0.9 },
+  { x: 76, w: 6, h: 9,  r: 2, color: "rgb(var(--c-mint))", d: 6.2, delay: -3.9 },
+  { x: 85, w: 8, h: 8,  r: 2, color: "rgb(var(--c-violet))", d: 5.6, delay: -1.7 },
+  { x: 92, w: 6, h: 10, r: 2, color: "rgb(var(--c-gold))", d: 7.2, delay: -5.1 },
 ];
 
 export function ResultsScreen({
@@ -76,7 +76,7 @@ export function ResultsScreen({
   return (
     <div className="animate-pop" style={{ position: "relative", overflow: "hidden" }}>
       <style>{`
-        @keyframes rs-glow { 0%,100% { text-shadow: 0 0 22px rgba(255,194,75,.4) } 50% { text-shadow: 0 0 48px rgba(255,194,75,.85) } }
+        @keyframes rs-glow { 0%,100% { text-shadow: 0 0 22px rgb(var(--c-gold) / .4) } 50% { text-shadow: 0 0 48px rgb(var(--c-gold) / .85) } }
         @keyframes rs-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
         @keyframes rs-crown { 0%,100% { transform: translateY(0) rotate(-3deg) } 50% { transform: translateY(-5px) rotate(3deg) } }
         @keyframes rs-pulse { 0%,100% { transform: scale(1); opacity:.9 } 50% { transform: scale(1.1); opacity:1 } }
@@ -94,11 +94,11 @@ export function ResultsScreen({
       {winner && !nobody && coLeaders.some((r) => r.id === you) && (
         <div aria-hidden className="rs-boom" style={{ position: "absolute", left: "50%", top: 92, width: 0, height: 0, pointerEvents: "none" }}>
           <span style={{ position: "absolute", left: 0, top: 0, width: 120, height: 120, borderRadius: "50%", border: `3px solid ${GOLD}`, animation: "rs-wave 1.1s cubic-bezier(.1,.7,.3,1) .15s both" }} />
-          <span style={{ position: "absolute", left: 0, top: 0, width: 120, height: 120, borderRadius: "50%", border: "2px solid #FF4D8D", animation: "rs-wave 1.3s cubic-bezier(.1,.7,.3,1) .35s both" }} />
+          <span style={{ position: "absolute", left: 0, top: 0, width: 120, height: 120, borderRadius: "50%", border: "2px solid rgb(var(--c-magenta))", animation: "rs-wave 1.3s cubic-bezier(.1,.7,.3,1) .35s both" }} />
           <svg width="260" height="260" viewBox="0 0 24 24" style={{ position: "absolute", left: 0, top: 0, animation: "rs-burst .9s ease-out .1s both" }}>
-            <path d="m12 2 1.9 5.2L19 4.6l-2.1 5L22 12l-5.1 1.9 2.1 5.5-5.2-2.6L12 22l-1.8-5.2L5 19.4l2.1-5.5L2 12l5.1-2.4L5 4.6l5.1 2.6L12 2Z" fill="rgba(255,194,75,.22)" stroke="rgba(255,194,75,.6)" strokeWidth=".4" />
+            <path d="m12 2 1.9 5.2L19 4.6l-2.1 5L22 12l-5.1 1.9 2.1 5.5-5.2-2.6L12 22l-1.8-5.2L5 19.4l2.1-5.5L2 12l5.1-2.4L5 4.6l5.1 2.6L12 2Z" fill="rgb(var(--c-gold) / .22)" stroke="rgb(var(--c-gold) / .6)" strokeWidth=".4" />
           </svg>
-          <span style={{ position: "absolute", left: 58, top: -64, padding: "2px 10px", border: "3px solid #FF4D8D", borderRadius: 8, fontFamily: DISPLAY, fontWeight: 800, fontSize: 22, letterSpacing: ".04em", color: "#FF4D8D", background: "rgba(20,16,42,.7)", whiteSpace: "nowrap", animation: "rs-stamp .5s cubic-bezier(.2,.9,.3,1.3) .55s both" }}>BOUM&nbsp;!</span>
+          <span style={{ position: "absolute", left: 58, top: -64, padding: "2px 10px", border: "3px solid rgb(var(--c-magenta))", borderRadius: 8, fontFamily: DISPLAY, fontWeight: 800, fontSize: 22, letterSpacing: ".04em", color: "rgb(var(--c-magenta))", background: "rgb(var(--c-ink) / .7)", whiteSpace: "nowrap", animation: "rs-stamp .5s cubic-bezier(.2,.9,.3,1.3) .55s both" }}>BOUM&nbsp;!</span>
         </div>
       )}
 
@@ -111,20 +111,20 @@ export function ResultsScreen({
 
       {/* héros */}
       <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, paddingTop: 14, textAlign: "center" }}>
-        <span style={{ fontFamily: DISPLAY, fontSize: 11, fontWeight: 700, letterSpacing: ".18em", textTransform: "uppercase", color: "#6E6796" }}>{eyebrow}</span>
-        <NeonIcon name="trophy" size={76} style={{ filter: "drop-shadow(0 6px 20px rgba(255,194,75,.45))", animation: "rs-float 4s ease-in-out infinite" }} />
+        <span style={{ fontFamily: DISPLAY, fontSize: 11, fontWeight: 700, letterSpacing: ".18em", textTransform: "uppercase", color: "rgb(var(--c-text-faint))" }}>{eyebrow}</span>
+        <NeonIcon name="trophy" size={76} style={{ filter: "drop-shadow(0 6px 20px rgb(var(--c-gold) / .45))", animation: "rs-float 4s ease-in-out infinite" }} />
         <h1 className="font-display" style={{ margin: 0, fontSize: nobody ? 34 : 44, fontWeight: 800, letterSpacing: "-.02em", color: GOLD, animation: "rs-pop .7s cubic-bezier(.2,.9,.3,1.3) both, rs-glow 3s ease-in-out .7s infinite" }}>{nobody ? "Personne n'a marqué" : winner && coLeaders.some((r) => r.id === you) ? (coLeaders.length > 1 ? "Ex æquo\u202f!" : "Victoire\u202f!") : endTitle}</h1>
-        {nobody && <p style={{ margin: 0, fontSize: 15, color: "#A79FC7" }}>Zéro partout… la revanche s'impose.</p>}
+        {nobody && <p style={{ margin: 0, fontSize: 15, color: "rgb(var(--c-text-muted))" }}>Zéro partout… la revanche s'impose.</p>}
         {winner && !nobody && (
-          <p style={{ margin: 0, fontSize: 15, color: "#A79FC7" }}>
+          <p style={{ margin: 0, fontSize: 15, color: "rgb(var(--c-text-muted))" }}>
             {coLeaders.length > 1 ? (
-              <><b style={{ color: "#F3EEFF" }}>{coLeaders.map((r) => r.name + (r.id === you ? " (toi)" : "")).join(" & ")}</b> à égalité en tête !</>
+              <><b style={{ color: "rgb(var(--c-text))" }}>{coLeaders.map((r) => r.name + (r.id === you ? " (toi)" : "")).join(" & ")}</b> à égalité en tête !</>
             ) : (
-              <><b style={{ color: "#F3EEFF" }}>{winner.name}{winner.id === you ? " (toi)" : ""}</b> {winnerText}</>
+              <><b style={{ color: "rgb(var(--c-text))" }}>{winner.name}{winner.id === you ? " (toi)" : ""}</b> {winnerText}</>
             )}
           </p>
         )}
-        <span style={{ marginTop: 2, borderRadius: 999, border: "1px solid #332A5A", background: "rgba(28,22,54,.5)", padding: "5px 13px", fontFamily: DISPLAY, fontSize: 10, fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", color: "#6E6796" }}>{ranking.length} joueur{ranking.length > 1 ? "s" : ""}</span>
+        <span style={{ marginTop: 2, borderRadius: 999, border: "1px solid rgb(var(--c-ink-border))", background: "rgb(var(--c-ink-surface) / .5)", padding: "5px 13px", fontFamily: DISPLAY, fontSize: 10, fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", color: "rgb(var(--c-text-faint))" }}>{ranking.length} joueur{ranking.length > 1 ? "s" : ""}</span>
       </div>
 
       {/* podium */}
@@ -138,11 +138,11 @@ export function ResultsScreen({
       {rest.length > 0 && !nobody && (
         <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 8, marginTop: 20, maxWidth: 460, marginInline: "auto" }}>
           {rest.map((r, i) => (
-            <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 14, border: "1px solid #332A5A", background: "linear-gradient(180deg, rgba(37,28,69,.6), rgba(28,22,54,.6))" }}>
-              <span style={{ width: 16, fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: "#6E6796" }}>{places[i + 3]}</span>
+            <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 14, border: "1px solid rgb(var(--c-ink-border))", background: "linear-gradient(180deg, rgb(var(--c-ink-raised) / .6), rgb(var(--c-ink-surface) / .6))" }}>
+              <span style={{ width: 16, fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: "rgb(var(--c-text-faint))" }}>{places[i + 3]}</span>
               <Avatar name={r.name} color={r.color} avatar={r.avatar} size={34} />
               <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: DISPLAY, fontWeight: 700, fontSize: 15 }}>{r.name}{r.id === you ? " (toi)" : ""}</span>
-              <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 15, color: "#A79FC7" }}>{r.score.toLocaleString("fr-FR")}</span>
+              <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 15, color: "rgb(var(--c-text-muted))" }}>{r.score.toLocaleString("fr-FR")}</span>
             </div>
           ))}
         </div>
@@ -203,25 +203,25 @@ function PodiumCol({
   return (
     <div style={{ flex: winner ? 1.14 : 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 10, animation: `rs-rise .6s cubic-bezier(.2,.9,.3,1.15) ${rise} both` }}>
       {winner && (
-        <NeonIcon name="crown" size={44} style={{ filter: "drop-shadow(0 4px 12px rgba(255,194,75,.6))", animation: "rs-crown 3.2s ease-in-out infinite" }} />
+        <NeonIcon name="crown" size={44} style={{ filter: "drop-shadow(0 4px 12px rgb(var(--c-gold) / .6))", animation: "rs-crown 3.2s ease-in-out infinite" }} />
       )}
       <div style={{ position: "relative", display: "grid", placeItems: "center" }}>
         {winner && (
-          <div aria-hidden style={{ position: "absolute", width: 196, height: 196, borderRadius: "50%", background: "repeating-conic-gradient(from 0deg, rgba(255,194,75,.22) 0deg 7deg, transparent 7deg 20deg)", WebkitMaskImage: "radial-gradient(circle, transparent 24%, #000 33%, transparent 68%)", maskImage: "radial-gradient(circle, transparent 24%, #000 33%, transparent 68%)", animation: "rs-rays 16s linear infinite", opacity: 0.75 }} />
+          <div aria-hidden style={{ position: "absolute", width: 196, height: 196, borderRadius: "50%", background: "repeating-conic-gradient(from 0deg, rgb(var(--c-gold) / .22) 0deg 7deg, transparent 7deg 20deg)", WebkitMaskImage: "radial-gradient(circle, transparent 24%, #000 33%, transparent 68%)", maskImage: "radial-gradient(circle, transparent 24%, #000 33%, transparent 68%)", animation: "rs-rays 16s linear infinite", opacity: 0.75 }} />
         )}
         {winner && (
-          <div aria-hidden style={{ position: "absolute", width: 118, height: 118, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,194,75,.6), rgba(255,194,75,.14) 45%, transparent 70%)", animation: "rs-pulse 1.8s ease-in-out infinite" }} />
+          <div aria-hidden style={{ position: "absolute", width: 118, height: 118, borderRadius: "50%", background: "radial-gradient(circle, rgb(var(--c-gold) / .6), rgb(var(--c-gold) / .14) 45%, transparent 70%)", animation: "rs-pulse 1.8s ease-in-out infinite" }} />
         )}
         <span style={{ position: "relative", borderRadius: 14, boxShadow: `0 0 0 2px ${color}, 0 0 30px -8px ${color}` }}>
           <Avatar name={row.name} color={row.color} avatar={row.avatar} size={avatar} />
         </span>
       </div>
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: winner ? 16 : 14, color: winner ? GOLD : "#F3EEFF" }}>{row.name}{row.id === you ? " (toi)" : ""}</div>
+        <div style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: winner ? 16 : 14, color: winner ? GOLD : "rgb(var(--c-text))" }}>{row.name}{row.id === you ? " (toi)" : ""}</div>
         <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: winner ? 15 : 13, color }}>{row.score.toLocaleString("fr-FR")}</div>
       </div>
-      <div style={{ position: "relative", width: "100%", height: h, borderRadius: "14px 14px 0 0", background: `linear-gradient(180deg, ${color}3d, ${color}0d)`, border: `1px solid ${color}8c`, borderBottom: "none", display: "grid", placeItems: "center", fontFamily: DISPLAY, fontWeight: 800, fontSize: font, color, overflow: "hidden" }}>
-        <span style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${color}cc, transparent)` }} />
+      <div style={{ position: "relative", width: "100%", height: h, borderRadius: "14px 14px 0 0", background: `linear-gradient(180deg, color-mix(in srgb, ${color} 23.9%, transparent), color-mix(in srgb, ${color} 5.1%, transparent))`, border: `1px solid color-mix(in srgb, ${color} 54.9%, transparent)`, borderBottom: "none", display: "grid", placeItems: "center", fontFamily: DISPLAY, fontWeight: 800, fontSize: font, color, overflow: "hidden" }}>
+        <span style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, color-mix(in srgb, ${color} 80%, transparent), transparent)` }} />
         {place}
       </div>
     </div>
@@ -230,8 +230,8 @@ function PodiumCol({
 
 function Chip({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, borderRadius: 999, border: "1px solid #332A5A", background: "rgba(28,22,54,.5)", padding: "9px 15px", fontSize: 13, color: "#A79FC7" }}>
-      {icon} {label}&nbsp;: <b style={{ color: "#F3EEFF" }}>{value}</b>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, borderRadius: 999, border: "1px solid rgb(var(--c-ink-border))", background: "rgb(var(--c-ink-surface) / .5)", padding: "9px 15px", fontSize: 13, color: "rgb(var(--c-text-muted))" }}>
+      {icon} {label}&nbsp;: <b style={{ color: "rgb(var(--c-text))" }}>{value}</b>
     </span>
   );
 }

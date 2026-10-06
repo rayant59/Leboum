@@ -43,12 +43,12 @@ export function PassCard({ state, serverNow, cfg }: { state: PublicRoomState; se
 
   if (active && state.pass) {
     return (
-      <section className="mb-8" style={{ borderRadius: 18, padding: "16px 18px", border: "1px solid rgba(255,194,75,.55)", background: "linear-gradient(135deg, rgba(255,194,75,.14), rgba(255,77,141,.08))" }}>
-        <p style={{ margin: 0, fontFamily: "var(--font-display), sans-serif", fontWeight: 800, fontSize: 18, color: "#FFC24B" }}>
+      <section className="mb-8" style={{ borderRadius: 18, padding: "16px 18px", border: "1px solid rgb(var(--c-gold) / .55)", background: "linear-gradient(135deg, rgb(var(--c-gold) / .14), rgb(var(--c-magenta) / .08))" }}>
+        <p style={{ margin: 0, fontFamily: "var(--font-display), sans-serif", fontWeight: 800, fontSize: 18, color: "rgb(var(--c-gold))" }}>
           <NeonIcon name="sparkles" size={22} style={{ verticalAlign: "-4px" }} /> Pass Soirée actif
         </p>
         <p style={{ margin: "4px 0 0", fontSize: 14, color: "#C9C2E6" }}>
-          {state.pass.offeredBy ? <>Offert par <b style={{ color: "#F3EEFF" }}>{state.pass.offeredBy}</b> · </> : null}
+          {state.pass.offeredBy ? <>Offert par <b style={{ color: "rgb(var(--c-text))" }}>{state.pass.offeredBy}</b> · </> : null}
           jusqu&apos;à {fmtHour(state.pass.activeUntil)}. Merci, vous faites vivre LeBoum&nbsp;!
         </p>
       </section>
@@ -75,7 +75,7 @@ export function PassCard({ state, serverNow, cfg }: { state: PublicRoomState; se
   }
 
   return (
-    <section className="mb-8" style={{ borderRadius: 18, padding: open ? "16px 18px" : "12px 16px", border: "1px solid #332A5A", background: "rgba(28,22,54,.6)" }}>
+    <section className="mb-8" style={{ borderRadius: 18, padding: open ? "16px 18px" : "12px 16px", border: "1px solid rgb(var(--c-ink-border))", background: "rgb(var(--c-ink-surface) / .6)" }}>
       <button
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
@@ -83,12 +83,12 @@ export function PassCard({ state, serverNow, cfg }: { state: PublicRoomState; se
       >
         <NeonIcon name="sparkles" size={28} />
         <span style={{ minWidth: 0, flex: 1 }}>
-          <span style={{ display: "block", fontFamily: "var(--font-display), sans-serif", fontWeight: 800, fontSize: 16, color: "#F3EEFF" }}>
-            Pass Soirée <span style={{ color: "#FFC24B" }}>· {cfg.priceLabel}</span>
+          <span style={{ display: "block", fontFamily: "var(--font-display), sans-serif", fontWeight: 800, fontSize: 16, color: "rgb(var(--c-text))" }}>
+            Pass Soirée <span style={{ color: "rgb(var(--c-gold))" }}>· {cfg.priceLabel}</span>
           </span>
-          <span style={{ display: "block", fontSize: 12.5, color: "#A79FC7" }}>12 joueurs, tes propres questions… pour toute la tablée.</span>
+          <span style={{ display: "block", fontSize: 12.5, color: "rgb(var(--c-text-muted))" }}>12 joueurs, tes propres questions… pour toute la tablée.</span>
         </span>
-        <span style={{ flex: "none", fontSize: 12.5, fontWeight: 700, color: "#FFC24B" }}>{open ? "Fermer" : "Voir"}</span>
+        <span style={{ flex: "none", fontSize: 12.5, fontWeight: 700, color: "rgb(var(--c-gold))" }}>{open ? "Fermer" : "Voir"}</span>
       </button>
       {open && (
         <>
@@ -98,10 +98,10 @@ export function PassCard({ state, serverNow, cfg }: { state: PublicRoomState; se
           <button onClick={buy} disabled={busy} className="arc arc-p arc-block" style={{ marginTop: 12 }}>
             {busy ? "Ouverture du paiement…" : `Offrir le Pass à la tablée · ${cfg.priceLabel}`}
           </button>
-          <p style={{ margin: "8px 0 0", fontSize: 12, color: "#6E6796", lineHeight: 1.5 }}>
+          <p style={{ margin: "8px 0 0", fontSize: 12, color: "rgb(var(--c-text-faint))", lineHeight: 1.5 }}>
             Un seul paiement, toute la tablée en profite. Paiement sécurisé par Stripe. Le jeu de base reste 100 % gratuit. En payant, tu demandes l&apos;accès
             immédiat au Pass et renonces à ton droit de rétractation pour ce contenu numérique.{" "}
-            <a href="/cgv" target="_blank" style={{ color: "#A79FC7" }}>Conditions de vente</a>
+            <a href="/cgv" target="_blank" style={{ color: "rgb(var(--c-text-muted))" }}>Conditions de vente</a>
           </p>
         </>
       )}

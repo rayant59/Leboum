@@ -21,7 +21,7 @@ function FaRail({ kicker, heading, sub, rows, chat }: { kicker: string; heading:
         <span style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.1 }}>{heading}</span>
         <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 12, color: LB.faint }}>{sub}</span>
       </div>
-      <div style={{ height: 1, flex: "none", background: "linear-gradient(90deg,transparent,rgba(243,238,255,.14) 18%,rgba(243,238,255,.14) 82%,transparent)" }} />
+      <div style={{ height: 1, flex: "none", background: "linear-gradient(90deg,transparent,rgb(var(--c-text) / .14) 18%,rgb(var(--c-text) / .14) 82%,transparent)" }} />
       <div style={{ flex: "none", display: "flex", flexDirection: "column", gap: 8 }}>
         {rows.map((r) => {
           const ac = r.accent;
@@ -120,7 +120,7 @@ export function FakeArtistView({ room }: { room: UseRoom }) {
       <main style={lbShell} className="lb-scope">
         <style dangerouslySetInnerHTML={{ __html: LB_SCOPED_CSS + FA_CSS }} />
         <div style={lbCard}>
-          <Aurora tint="rgba(255,194,75,.14)" tint2="rgba(139,125,246,.10)" />
+          <Aurora tint="rgb(var(--c-gold) / .14)" tint2="rgb(var(--c-violet) / .10)" />
           <FaRail kicker="Classement" heading="Partie terminée" sub={`${game.totalRounds} manches`} rows={rows} />
           <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflowY: "auto" }}>
             <div style={topBar(LB.gold)} />
@@ -154,7 +154,7 @@ export function FakeArtistView({ room }: { room: UseRoom }) {
       <main style={lbShell} className="lb-scope">
         <style dangerouslySetInnerHTML={{ __html: LB_SCOPED_CSS + FA_CSS }} />
         <div style={lbCard}>
-          <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none" }}><div style={{ position: "absolute", top: "-10%", left: "38%", width: 560, height: 560, borderRadius: "50%", filter: "blur(90px)", background: `radial-gradient(circle, rgba(255,77,141,.16), transparent 62%)` }} /></div>
+          <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none" }}><div style={{ position: "absolute", top: "-10%", left: "38%", width: 560, height: 560, borderRadius: "50%", filter: "blur(90px)", background: `radial-gradient(circle, rgb(var(--c-magenta) / .16), transparent 62%)` }} /></div>
           <FaRail kicker="Faux-artiste" heading="Manche terminée" sub="points de la manche" rows={rows} />
           <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflowY: "auto" }}>
             <div style={topBar(LB.pink)} />
@@ -206,7 +206,7 @@ export function FakeArtistView({ room }: { room: UseRoom }) {
       <main style={lbShell} className="lb-scope">
         <style dangerouslySetInnerHTML={{ __html: LB_SCOPED_CSS + FA_CSS }} />
         <div style={lbCard}>
-          <Aurora tint="rgba(139,125,246,.14)" tint2="rgba(255,77,141,.06)" />
+          <Aurora tint="rgb(var(--c-violet) / .14)" tint2="rgb(var(--c-magenta) / .06)" />
           <FaRail kicker="Faux-artiste" heading={`Manche ${game.round} / ${game.totalRounds}`} sub={`${game.players.length} joueurs · 1 mot différent`} rows={railRows} />
           <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflowY: "auto" }}>
             <div style={topBar(LB.gold, 30)} />
@@ -215,7 +215,7 @@ export function FakeArtistView({ room }: { room: UseRoom }) {
               <button onClick={() => setBriefRound(game.round)} style={{ border: "none", background: "transparent", cursor: "pointer", fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: LB.gold }}>Commencer →</button>
             </div>
             <div style={{ flex: 1, display: "grid", placeItems: "center", padding: 28 }}>
-              <div style={{ padding: "44px 72px", borderRadius: 24, background: LB.surface, textAlign: "center", boxShadow: `0 0 0 1px ${LB.line}, inset 0 1px 0 rgba(243,238,255,.05), 0 0 70px -30px ${hexA(LB.gold, 0.5)}`, maxWidth: "90%" }}>
+              <div style={{ padding: "44px 72px", borderRadius: 24, background: LB.surface, textAlign: "center", boxShadow: `0 0 0 1px ${LB.line}, inset 0 1px 0 rgb(var(--c-text) / .05), 0 0 70px -30px ${hexA(LB.gold, 0.5)}`, maxWidth: "90%" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 18, alignItems: "center" }}>
                   <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".18em", color: LB.gold }}>Ton mot</span>
                   <span className="fa-word" style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 74, letterSpacing: "-.03em", lineHeight: 1 }}>{shownWord ?? "—"}</span>
@@ -232,7 +232,7 @@ export function FakeArtistView({ room }: { room: UseRoom }) {
     <main style={lbShell} className="lb-scope">
       <style dangerouslySetInnerHTML={{ __html: LB_SCOPED_CSS + FA_CSS }} />
       <div style={lbCard}>
-        <Aurora tint={voting ? "rgba(255,77,141,.13)" : "rgba(139,125,246,.13)"} tint2="rgba(255,77,141,.08)" />
+        <Aurora tint={voting ? "rgb(var(--c-magenta) / .13)" : "rgb(var(--c-violet) / .13)"} tint2="rgb(var(--c-magenta) / .08)" />
         <FaRail
           kicker="Faux-artiste"
           heading={voting ? "Qui a triché ?" : `Manche ${game.round} / ${game.totalRounds}`}
@@ -311,7 +311,7 @@ export function FakeArtistView({ room }: { room: UseRoom }) {
                 {game.players.filter((p) => p.id !== you).map((p) => (
                   <div key={p.id} style={{ position: "relative", borderRadius: 14, overflow: "hidden", boxShadow: `0 0 0 1px ${LB.line}`, background: "#EDEAF6" }}>
                     <DrawCanvas room={room} drawable={false} blind={false} authorFilter={p.id} turnKey={`fa-vote-${p.id}-${game.round}`} />
-                    <span style={{ position: "absolute", top: 8, left: 8, display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 9px", borderRadius: 9, background: "rgba(14,11,26,.92)" }}>
+                    <span style={{ position: "absolute", top: 8, left: 8, display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 9px", borderRadius: 9, background: "rgb(var(--c-ink-deep) / .92)" }}>
                       <Avatar name={p.name} color={p.color} avatar={p.avatar} size={18} />
                       <span style={{ fontFamily: DISPLAY, fontSize: 11, fontWeight: 700 }}>{p.name}</span>
                     </span>

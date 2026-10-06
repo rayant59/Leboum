@@ -33,11 +33,11 @@ export default function EntreprisePage() {
       <h2>Parlons-en</h2>
       {mail ? (
         <p>
-          <a href={mail} style={{ display: "inline-block", marginTop: 4, borderRadius: 14, background: "#FFC24B", color: "#14102A", padding: "14px 22px", fontFamily: "var(--font-display), 'Bricolage Grotesque', sans-serif", fontWeight: 800, textDecoration: "none" }}>
+          <a href={mail} style={{ display: "inline-block", marginTop: 4, borderRadius: 14, background: "rgb(var(--c-gold))", color: "rgb(var(--c-ink))", padding: "14px 22px", fontFamily: "var(--font-display), sans-serif", fontWeight: 800, textDecoration: "none" }}>
             Demander un devis
           </a>
           <br />
-          <span style={{ fontSize: 14, color: "#A79FC7" }}>Ou écrivez-nous : {SITE.contactEmail}</span>
+          <span style={{ fontSize: 14, color: "rgb(var(--c-text-muted))" }}>Ou écrivez-nous : {SITE.contactEmail}</span>
         </p>
       ) : (
         <p>Le formulaire de contact arrive très bientôt.</p>

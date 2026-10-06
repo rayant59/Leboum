@@ -23,12 +23,12 @@ export function SupportButton({ floating = false, variant }: { floating?: boolea
         target="_blank"
         rel="noopener noreferrer"
         className="lb-support-line"
-        style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 13, color: "#A79FC7", textDecoration: "none" }}
+        style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgb(var(--c-text-muted))", textDecoration: "none" }}
       >
         <NeonIcon name="heart" size={18} />
         <span>
           LeBoum est gratuit et fait maison.{" "}
-          <span style={{ color: "#FFC24B", fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 3 }}>Paie ta tournée</span>
+          <span style={{ color: "rgb(var(--c-gold))", fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 3 }}>Paie ta tournée</span>
         </span>
       </a>
     );
@@ -47,14 +47,14 @@ export function SupportButton({ floating = false, variant }: { floating?: boolea
         alignItems: "center",
         gap: 8,
         borderRadius: 999,
-        border: "1px solid rgba(255,194,75,.45)",
-        background: "rgba(14,11,26,.8)",
+        border: "1px solid rgb(var(--c-gold) / .45)",
+        background: "rgb(var(--c-ink-deep) / .8)",
         backdropFilter: "blur(6px)",
         padding: "7px 15px 7px 10px",
-        fontFamily: "var(--font-display), 'Bricolage Grotesque', sans-serif",
+        fontFamily: "var(--font-display), sans-serif",
         fontWeight: 700,
         fontSize: 13.5,
-        color: "#FFC24B",
+        color: "rgb(var(--c-gold))",
         textDecoration: "none",
         transition: "transform .15s ease, border-color .15s ease",
       }}

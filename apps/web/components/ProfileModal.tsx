@@ -37,7 +37,7 @@ export function ProfileModal({
       <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" onClick={onClose} />
       <div
         className="relative w-full max-w-md rounded-2xl border border-ink-border p-6"
-        style={{ backgroundImage: "linear-gradient(165deg, rgba(37,28,69,.96), rgba(18,14,36,.98))", boxShadow: "0 30px 80px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.05)" }}
+        style={{ backgroundImage: "linear-gradient(165deg, rgb(var(--c-ink-raised) / .96), rgba(18,14,36,.98))", boxShadow: "0 30px 80px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.05)" }}
       >
         <button
           onClick={onClose}

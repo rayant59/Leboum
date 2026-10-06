@@ -72,9 +72,9 @@ function ToolGlyph({ id }: { id: Tool | "clear" | "undo" }) {
 function toolBtnStyle(active: boolean): CSSProperties {
   return {
     width: 44, height: 44, padding: 0, border: "none",
-    background: active ? "rgba(255,194,75,.14)" : "transparent", borderRadius: 13,
+    background: active ? "rgb(var(--c-gold) / .14)" : "transparent", borderRadius: 13,
     cursor: "pointer", display: "grid", placeItems: "center", flex: "none",
-    boxShadow: active ? "0 0 0 2px #FFC24B, 0 0 0 5px rgba(255,194,75,.22)" : "none",
+    boxShadow: active ? "0 0 0 2px rgb(var(--c-gold)), 0 0 0 5px rgb(var(--c-gold) / .22)" : "none",
     transition: "transform .06s ease, box-shadow .12s ease, background .12s ease",
   };
 }
@@ -999,7 +999,7 @@ function GuessPlate({ room }: { room: UseRoom }) {
       {hint && (
         <span role="status" style={{ position: "absolute", left: 12, bottom: "calc(100% + 8px)", zIndex: 5, padding: "6px 12px", borderRadius: 10, background: hexA(LB.gold, 0.16), boxShadow: `0 0 0 1px ${hexA(LB.gold, 0.55)}`, color: LB.gold, fontFamily: DISPLAY, fontWeight: 700, fontSize: 14, whiteSpace: "nowrap" }}>{hint}</span>
       )}
-      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "clamp(10px, 1.6vw, 16px) clamp(14px, 2vw, 22px)", borderRadius: 18, background: LB.bg, boxShadow: `0 0 0 2px ${hexA(wrong ? LB.pink : LB.gold, 0.5)}, inset 0 1px 0 rgba(243,238,255,.04)` }}>
+      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "clamp(10px, 1.6vw, 16px) clamp(14px, 2vw, 22px)", borderRadius: 18, background: LB.bg, boxShadow: `0 0 0 2px ${hexA(wrong ? LB.pink : LB.gold, 0.5)}, inset 0 1px 0 rgb(var(--c-text) / .04)` }}>
         <input
           className="lb-input"
           value={text}
@@ -1041,7 +1041,7 @@ function DrawRail({ kicker, heading, sub, rows, chat, pops }: { kicker: string; 
         <span style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.1 }}>{heading}</span>
         <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 12, color: LB.faint }}>{sub}</span>
       </div>
-      <div style={{ height: 1, flex: "none", background: "linear-gradient(90deg,transparent,rgba(243,238,255,.14) 18%,rgba(243,238,255,.14) 82%,transparent)" }} />
+      <div style={{ height: 1, flex: "none", background: "linear-gradient(90deg,transparent,rgb(var(--c-text) / .14) 18%,rgb(var(--c-text) / .14) 82%,transparent)" }} />
       <div style={{ flex: "none", display: "flex", flexDirection: "column", gap: 8 }}>
         {rows.map((r) => {
           const ac = r.accent;
@@ -1195,7 +1195,7 @@ function EventToasts({ toasts }: { toasts: DrawToast[] }) {
           style={{
             display: "inline-flex", alignItems: "center", gap: 10,
             padding: "9px 16px 9px 13px", borderRadius: 999,
-            background: "rgba(20,16,42,.92)",
+            background: "rgb(var(--c-ink) / .92)",
             boxShadow: `0 0 0 1px ${hexA(t.accent, 0.55)}, 0 10px 30px -12px ${hexA(t.accent, 0.9)}`,
             animation: "lbToastIn .22s ease-out",
             maxWidth: "90%",
@@ -1258,7 +1258,7 @@ export function DrawGameView({ room }: { room: UseRoom }) {
       <main style={lbShell} className="lb-scope">
         <style dangerouslySetInnerHTML={{ __html: LB_SCOPED_CSS }} />
         <div style={lbCard}>
-          <Aurora tint="rgba(255,194,75,.14)" tint2="rgba(139,125,246,.10)" />
+          <Aurora tint="rgb(var(--c-gold) / .14)" tint2="rgb(var(--c-violet) / .10)" />
           <DrawRail kicker="Classement" heading={isCoop ? "Bravo l'équipe !" : "Partie terminée"} sub={`${game.totalRounds} manches`} rows={finalRows} />
           <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflowY: "auto" }}>
             <div style={topBar(LB.gold)} />
@@ -1345,7 +1345,7 @@ export function DrawGameView({ room }: { room: UseRoom }) {
     <main style={lbShell} className="lb-scope">
       <style dangerouslySetInnerHTML={{ __html: LB_SCOPED_CSS }} />
       <div style={lbCard}>
-        <Aurora tint={accent === LB.mint ? "rgba(70,224,176,.12)" : "rgba(255,194,75,.10)"} tint2="rgba(139,125,246,.12)" />
+        <Aurora tint={accent === LB.mint ? "rgb(var(--c-mint) / .12)" : "rgb(var(--c-gold) / .10)"} tint2="rgb(var(--c-violet) / .12)" />
         {rail}
 
         <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflowY: "auto" }}>
@@ -1473,7 +1473,7 @@ export function DrawGameView({ room }: { room: UseRoom }) {
               <div className="dv-canvasfill" style={{ display: "flex", justifyContent: "center", minHeight: 0 }}>
                 <div style={{ position: "relative", height: "100%", aspectRatio: "3 / 2", maxWidth: "100%", borderRadius: 20, overflow: "hidden", boxShadow: `0 0 0 1px ${hexA(LB.mint, 0.45)}` }}>
                   <TurnDrawing room={room} />
-                  <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "clamp(28px, 6vw, 60px) clamp(14px, 3vw, 26px) clamp(12px, 2.4vw, 22px)", background: "linear-gradient(180deg,transparent,rgba(14,11,26,.96))" }}>
+                  <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "clamp(28px, 6vw, 60px) clamp(14px, 3vw, 26px) clamp(12px, 2.4vw, 22px)", background: "linear-gradient(180deg,transparent,rgb(var(--c-ink-deep) / .96))" }}>
                     <span key={revealResult?.word} data-lb-anim="" style={{ display: "block", fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(28px, 6vw, 52px)", letterSpacing: "-.02em", lineHeight: 1.05, overflowWrap: "anywhere", color: LB.mint, textShadow: `0 4px 28px ${hexA(LB.mint, 0.55)}`, animation: "lbWordReveal .4s cubic-bezier(.2,.8,.2,1)" }}>{revealResult?.word}</span>
                     {noneFound && <span style={{ display: "block", marginTop: 8, fontSize: 13, color: LB.faint }}>Personne n'a trouvé ce tour-ci 🙈</span>}
                   </div>

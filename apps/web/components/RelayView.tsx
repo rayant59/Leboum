@@ -30,7 +30,7 @@ export function RelayView({ room }: { room: UseRoom }) {
       <main style={lbShell} className="lb-scope">
         <style dangerouslySetInnerHTML={{ __html: LB_SCOPED_CSS }} />
         <div style={lbCard}>
-          <Aurora tint="rgba(255,194,75,.14)" tint2="rgba(139,125,246,.10)" />
+          <Aurora tint="rgb(var(--c-gold) / .14)" tint2="rgb(var(--c-violet) / .10)" />
           <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflowY: "auto" }}>
             <div style={topBar(LB.gold)} />
             <div style={{ flex: 1, display: "grid", placeItems: "center", padding: 28 }}>
@@ -101,7 +101,7 @@ export function RelayView({ room }: { room: UseRoom }) {
     <main style={lbShell} className="lb-scope">
       <style dangerouslySetInnerHTML={{ __html: LB_SCOPED_CSS }} />
       <div style={lbCard}>
-        <Aurora tint={game.phase === "reveal" ? "rgba(70,224,176,.12)" : "rgba(255,194,75,.10)"} tint2="rgba(139,125,246,.12)" />
+        <Aurora tint={game.phase === "reveal" ? "rgb(var(--c-mint) / .12)" : "rgb(var(--c-gold) / .10)"} tint2="rgb(var(--c-violet) / .12)" />
         {rail}
 
         <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflowY: "auto" }}>

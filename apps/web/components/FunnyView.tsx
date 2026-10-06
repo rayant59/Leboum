@@ -10,7 +10,7 @@ import { Avatar } from "@/components/Avatar";
 import { playSound } from "@/lib/sound";
 import { BODY, DISPLAY, Gain, HostSkip, K, MONO, PromptCard, SocialFinal, SocialHeader, SocialStage, StatusBar, hexA, topOf, nbsp, useCountdown } from "@/components/social/kit";
 
-const ACCENT = "#FF4D8D";
+const ACCENT = "rgb(var(--c-magenta))";
 
 /** Affiche la phrase avec le trou souligné (ou rempli par une réponse). */
 function PromptText({ prompt, fill }: { prompt: string; fill?: string | null }) {
@@ -73,7 +73,7 @@ export function FunnyView({ room }: { room: UseRoom }) {
               {g.best.map((b, i) => {
                 const p = g.players.find((x) => x.id === b.authorId);
                 return (
-                  <li key={i} style={{ padding: "12px 14px", borderRadius: 16, border: `1px solid ${K.line}`, background: "rgba(28,22,54,.6)" }}>
+                  <li key={i} style={{ padding: "12px 14px", borderRadius: 16, border: `1px solid ${K.line}`, background: "rgb(var(--c-ink-surface) / .6)" }}>
                     <div style={{ fontSize: 13, color: K.muted, marginBottom: 4 }}><PromptText prompt={b.prompt} /></div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       {p && <Avatar name={p.name} color={p.color} avatar={p.avatar} size={26} />}
@@ -145,7 +145,7 @@ export function FunnyView({ room }: { room: UseRoom }) {
                   className="sk-card"
                   disabled={!canVote}
                   onClick={() => { playSound("vote"); room.gameAction({ kind: "vote", token: a.token }); }}
-                  style={{ position: "relative", textAlign: "left", padding: "18px 16px", borderRadius: 18, border: `1px solid ${picked ? ACCENT : K.line}`, background: picked ? `linear-gradient(160deg, ${hexA(ACCENT, 0.22)}, rgba(28,22,54,.85))` : "rgba(28,22,54,.72)", color: K.text, cursor: canVote ? "pointer" : "default", fontFamily: DISPLAY, fontWeight: 700, fontSize: 18, lineHeight: 1.3, animation: `sk-rise .35s ease-out ${(i * 0.12).toFixed(2)}s both`, opacity: g.phase === "vote" && mine ? 0.6 : 1 }}
+                  style={{ position: "relative", textAlign: "left", padding: "18px 16px", borderRadius: 18, border: `1px solid ${picked ? ACCENT : K.line}`, background: picked ? `linear-gradient(160deg, ${hexA(ACCENT, 0.22)}, rgb(var(--c-ink-surface) / .85))` : "rgb(var(--c-ink-surface) / .72)", color: K.text, cursor: canVote ? "pointer" : "default", fontFamily: DISPLAY, fontWeight: 700, fontSize: 18, lineHeight: 1.3, animation: `sk-rise .35s ease-out ${(i * 0.12).toFixed(2)}s both`, opacity: g.phase === "vote" && mine ? 0.6 : 1 }}
                 >
                   « {a.text} »
                   {mine && <span style={{ display: "block", marginTop: 8, fontFamily: MONO, fontSize: 10, fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", color: K.faint }}>Ta réponse</span>}
@@ -176,7 +176,7 @@ export function FunnyView({ room }: { room: UseRoom }) {
               {g.results.map((r, i) => {
                 const p = g.players.find((x) => x.id === r.authorId);
                 return (
-                  <div key={r.token} style={{ ["--a" as string]: ACCENT, display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 18, border: `1px solid ${r.winner ? ACCENT : K.line}`, background: r.winner ? `linear-gradient(90deg, ${hexA(ACCENT, 0.18)}, rgba(28,22,54,.7))` : "rgba(28,22,54,.6)", animation: `sk-rise .35s ease-out ${(i * 0.1).toFixed(2)}s both${r.winner ? ", sk-glow 2.4s ease-in-out infinite" : ""}` }}>
+                  <div key={r.token} style={{ ["--a" as string]: ACCENT, display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 18, border: `1px solid ${r.winner ? ACCENT : K.line}`, background: r.winner ? `linear-gradient(90deg, ${hexA(ACCENT, 0.18)}, rgb(var(--c-ink-surface) / .7))` : "rgb(var(--c-ink-surface) / .6)", animation: `sk-rise .35s ease-out ${(i * 0.1).toFixed(2)}s both${r.winner ? ", sk-glow 2.4s ease-in-out infinite" : ""}` }}>
                     {p && <Avatar name={p.name} color={p.color} avatar={p.avatar} size={40} />}
                     <div style={{ minWidth: 0, flex: 1 }}>
                       <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 17, lineHeight: 1.3 }}>« {r.text} »</div>

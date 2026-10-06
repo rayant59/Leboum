@@ -107,7 +107,7 @@ function SpeakingBar({ room, you, localSpeaking }: { room: UseRoom; you: string 
         return (
           <span
             key={p.id}
-            className={`flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-sm transition-all ${active ? "border-mint bg-mint/15 shadow-[0_0_0_2px_rgba(70,224,176,0.4)]" : "border-ink-border"}`}
+            className={`flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-sm transition-all ${active ? "border-mint bg-mint/15 shadow-[0_0_0_2px_rgb(var(--c-mint) / 0.4)]" : "border-ink-border"}`}
           >
             <span className={`rounded-lg ${active ? "ring-2 ring-mint" : ""}`}>
               <Avatar name={p.name} color={p.color} avatar={p.avatar} size={26} />

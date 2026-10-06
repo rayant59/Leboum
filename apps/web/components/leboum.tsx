@@ -11,34 +11,34 @@ import { hexA } from "@/lib/color";
 import { useCountdown } from "@/lib/countdown";
 
 export const LB = {
-  bg: "#14102A",
-  aside: "rgba(28,22,54,.72)",
-  ink: "#0E0B1A",
-  surface: "#1C1636",
-  raised: "#251C45",
-  line: "#332A5A",
+  bg: "rgb(var(--c-ink))",
+  aside: "rgb(var(--c-ink-surface) / .72)",
+  ink: "rgb(var(--c-ink-deep))",
+  surface: "rgb(var(--c-ink-surface))",
+  raised: "rgb(var(--c-ink-raised))",
+  line: "rgb(var(--c-ink-border))",
   lineFaint: "#241D45",
-  text: "#F3EEFF",
-  muted: "#A79FC7",
-  faint: "#6E6796",
+  text: "rgb(var(--c-text))",
+  muted: "rgb(var(--c-text-muted))",
+  faint: "rgb(var(--c-text-faint))",
   dim: "#4A4370",
-  gold: "#FFC24B",
-  goldSh: "#B47F16",
+  gold: "rgb(var(--c-gold))",
+  goldSh: "rgb(var(--c-gold-dark))",
   orange: "#FF8A3D",
-  mint: "#46E0B0",
+  mint: "rgb(var(--c-mint))",
   mintSh: "#1E6B55",
-  pink: "#FF4D8D",
+  pink: "rgb(var(--c-magenta))",
   pinkSh: "#8C2A4E",
-  violet: "#8B7DF6",
+  violet: "rgb(var(--c-violet))",
   cyan: "#4FC3F7",
 };
 
-export const DISPLAY = "'Bricolage Grotesque', system-ui, sans-serif";
-export const MONO = "'Bricolage Grotesque', system-ui, sans-serif";
+export const DISPLAY = "var(--font-display), system-ui, sans-serif";
+export const MONO = "var(--font-display), system-ui, sans-serif";
 export const BODY = "'Inter', system-ui, sans-serif";
 
 // Aurores animées de fond (keyframes globales bmbAuroraA/B).
-export function Aurora({ tint = "rgba(255,194,75,.10)", tint2 = "rgba(139,125,246,.12)" }: { tint?: string; tint2?: string }) {
+export function Aurora({ tint = "rgb(var(--c-gold) / .10)", tint2 = "rgb(var(--c-violet) / .12)" }: { tint?: string; tint2?: string }) {
   return (
     <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
       <div data-bmb-anim style={{ position: "absolute", top: "-18%", left: "36%", width: 520, height: 520, borderRadius: "50%", filter: "blur(84px)", background: `radial-gradient(circle, ${tint}, transparent 62%)`, animation: "bmbAuroraA 19s ease-in-out infinite" }} />
@@ -62,7 +62,7 @@ export function Rail({ kicker, heading, sub, rows, foot }: { kicker: string; hea
         <span style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.1 }}>{heading}</span>
         <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 12, color: LB.faint }}>{sub}</span>
       </div>
-      <div style={{ height: 1, flex: "none", background: "linear-gradient(90deg,transparent,rgba(243,238,255,.14) 18%,rgba(243,238,255,.14) 82%,transparent)" }} />
+      <div style={{ height: 1, flex: "none", background: "linear-gradient(90deg,transparent,rgb(var(--c-text) / .14) 18%,rgb(var(--c-text) / .14) 82%,transparent)" }} />
       <div style={{ flex: "none", display: "flex", flexDirection: "column", gap: 8 }}>
         {rows.map((r) => {
           const ac = r.accent;

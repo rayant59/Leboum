@@ -127,7 +127,7 @@ function WordPill({ g }: { g: ImposterPublic }) {
     <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
       <button
         onClick={() => setHidden((v) => !v)}
-        style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "7px 14px", borderRadius: 999, border: `1px solid ${g.youAreImposter ? hexA(ACCENT, 0.6) : K.line}`, background: g.youAreImposter ? hexA(ACCENT, 0.12) : "rgba(28,22,54,.7)", color: K.text, fontSize: 14, cursor: "pointer", fontFamily: BODY }}
+        style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "7px 14px", borderRadius: 999, border: `1px solid ${g.youAreImposter ? hexA(ACCENT, 0.6) : K.line}`, background: g.youAreImposter ? hexA(ACCENT, 0.12) : "rgb(var(--c-ink-surface) / .7)", color: K.text, fontSize: 14, cursor: "pointer", fontFamily: BODY }}
       >
         <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: ".14em", textTransform: "uppercase", color: K.faint }}>{g.youAreImposter ? "Rôle" : "Ton mot"}</span>
         <b style={{ fontFamily: DISPLAY, color: g.youAreImposter ? ACCENT : K.text, filter: hidden ? "blur(7px)" : "none", transition: "filter .2s" }}>
@@ -149,7 +149,7 @@ function CluesBoard({ g, highlight, footer }: { g: ImposterPublic; highlight?: s
         const mine = g.clues.filter((c) => c.playerId === id);
         const cur = highlight === id;
         return (
-          <div key={id} style={{ ["--a" as string]: ACCENT, display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 16, border: `1px solid ${cur ? ACCENT : K.line}`, background: cur ? `linear-gradient(90deg, ${hexA(ACCENT, 0.16)}, rgba(28,22,54,.7))` : "rgba(28,22,54,.6)", animation: `sk-rise .3s ease-out ${(i * 0.04).toFixed(2)}s both${cur ? ", sk-glow 2.4s ease-in-out infinite" : ""}` }}>
+          <div key={id} style={{ ["--a" as string]: ACCENT, display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 16, border: `1px solid ${cur ? ACCENT : K.line}`, background: cur ? `linear-gradient(90deg, ${hexA(ACCENT, 0.16)}, rgb(var(--c-ink-surface) / .7))` : "rgb(var(--c-ink-surface) / .6)", animation: `sk-rise .3s ease-out ${(i * 0.04).toFixed(2)}s both${cur ? ", sk-glow 2.4s ease-in-out infinite" : ""}` }}>
             <span style={{ width: 18, fontFamily: MONO, fontSize: 12, color: K.faint }}>{i + 1}</span>
             <Avatar name={p.name} color={p.color} avatar={p.avatar} size={36} />
             <div style={{ minWidth: 0, flex: 1 }}>
@@ -317,7 +317,7 @@ function RevealPhase({ room, g, nameOf }: { room: UseRoom; g: ImposterPublic; na
   const sorted = roster.slice().sort((a, b) => (tally[b.id] ?? 0) - (tally[a.id] ?? 0));
   return (
     <>
-      <section style={{ textAlign: "center", margin: "4px 0 18px", padding: "22px 18px", borderRadius: 24, border: `1px solid ${hexA(o.good ? K.mint : ACCENT, 0.45)}`, background: `linear-gradient(160deg, ${hexA(o.good ? K.mint : ACCENT, 0.14)}, rgba(28,22,54,.75) 60%)`, animation: "sk-pop .45s ease-out both" }}>
+      <section style={{ textAlign: "center", margin: "4px 0 18px", padding: "22px 18px", borderRadius: 24, border: `1px solid ${hexA(o.good ? K.mint : ACCENT, 0.45)}`, background: `linear-gradient(160deg, ${hexA(o.good ? K.mint : ACCENT, 0.14)}, rgb(var(--c-ink-surface) / .75) 60%)`, animation: "sk-pop .45s ease-out both" }}>
         <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em", textTransform: "uppercase", color: K.faint }}>L&apos;imposteur était…</div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, margin: "12px 0 8px" }}>
           {imp && <Avatar name={imp.name} color={imp.color} avatar={imp.avatar} size={52} />}
@@ -337,7 +337,7 @@ function RevealPhase({ room, g, nameOf }: { room: UseRoom; g: ImposterPublic; na
           const isImp = p.id === r.imposterId;
           const voters = Object.entries(r.votes ?? {}).filter(([, t]) => t === p.id).map(([v]) => g.players.find((x) => x.id === v)).filter(Boolean) as GamePlayer[];
           return (
-            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 16, border: `1px solid ${isImp ? ACCENT : K.line}`, background: isImp ? hexA(ACCENT, 0.1) : "rgba(28,22,54,.6)", animation: `sk-rise .3s ease-out ${(0.2 + i * 0.06).toFixed(2)}s both` }}>
+            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 16, border: `1px solid ${isImp ? ACCENT : K.line}`, background: isImp ? hexA(ACCENT, 0.1) : "rgb(var(--c-ink-surface) / .6)", animation: `sk-rise .3s ease-out ${(0.2 + i * 0.06).toFixed(2)}s both` }}>
               <Avatar name={p.name} color={p.color} avatar={p.avatar} size={38} />
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontFamily: DISPLAY, fontWeight: 700, fontSize: 15 }}>
@@ -383,7 +383,7 @@ function ImposterFinal({ room, g }: { room: UseRoom; g: ImposterPublic }) {
           <h3 style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".16em", textTransform: "uppercase", color: K.faint, textAlign: "center", marginBottom: 10 }}>Les manches</h3>
           <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
             {g.history.map((h, i) => (
-              <li key={i} style={{ padding: "10px 14px", borderRadius: 14, border: `1px solid ${K.line}`, background: "rgba(28,22,54,.55)", fontSize: 14, color: K.muted }}>
+              <li key={i} style={{ padding: "10px 14px", borderRadius: 14, border: `1px solid ${K.line}`, background: "rgb(var(--c-ink-surface) / .55)", fontSize: 14, color: K.muted }}>
                 <b style={{ color: K.text }}>{h.word}</b>
                 {h.decoy ? <> / {h.decoy}</> : null} — <b style={{ color: ACCENT }}>{nameOf(h.imposterId)}</b> {OUTCOME_SHORT[h.outcome]}
               </li>

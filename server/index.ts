@@ -15,6 +15,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { createServer, type IncomingMessage } from "node:http";
 import { Stats } from "./stats";
 import { passConfigFromEnv, isAllowedOrigin, PassRegistry } from "./pass";
+import { ThemeStore, designAllowed } from "./theme";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import {
@@ -430,6 +431,9 @@ const rooms = new Map<string, Room>();
 // Statistiques anonymes (voir server/stats.ts). Fichier optionnel : STATS_FILE.
 const stats = new Stats(process.env.STATS_FILE ?? resolve(process.cwd(), "data/stats.json"));
 setInterval(() => stats.flush(), 60_000).unref();
+
+// Thème du site, réglé depuis /design (voir server/theme.ts).
+const themeStore = new ThemeStore(process.env.THEME_FILE ?? resolve(process.cwd(), "data/theme.json"));
 
 // Pass Soirée (voir server/pass.ts). Désactivé tant que Stripe n'est pas configuré.
 const pass = passConfigFromEnv(process.env);
@@ -1027,6 +1031,26 @@ async function redeemPass(room: Room, playerId: string, sessionId: string, ws: W
   }
 }
 
+/** Éditeur de design : connexion et publication du thème. */
+async function handleTheme(req: IncomingMessage, res: import("node:http").ServerResponse, login: boolean) {
+  const send = (status: number, body: unknown) => res.writeHead(status, { "Content-Type": "application/json", "Cache-Control": "no-store" }).end(JSON.stringify(body));
+  if (req.method !== "POST") return send(405, { error: "POST attendu" });
+  try {
+    const body = JSON.parse(await readBody(req, 64_000)) as { token?: unknown; theme?: unknown };
+    const configured = process.env.DESIGN_TOKEN || process.env.STATS_TOKEN || undefined;
+    if (!designAllowed(body.token, configured, req.socket.remoteAddress)) {
+      return send(403, { error: configured ? "Code incorrect." : "Aucun code configuré : ajoute DESIGN_TOKEN sur le serveur de jeu." });
+    }
+    if (login) return send(200, { ok: true });
+    const saved = themeStore.set(body.theme, Date.now());
+    if (!saved) return send(400, { error: "Thème invalide." });
+    console.log("[theme] nouveau thème publié");
+    return send(200, saved);
+  } catch {
+    return send(400, { error: "Requête invalide." });
+  }
+}
+
 // Serveur HTTP : santé + statistiques ; la même porte accueille le WebSocket.
 const httpServer = createServer((req, res) => {
   const url = new URL(req.url ?? "/", "http://x");
@@ -1045,6 +1069,18 @@ const httpServer = createServer((req, res) => {
       return;
     }
     void handleCheckout(req, res);
+    return;
+  }
+  if (url.pathname === "/theme" || url.pathname === "/theme/login") {
+    if (req.method === "OPTIONS") {
+      res.writeHead(204, { "Access-Control-Allow-Methods": "GET, POST", "Access-Control-Allow-Headers": "Content-Type", "Access-Control-Max-Age": "86400" }).end();
+      return;
+    }
+    if (url.pathname === "/theme" && req.method === "GET") {
+      res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-cache" }).end(JSON.stringify(themeStore.get()));
+      return;
+    }
+    void handleTheme(req, res, url.pathname === "/theme/login");
     return;
   }
   if (url.pathname === "/stats") {

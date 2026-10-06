@@ -49,75 +49,75 @@ interface ModeDef { id: string; c: string; nm: string; ds: string; img?: string;
  *  mode classique pour tout mode qu'il ne sait pas encore jouer. */
 const MODE_SETS: Record<GameId, ModeDef[]> = {
   draw: [
-    { id: "classic", c: "#FFC24B", nm: "Classique", ds: "Un dessine, les autres devinent. Le plus rapide marque le plus.", img: MODE_ICONS.classique },
-    { id: "blind", c: "#4CC9F0", nm: "Aveugle", ds: "Tu dessines sans voir ton trait (courage). Plus de temps pour compenser.", img: MODE_ICONS.aveugle },
-    { id: "constraints", c: "#8B7DF6", nm: "Contraintes", ds: "Chaque dessin impose une règle absurde (une couleur, sans lever le crayon…).", img: MODE_ICONS.contraintes },
-    { id: "coop", c: "#46E0B0", nm: "Coopératif", ds: "En équipe : tous vos points sont mis en commun pour un score collectif.", img: MODE_ICONS.coop },
+    { id: "classic", c: "rgb(var(--c-gold))", nm: "Classique", ds: "Un dessine, les autres devinent. Le plus rapide marque le plus.", img: MODE_ICONS.classique },
+    { id: "blind", c: "rgb(var(--c-cyan))", nm: "Aveugle", ds: "Tu dessines sans voir ton trait (courage). Plus de temps pour compenser.", img: MODE_ICONS.aveugle },
+    { id: "constraints", c: "rgb(var(--c-violet))", nm: "Contraintes", ds: "Chaque dessin impose une règle absurde (une couleur, sans lever le crayon…).", img: MODE_ICONS.contraintes },
+    { id: "coop", c: "rgb(var(--c-mint))", nm: "Coopératif", ds: "En équipe : tous vos points sont mis en commun pour un score collectif.", img: MODE_ICONS.coop },
     { id: "fakeartist", c: "#FF6B6B", nm: "Faux-artiste", ds: "Un imposteur reçoit un mot voisin sans le savoir ; démasquez-le au vote.", img: MODE_ICONS.fakeartist, min: 3 },
-    { id: "relay", c: "#4CC9F0", nm: "Relais", ds: "Deux joueurs se relaient au crayon, rotation auto.", img: MODE_ICONS.relais, min: 3 },
+    { id: "relay", c: "rgb(var(--c-cyan))", nm: "Relais", ds: "Deux joueurs se relaient au crayon, rotation auto.", img: MODE_ICONS.relais, min: 3 },
   ],
   mimic: [
-    { id: "classic", c: "#46E0B0", nm: "Classique", ds: "Chacun imite le son, puis tout le monde vote pour la meilleure prise." },
-    { id: "chain", c: "#FFC24B", nm: "Téléphone arabe", ds: "Chaque joueur imite l'imitation du précédent. Le résultat final vaut le détour.", min: 3 },
+    { id: "classic", c: "rgb(var(--c-mint))", nm: "Classique", ds: "Chacun imite le son, puis tout le monde vote pour la meilleure prise." },
+    { id: "chain", c: "rgb(var(--c-gold))", nm: "Téléphone arabe", ds: "Chaque joueur imite l'imitation du précédent. Le résultat final vaut le détour.", min: 3 },
     { id: "duel", c: "#FF6B6B", nm: "Duel", ds: "Deux joueurs s'affrontent sur le même son, le reste du salon tranche.", min: 3 },
   ],
   quiz: [
-    { id: "classic", c: "#8B7DF6", nm: "Classique", ds: "Une question, tu tapes ta réponse, les points au bout." },
-    { id: "speed", c: "#FFC24B", nm: "Vitesse", ds: "Plus tu réponds vite, plus tu marques. Une erreur coûte cher." },
+    { id: "classic", c: "rgb(var(--c-violet))", nm: "Classique", ds: "Une question, tu tapes ta réponse, les points au bout." },
+    { id: "speed", c: "rgb(var(--c-gold))", nm: "Vitesse", ds: "Plus tu réponds vite, plus tu marques. Une erreur coûte cher." },
     { id: "survival", c: "#FF6B6B", nm: "Survie", ds: "Trois vies chacun : une mauvaise réponse et tu en perds une." },
-    { id: "teams", c: "#46E0B0", nm: "Équipes", ds: "Deux camps, une seule réponse par équipe : mettez-vous d'accord.", min: 4 },
+    { id: "teams", c: "rgb(var(--c-mint))", nm: "Équipes", ds: "Deux camps, une seule réponse par équipe : mettez-vous d'accord.", min: 4 },
   ],
   reco: [
-    { id: "classic", c: "#4CC9F0", nm: "Classique", ds: "Une image, tout le monde cherche la bonne réponse en même temps." },
-    { id: "zoom", c: "#FFC24B", nm: "Zoom arrière", ds: "On part d'un détail : l'image se dézoome jusqu'à ce que quelqu'un trouve." },
-    { id: "theme", c: "#8B7DF6", nm: "Thème imposé", ds: "Toute la manche sur une seule catégorie : cinéma, lieux, personnalités…" },
+    { id: "classic", c: "rgb(var(--c-cyan))", nm: "Classique", ds: "Une image, tout le monde cherche la bonne réponse en même temps." },
+    { id: "zoom", c: "rgb(var(--c-gold))", nm: "Zoom arrière", ds: "On part d'un détail : l'image se dézoome jusqu'à ce que quelqu'un trouve." },
+    { id: "theme", c: "rgb(var(--c-violet))", nm: "Thème imposé", ds: "Toute la manche sur une seule catégorie : cinéma, lieux, personnalités…" },
   ],
   pixel: [
-    { id: "classic", c: "#46E0B0", nm: "Classique", ds: "L'image se dévoile pixel par pixel, premier trouvé premier servi." },
-    { id: "rush", c: "#FF6B4D", nm: "Rush", ds: "Révélation deux fois plus rapide, mais les points doublent." },
-    { id: "coop", c: "#4CC9F0", nm: "Coopératif", ds: "Score commun : trouvez un maximum d'images avant la fin du chrono." },
+    { id: "classic", c: "rgb(var(--c-mint))", nm: "Classique", ds: "L'image se dévoile pixel par pixel, premier trouvé premier servi." },
+    { id: "rush", c: "rgb(var(--c-orange))", nm: "Rush", ds: "Révélation deux fois plus rapide, mais les points doublent." },
+    { id: "coop", c: "rgb(var(--c-cyan))", nm: "Coopératif", ds: "Score commun : trouvez un maximum d'images avant la fin du chrono." },
   ],
   whois: [
-    { id: "mix", c: "#FFC24B", nm: "Grand mélange", ds: "Toutes les catégories : drôle, perso, absurde, amis, compét', soirée." },
-    { id: "drole", c: "#FF4D8D", nm: "Drôle", ds: "Les questions qui font rire (et un peu rougir)." },
-    { id: "personnalite", c: "#8B7DF6", nm: "Personnalité", ds: "Qui est le plus têtu, le plus organisé, le plus sensible ?" },
-    { id: "absurde", c: "#4CC9F0", nm: "Situations absurdes", ds: "Île déserte, oies agressives et extraterrestres." },
-    { id: "amis", c: "#46E0B0", nm: "Entre amis", ds: "Retards, potins, groupes WhatsApp : la vérité éclate." },
-    { id: "competition", c: "#FF6B4D", nm: "Compétition", ds: "Mauvais perdants et tricheurs au Monopoly." },
-    { id: "soiree", c: "#FFC24B", nm: "Soirée", ds: "Piste de danse, karaoké et derniers à partir." },
+    { id: "mix", c: "rgb(var(--c-gold))", nm: "Grand mélange", ds: "Toutes les catégories : drôle, perso, absurde, amis, compét', soirée." },
+    { id: "drole", c: "rgb(var(--c-magenta))", nm: "Drôle", ds: "Les questions qui font rire (et un peu rougir)." },
+    { id: "personnalite", c: "rgb(var(--c-violet))", nm: "Personnalité", ds: "Qui est le plus têtu, le plus organisé, le plus sensible ?" },
+    { id: "absurde", c: "rgb(var(--c-cyan))", nm: "Situations absurdes", ds: "Île déserte, oies agressives et extraterrestres." },
+    { id: "amis", c: "rgb(var(--c-mint))", nm: "Entre amis", ds: "Retards, potins, groupes WhatsApp : la vérité éclate." },
+    { id: "competition", c: "rgb(var(--c-orange))", nm: "Compétition", ds: "Mauvais perdants et tricheurs au Monopoly." },
+    { id: "soiree", c: "rgb(var(--c-gold))", nm: "Soirée", ds: "Piste de danse, karaoké et derniers à partir." },
   ],
   funny: [
-    { id: "classic", c: "#FF4D8D", nm: "Classique", ds: "Le temps de soigner sa vanne : une phrase, une réponse, un vote." },
-    { id: "express", c: "#FFC24B", nm: "Express", ds: "30 secondes pour écrire : la première idée est souvent la meilleure." },
+    { id: "classic", c: "rgb(var(--c-magenta))", nm: "Classique", ds: "Le temps de soigner sa vanne : une phrase, une réponse, un vote." },
+    { id: "express", c: "rgb(var(--c-gold))", nm: "Express", ds: "30 secondes pour écrire : la première idée est souvent la meilleure." },
   ],
   ranking: [
-    { id: "savoir", c: "#FFC24B", nm: "Le bon ordre", ds: "Poids, dates, distances, tailles : un seul classement est juste. Jouable même seul." },
-    { id: "table", c: "#FF4D8D", nm: "Comme la table", ds: "Pas de bonne réponse : il faut classer comme la moyenne de la table. Pense comme tes potes !", min: 3 },
+    { id: "savoir", c: "rgb(var(--c-gold))", nm: "Le bon ordre", ds: "Poids, dates, distances, tailles : un seul classement est juste. Jouable même seul." },
+    { id: "table", c: "rgb(var(--c-magenta))", nm: "Comme la table", ds: "Pas de bonne réponse : il faut classer comme la moyenne de la table. Pense comme tes potes !", min: 3 },
   ],
   guesswho: [
-    { id: "celebrites", c: "#4CC9F0", nm: "Célébrités", ds: "Une personnalité ou un personnage connu : Zidane, Dark Vador, Marie Curie, Shrek…" },
-    { id: "entrenous", c: "#FFC24B", nm: "Entre nous", ds: "La personne mystère est l'un des joueurs du salon. Qui vous connaît le mieux ?" },
+    { id: "celebrites", c: "rgb(var(--c-cyan))", nm: "Célébrités", ds: "Une personnalité ou un personnage connu : Zidane, Dark Vador, Marie Curie, Shrek…" },
+    { id: "entrenous", c: "rgb(var(--c-gold))", nm: "Entre nous", ds: "La personne mystère est l'un des joueurs du salon. Qui vous connaît le mieux ?" },
   ],
   yesno: [
-    { id: "voix", c: "#FF6B4D", nm: "À voix haute", ds: "On interroge pour de vrai. Quiconque entend un oui ou un non buzze, la table valide d'un vote éclair." },
-    { id: "chat", c: "#4CC9F0", nm: "Par écrit", ds: "Questions et réponses tapées : le jeu repère tout seul le moindre oui, non, ouais ou nan." },
+    { id: "voix", c: "rgb(var(--c-orange))", nm: "À voix haute", ds: "On interroge pour de vrai. Quiconque entend un oui ou un non buzze, la table valide d'un vote éclair." },
+    { id: "chat", c: "rgb(var(--c-cyan))", nm: "Par écrit", ds: "Questions et réponses tapées : le jeu repère tout seul le moindre oui, non, ouais ou nan." },
   ],
   taboo: [
-    { id: "ecrit", c: "#8B7DF6", nm: "Écrit", ds: "Indices tapés au clavier : le jeu bloque les mots interdits et valide les réponses tout seul. Parfait à distance." },
-    { id: "oral", c: "#FF4D8D", nm: "À voix haute", ds: "On parle pour de vrai, dans la même pièce. Le joueur suivant surveille la carte et buzze au moindre écart.", min: 3 },
+    { id: "ecrit", c: "rgb(var(--c-violet))", nm: "Écrit", ds: "Indices tapés au clavier : le jeu bloque les mots interdits et valide les réponses tout seul. Parfait à distance." },
+    { id: "oral", c: "rgb(var(--c-magenta))", nm: "À voix haute", ds: "On parle pour de vrai, dans la même pièce. Le joueur suivant surveille la carte et buzze au moindre écart.", min: 3 },
   ],
   phone: [
-    { id: "classique", c: "#46E0B0", nm: "Classique", ds: "Phrase → dessin → description → dessin → description. Cinq étapes, fou rire garanti." },
-    { id: "complet", c: "#FFC24B", nm: "Tour complet", ds: "Chaque chaîne passe entre les mains de TOUS les joueurs avant la révélation." },
+    { id: "classique", c: "rgb(var(--c-mint))", nm: "Classique", ds: "Phrase → dessin → description → dessin → description. Cinq étapes, fou rire garanti." },
+    { id: "complet", c: "rgb(var(--c-gold))", nm: "Tour complet", ds: "Chaque chaîne passe entre les mains de TOUS les joueurs avant la révélation." },
   ],
   imposter: [
     { id: "classique", c: "#FF5C7A", nm: "Classique", ds: "L'imposteur sait qu'il l'est et ne connaît que la catégorie. Démasqué, il peut encore deviner le mot." },
-    { id: "infiltre", c: "#8B7DF6", nm: "Infiltré", ds: "L'imposteur reçoit un mot voisin… et ne sait même pas que c'est lui." },
+    { id: "infiltre", c: "rgb(var(--c-violet))", nm: "Infiltré", ds: "L'imposteur reçoit un mot voisin… et ne sait même pas que c'est lui." },
   ],
   bombe: [
-    { id: "classic", c: "#FF6B4D", nm: "Classique", ds: "Une syllabe, un mot, la bombe tourne jusqu'à l'explosion." },
+    { id: "classic", c: "rgb(var(--c-orange))", nm: "Classique", ds: "Une syllabe, un mot, la bombe tourne jusqu'à l'explosion." },
     { id: "hardcore", c: "#FF6B6B", nm: "Hardcore", ds: "Chrono partagé de 15 s : chaque bonne réponse rend 2 s, jamais moins de 5 s." },
-    { id: "coop", c: "#46E0B0", nm: "Coopératif", ds: "Tenez ensemble le plus longtemps possible face à la bombe." },
+    { id: "coop", c: "rgb(var(--c-mint))", nm: "Coopératif", ds: "Tenez ensemble le plus longtemps possible face à la bombe." },
   ],
 };
 
@@ -552,19 +552,19 @@ export default function LobbyPage() {
             <style>{`@keyframes lb-dot{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-7px);opacity:1}}@keyframes lb-clap{0%,72%,100%{transform:rotate(0)}82%{transform:rotate(-22deg)}92%{transform:rotate(0)}}@keyframes lb-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}`}</style>
             <div className="animate-pop" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 24 }}>
               <div style={{ position: "relative", width: 120, height: 108, animation: "lb-float 4s ease-in-out infinite" }}>
-                <div style={{ position: "absolute", bottom: 0, width: 120, height: 80, borderRadius: 10, background: "linear-gradient(180deg, #251C45, #1C1636)", border: "1px solid #332A5A", boxShadow: "0 18px 40px -18px rgba(0,0,0,.9)" }} />
-                <div style={{ position: "absolute", bottom: 26, left: 14, fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 800, fontSize: 14, color: "#FFC24B" }}>BOUM</div>
+                <div style={{ position: "absolute", bottom: 0, width: 120, height: 80, borderRadius: 10, background: "linear-gradient(180deg, rgb(var(--c-ink-raised)), rgb(var(--c-ink-surface)))", border: "1px solid rgb(var(--c-ink-border))", boxShadow: "0 18px 40px -18px rgba(0,0,0,.9)" }} />
+                <div style={{ position: "absolute", bottom: 26, left: 14, fontFamily: "var(--font-display), sans-serif", fontWeight: 800, fontSize: 14, color: "rgb(var(--c-gold))" }}>BOUM</div>
                 <div style={{ position: "absolute", top: 0, left: 0, width: 120, height: 26, transformOrigin: "6px 22px", animation: "lb-clap 2.6s ease-in-out infinite" }}>
-                  <div style={{ width: 120, height: 22, borderRadius: 8, background: "#0E0B1A", border: "1px solid #332A5A", overflow: "hidden" }}>
-                    <span style={{ display: "block", width: "100%", height: "100%", background: "repeating-linear-gradient(115deg,#F3EEFF 0 13px,#0E0B1A 13px 26px)" }} />
+                  <div style={{ width: 120, height: 22, borderRadius: 8, background: "rgb(var(--c-ink-deep))", border: "1px solid rgb(var(--c-ink-border))", overflow: "hidden" }}>
+                    <span style={{ display: "block", width: "100%", height: "100%", background: "repeating-linear-gradient(115deg,rgb(var(--c-text)) 0 13px,rgb(var(--c-ink-deep)) 13px 26px)" }} />
                   </div>
                 </div>
               </div>
               <div className="flex justify-center"><SubtitleStrip>silence, ça tourne…</SubtitleStrip></div>
               <div style={{ display: "flex", gap: 9 }}>
-                <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#FFC24B", animation: "lb-dot 1.2s ease-in-out infinite" }} />
-                <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#FFC24B", animation: "lb-dot 1.2s ease-in-out .16s infinite" }} />
-                <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#FFC24B", animation: "lb-dot 1.2s ease-in-out .32s infinite" }} />
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: "rgb(var(--c-gold))", animation: "lb-dot 1.2s ease-in-out infinite" }} />
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: "rgb(var(--c-gold))", animation: "lb-dot 1.2s ease-in-out .16s infinite" }} />
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: "rgb(var(--c-gold))", animation: "lb-dot 1.2s ease-in-out .32s infinite" }} />
               </div>
             </div>
           </main>
@@ -730,7 +730,7 @@ export default function LobbyPage() {
             <div className="cfg-grp">
               <div className="cfg-head">
                 <div className="min-w-0 flex-1">
-                  <h2 className="cfg-tt">Tes questions {!hasPass && <span style={{ fontSize: 12, color: "#FFC24B" }}>· Pass Soirée</span>}</h2>
+                  <h2 className="cfg-tt">Tes questions {!hasPass && <span style={{ fontSize: 12, color: "rgb(var(--c-gold))" }}>· Pass Soirée</span>}</h2>
                   <span className="cfg-sub">{hasPass ? "Jouées en priorité, la banque complète" : "Personnalise le quiz pour ta bande"}</span>
                 </div>
               </div>
@@ -742,14 +742,14 @@ export default function LobbyPage() {
                     rows={5}
                     spellCheck={false}
                     placeholder={"Une question par ligne, la réponse après « = » :\nLe surnom de Karim au lycée ? = Le Boss | boss\nLa ville de nos dernières vacances ? = Marseille"}
-                    style={{ width: "100%", boxSizing: "border-box", borderRadius: 14, border: "1px solid #332A5A", background: "#0E0B1A", color: "#F3EEFF", padding: "12px 14px", fontSize: 14, lineHeight: 1.5, resize: "vertical" }}
+                    style={{ width: "100%", boxSizing: "border-box", borderRadius: 14, border: "1px solid rgb(var(--c-ink-border))", background: "rgb(var(--c-ink-deep))", color: "rgb(var(--c-text))", padding: "12px 14px", fontSize: 14, lineHeight: 1.5, resize: "vertical" }}
                   />
                   <span className="cfg-sub" style={{ textTransform: "none", letterSpacing: 0 }}>
                     {(() => { const n = roomQuestions.split(/\r?\n/).filter((l) => l.includes("=") && l.split("=")[1]?.trim()).length; return `${n} question${n > 1 ? "s" : ""} prête${n > 1 ? "s" : ""} · « | » pour accepter plusieurs réponses`; })()}
                   </span>
                 </>
               ) : (
-                <p style={{ margin: 0, fontSize: 14, color: "#A79FC7" }}>
+                <p style={{ margin: 0, fontSize: 14, color: "rgb(var(--c-text-muted))" }}>
                   Les private jokes de ta bande dans le quiz : débloque-les avec le Pass Soirée{passCfg?.enabled ? " (juste au-dessus)" : " (bientôt disponible)"}.
                 </p>
               )}
@@ -843,15 +843,15 @@ export default function LobbyPage() {
       {/* hero: the room code + invite — carte fidèle à la maquette */}
       <section
         className="mb-8 rounded-2xl border p-6 text-center"
-        style={{ borderColor: "#332A5A", backgroundImage: "linear-gradient(180deg, rgba(37,28,69,0.72), rgba(28,22,54,0.72))", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 0 rgba(255,255,255,0.02), 0 22px 44px -26px rgba(0,0,0,0.95)", backdropFilter: "blur(6px)" }}
+        style={{ borderColor: "rgb(var(--c-ink-border))", backgroundImage: "linear-gradient(180deg, rgb(var(--c-ink-raised) / 0.72), rgb(var(--c-ink-surface) / 0.72))", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 1px 0 rgba(255,255,255,0.02), 0 22px 44px -26px rgba(0,0,0,0.95)", backdropFilter: "blur(6px)" }}
       >
-        <p style={{ margin: "0 0 12px", fontFamily: "'Space Mono', monospace", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".16em", color: "#6E6796" }}>Code de la salle</p>
+        <p style={{ margin: "0 0 12px", fontFamily: "var(--font-mono), monospace", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".16em", color: "rgb(var(--c-text-faint))" }}>Code de la salle</p>
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
-          <div style={{ display: "inline-flex", gap: 6, padding: 10, borderRadius: 12, background: "rgba(14,11,26,0.8)", boxShadow: "inset 0 2px 10px rgba(0,0,0,0.55)" }}>
+          <div style={{ display: "inline-flex", gap: 6, padding: 10, borderRadius: 12, background: "rgb(var(--c-ink-deep) / 0.8)", boxShadow: "inset 0 2px 10px rgba(0,0,0,0.55)" }}>
             {[...code].map((c, i) => (
               <span
                 key={i}
-                style={{ display: "grid", placeItems: "center", width: 44, height: 56, borderRadius: 8, border: "1px solid rgba(255,194,75,0.4)", background: "#0E0B1A", fontFamily: "'Space Mono', monospace", fontSize: 24, fontWeight: 700, color: "#FFC24B", boxShadow: "0 0 20px rgba(255,194,75,0.18), inset 0 1px 0 rgba(255,255,255,0.06)", animation: `tilePop 0.5s cubic-bezier(0.34,1.56,0.64,1) ${(0.12 + i * 0.09).toFixed(2)}s both` }}
+                style={{ display: "grid", placeItems: "center", width: 44, height: 56, borderRadius: 8, border: "1px solid rgb(var(--c-gold) / 0.4)", background: "rgb(var(--c-ink-deep))", fontFamily: "var(--font-mono), monospace", fontSize: 24, fontWeight: 700, color: "rgb(var(--c-gold))", boxShadow: "0 0 20px rgb(var(--c-gold) / 0.18), inset 0 1px 0 rgba(255,255,255,0.06)", animation: `tilePop 0.5s cubic-bezier(0.34,1.56,0.64,1) ${(0.12 + i * 0.09).toFixed(2)}s both` }}
               >
                 {c}
               </span>
@@ -865,14 +865,14 @@ export default function LobbyPage() {
           className="lb-copy"
           style={{
             display: "inline-flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "12px 20px 12px 14px", borderRadius: 999,
-            fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 700, fontSize: 14.5, lineHeight: 1,
-            border: `1px solid ${copied ? "rgba(70,224,176,.6)" : "rgba(255,194,75,.55)"}`,
-            background: copied ? "linear-gradient(180deg, rgba(70,224,176,.22), rgba(70,224,176,.08))" : "linear-gradient(180deg, rgba(255,194,75,.20), rgba(255,194,75,.06))",
+            fontFamily: "var(--font-display), sans-serif", fontWeight: 700, fontSize: 14.5, lineHeight: 1,
+            border: `1px solid ${copied ? "rgb(var(--c-mint) / .6)" : "rgb(var(--c-gold) / .55)"}`,
+            background: copied ? "linear-gradient(180deg, rgb(var(--c-mint) / .22), rgb(var(--c-mint) / .08))" : "linear-gradient(180deg, rgb(var(--c-gold) / .20), rgb(var(--c-gold) / .06))",
             color: copied ? "#8BF0CE" : "#FFD98A",
-            boxShadow: copied ? "0 5px 0 #17624a, 0 12px 22px -12px rgba(70,224,176,.55), inset 0 1px 0 rgba(255,255,255,.18)" : "0 5px 0 #8f620c, 0 12px 22px -12px rgba(255,194,75,.55), inset 0 1px 0 rgba(255,255,255,.18)",
+            boxShadow: copied ? "0 5px 0 #17624a, 0 12px 22px -12px rgb(var(--c-mint) / .55), inset 0 1px 0 rgba(255,255,255,.18)" : "0 5px 0 #8f620c, 0 12px 22px -12px rgb(var(--c-gold) / .55), inset 0 1px 0 rgba(255,255,255,.18)",
           }}
         >
-          <span style={{ display: "grid", placeItems: "center", width: 28, height: 28, flex: "none", borderRadius: "50%", background: copied ? "rgba(70,224,176,.18)" : "rgba(255,194,75,.16)" }}>
+          <span style={{ display: "grid", placeItems: "center", width: 28, height: 28, flex: "none", borderRadius: "50%", background: copied ? "rgb(var(--c-mint) / .18)" : "rgb(var(--c-gold) / .16)" }}>
             {copied ? (
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L19 7" /></svg>
             ) : (
@@ -888,7 +888,7 @@ export default function LobbyPage() {
         <div className="cfg-head">
           <span className="cfg-ic"><img src={UI.groupViolet} alt="" width={22} height={22} className="select-none" draggable={false} aria-hidden /></span>
           <div>
-            <h2 className="cfg-tt">Joueurs <span style={{ fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 14, color: "#6E6796" }}>{players.length}/{maxPlayers}</span></h2>
+            <h2 className="cfg-tt">Joueurs <span style={{ fontFamily: "var(--font-mono), monospace", fontWeight: 700, fontSize: 14, color: "rgb(var(--c-text-faint))" }}>{players.length}/{maxPlayers}</span></h2>
           </div>
           <span className={`pl-readypill${readyCount > 0 ? " some" : ""}`}><span className="d" />{readyCount}/{connectedCount} prêt{readyCount > 1 ? "s" : ""}</span>
         </div>
@@ -965,7 +965,7 @@ export default function LobbyPage() {
         <section className="mb-8">
           <p className="eyebrow mb-2 px-1">{room.pendingSoiree.length > 0 ? "Soirée prévue par l'hôte" : "Jeu choisi par l'hôte"}</p>
           {room.pendingSoiree.length > 0 ? (
-            <div className="rounded-2xl border p-3" style={{ borderColor: "rgba(255,194,75,.4)", background: "rgba(255,194,75,.06)" }}>
+            <div className="rounded-2xl border p-3" style={{ borderColor: "rgb(var(--c-gold) / .4)", background: "rgb(var(--c-gold) / .06)" }}>
               <ol className="flex flex-col gap-2" style={{ listStyle: "none", margin: 0, padding: 0 }}>
                 {room.pendingSoiree.map((gid, i) => {
                   const g = gameInfo(gid);
@@ -983,7 +983,7 @@ export default function LobbyPage() {
               <p className="mt-3 text-xs text-text-faint">Un seul classement pour toute la soirée. Mets-toi « prêt » !</p>
             </div>
           ) : room.pendingGame && GAME_META[room.pendingGame] ? (
-            <div className="flex items-center gap-3 rounded-2xl border p-3" style={{ borderColor: `${GAME_META[room.pendingGame].tint}55`, background: `${GAME_META[room.pendingGame].tint}0f` }}>
+            <div className="flex items-center gap-3 rounded-2xl border p-3" style={{ borderColor: `color-mix(in srgb, ${GAME_META[room.pendingGame].tint} 33.3%, transparent)`, background: `color-mix(in srgb, ${GAME_META[room.pendingGame].tint} 5.9%, transparent)` }}>
               <img src={GAME_META[room.pendingGame].img} alt="" className="h-14 w-14 shrink-0 rounded-xl object-cover" draggable={false} />
               <div className="min-w-0">
                 <p className="font-display text-lg font-bold">{GAME_META[room.pendingGame].label}</p>
@@ -1026,7 +1026,7 @@ export default function LobbyPage() {
             <button
               onClick={() => { setJustAdded(false); setSettingsOpen(true); }}
               className="mb-4 flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors hover:brightness-110"
-              style={{ borderColor: `${GAME_META[selectedGame].tint}66`, background: `${GAME_META[selectedGame].tint}12` }}
+              style={{ borderColor: `color-mix(in srgb, ${GAME_META[selectedGame].tint} 40%, transparent)`, background: `color-mix(in srgb, ${GAME_META[selectedGame].tint} 7.1%, transparent)` }}
             >
               <img src={GAME_META[selectedGame].img} alt="" className="h-12 w-12 shrink-0 rounded-xl object-cover" draggable={false} />
               <span className="min-w-0 flex-1">
@@ -1034,14 +1034,14 @@ export default function LobbyPage() {
                 <span className="block truncate font-display text-base font-bold">{gameInfo(curLaunch.gameId).name}</span>
                 <span className="block truncate text-xs text-text-muted">{curLaunch.detail}</span>
               </span>
-              <span className="shrink-0 rounded-full border px-3 py-1.5 text-xs font-bold" style={{ borderColor: `${GAME_META[selectedGame].tint}88`, color: GAME_META[selectedGame].tint }}>
+              <span className="shrink-0 rounded-full border px-3 py-1.5 text-xs font-bold" style={{ borderColor: `color-mix(in srgb, ${GAME_META[selectedGame].tint} 53.3%, transparent)`, color: GAME_META[selectedGame].tint }}>
                 Modes &amp; réglages
               </span>
             </button>
           )}
           <div className="mb-3 flex flex-wrap items-center gap-2 px-1">
             <p className="eyebrow mr-1">Jeu</p>
-            {([["all", "Tous", "#F3EEFF"]] as [string, string, string][]).concat(gamesByCategory(pickerGames).map((f) => [f.category, f.label, f.tint])).map(([id, label, tint]) => {
+            {([["all", "Tous", "rgb(var(--c-text))"]] as [string, string, string][]).concat(gamesByCategory(pickerGames).map((f) => [f.category, f.label, f.tint])).map(([id, label, tint]) => {
               const on = familyFilter === id;
               const count = id === "all" ? pickerGames.length : pickerGames.filter((g) => g.category === id).length;
               return (
@@ -1050,7 +1050,7 @@ export default function LobbyPage() {
                   onClick={() => setFamilyFilter(id as GameCategory | "all")}
                   aria-pressed={on}
                   className="rounded-full border px-3 py-1 text-xs font-semibold transition-colors"
-                  style={{ borderColor: on ? tint : "#332A5A", background: on ? `${tint}22` : "transparent", color: on ? tint : "#A79FC7" }}
+                  style={{ borderColor: on ? tint : "rgb(var(--c-ink-border))", background: on ? `color-mix(in srgb, ${tint} 13.3%, transparent)` : "transparent", color: on ? tint : "rgb(var(--c-text-muted))" }}
                 >
                   {label} <span style={{ opacity: 0.6 }}>{count}</span>
                 </button>
@@ -1067,7 +1067,7 @@ export default function LobbyPage() {
                 </div>
                 <div className="game-picker-grid">
                   {f.games
-                    .map((g) => ({ id: g.id as GameId, img: g.img, label: g.name, desc: g.tagline, tint: g.accent, tintBg: `${g.accent}1f`, tintBorder: `${g.accent}66`, min: g.minPlayers, max: g.maxPlayers }))
+                    .map((g) => ({ id: g.id as GameId, img: g.img, label: g.name, desc: g.tagline, tint: g.accent, tintBg: `color-mix(in srgb, ${g.accent} 12.2%, transparent)`, tintBorder: `color-mix(in srgb, ${g.accent} 40%, transparent)`, min: g.minPlayers, max: g.maxPlayers }))
                     .map((c) => {
               const sel = selectedGame === c.id;
               return (
@@ -1076,24 +1076,24 @@ export default function LobbyPage() {
                   onClick={() => { setSelectedGame(c.id); setJustAdded(false); setSettingsOpen(true); }}
                   className="lb-gamecard group relative flex flex-col overflow-hidden rounded-2xl border p-4 text-left"
                   style={{
-                    borderColor: sel ? c.tint : "#332A5A",
-                    background: sel ? `linear-gradient(160deg, ${c.tintBg}, rgba(28,22,54,0.6) 60%)` : "rgba(28,22,54,0.55)",
+                    borderColor: sel ? c.tint : "rgb(var(--c-ink-border))",
+                    background: sel ? `linear-gradient(160deg, ${c.tintBg}, rgb(var(--c-ink-surface) / 0.6) 60%)` : "rgb(var(--c-ink-surface) / 0.55)",
                     boxShadow: sel
-                      ? `inset 0 1px 0 ${c.tint}59, 0 0 0 1px ${c.tint}66, 0 6px 0 -1px rgba(0,0,0,.4), 0 18px 34px -18px ${c.tint}aa`
+                      ? `inset 0 1px 0 color-mix(in srgb, ${c.tint} 34.9%, transparent), 0 0 0 1px color-mix(in srgb, ${c.tint} 40%, transparent), 0 6px 0 -1px rgba(0,0,0,.4), 0 18px 34px -18px color-mix(in srgb, ${c.tint} 66.7%, transparent)`
                       : "inset 0 1px 0 rgba(255,255,255,.05), 0 5px 0 -1px rgba(0,0,0,.35), 0 16px 28px -22px rgba(0,0,0,.9)",
                   }}
                 >
                   {/* decorative sparkles */}
-                  <svg aria-hidden width="12" height="12" viewBox="0 0 24 24" className="gc-spark pointer-events-none absolute" style={{ top: 30, left: 92, color: sel ? c.tint : "#6E6796", opacity: sel ? 0.55 : 0.3 }}><path fill="currentColor" d="M12 2l1.5 8.5L22 12l-8.5 1.5L12 22l-1.5-8.5L2 12l8.5-1.5z" /></svg>
-                  <svg aria-hidden width="9" height="9" viewBox="0 0 24 24" className="gc-spark pointer-events-none absolute" style={{ top: 56, right: 22, color: sel ? c.tint : "#6E6796", opacity: sel ? 0.5 : 0.25 }}><path fill="currentColor" d="M12 2l1.5 8.5L22 12l-8.5 1.5L12 22l-1.5-8.5L2 12l8.5-1.5z" /></svg>
+                  <svg aria-hidden width="12" height="12" viewBox="0 0 24 24" className="gc-spark pointer-events-none absolute" style={{ top: 30, left: 92, color: sel ? c.tint : "rgb(var(--c-text-faint))", opacity: sel ? 0.55 : 0.3 }}><path fill="currentColor" d="M12 2l1.5 8.5L22 12l-8.5 1.5L12 22l-1.5-8.5L2 12l8.5-1.5z" /></svg>
+                  <svg aria-hidden width="9" height="9" viewBox="0 0 24 24" className="gc-spark pointer-events-none absolute" style={{ top: 56, right: 22, color: sel ? c.tint : "rgb(var(--c-text-faint))", opacity: sel ? 0.5 : 0.25 }}><path fill="currentColor" d="M12 2l1.5 8.5L22 12l-8.5 1.5L12 22l-1.5-8.5L2 12l8.5-1.5z" /></svg>
                   <div className="gc-head mb-2.5 flex items-start justify-between">
                     <span
                       className="gc-img inline-flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl transition-transform group-hover:scale-105"
-                      style={{ border: `1px solid ${sel ? c.tintBorder : "#332A5A"}`, boxShadow: sel ? `0 0 16px -4px ${c.tint}` : "none" }}
+                      style={{ border: `1px solid ${sel ? c.tintBorder : "rgb(var(--c-ink-border))"}`, boxShadow: sel ? `0 0 16px -4px ${c.tint}` : "none" }}
                     >
                       <img src={c.img} alt="" className="h-full w-full object-cover" draggable={false} />
                     </span>
-                    <span className="gc-pill rounded-full border px-2.5 py-0.5 text-[11px] tabular-nums" style={{ borderColor: sel ? `${c.tint}66` : "#332A5A", color: sel ? c.tint : "#8078a8" }}>
+                    <span className="gc-pill rounded-full border px-2.5 py-0.5 text-[11px] tabular-nums" style={{ borderColor: sel ? `color-mix(in srgb, ${c.tint} 40%, transparent)` : "rgb(var(--c-ink-border))", color: sel ? c.tint : "#8078a8" }}>
                       {`${c.min}–${Math.min(c.max, maxPlayers)}`}
                     </span>
                   </div>
@@ -1118,7 +1118,7 @@ export default function LobbyPage() {
 
       {/* action dock — l'hôte lance directement (il compte comme prêt),
           les invités basculent « prêt / pas prêt ». z-20 : au-dessus des cartes. */}
-      <div className="sticky bottom-[max(1rem,env(safe-area-inset-bottom))] z-20 mt-2 flex gap-3 rounded-2xl border border-ink-border/80 bg-[rgba(20,16,42,0.92)] p-3 backdrop-blur-md">
+      <div className="sticky bottom-[max(1rem,env(safe-area-inset-bottom))] z-20 mt-2 flex gap-3 rounded-2xl border border-ink-border/80 bg-[rgb(var(--c-ink) / 0.92)] p-3 backdrop-blur-md">
         {isHost && soireeItems.length > 0 && !soireeLive ? (
           <div className="flex w-full flex-col gap-2">
             <button
@@ -1180,7 +1180,7 @@ export default function LobbyPage() {
           <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" onClick={() => setSettingsOpen(false)} />
           <div
             className="relative flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border border-ink-border sm:rounded-3xl"
-            style={{ backgroundImage: "linear-gradient(165deg, rgba(37,28,69,.98), rgba(18,14,36,.99))", boxShadow: "0 30px 80px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.05)", animation: "pop-in .2s ease-out both" }}
+            style={{ backgroundImage: "linear-gradient(165deg, rgb(var(--c-ink-raised) / .98), rgba(18,14,36,.99))", boxShadow: "0 30px 80px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.05)", animation: "pop-in .2s ease-out both" }}
           >
             <div className="flex items-center gap-3 border-b border-ink-border px-5 py-4">
               <img src={GAME_META[selectedGame].img} alt="" className="h-12 w-12 shrink-0 rounded-xl object-cover" draggable={false} />

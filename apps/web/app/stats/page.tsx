@@ -44,16 +44,16 @@ export default function StatsPage() {
   const perGame: Record<string, number> = {};
   for (const [, d] of last7) for (const [g, n] of Object.entries(d.gamesStarted)) perGame[g] = (perGame[g] ?? 0) + n;
 
-  const card = { borderRadius: 16, border: "1px solid #332A5A", background: "rgba(28,22,54,.6)", padding: "16px 18px" } as const;
-  const big = { fontFamily: "var(--font-display), 'Bricolage Grotesque', sans-serif", fontSize: 34, fontWeight: 800, color: "#F3EEFF", lineHeight: 1.1 } as const;
+  const card = { borderRadius: 16, border: "1px solid rgb(var(--c-ink-border))", background: "rgb(var(--c-ink-surface) / .6)", padding: "16px 18px" } as const;
+  const big = { fontFamily: "var(--font-display), sans-serif", fontSize: 34, fontWeight: 800, color: "rgb(var(--c-text))", lineHeight: 1.1 } as const;
 
   return (
     <InfoPage kicker="Réservé à l'équipe" title="Fréquentation de LeBoum">
       {!data && (
         <form onSubmit={(e) => { e.preventDefault(); void load(token); }} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <input value={token} onChange={(e) => setToken(e.target.value)} placeholder="Code d'accès" type="password"
-            style={{ flex: "1 1 220px", borderRadius: 12, border: "1px solid #332A5A", background: "#0E0B1A", color: "#F3EEFF", padding: "12px 14px", fontSize: 16 }} />
-          <button style={{ borderRadius: 12, border: "none", background: "#FFC24B", color: "#14102A", fontWeight: 800, padding: "12px 20px", cursor: "pointer" }}>Voir</button>
+            style={{ flex: "1 1 220px", borderRadius: 12, border: "1px solid rgb(var(--c-ink-border))", background: "rgb(var(--c-ink-deep))", color: "rgb(var(--c-text))", padding: "12px 14px", fontSize: 16 }} />
+          <button style={{ borderRadius: 12, border: "none", background: "rgb(var(--c-gold))", color: "rgb(var(--c-ink))", fontWeight: 800, padding: "12px 20px", cursor: "pointer" }}>Voir</button>
         </form>
       )}
       {error && <p style={{ color: "#FF8A8A" }}>{error}</p>}
@@ -77,7 +77,7 @@ export default function StatsPage() {
           <h2>Jour par jour</h2>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-              <thead><tr style={{ textAlign: "left", color: "#A79FC7" }}><th>Jour</th><th>Joueurs</th><th>Salons</th><th>Parties</th><th>Joueurs/partie</th><th>Pic simultané</th></tr></thead>
+              <thead><tr style={{ textAlign: "left", color: "rgb(var(--c-text-muted))" }}><th>Jour</th><th>Joueurs</th><th>Salons</th><th>Parties</th><th>Joueurs/partie</th><th>Pic simultané</th></tr></thead>
               <tbody>
                 {days.slice(0, 30).map(([day, d]) => {
                   const g = Object.values(d.gamesStarted).reduce((a, b) => a + b, 0);
@@ -92,7 +92,7 @@ export default function StatsPage() {
               </tbody>
             </table>
           </div>
-          <p style={{ fontSize: 13, color: "#6E6796" }}>Comptage depuis le {new Date(data.since).toLocaleDateString("fr-FR")}. Anonyme : aucun pseudo n&apos;est enregistré.</p>
+          <p style={{ fontSize: 13, color: "rgb(var(--c-text-faint))" }}>Comptage depuis le {new Date(data.since).toLocaleDateString("fr-FR")}. Anonyme : aucun pseudo n&apos;est enregistré.</p>
         </>
       )}
     </InfoPage>

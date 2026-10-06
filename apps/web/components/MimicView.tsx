@@ -236,11 +236,11 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 
 // Carte-plaque qui entoure l'onde.
 function WavePlate({ mode, children }: { mode: "listen" | "record"; children: ReactNode }) {
-  const glow = mode === "listen" ? "rgba(255,194,75,.22)" : "rgba(70,224,176,.2)";
+  const glow = mode === "listen" ? "rgb(var(--c-gold) / .22)" : "rgb(var(--c-mint) / .2)";
   return (
     <div style={{ position: "relative", width: "100%", padding: "40px 36px 30px", borderRadius: 26, overflow: "hidden",
       background: mode === "listen" ? "linear-gradient(180deg,#211A44,#171130)" : "linear-gradient(180deg,#1B2440,#141A30)",
-      boxShadow: `0 0 0 1px ${mode === "listen" ? "#3A2F66" : "#2F4A5E"}, inset 0 1px 0 rgba(243,238,255,.07), 0 34px 70px -44px rgba(0,0,0,.95)` }}>
+      boxShadow: `0 0 0 1px ${mode === "listen" ? "#3A2F66" : "#2F4A5E"}, inset 0 1px 0 rgb(var(--c-text) / .07), 0 34px 70px -44px rgba(0,0,0,.95)` }}>
       <div aria-hidden style={{ position: "absolute", left: mode === "listen" ? "46%" : "44%", top: "50%", width: 620, height: 300, transform: "translate(-50%,-50%)", borderRadius: "50%", filter: "blur(72px)", background: `radial-gradient(ellipse, ${glow}, transparent 66%)`, pointerEvents: "none" }} />
       <div style={{ position: "relative" }}>{children}</div>
     </div>
@@ -404,7 +404,7 @@ function MimicRail({ kicker, heading, sub, rows, chat }: { kicker: string; headi
         <span style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.1 }}>{heading}</span>
         <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 12, color: LB.faint }}>{sub}</span>
       </div>
-      <div style={{ height: 1, flex: "none", background: "linear-gradient(90deg,transparent,rgba(243,238,255,.14) 18%,rgba(243,238,255,.14) 82%,transparent)" }} />
+      <div style={{ height: 1, flex: "none", background: "linear-gradient(90deg,transparent,rgb(var(--c-text) / .14) 18%,rgb(var(--c-text) / .14) 82%,transparent)" }} />
       <div style={{ flex: "none", display: "flex", flexDirection: "column", gap: 8 }}>
         {rows.map((r) => {
           const ac = r.accent;
@@ -454,7 +454,7 @@ export function MimicView({ room }: { room: UseRoom }) {
       <main style={lbShell} className="lb-scope">
         <style dangerouslySetInnerHTML={{ __html: LB_SCOPED_CSS }} />
         <div style={lbCard}>
-          <Aurora tint="rgba(255,77,141,.12)" tint2="rgba(139,125,246,.10)" />
+          <Aurora tint="rgb(var(--c-magenta) / .12)" tint2="rgb(var(--c-violet) / .10)" />
           <div style={{ position: "relative", flex: 1, display: "grid", placeItems: "center", padding: 28, textAlign: "center" }}>
             <div>
               <p style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: LB.pink, marginBottom: 8 }}>Mimic indisponible</p>
@@ -511,7 +511,7 @@ export function MimicView({ room }: { room: UseRoom }) {
     <main style={lbShell} className="lb-scope">
       <style dangerouslySetInnerHTML={{ __html: LB_SCOPED_CSS }} />
       <div style={lbCard}>
-        <Aurora tint={listening ? "rgba(255,194,75,.11)" : "rgba(70,224,176,.11)"} tint2="rgba(139,125,246,.10)" />
+        <Aurora tint={listening ? "rgb(var(--c-gold) / .11)" : "rgb(var(--c-mint) / .11)"} tint2="rgb(var(--c-violet) / .10)" />
         {rail}
         <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflowY: "auto" }}>
           <div style={topBar(accent, game.phase === "scoreboard" ? 95 : game.phase === "recording" ? 42 : game.phase === "reference" ? 58 : 32)} />
@@ -543,9 +543,9 @@ function Countdown({ room, game, isHost }: { room: UseRoom; game: MimicPublic; i
       <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", padding: "16px 34px 0" }}>{skipBtn(room, isHost, game.phase)}</div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 34 }}>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 9, fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".2em", color: LB.gold }}><BoumIcon name="headphones" size={14} color={LB.gold} /> une seule écoute</span>
-        <div style={{ position: "relative", width: 220, height: 220, borderRadius: "50%", display: "grid", placeItems: "center", boxShadow: "0 0 0 2px rgba(255,194,75,.55), 0 0 90px -30px rgba(255,194,75,.9)" }}>
+        <div style={{ position: "relative", width: 220, height: 220, borderRadius: "50%", display: "grid", placeItems: "center", boxShadow: "0 0 0 2px rgb(var(--c-gold) / .55), 0 0 90px -30px rgb(var(--c-gold) / .9)" }}>
           <span key={n} style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 112, lineHeight: 1, color: LB.gold }}>{n}</span>
-          <span aria-hidden data-lb-anim style={{ position: "absolute", inset: 0, borderRadius: "50%", boxShadow: "0 0 0 2px #FFC24B", animation: "lbRingPulse 1.6s ease-out infinite" }} />
+          <span aria-hidden data-lb-anim style={{ position: "absolute", inset: 0, borderRadius: "50%", boxShadow: "0 0 0 2px rgb(var(--c-gold))", animation: "lbRingPulse 1.6s ease-out infinite" }} />
         </div>
         <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 24, letterSpacing: "-.01em" }}>Le son démarre pour tout le monde</span>
       </div>
@@ -625,7 +625,7 @@ function Listening({ room, game, isHost }: { room: UseRoom; game: MimicPublic; i
           <RealWave peaks={dec?.peaks ?? []} played={played} accent={LB.gold} height={224} />
           <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 28 }}>
             <span style={{ flex: 1, height: 4, borderRadius: 2, background: "#2A2350", overflow: "hidden" }}>
-              <span style={{ display: "block", height: "100%", width: `${Math.round(played * 100)}%`, borderRadius: 2, background: "linear-gradient(90deg,rgba(255,194,75,.3),#FFC24B)" }} />
+              <span style={{ display: "block", height: "100%", width: `${Math.round(played * 100)}%`, borderRadius: 2, background: "linear-gradient(90deg,rgb(var(--c-gold) / .3),rgb(var(--c-gold)))" }} />
             </span>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".16em", color: LB.faint }}><BoumIcon name="headphones" size={13} color={LB.faint} /> aucune relecture</span>
           </div>
@@ -755,7 +755,7 @@ function Recording({ room, game, mic, isHost }: { room: UseRoom; game: MimicPubl
             </div>
             <RealWave peaks={buildLivePeaks(liveLevels, played, 76)} played={played} accent={LB.mint} height={196} n={76} ghostPeaks={dec?.peaks ?? null} />
             <div style={{ marginTop: 24, height: 4, borderRadius: 2, background: "#232C46", overflow: "hidden" }}>
-              <span style={{ display: "block", height: "100%", width: `${Math.round(played * 100)}%`, borderRadius: 2, background: "linear-gradient(90deg,rgba(70,224,176,.3),#46E0B0)" }} />
+              <span style={{ display: "block", height: "100%", width: `${Math.round(played * 100)}%`, borderRadius: 2, background: "linear-gradient(90deg,rgb(var(--c-mint) / .3),rgb(var(--c-mint)))" }} />
             </div>
           </WavePlate>
         </div>
@@ -767,7 +767,7 @@ function Recording({ room, game, mic, isHost }: { room: UseRoom; game: MimicPubl
         ) : (
           <button onClick={() => finish(false)} aria-label="Arrêter et valider ma prise" className="lb-mic" style={{ position: "relative", width: 96, height: 96, borderRadius: "50%", border: "none", background: LB.pink, color: LB.ink, cursor: "pointer", display: "grid", placeItems: "center", boxShadow: "0 6px 0 #A32458" }}>
             <Icon id="mic" size={36} />
-            <span aria-hidden data-lb-anim style={{ position: "absolute", inset: 0, borderRadius: "50%", boxShadow: "0 0 0 2px #FF4D8D", animation: "lbRingPulse 1.5s ease-out infinite" }} />
+            <span aria-hidden data-lb-anim style={{ position: "absolute", inset: 0, borderRadius: "50%", boxShadow: "0 0 0 2px rgb(var(--c-magenta))", animation: "lbRingPulse 1.5s ease-out infinite" }} />
           </button>
         )}
         {mic.status !== "on" && !done && <p style={{ fontSize: 12, color: LB.faint }}>Micro non autorisé — ta prise sera vide. (Ouvre en https/localhost.)</p>}
@@ -966,7 +966,7 @@ function Final({ room, game, you, isHost }: { room: UseRoom; game: MimicPublic; 
     <main style={lbShell} className="lb-scope">
       <style dangerouslySetInnerHTML={{ __html: LB_SCOPED_CSS }} />
       <div style={lbCard}>
-        <Aurora tint="rgba(255,194,75,.14)" tint2="rgba(139,125,246,.10)" />
+        <Aurora tint="rgb(var(--c-gold) / .14)" tint2="rgb(var(--c-violet) / .10)" />
         <MimicRail kicker="Classement" heading="Partie terminée" sub={`${game.totalRounds} sons`} rows={rows} />
         <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflowY: "auto" }}>
           <div style={topBar(LB.gold)} />
@@ -981,7 +981,7 @@ function Final({ room, game, you, isHost }: { room: UseRoom; game: MimicPublic; 
                   <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 28 }}>{(winner?.score ?? 0)}</span>
                   <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".16em", color: LB.faint }}>votes cumulés</span>
                 </div>
-                <div style={{ width: 1, background: "linear-gradient(180deg,transparent,rgba(243,238,255,.16),transparent)" }} />
+                <div style={{ width: 1, background: "linear-gradient(180deg,transparent,rgb(var(--c-text) / .16),transparent)" }} />
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "0 26px" }}>
                   <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 28 }}>{game.totalRounds}</span>
                   <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 10, textTransform: "uppercase", letterSpacing: ".16em", color: LB.faint }}>sons joués</span>
@@ -1010,7 +1010,7 @@ function Prep({ room, game, mic, you, isHost }: { room: UseRoom; game: MimicPubl
     <main style={lbShell} className="lb-scope">
       <style dangerouslySetInnerHTML={{ __html: LB_SCOPED_CSS }} />
       <div style={lbCard}>
-        <Aurora tint="rgba(255,194,75,.11)" tint2="rgba(139,125,246,.10)" />
+        <Aurora tint="rgb(var(--c-gold) / .11)" tint2="rgb(var(--c-violet) / .10)" />
         <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflowY: "auto" }}>
           <div style={topBar(LB.gold, 20)} />
           <div style={{ flex: 1, display: "grid", placeItems: "center", padding: 28 }}>

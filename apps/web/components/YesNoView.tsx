@@ -10,7 +10,7 @@ import { Avatar } from "@/components/Avatar";
 import { playSound } from "@/lib/sound";
 import { BODY, DISPLAY, Gain, HostSkip, K, MONO, SocialFinal, SocialHeader, SocialStage, StatusBar, hexA, plural, topOf, useCountdown } from "@/components/social/kit";
 
-const ACCENT = "#FF6B4D";
+const ACCENT = "rgb(var(--c-orange))";
 
 /** Idées de questions pièges, pour ceux qui sèchent. */
 const TRAPS = [
@@ -143,7 +143,7 @@ function HotChat({ room, g, isTarget }: { room: UseRoom; g: YesNoPublic; isTarge
   const nameOf = (id: string) => g.players.find((p) => p.id === id)?.name ?? "";
   return (
     <>
-      <div ref={box} style={{ maxWidth: 560, margin: "0 auto", maxHeight: 300, minHeight: 140, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6, padding: 12, borderRadius: 18, border: `1px solid ${K.line}`, background: "rgba(14,11,26,.6)" }}>
+      <div ref={box} style={{ maxWidth: 560, margin: "0 auto", maxHeight: 300, minHeight: 140, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6, padding: 12, borderRadius: 18, border: `1px solid ${K.line}`, background: "rgb(var(--c-ink-deep) / .6)" }}>
         {g.log.length === 0 && <p style={{ margin: "auto", color: K.faint, fontSize: 14 }}>{isTarget ? "Les questions arrivent…" : "Pose ta première question piège !"}</p>}
         {g.log.map((m) =>
           !m.from ? (
@@ -227,7 +227,7 @@ function Result({ room, g }: { room: UseRoom; g: YesNoPublic }) {
   const gains = useMemo(() => Object.entries(r.gained).filter(([, v]) => v), [r.gained]);
   return (
     <section style={{ textAlign: "center" }}>
-      <div style={{ padding: "20px 18px", borderRadius: 24, border: `1px solid ${hexA(caught ? K.danger : K.mint, 0.5)}`, background: `linear-gradient(160deg, ${hexA(caught ? K.danger : K.mint, 0.14)}, rgba(28,22,54,.75) 60%)`, animation: "sk-pop .45s ease-out both" }}>
+      <div style={{ padding: "20px 18px", borderRadius: 24, border: `1px solid ${hexA(caught ? K.danger : K.mint, 0.5)}`, background: `linear-gradient(160deg, ${hexA(caught ? K.danger : K.mint, 0.14)}, rgb(var(--c-ink-surface) / .75) 60%)`, animation: "sk-pop .45s ease-out both" }}>
         <div style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 28, color: caught ? K.danger : K.mint }}>
           {caught ? `Craqué au bout de ${secs} s !` : `${target?.name} a tenu ${g.seconds} s !`}
         </div>

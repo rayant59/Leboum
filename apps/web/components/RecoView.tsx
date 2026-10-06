@@ -14,24 +14,24 @@ import { hexA } from "@/lib/color";
 
 // ── Palette « LeBoum » (identité or / menthe / rose / violet) ───────────────
 const C = {
-  bg: "#14102A",
-  surface: "#1C1636",
-  aside: "rgba(28,22,54,.72)",
-  ink: "#0E0B1A",
-  line: "#332A5A",
+  bg: "rgb(var(--c-ink))",
+  surface: "rgb(var(--c-ink-surface))",
+  aside: "rgb(var(--c-ink-surface) / .72)",
+  ink: "rgb(var(--c-ink-deep))",
+  line: "rgb(var(--c-ink-border))",
   lineFaint: "#241D45",
-  text: "#F3EEFF",
-  muted: "#A79FC7",
-  faint: "#6E6796",
+  text: "rgb(var(--c-text))",
+  muted: "rgb(var(--c-text-muted))",
+  faint: "rgb(var(--c-text-faint))",
   dim: "#4A4370",
-  gold: "#FFC24B",
-  goldSh: "#B47F16",
-  mint: "#46E0B0",
-  pink: "#FF4D8D",
-  violet: "#8B7DF6",
+  gold: "rgb(var(--c-gold))",
+  goldSh: "rgb(var(--c-gold-dark))",
+  mint: "rgb(var(--c-mint))",
+  pink: "rgb(var(--c-magenta))",
+  violet: "rgb(var(--c-violet))",
   orange: "#FF8A3D",
 };
-const DISPLAY = "'Bricolage Grotesque', system-ui, sans-serif";
+const DISPLAY = "var(--font-display), system-ui, sans-serif";
 const BODY = "'Inter', system-ui, sans-serif";
 
 // --- real image resolver (Wikimedia REST) ----------------------------------
@@ -97,7 +97,7 @@ function ImageFrame({
           <span style={{ position: "absolute", top: 8, right: 10, fontFamily: DISPLAY, fontWeight: 700, fontSize: 9, letterSpacing: ".08em", textTransform: "uppercase", color: hexA(C.text, 0.4) }}>{credit}</span>
         )}
         {overlay && (
-          <div aria-hidden style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "48px 26px 22px", background: "linear-gradient(180deg,transparent,rgba(14,11,26,.92))", pointerEvents: "none" }}>
+          <div aria-hidden style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "48px 26px 22px", background: "linear-gradient(180deg,transparent,rgb(var(--c-ink-deep) / .92))", pointerEvents: "none" }}>
             <span style={{ fontFamily: DISPLAY, fontSize: "clamp(28px,4.4vw,44px)", fontWeight: 800, letterSpacing: "-.02em", lineHeight: 1, color: C.mint }}>{overlay}</span>
           </div>
         )}
@@ -232,7 +232,7 @@ function Rail({ kicker, heading, sub, rows }: { kicker: string; heading: string;
         <span style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 800, letterSpacing: "-.01em", lineHeight: 1.1 }}>{heading}</span>
         <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 12, color: C.faint }}>{sub}</span>
       </div>
-      <div style={{ height: 1, flex: "none", background: "linear-gradient(90deg,transparent,rgba(243,238,255,.14) 18%,rgba(243,238,255,.14) 82%,transparent)" }} />
+      <div style={{ height: 1, flex: "none", background: "linear-gradient(90deg,transparent,rgb(var(--c-text) / .14) 18%,rgb(var(--c-text) / .14) 82%,transparent)" }} />
       <div style={{ flex: "none", display: "flex", flexDirection: "column", gap: 8 }}>
         {rows.map((r) => {
           const ac = r.accent;
@@ -503,7 +503,7 @@ export function RecoView({ room, pixel = false }: { room: UseRoom; pixel?: boole
                     </div>
                   ) : (
                     <>
-                      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "18px 24px", borderRadius: 16, background: C.ink, boxShadow: `0 0 0 1px ${C.line}, inset 0 1px 0 rgba(243,238,255,.04), 0 20px 44px -28px rgba(0,0,0,.9)` }}>
+                      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "18px 24px", borderRadius: 16, background: C.ink, boxShadow: `0 0 0 1px ${C.line}, inset 0 1px 0 rgb(var(--c-text) / .04), 0 20px 44px -28px rgba(0,0,0,.9)` }}>
                         <input
                           className="rc-input"
                           value={text}

@@ -13,45 +13,45 @@ import { hexA } from "@/lib/color";
 
 // ── Palette « LeBoum » (identité or / menthe / rose) ────────────────────────
 const C = {
-  bg: "#14102A",
-  aside: "rgba(28,22,54,.72)",
-  ink: "#0E0B1A",
-  surface: "#1C1636",
-  line: "#332A5A",
+  bg: "rgb(var(--c-ink))",
+  aside: "rgb(var(--c-ink-surface) / .72)",
+  ink: "rgb(var(--c-ink-deep))",
+  surface: "rgb(var(--c-ink-surface))",
+  line: "rgb(var(--c-ink-border))",
   lineFaint: "#241D45",
-  text: "#F3EEFF",
-  muted: "#A79FC7",
-  faint: "#6E6796",
+  text: "rgb(var(--c-text))",
+  muted: "rgb(var(--c-text-muted))",
+  faint: "rgb(var(--c-text-faint))",
   dim: "#4A4370",
-  gold: "#FFC24B",
-  goldSh: "#B47F16",
+  gold: "rgb(var(--c-gold))",
+  goldSh: "rgb(var(--c-gold-dark))",
   orange: "#FF8A3D",
-  mint: "#46E0B0",
+  mint: "rgb(var(--c-mint))",
   mintSh: "#1E6B55",
-  pink: "#FF4D8D",
+  pink: "rgb(var(--c-magenta))",
   pinkSh: "#8C2A4E",
-  violet: "#8B7DF6",
+  violet: "rgb(var(--c-violet))",
   cyan: "#4FC3F7",
 };
-const DISPLAY = "'Bricolage Grotesque', system-ui, sans-serif";
-const MONO = "'Bricolage Grotesque', system-ui, sans-serif";
+const DISPLAY = "var(--font-display), system-ui, sans-serif";
+const MONO = "var(--font-display), system-ui, sans-serif";
 const BODY = "'Inter', system-ui, sans-serif";
 
 // Styles de survol / enfoncement — signature « chunky » du jeu.
 const SCOPED_CSS = `
 .qz-tile{transition:box-shadow .12s ease,transform .06s ease}
-.qz-tile:hover{box-shadow:0 0 0 1px rgba(255,194,75,.6), 0 4px 0 #241D45}
-.qz-tile:active{transform:translateY(3px);box-shadow:0 0 0 1px rgba(255,194,75,.6), 0 1px 0 #241D45}
+.qz-tile:hover{box-shadow:0 0 0 1px rgb(var(--c-gold) / .6), 0 4px 0 #241D45}
+.qz-tile:active{transform:translateY(3px);box-shadow:0 0 0 1px rgb(var(--c-gold) / .6), 0 1px 0 #241D45}
 .qz-tf{transition:transform .06s ease,box-shadow .12s ease,background .12s ease}
-.qz-tf-t:hover{background:rgba(70,224,176,.18)}
-.qz-tf-t:active{transform:translateY(4px);box-shadow:0 0 0 1px rgba(70,224,176,.45), 0 1px 0 #1E6B55}
-.qz-tf-f:hover{background:rgba(255,77,141,.18)}
-.qz-tf-f:active{transform:translateY(4px);box-shadow:0 0 0 1px rgba(255,77,141,.45), 0 1px 0 #8C2A4E}
+.qz-tf-t:hover{background:rgb(var(--c-mint) / .18)}
+.qz-tf-t:active{transform:translateY(4px);box-shadow:0 0 0 1px rgb(var(--c-mint) / .45), 0 1px 0 #1E6B55}
+.qz-tf-f:hover{background:rgb(var(--c-magenta) / .18)}
+.qz-tf-f:active{transform:translateY(4px);box-shadow:0 0 0 1px rgb(var(--c-magenta) / .45), 0 1px 0 #8C2A4E}
 .qz-gold{transition:transform .06s ease,box-shadow .12s ease,filter .12s ease}
 .qz-gold:hover{filter:brightness(1.04)}
-.qz-gold:active{transform:translateY(4px);box-shadow:0 1px 0 #B47F16}
+.qz-gold:active{transform:translateY(4px);box-shadow:0 1px 0 rgb(var(--c-gold-dark))}
 .qz-ghost{transition:border-color .12s ease,color .12s ease}
-.qz-ghost:hover{border-color:#FFC24B;color:#FFC24B}
+.qz-ghost:hover{border-color:rgb(var(--c-gold));color:rgb(var(--c-gold))}
 .qz-input::placeholder{color:#4A4370}
 @keyframes qzPulse{0%,100%{opacity:.55}50%{opacity:1}}
 `;
@@ -61,7 +61,7 @@ function initials(name: string) {
 }
 
 // Aurores animées en fond (réutilise les keyframes globales bmbAuroraA/B).
-function Aurora({ tint = "rgba(255,194,75,.10)", tint2 = "rgba(139,125,246,.12)" }: { tint?: string; tint2?: string }) {
+function Aurora({ tint = "rgb(var(--c-gold) / .10)", tint2 = "rgb(var(--c-violet) / .12)" }: { tint?: string; tint2?: string }) {
   return (
     <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
       <div data-bmb-anim style={{ position: "absolute", top: "-18%", left: "36%", width: 520, height: 520, borderRadius: "50%", filter: "blur(84px)", background: `radial-gradient(circle, ${tint}, transparent 62%)`, animation: "bmbAuroraA 19s ease-in-out infinite" }} />
@@ -224,7 +224,7 @@ export function QuizView({ room }: { room: UseRoom }) {
           <span style={{ marginLeft: "auto", letterSpacing: 2 }}>{Array.from({ length: 3 }).map((_, k) => <span key={k} style={{ color: k < (game.yourLives ?? 0) ? C.pink : C.dim }}>♥</span>)}</span>
         </div>
       )}
-      <div className="bmb-sep" style={{ height: 1, flex: "none", background: "linear-gradient(90deg,transparent,rgba(243,238,255,.14) 18%,rgba(243,238,255,.14) 82%,transparent)" }} />
+      <div className="bmb-sep" style={{ height: 1, flex: "none", background: "linear-gradient(90deg,transparent,rgb(var(--c-text) / .14) 18%,rgb(var(--c-text) / .14) 82%,transparent)" }} />
       <div className="bmb-rows" style={{ display: "flex", flexDirection: "column", gap: 8 }}>{RailRows}</div>
     </aside>
   );
@@ -257,7 +257,7 @@ export function QuizView({ room }: { room: UseRoom }) {
       <main style={shell}>
         <style dangerouslySetInnerHTML={{ __html: SCOPED_CSS }} />
         <div className="bmb-wrap" style={card}>
-          <Aurora tint="rgba(255,194,75,.14)" tint2="rgba(139,125,246,.10)" />
+          <Aurora tint="rgb(var(--c-gold) / .14)" tint2="rgb(var(--c-violet) / .10)" />
           {Sidebar}
           <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
             <div style={{ height: 3, background: `linear-gradient(90deg,transparent,${C.gold} 5%,${C.gold} 95%,transparent)` }} />
@@ -278,7 +278,7 @@ export function QuizView({ room }: { room: UseRoom }) {
                 <div style={{ display: "flex", alignItems: "stretch" }}>
                   {statCols.map((s, k) => (
                     <div key={k} style={{ display: "flex", alignItems: "center" }}>
-                      {k > 0 && <div style={{ width: 1, alignSelf: "stretch", background: "linear-gradient(180deg,transparent,rgba(243,238,255,.16),transparent)" }} />}
+                      {k > 0 && <div style={{ width: 1, alignSelf: "stretch", background: "linear-gradient(180deg,transparent,rgb(var(--c-text) / .16),transparent)" }} />}
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "0 26px" }}>
                         <span style={{ fontFamily: DISPLAY, fontSize: 28, fontWeight: 800 }}>{s.v}</span>
                         <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: ".16em", color: C.faint }}>{s.label}</span>
@@ -289,7 +289,7 @@ export function QuizView({ room }: { room: UseRoom }) {
               )}
             </div>
             <div style={{ padding: "0 clamp(16px,4vw,40px) 34px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", padding: "22px 26px", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 1px ${C.line}, inset 0 1px 0 rgba(243,238,255,.04)` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", padding: "22px 26px", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 1px ${C.line}, inset 0 1px 0 rgb(var(--c-text) / .04)` }}>
                 <span style={{ flex: 1, minWidth: 180, display: "flex", flexDirection: "column", gap: 3 }}>
                   <span style={{ fontFamily: DISPLAY, fontSize: 17, fontWeight: 700 }}>Partie terminée</span>
                   <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 13, color: C.muted }}>{game.total} questions · {game.ranking.length} joueur{game.ranking.length > 1 ? "s" : ""}</span>
@@ -319,13 +319,13 @@ export function QuizView({ room }: { room: UseRoom }) {
 
   const progressTop = reveal
     ? `linear-gradient(90deg,transparent,${C.mint} 5%,${C.mint} 95%,transparent)`
-    : `linear-gradient(90deg,transparent,${C.gold} 5%,${C.gold} ${barPct}%,rgba(255,194,75,0) ${barPct + 1}%)`;
+    : `linear-gradient(90deg,transparent,${C.gold} 5%,${C.gold} ${barPct}%,rgb(var(--c-gold) / 0) ${barPct + 1}%)`;
 
   return (
     <main style={shell}>
       <style dangerouslySetInnerHTML={{ __html: SCOPED_CSS }} />
       <div className="bmb-wrap" style={card}>
-        <Aurora tint={reveal ? "rgba(70,224,176,.12)" : "rgba(255,194,75,.10)"} tint2={reveal ? "rgba(70,224,176,.06)" : "rgba(139,125,246,.12)"} />
+        <Aurora tint={reveal ? "rgb(var(--c-mint) / .12)" : "rgb(var(--c-gold) / .10)"} tint2={reveal ? "rgb(var(--c-mint) / .06)" : "rgb(var(--c-violet) / .12)"} />
         {Sidebar}
 
         <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
@@ -482,7 +482,7 @@ export function QuizView({ room }: { room: UseRoom }) {
                     </div>
                   ) : (
                     <div style={{ display: "flex", alignItems: "center", gap: "clamp(10px, 2vw, 20px)" }}>
-                      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "clamp(10px, 1.8vw, 18px) clamp(14px, 2.4vw, 28px)", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 1px #332A5A, inset 0 1px 0 rgba(243,238,255,.04), 0 20px 44px -28px rgba(0,0,0,.9)` }}>
+                      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", padding: "clamp(10px, 1.8vw, 18px) clamp(14px, 2.4vw, 28px)", borderRadius: 18, background: C.ink, boxShadow: `0 0 0 1px rgb(var(--c-ink-border)), inset 0 1px 0 rgb(var(--c-text) / .04), 0 20px 44px -28px rgba(0,0,0,.9)` }}>
                         <input
                           className="qz-input"
                           value={freeText}

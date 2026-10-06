@@ -131,7 +131,7 @@ function Confetti({ count = 26 }: { count?: number }) {
         delay: Math.random() * 0.5,
         dur: 1.8 + Math.random() * 1.6,
         size: 14 + Math.random() * 16,
-        color: ["#FFC24B", "#FF4D8D", "#46E0B0", "#8B7DF6", "#4CC9F0", "#FF6B4D"][i % 6],
+        color: ["rgb(var(--c-gold))", "rgb(var(--c-magenta))", "rgb(var(--c-mint))", "rgb(var(--c-violet))", "rgb(var(--c-cyan))", "rgb(var(--c-orange))"][i % 6],
         shape: i % 3,
         spin: Math.random() * 360,
       })),
@@ -588,7 +588,7 @@ function ResultsPhase({
             >
               {isWinner && (
                 <div className="mb-1.5 animate-pop text-center font-display text-sm font-extrabold text-gold">
-                  <BoumIcon name="party" size={16} color="#FFC24B" /> Manche remportée !
+                  <BoumIcon name="party" size={16} color="rgb(var(--c-gold))" /> Manche remportée !
                 </div>
               )}
               <div className="mb-1.5 flex items-center gap-2">

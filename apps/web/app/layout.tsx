@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Inter, Space_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
+import { ThemeRuntime } from "@/components/ThemeRuntime";
+import { THEME_BOOT_SCRIPT } from "@/lib/themeBoot";
 
 const display = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -32,8 +34,14 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" className={`${display.variable} ${body.variable} ${mono.variable}`}>
+      <head>
+        {/* Remet le thème personnalisé avant l'affichage (pas de flash de couleurs). */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+      </head>
       <body>
         {children}
+        {/* Thème publié depuis /design (+ l'éditeur en direct quand il est ouvert). */}
+        <ThemeRuntime />
         {/* Mesure d'audience Vercel : seulement si le site est hébergé sur Vercel. */}
         {process.env.VERCEL ? <Analytics /> : null}
       </body>

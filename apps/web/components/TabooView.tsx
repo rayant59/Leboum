@@ -11,7 +11,7 @@ import { Avatar } from "@/components/Avatar";
 import { playSound } from "@/lib/sound";
 import { BODY, DISPLAY, Gain, HostSkip, K, MONO, SocialFinal, SocialHeader, SocialStage, StatusBar, hexA, plural, topOf, useCountdown } from "@/components/social/kit";
 
-const ACCENT = "#8B7DF6";
+const ACCENT = "rgb(var(--c-violet))";
 
 export function TabooView({ room }: { room: UseRoom }) {
   const g = room.game as TabooPublic | null;
@@ -105,7 +105,7 @@ export function TabooView({ room }: { room: UseRoom }) {
 }
 
 function Pill({ children }: { children: React.ReactNode }) {
-  return <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 999, border: `1px solid ${K.line}`, background: "rgba(28,22,54,.7)", fontSize: 14 }}>{children}</span>;
+  return <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 999, border: `1px solid ${K.line}`, background: "rgb(var(--c-ink-surface) / .7)", fontSize: 14 }}>{children}</span>;
 }
 
 /** La carte : le mot en grand, les mots interdits barrés en rouge. */
@@ -197,7 +197,7 @@ function Feed({ g, you }: { g: TabooPublic; you: string }) {
   }, [g.log.length]);
   const nameOf = (id: string) => g.players.find((p) => p.id === id)?.name ?? "";
   return (
-    <div ref={box} style={{ maxWidth: 560, margin: "0 auto", maxHeight: 280, minHeight: 120, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6, padding: 12, borderRadius: 18, border: `1px solid ${K.line}`, background: "rgba(14,11,26,.6)" }}>
+    <div ref={box} style={{ maxWidth: 560, margin: "0 auto", maxHeight: 280, minHeight: 120, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6, padding: 12, borderRadius: 18, border: `1px solid ${K.line}`, background: "rgb(var(--c-ink-deep) / .6)" }}>
       {g.log.length === 0 && <p style={{ margin: "auto", color: K.faint, fontSize: 14 }}>Les indices vont apparaître ici…</p>}
       {g.log.map((m: TabooMessage) =>
         m.kind === "system" ? (
@@ -254,7 +254,7 @@ function Recap({ room, g }: { room: UseRoom; g: TabooPublic }) {
           const o = OUTCOME[p.outcome];
           const finder = p.finderId ? g.players.find((x) => x.id === p.finderId) : null;
           return (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 14, border: `1px solid ${K.line}`, background: "rgba(28,22,54,.6)", animation: `sk-rise .3s ease-out ${(i * 0.05).toFixed(2)}s both` }}>
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 14, border: `1px solid ${K.line}`, background: "rgb(var(--c-ink-surface) / .6)", animation: `sk-rise .3s ease-out ${(i * 0.05).toFixed(2)}s both` }}>
               <span style={{ flex: 1, fontFamily: DISPLAY, fontWeight: 700, fontSize: 16 }}>{p.card.word}</span>
               {finder && <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: K.muted }}><Avatar name={finder.name} color={finder.color} avatar={finder.avatar} size={20} /> {finder.name}</span>}
               {p.culprit && <span style={{ fontSize: 12, color: K.faint }}>« {p.culprit} »</span>}

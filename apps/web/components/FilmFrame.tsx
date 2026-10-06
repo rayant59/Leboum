@@ -11,7 +11,7 @@ export function FilmFrame({
   small?: boolean;
 }) {
   const clip = game.clip;
-  const accent = clip?.posterColor ?? "#FFC24B";
+  const accent = clip?.posterColor ?? "rgb(var(--c-gold))";
   return (
     <div
       className="relative grid place-items-center overflow-hidden rounded-2xl border border-ink-border"

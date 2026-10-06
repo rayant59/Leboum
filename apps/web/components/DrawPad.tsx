@@ -56,7 +56,7 @@ function drawStroke(ctx: CanvasRenderingContext2D, s: Stroke) {
 }
 
 export const DrawPad = forwardRef<DrawPadHandle, { accent?: string; disabled?: boolean; onInk?: (hasInk: boolean) => void }>(function DrawPad(
-  { accent = "#46E0B0", disabled = false, onInk },
+  { accent = "rgb(var(--c-mint))", disabled = false, onInk },
   ref,
 ) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -157,8 +157,8 @@ export const DrawPad = forwardRef<DrawPadHandle, { accent?: string; disabled?: b
     borderRadius: 12,
     border: "none",
     cursor: disabled ? "default" : "pointer",
-    background: active ? "rgba(255,194,75,.14)" : "rgba(28,22,54,.7)",
-    boxShadow: active ? "0 0 0 2px #FFC24B" : "inset 0 0 0 1px #332A5A",
+    background: active ? "rgb(var(--c-gold) / .14)" : "rgb(var(--c-ink-surface) / .7)",
+    boxShadow: active ? "0 0 0 2px rgb(var(--c-gold))" : "inset 0 0 0 1px rgb(var(--c-ink-border))",
     display: "grid",
     placeItems: "center",
     flex: "none",
@@ -175,7 +175,7 @@ export const DrawPad = forwardRef<DrawPadHandle, { accent?: string; disabled?: b
         onPointerUp={onUp}
         onPointerCancel={onUp}
         aria-label="Zone de dessin"
-        style={{ width: "100%", aspectRatio: "4 / 3", borderRadius: 18, background: "#fff", touchAction: "none", cursor: disabled ? "not-allowed" : "crosshair", boxShadow: `0 0 0 2px ${accent}55, 0 20px 40px -24px rgba(0,0,0,.9)`, opacity: disabled ? 0.85 : 1 }}
+        style={{ width: "100%", aspectRatio: "4 / 3", borderRadius: 18, background: "#fff", touchAction: "none", cursor: disabled ? "not-allowed" : "crosshair", boxShadow: `0 0 0 2px color-mix(in srgb, ${accent} 33.3%, transparent), 0 20px 40px -24px rgba(0,0,0,.9)`, opacity: disabled ? 0.85 : 1 }}
       />
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, justifyContent: "center" }}>
         <button type="button" title="Pinceau" aria-label="Pinceau" style={toolBtn(!eraser)} onClick={() => setEraser(false)} disabled={disabled}>
@@ -186,18 +186,18 @@ export const DrawPad = forwardRef<DrawPadHandle, { accent?: string; disabled?: b
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/tools/eraser.png" alt="" width={32} height={32} draggable={false} />
         </button>
-        <span style={{ width: 1, height: 28, background: "#332A5A" }} />
+        <span style={{ width: 1, height: 28, background: "rgb(var(--c-ink-border))" }} />
         {SIZES.map((sz) => (
           <button key={sz} type="button" title={`Épaisseur ${sz}`} aria-label={`Épaisseur ${sz}`} style={toolBtn(size === sz)} onClick={() => setSize(sz)} disabled={disabled}>
-            <span style={{ width: Math.max(5, sz * 0.8), height: Math.max(5, sz * 0.8), borderRadius: 999, background: "#F3EEFF" }} />
+            <span style={{ width: Math.max(5, sz * 0.8), height: Math.max(5, sz * 0.8), borderRadius: 999, background: "rgb(var(--c-text))" }} />
           </button>
         ))}
-        <span style={{ width: 1, height: 28, background: "#332A5A" }} />
+        <span style={{ width: 1, height: 28, background: "rgb(var(--c-ink-border))" }} />
         <button type="button" title="Annuler" aria-label="Annuler" style={{ ...toolBtn(false), opacity: count ? 1 : 0.4 }} onClick={undo} disabled={disabled || !count}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/tools/undo.png" alt="" width={32} height={32} draggable={false} />
         </button>
-        <button type="button" title={confirmClear ? "Clique encore pour tout effacer" : "Tout effacer"} aria-label="Tout effacer" style={{ ...toolBtn(confirmClear), boxShadow: confirmClear ? "0 0 0 2px #FF4D8D" : toolBtn(false).boxShadow, opacity: count ? 1 : 0.4 }} onClick={clear} disabled={disabled || !count}>
+        <button type="button" title={confirmClear ? "Clique encore pour tout effacer" : "Tout effacer"} aria-label="Tout effacer" style={{ ...toolBtn(confirmClear), boxShadow: confirmClear ? "0 0 0 2px rgb(var(--c-magenta))" : toolBtn(false).boxShadow, opacity: count ? 1 : 0.4 }} onClick={clear} disabled={disabled || !count}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/tools/clear.png" alt="" width={32} height={32} draggable={false} />
         </button>
@@ -212,7 +212,7 @@ export const DrawPad = forwardRef<DrawPadHandle, { accent?: string; disabled?: b
               aria-label={`Couleur ${c}`}
               onClick={() => { setColor(c); setEraser(false); }}
               disabled={disabled}
-              style={{ width: 26, height: 26, borderRadius: 999, border: "none", cursor: "pointer", background: c, boxShadow: on ? "0 0 0 3px #14102A, 0 0 0 5px #FFC24B" : "inset 0 0 0 1px rgba(255,255,255,.25)", transform: on ? "scale(1.08)" : "none", transition: "transform .1s" }}
+              style={{ width: 26, height: 26, borderRadius: 999, border: "none", cursor: "pointer", background: c, boxShadow: on ? "0 0 0 3px rgb(var(--c-ink)), 0 0 0 5px rgb(var(--c-gold))" : "inset 0 0 0 1px rgba(255,255,255,.25)", transform: on ? "scale(1.08)" : "none", transition: "transform .1s" }}
             />
           );
         })}

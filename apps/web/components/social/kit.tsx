@@ -15,23 +15,23 @@ import { hexA } from "@/lib/color";
 import { useCountdown } from "@/lib/countdown";
 
 export const K = {
-  bg: "#14102A",
-  ink: "#0E0B1A",
-  surface: "#1C1636",
-  raised: "#251C45",
-  line: "#332A5A",
-  text: "#F3EEFF",
-  muted: "#A79FC7",
-  faint: "#6E6796",
-  gold: "#FFC24B",
-  mint: "#46E0B0",
-  pink: "#FF4D8D",
-  violet: "#8B7DF6",
+  bg: "rgb(var(--c-ink))",
+  ink: "rgb(var(--c-ink-deep))",
+  surface: "rgb(var(--c-ink-surface))",
+  raised: "rgb(var(--c-ink-raised))",
+  line: "rgb(var(--c-ink-border))",
+  text: "rgb(var(--c-text))",
+  muted: "rgb(var(--c-text-muted))",
+  faint: "rgb(var(--c-text-faint))",
+  gold: "rgb(var(--c-gold))",
+  mint: "rgb(var(--c-mint))",
+  pink: "rgb(var(--c-magenta))",
+  violet: "rgb(var(--c-violet))",
   cyan: "#4FC3F7",
-  danger: "#FF5C5C",
+  danger: "rgb(var(--c-danger))",
 };
-export const DISPLAY = "'Bricolage Grotesque', system-ui, sans-serif";
-export const MONO = "'Space Mono', monospace";
+export const DISPLAY = "var(--font-display), system-ui, sans-serif";
+export const MONO = "var(--font-mono), monospace";
 export const BODY = "'Inter', system-ui, sans-serif";
 
 /** Jauge de temps : se vide de gauche à droite, rougit sur la fin. */
@@ -116,7 +116,7 @@ export function nbsp(text: string): string {
 /** Grande carte de question / consigne. */
 export function PromptCard({ eyebrow, children, accent }: { eyebrow?: string; children: ReactNode; accent: string }) {
   return (
-    <section style={{ position: "relative", margin: "6px 0 22px", padding: "26px 22px", borderRadius: 24, border: `1px solid ${hexA(accent, 0.4)}`, background: `linear-gradient(160deg, ${hexA(accent, 0.13)}, rgba(28,22,54,.75) 60%)`, boxShadow: `0 24px 48px -30px ${hexA(accent, 0.8)}`, textAlign: "center", animation: "sk-rise .35s ease-out both" }}>
+    <section style={{ position: "relative", margin: "6px 0 22px", padding: "26px 22px", borderRadius: 24, border: `1px solid ${hexA(accent, 0.4)}`, background: `linear-gradient(160deg, ${hexA(accent, 0.13)}, rgb(var(--c-ink-surface) / .75) 60%)`, boxShadow: `0 24px 48px -30px ${hexA(accent, 0.8)}`, textAlign: "center", animation: "sk-rise .35s ease-out both" }}>
       {eyebrow && <div style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: ".18em", textTransform: "uppercase", color: accent, marginBottom: 10 }}>{eyebrow}</div>}
       <div style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(22px, 4.6vw, 34px)", lineHeight: 1.2, letterSpacing: "-.01em" }}>{children}</div>
     </section>
@@ -157,7 +157,7 @@ export function PlayerGrid({
           padding: "18px 12px 14px",
           borderRadius: 20,
           border: `1px solid ${isSel ? accent : K.line}`,
-          background: isSel ? `linear-gradient(170deg, ${hexA(accent, 0.22)}, rgba(28,22,54,.8))` : "rgba(28,22,54,.7)",
+          background: isSel ? `linear-gradient(170deg, ${hexA(accent, 0.22)}, rgb(var(--c-ink-surface) / .8))` : "rgb(var(--c-ink-surface) / .7)",
           color: K.text,
           cursor: disabled ? "default" : "pointer",
           opacity: disabledIds.includes(p.id) ? 0.45 : 1,
@@ -190,7 +190,7 @@ export function Gain({ value }: { value: number }) {
 /** Bande d'état en bas : « 3/5 ont voté », boutons de l'hôte. */
 export function StatusBar({ children }: { children: ReactNode }) {
   return (
-    <div style={{ marginTop: 20, display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 12, padding: "12px 16px", borderRadius: 16, border: `1px solid ${K.line}`, background: "rgba(20,16,42,.8)", color: K.muted, fontSize: 14, textAlign: "center" }}>
+    <div style={{ marginTop: 20, display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 12, padding: "12px 16px", borderRadius: 16, border: `1px solid ${K.line}`, background: "rgb(var(--c-ink) / .8)", color: K.muted, fontSize: 14, textAlign: "center" }}>
       {children}
     </div>
   );
@@ -231,7 +231,7 @@ export function SocialFinal({
             const p = players.find((x) => x.id === a.playerId);
             if (!p) return null;
             return (
-              <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "8px 14px 8px 8px", borderRadius: 999, border: `1px solid ${K.line}`, background: "rgba(28,22,54,.6)", animation: `sk-rise .3s ease-out ${(0.5 + i * 0.1).toFixed(2)}s both` }}>
+              <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "8px 14px 8px 8px", borderRadius: 999, border: `1px solid ${K.line}`, background: "rgb(var(--c-ink-surface) / .6)", animation: `sk-rise .3s ease-out ${(0.5 + i * 0.1).toFixed(2)}s both` }}>
                 <Avatar name={p.name} color={p.color} avatar={p.avatar} size={28} />
                 <span style={{ fontSize: 13, color: K.muted }}>
                   <b style={{ color: K.gold, fontFamily: DISPLAY }}>{a.label}</b> · {p.name}

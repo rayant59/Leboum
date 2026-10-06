@@ -10,7 +10,7 @@ import { Avatar } from "@/components/Avatar";
 import { playSound } from "@/lib/sound";
 import { DISPLAY, Gain, HostSkip, K, MONO, SocialFinal, SocialHeader, SocialStage, StatusBar, hexA, plural, topOf, useCountdown } from "@/components/social/kit";
 
-const ACCENT = "#FFC24B";
+const ACCENT = "rgb(var(--c-gold))";
 
 export function RankingView({ room }: { room: UseRoom }) {
   const g = room.game as RankingPublic | null;
@@ -96,7 +96,7 @@ function OrderBoard({ room, g }: { room: UseRoom; g: RankingPublic }) {
         {order.map((item, pos) => {
           const sel = picked === pos;
           return (
-            <div key={item} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 10px 10px 14px", borderRadius: 16, border: `1px solid ${sel ? ACCENT : K.line}`, background: sel ? hexA(ACCENT, 0.14) : "rgba(28,22,54,.7)", transition: "background .15s, border-color .15s" }}>
+            <div key={item} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 10px 10px 14px", borderRadius: 16, border: `1px solid ${sel ? ACCENT : K.line}`, background: sel ? hexA(ACCENT, 0.14) : "rgb(var(--c-ink-surface) / .7)", transition: "background .15s, border-color .15s" }}>
               <span style={{ width: 26, height: 26, display: "grid", placeItems: "center", borderRadius: 999, background: hexA(ACCENT, 0.18), color: ACCENT, fontFamily: DISPLAY, fontWeight: 800, fontSize: 14, flex: "none" }}>{pos + 1}</span>
               <button onClick={() => tap(pos)} disabled={!playing} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", color: K.text, fontFamily: DISPLAY, fontWeight: 700, fontSize: 17, cursor: "pointer", padding: "4px 0" }}>
                 {g.items[item]?.label}
@@ -145,7 +145,7 @@ function Reveal({ room, g }: { room: UseRoom; g: RankingPublic }) {
           const d = myPos < 0 ? null : Math.abs(myPos - pos);
           const badge = d == null ? null : d === 0 ? { t: "✓ pile", c: K.mint } : d === 1 ? { t: "à 1 place", c: K.gold } : { t: `à ${d} places`, c: K.faint };
           return (
-            <div key={item} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 16, border: `1px solid ${d === 0 ? hexA(K.mint, 0.6) : K.line}`, background: d === 0 ? hexA(K.mint, 0.1) : "rgba(28,22,54,.7)", animation: `sk-rise .35s ease-out ${(pos * 0.12).toFixed(2)}s both` }}>
+            <div key={item} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 16, border: `1px solid ${d === 0 ? hexA(K.mint, 0.6) : K.line}`, background: d === 0 ? hexA(K.mint, 0.1) : "rgb(var(--c-ink-surface) / .7)", animation: `sk-rise .35s ease-out ${(pos * 0.12).toFixed(2)}s both` }}>
               <span style={{ width: 26, height: 26, display: "grid", placeItems: "center", borderRadius: 999, background: hexA(ACCENT, 0.18), color: ACCENT, fontFamily: DISPLAY, fontWeight: 800, fontSize: 14, flex: "none" }}>{pos + 1}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 17 }}>{g.items[item]?.label}</div>

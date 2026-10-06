@@ -9,7 +9,7 @@ import { Avatar } from "@/components/Avatar";
 import { playSound } from "@/lib/sound";
 import { DISPLAY, Gain, nbsp, HostSkip, K, MONO, PlayerGrid, plural, PromptCard, SocialFinal, SocialHeader, SocialStage, StatusBar, hexA, topOf, useCountdown } from "@/components/social/kit";
 
-const ACCENT = "#FFC24B";
+const ACCENT = "rgb(var(--c-gold))";
 
 export function WhoisView({ room }: { room: UseRoom }) {
   const g = room.game as WhoisPublic | null;
@@ -40,7 +40,7 @@ export function WhoisView({ room }: { room: UseRoom }) {
             <h3 style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".16em", textTransform: "uppercase", color: K.faint, textAlign: "center", marginBottom: 10 }}>Le best-of</h3>
             <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
               {g.history.map((h, i) => (
-                <li key={i} style={{ padding: "10px 14px", borderRadius: 14, border: `1px solid ${K.line}`, background: "rgba(28,22,54,.55)", fontSize: 14, color: K.muted }}>
+                <li key={i} style={{ padding: "10px 14px", borderRadius: 14, border: `1px solid ${K.line}`, background: "rgb(var(--c-ink-surface) / .55)", fontSize: 14, color: K.muted }}>
                   Qui de nous {h.question}{" "}
                   <b style={{ color: K.text }}>{h.elected.length ? h.elected.map((id) => g.players.find((p) => p.id === id)?.name ?? "?").join(" & ") : "personne"}</b>
                 </li>
@@ -100,7 +100,7 @@ export function WhoisView({ room }: { room: UseRoom }) {
               const elected = g.elected.includes(p.id);
               const voters = Object.entries(g.votes ?? {}).filter(([, t]) => t === p.id).map(([v]) => g.players.find((x) => x.id === v)).filter(Boolean);
               return (
-                <div key={p.id} style={{ ["--a" as string]: ACCENT, position: "relative", display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 18, border: `1px solid ${elected ? ACCENT : K.line}`, background: elected ? `linear-gradient(90deg, ${hexA(ACCENT, 0.18)}, rgba(28,22,54,.7))` : "rgba(28,22,54,.6)", animation: `sk-rise .35s ease-out ${(i * 0.08).toFixed(2)}s both${elected ? ", sk-glow 2.4s ease-in-out infinite" : ""}` }}>
+                <div key={p.id} style={{ ["--a" as string]: ACCENT, position: "relative", display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 18, border: `1px solid ${elected ? ACCENT : K.line}`, background: elected ? `linear-gradient(90deg, ${hexA(ACCENT, 0.18)}, rgb(var(--c-ink-surface) / .7))` : "rgb(var(--c-ink-surface) / .6)", animation: `sk-rise .35s ease-out ${(i * 0.08).toFixed(2)}s both${elected ? ", sk-glow 2.4s ease-in-out infinite" : ""}` }}>
                   <Avatar name={p.name} color={p.color} avatar={p.avatar} size={42} />
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: DISPLAY, fontWeight: 700, fontSize: 16 }}>

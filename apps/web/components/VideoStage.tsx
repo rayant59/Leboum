@@ -166,7 +166,7 @@ export function VideoStage({
       {media}
       {inPause && (
         <div className="absolute inset-0 grid place-items-center bg-ink-deep/70">
-          <span className="animate-pop"><BoumIcon name="eye" size={34} color="#FFC24B" /></span>
+          <span className="animate-pop"><BoumIcon name="eye" size={34} color="rgb(var(--c-gold))" /></span>
         </div>
       )}
       <span className="pointer-events-none absolute left-3 top-3 rounded-md border border-ink-border bg-black/55 px-2 py-1 font-mono text-[11px] tracking-widest text-text-muted">

@@ -11,7 +11,7 @@ import { Avatar } from "@/components/Avatar";
 import { playSound } from "@/lib/sound";
 import { BODY, DISPLAY, Gain, HostSkip, K, MONO, SocialFinal, SocialHeader, SocialStage, StatusBar, hexA, plural, topOf, useCountdown } from "@/components/social/kit";
 
-const ACCENT = "#4CC9F0";
+const ACCENT = "rgb(var(--c-cyan))";
 
 const ANSWER: Record<GuessWhoAnswer, { label: string; color: string }> = {
   oui: { label: "Oui", color: K.mint },
@@ -51,7 +51,7 @@ export function GuessWhoView({ room }: { room: UseRoom }) {
       {g.phase !== "reveal" && (
         <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
           {master && (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 999, border: `1px solid ${K.line}`, background: "rgba(28,22,54,.7)", fontSize: 14 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 999, border: `1px solid ${K.line}`, background: "rgb(var(--c-ink-surface) / .7)", fontSize: 14 }}>
               <Avatar name={master.name} color={master.color} avatar={master.avatar} size={20} /> {isMaster ? "Tu es le Maître du secret" : `${master.name} garde le secret`}
             </span>
           )}
@@ -92,7 +92,7 @@ export function GuessWhoView({ room }: { room: UseRoom }) {
 function QuestionGauge({ g }: { g: GuessWhoPublic }) {
   const pct = (g.left / g.maxQuestions) * 100;
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 999, border: `1px solid ${K.line}`, background: "rgba(28,22,54,.7)", fontSize: 14 }}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 999, border: `1px solid ${K.line}`, background: "rgb(var(--c-ink-surface) / .7)", fontSize: 14 }}>
       <span style={{ width: 70, height: 6, borderRadius: 999, background: K.raised, overflow: "hidden" }}>
         <span style={{ display: "block", width: `${pct}%`, height: "100%", background: g.left <= 5 ? K.danger : ACCENT, transition: "width .3s" }} />
       </span>
@@ -130,10 +130,10 @@ function QuestionList({ g, you }: { g: GuessWhoPublic; you: string }) {
   }, [g.questions.length, g.guesses.length]);
   const nameOf = (id: string) => (id === you ? "toi" : g.players.find((p) => p.id === id)?.name ?? "?");
   return (
-    <div ref={box} style={{ maxWidth: 600, margin: "0 auto", maxHeight: 300, minHeight: 100, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6, padding: 12, borderRadius: 18, border: `1px solid ${K.line}`, background: "rgba(14,11,26,.6)" }}>
+    <div ref={box} style={{ maxWidth: 600, margin: "0 auto", maxHeight: 300, minHeight: 100, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6, padding: 12, borderRadius: 18, border: `1px solid ${K.line}`, background: "rgb(var(--c-ink-deep) / .6)" }}>
       {items.length === 0 && g.guesses.length === 0 && <p style={{ margin: "auto", color: K.faint, fontSize: 14 }}>Aucune question pour l&apos;instant…</p>}
       {items.map(({ q, key }) => (
-        <div key={key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 10px", borderRadius: 12, background: "rgba(28,22,54,.6)" }}>
+        <div key={key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 10px", borderRadius: 12, background: "rgb(var(--c-ink-surface) / .6)" }}>
           <span style={{ flex: 1, fontSize: 15 }}><span style={{ color: K.faint, fontSize: 12 }}>{nameOf(q.askerId)} · </span>{q.text}</span>
           {q.answer ? (
             <span style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 14, color: ANSWER[q.answer].color, whiteSpace: "nowrap" }}>{ANSWER[q.answer].label}</span>
@@ -243,7 +243,7 @@ function GuesserPanel({ room, g }: { room: UseRoom; g: GuessWhoPublic }) {
           <>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
               {candidates.map((p) => (
-                <button key={p.id} className="sk-card" onClick={() => setPick(p.id)} aria-pressed={pick === p.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px 6px 6px", borderRadius: 999, border: `1px solid ${pick === p.id ? K.gold : K.line}`, background: pick === p.id ? hexA(K.gold, 0.15) : "rgba(28,22,54,.6)", color: K.text, cursor: "pointer" }}>
+                <button key={p.id} className="sk-card" onClick={() => setPick(p.id)} aria-pressed={pick === p.id} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px 6px 6px", borderRadius: 999, border: `1px solid ${pick === p.id ? K.gold : K.line}`, background: pick === p.id ? hexA(K.gold, 0.15) : "rgb(var(--c-ink-surface) / .6)", color: K.text, cursor: "pointer" }}>
                   <Avatar name={p.name} color={p.color} avatar={p.avatar} size={24} /> {p.name}{p.id === room.you ? " (toi)" : ""}
                 </button>
               ))}
@@ -267,7 +267,7 @@ function Reveal({ room, g }: { room: UseRoom; g: GuessWhoPublic }) {
   const secretP = g.players.find((p) => p.id === g.secretPlayerId);
   return (
     <section style={{ textAlign: "center" }}>
-      <div style={{ padding: "22px 18px", borderRadius: 24, border: `1px solid ${hexA(finder ? K.mint : K.danger, 0.45)}`, background: `linear-gradient(160deg, ${hexA(finder ? K.mint : ACCENT, 0.14)}, rgba(28,22,54,.75) 60%)`, animation: "sk-pop .45s ease-out both" }}>
+      <div style={{ padding: "22px 18px", borderRadius: 24, border: `1px solid ${hexA(finder ? K.mint : K.danger, 0.45)}`, background: `linear-gradient(160deg, ${hexA(finder ? K.mint : ACCENT, 0.14)}, rgb(var(--c-ink-surface) / .75) 60%)`, animation: "sk-pop .45s ease-out both" }}>
         <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em", textTransform: "uppercase", color: K.faint }}>La personne mystère était…</div>
         {g.celebrity ? (
           <>

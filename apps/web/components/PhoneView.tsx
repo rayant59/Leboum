@@ -13,7 +13,7 @@ import { playSound } from "@/lib/sound";
 import { useAutoSubmit } from "@/lib/useAutoSubmit";
 import { BODY, DISPLAY, HostSkip, K, MONO, SocialFinal, SocialHeader, SocialStage, StatusBar, hexA, plural, topOf, useCountdown } from "@/components/social/kit";
 
-const ACCENT = "#46E0B0";
+const ACCENT = "rgb(var(--c-mint))";
 
 export function PhoneView({ room }: { room: UseRoom }) {
   const g = room.game as PhonePublic | null;
@@ -103,7 +103,7 @@ function Received({ entry }: { entry: PhoneEntry }) {
     );
   }
   return (
-    <section style={{ margin: "0 auto 14px", maxWidth: 640, padding: "18px 20px", borderRadius: 22, border: `1px solid ${hexA(ACCENT, 0.4)}`, background: `linear-gradient(160deg, ${hexA(ACCENT, 0.12)}, rgba(28,22,54,.75) 60%)`, textAlign: "center", animation: "sk-rise .35s ease-out both" }}>
+    <section style={{ margin: "0 auto 14px", maxWidth: 640, padding: "18px 20px", borderRadius: 22, border: `1px solid ${hexA(ACCENT, 0.4)}`, background: `linear-gradient(160deg, ${hexA(ACCENT, 0.12)}, rgb(var(--c-ink-surface) / .75) 60%)`, textAlign: "center", animation: "sk-rise .35s ease-out both" }}>
       <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: ".18em", textTransform: "uppercase", color: ACCENT, marginBottom: 6 }}>Dessine…</div>
       <div style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(20px, 4.4vw, 30px)", lineHeight: 1.2 }}>{entry.content || "… rien du tout. Dessine ce qui te passe par la tête !"}</div>
     </section>
@@ -304,7 +304,7 @@ function PhoneFinal({ room, g }: { room: UseRoom; g: PhonePublic }) {
               const p = g.players.find((x) => x.id === c.ownerId);
               const on = i === tab;
               return (
-                <button key={i} role="tab" aria-selected={on} onClick={() => setTab(i)} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 12px 5px 5px", borderRadius: 999, border: `1px solid ${on ? ACCENT : K.line}`, background: on ? hexA(ACCENT, 0.14) : "rgba(28,22,54,.6)", color: K.text, cursor: "pointer", fontSize: 13 }}>
+                <button key={i} role="tab" aria-selected={on} onClick={() => setTab(i)} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 12px 5px 5px", borderRadius: 999, border: `1px solid ${on ? ACCENT : K.line}`, background: on ? hexA(ACCENT, 0.14) : "rgb(var(--c-ink-surface) / .6)", color: K.text, cursor: "pointer", fontSize: 13 }}>
                   {p && <Avatar name={p.name} color={p.color} avatar={p.avatar} size={22} />}
                   {p?.name ?? "?"}
                 </button>

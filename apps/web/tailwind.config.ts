@@ -1,26 +1,34 @@
 import type { Config } from "tailwindcss";
 
+/** Couleur du thème, compatible avec l'opacité Tailwind (bg-gold/20…). */
+const c = (name: string) => `rgb(var(--c-${name}) / <alpha-value>)`;
+
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     extend: {
+      // Toutes les couleurs viennent des variables CSS --c-* (app/globals.css),
+      // modifiables en direct depuis l'éditeur de design (/design).
       colors: {
         ink: {
-          DEFAULT: "#14102A", // aubergine night — the room we play in
-          deep: "#0E0B1A",
-          surface: "#1C1636",
-          raised: "#251C45",
-          border: "#332A5A",
+          DEFAULT: c("ink"), // aubergine night — the room we play in
+          deep: c("ink-deep"),
+          surface: c("ink-surface"),
+          raised: c("ink-raised"),
+          border: c("ink-border"),
         },
         text: {
-          DEFAULT: "#F3EEFF",
-          muted: "#A79FC7",
-          faint: "#6E6796",
+          DEFAULT: c("text"),
+          muted: c("text-muted"),
+          faint: c("text-faint"),
         },
-        gold: "#FFC24B", // cinema marquee — the primary accent, used sparingly
-        magenta: "#FF4D8D", // comedy energy
-        mint: "#46E0B0", // ready / go
-        danger: "#FF5C5C",
+        gold: c("gold"), // cinema marquee — the primary accent, used sparingly
+        magenta: c("magenta"), // comedy energy
+        mint: c("mint"), // ready / go
+        danger: c("danger"),
+        violet: c("violet"),
+        cyan: c("cyan"),
+        orange: c("orange"),
       },
       fontFamily: {
         display: ["var(--font-display)", "system-ui", "sans-serif"],
@@ -30,8 +38,8 @@ const config: Config = {
       keyframes: {
         "caret-blink": { "0%,49%": { opacity: "1" }, "50%,100%": { opacity: "0" } },
         "bulb-pulse": {
-          "0%,100%": { opacity: "1", filter: "drop-shadow(0 0 6px #FFC24B)" },
-          "50%": { opacity: "0.55", filter: "drop-shadow(0 0 2px #FFC24B)" },
+          "0%,100%": { opacity: "1", filter: "drop-shadow(0 0 6px rgb(var(--c-gold)))" },
+          "50%": { opacity: "0.55", filter: "drop-shadow(0 0 2px rgb(var(--c-gold)))" },
         },
         "pop-in": {
           "0%": { opacity: "0", transform: "translateY(6px) scale(0.97)" },

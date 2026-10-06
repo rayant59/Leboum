@@ -18,7 +18,7 @@ type IntroPlayer = {
   isConnected: boolean;
 };
 
-const DISPLAY = "'Bricolage Grotesque', system-ui, sans-serif";
+const DISPLAY = "var(--font-display), system-ui, sans-serif";
 
 /** Contexte de soirée : position dans le programme et leader actuel. */
 export interface IntroSoiree {
@@ -73,9 +73,9 @@ export function GameIntro({
         display: "grid",
         placeItems: "center",
         cursor: "pointer",
-        background: "radial-gradient(120% 90% at 50% 0%, #241A54 0%, #14102A 52%, #0B0918 100%)",
+        background: "radial-gradient(120% 90% at 50% 0%, #241A54 0%, rgb(var(--c-ink)) 52%, #0B0918 100%)",
         fontFamily: DISPLAY,
-        color: "#F3EEFF",
+        color: "rgb(var(--c-text))",
         animation: "gi-in .35s ease both",
       }}
     >
@@ -90,7 +90,7 @@ export function GameIntro({
 
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 22, padding: "0 32px", textAlign: "center" }}>
         {soiree && (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 12px", borderRadius: 999, border: "1px solid rgba(255,194,75,.45)", background: "rgba(255,194,75,.1)", fontSize: 12, fontWeight: 800, letterSpacing: ".16em", textTransform: "uppercase", color: "#FFC24B", animation: "gi-drop .5s cubic-bezier(.2,.9,.3,1.3) both" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 12px", borderRadius: 999, border: "1px solid rgb(var(--c-gold) / .45)", background: "rgb(var(--c-gold) / .1)", fontSize: 12, fontWeight: 800, letterSpacing: ".16em", textTransform: "uppercase", color: "rgb(var(--c-gold))", animation: "gi-drop .5s cubic-bezier(.2,.9,.3,1.3) both" }}>
             Soirée · jeu {soiree.index + 1}/{soiree.total}
           </span>
         )}
@@ -99,12 +99,12 @@ export function GameIntro({
             {soiree.skipped.join(" et ")} {soiree.skipped.length > 1 ? "passés" : "passé"} : pas assez de joueurs.
           </span>
         )}
-        <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: ".28em", textTransform: "uppercase", color: "#A79FC7" }}>
+        <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: ".28em", textTransform: "uppercase", color: "rgb(var(--c-text-muted))" }}>
           Prochain jeu · <span style={{ color: GAME_CATEGORIES[meta.category].tint }}>{GAME_CATEGORIES[meta.category].label}</span>
         </span>
 
         <div style={{ position: "relative", width: 200, height: 200, display: "grid", placeItems: "center", animation: "gi-float 4.2s ease-in-out infinite" }}>
-          <div aria-hidden style={{ position: "absolute", inset: -16, borderRadius: "50%", background: `conic-gradient(from 0deg, ${a}00, ${a}, rgba(139,125,246,.6), rgba(255,77,141,.6), ${a}00)`, filter: "blur(12px)", opacity: 0.8, animation: "gi-halo 8s linear infinite" }} />
+          <div aria-hidden style={{ position: "absolute", inset: -16, borderRadius: "50%", background: `conic-gradient(from 0deg, color-mix(in srgb, ${a} 0%, transparent), ${a}, rgb(var(--c-violet) / .6), rgb(var(--c-magenta) / .6), color-mix(in srgb, ${a} 0%, transparent))`, filter: "blur(12px)", opacity: 0.8, animation: "gi-halo 8s linear infinite" }} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={meta.img} alt={meta.name} width={180} height={180} style={{ position: "relative", width: 180, height: 180, borderRadius: 36, objectFit: "cover", boxShadow: "0 0 0 1px rgba(255,255,255,.08), 0 24px 50px -18px rgba(0,0,0,.9)" }} />
         </div>
@@ -112,12 +112,12 @@ export function GameIntro({
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
           <h1 style={{ margin: 0, fontSize: 46, fontWeight: 800, letterSpacing: "-.02em", animation: "gi-slam .55s cubic-bezier(.2,.9,.3,1.2) .1s both" }}>{meta.name}</h1>
           {meta.tagline && (
-            <p style={{ margin: 0, maxWidth: 460, fontSize: 15, lineHeight: 1.5, color: "#A79FC7" }}>{meta.tagline}</p>
+            <p style={{ margin: 0, maxWidth: 460, fontSize: 15, lineHeight: 1.5, color: "rgb(var(--c-text-muted))" }}>{meta.tagline}</p>
           )}
           {meta.rules.length > 0 && (
             <ol style={{ margin: "6px 0 0", padding: 0, listStyle: "none", display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8, maxWidth: 560 }}>
               {meta.rules.slice(0, 3).map((r, i) => (
-                <li key={i} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 999, border: `1px solid ${a}40`, background: `${a}12`, fontSize: 13, color: "#E4DDFB", fontFamily: "'Inter', system-ui, sans-serif" }}>
+                <li key={i} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 999, border: `1px solid color-mix(in srgb, ${a} 25.1%, transparent)`, background: `color-mix(in srgb, ${a} 7.1%, transparent)`, fontSize: 13, color: "#E4DDFB", fontFamily: "'Inter', system-ui, sans-serif" }}>
                   <b style={{ color: a, fontFamily: DISPLAY }}>{i + 1}</b>{r}
                 </li>
               ))}
@@ -126,10 +126,10 @@ export function GameIntro({
         </div>
 
         <div style={{ position: "relative", width: 108, height: 108, display: "grid", placeItems: "center" }}>
-          <div aria-hidden style={{ position: "absolute", width: 112, height: 112, borderRadius: "50%", boxShadow: `0 0 42px 10px ${a}3d, 0 0 14px 2px ${a}59`, pointerEvents: "none", animation: "gi-pulse 1s ease-in-out infinite" }} />
+          <div aria-hidden style={{ position: "absolute", width: 112, height: 112, borderRadius: "50%", boxShadow: `0 0 42px 10px color-mix(in srgb, ${a} 23.9%, transparent), 0 0 14px 2px color-mix(in srgb, ${a} 34.9%, transparent)`, pointerEvents: "none", animation: "gi-pulse 1s ease-in-out infinite" }} />
           <svg width="108" height="108" viewBox="0 0 108 108" style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
-            <circle cx="54" cy="54" r="48" fill="none" stroke="#332A5A" strokeWidth="6" />
-            <circle cx="54" cy="54" r="48" fill="none" stroke={a} strokeWidth="6" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C - (count / 3) * C} style={{ transition: "stroke-dashoffset .4s ease", filter: `drop-shadow(0 0 8px ${a}b3)` }} />
+            <circle cx="54" cy="54" r="48" fill="none" stroke="rgb(var(--c-ink-border))" strokeWidth="6" />
+            <circle cx="54" cy="54" r="48" fill="none" stroke={a} strokeWidth="6" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C - (count / 3) * C} style={{ transition: "stroke-dashoffset .4s ease", filter: `drop-shadow(0 0 8px color-mix(in srgb, ${a} 70.2%, transparent))` }} />
           </svg>
           <span style={{ position: "relative", fontSize: 48, fontWeight: 800, color: a }}>{count}</span>
         </div>
@@ -137,30 +137,30 @@ export function GameIntro({
         <p style={{ margin: "-8px 0 0", fontSize: 15, fontWeight: 700, color: "#E4DDFB" }}>
           {soiree && soiree.index > 0 && soiree.leader ? (
             <>
-              {soiree.leader.tied ? "Égalité en tête" : <>En tête : <span style={{ color: "#FFC24B" }}>{soiree.leader.name}</span></>} · {soiree.leader.total} pts.{" "}
-              <VoiceLine k="soireeNext" style={{ color: "#A79FC7", fontWeight: 600 }} />
+              {soiree.leader.tied ? "Égalité en tête" : <>En tête : <span style={{ color: "rgb(var(--c-gold))" }}>{soiree.leader.name}</span></>} · {soiree.leader.total} pts.{" "}
+              <VoiceLine k="soireeNext" style={{ color: "rgb(var(--c-text-muted))", fontWeight: 600 }} />
             </>
           ) : (
-            <VoiceLine k="introPunch" style={{ color: "#A79FC7", fontWeight: 600 }} />
+            <VoiceLine k="introPunch" style={{ color: "rgb(var(--c-text-muted))", fontWeight: 600 }} />
           )}
         </p>
 
         {connected.length > 0 && (
-          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", borderRadius: 999, border: "1px solid #332A5A", background: "rgba(28,22,54,.55)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 18px", borderRadius: 999, border: "1px solid rgb(var(--c-ink-border))", background: "rgb(var(--c-ink-surface) / .55)" }}>
             <div style={{ display: "flex" }}>
               {shown.map((p, i) => (
-                <span key={p.id} style={{ marginLeft: i === 0 ? 0 : -8, borderRadius: 9, boxShadow: "0 0 0 2px #14102A" }}>
+                <span key={p.id} style={{ marginLeft: i === 0 ? 0 : -8, borderRadius: 9, boxShadow: "0 0 0 2px rgb(var(--c-ink))" }}>
                   <Avatar name={p.name} color={p.color} avatar={p.avatar} size={30} />
                 </span>
               ))}
               {extra > 0 && (
-                <span style={{ marginLeft: -8, width: 30, height: 30, borderRadius: 9, display: "grid", placeItems: "center", background: "#251C45", color: "#A79FC7", fontWeight: 800, fontSize: 11, boxShadow: "0 0 0 2px #14102A" }}>
+                <span style={{ marginLeft: -8, width: 30, height: 30, borderRadius: 9, display: "grid", placeItems: "center", background: "rgb(var(--c-ink-raised))", color: "rgb(var(--c-text-muted))", fontWeight: 800, fontSize: 11, boxShadow: "0 0 0 2px rgb(var(--c-ink))" }}>
                   +{extra}
                 </span>
               )}
             </div>
-            <span style={{ fontSize: 13, color: "#A79FC7" }}>
-              <b style={{ color: "#46E0B0" }}>{connected.length} joueur{connected.length > 1 ? "s" : ""}</b> · prêt{connected.length > 1 ? "s" : ""}
+            <span style={{ fontSize: 13, color: "rgb(var(--c-text-muted))" }}>
+              <b style={{ color: "rgb(var(--c-mint))" }}>{connected.length} joueur{connected.length > 1 ? "s" : ""}</b> · prêt{connected.length > 1 ? "s" : ""}
             </span>
           </div>
         )}
