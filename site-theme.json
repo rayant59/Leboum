@@ -536,8 +536,28 @@
         "style": {
           "hidden": true
         }
+      },
+      {
+        "id": "9n9662p1",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(2)",
+        "tag": "li",
+        "fp": "Tape ce que tu reconnais le plus vite possible.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "ymyo2qmi",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > ol:nth-child(3) > li:nth-child(1)",
+        "tag": "li",
+        "fp": "Une image s'affiche.",
+        "style": {
+          "hidden": true
+        }
       }
     ]
   },
-  "updatedAt": 1791319363364
+  "updatedAt": 1791319427757
 }
