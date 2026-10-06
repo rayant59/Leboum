@@ -85,6 +85,8 @@ export type ServerMessage =
       /** The server's clock at send time, so clients can correct for skew and
        *  synchronise video playback to the authoritative timeline. */
       serverTime: number;
+      /** Temps figé depuis le panneau Admin (en local) : les chronos sont à l'arrêt. */
+      paused?: boolean;
       you: PlayerId;
     }
   | { type: "error"; code: RoomErrorCode | SubtitlesErrorCode | string; message: string }

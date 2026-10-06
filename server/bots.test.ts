@@ -61,7 +61,7 @@ async function main() {
   check("le salon apparaît dans la liste Admin, avec ses bots", !!info && info.players.filter((p) => p.isBot).length === 3);
 
   await sleep(2000);
-  const last = () => states[states.length - 1];
+  const last = () => states[states.length - 1] as StateMsg & { paused?: boolean };
   const bots = () => Object.values(last().state.players).filter((p) => p.isBot);
   check("le client voit les 3 bots", bots().length === 3);
   check("les bots se mettent prêts tout seuls", bots().every((p) => p.isReady));
@@ -93,6 +93,40 @@ async function main() {
   }
   check("les bots répondent aux questions", botAnswers === 3);
   check("la partie se termine (bots + humain)", !!last().gameOver, `phase ${(last().game as { phase?: string } | null)?.phase}`);
+
+  console.log("temps figé, étape suivante, lancement direct");
+  {
+    const rl = await admin({ room: "BOTS", op: "launch", gameId: "whois" });
+    check("lancer un jeu directement depuis l'Admin", rl.status === 200, JSON.stringify(rl.data).slice(0, 200));
+    await sleep(300);
+    check("le client est passé sur ce jeu", last().gameId === "whois" && last().state.phase === "in_game");
+    const rp = await admin({ room: "BOTS", op: "time", paused: true });
+    await sleep(150);
+    check("temps figé (Admin + message aux clients)", (rp.data.room as { timePaused?: boolean } | undefined)?.timePaused === true && last().paused === true);
+    const frozenTime = last().serverTime;
+    const g0 = last().game as { phase: string; round: number; deadline: number | null };
+    await sleep(1500);
+    const ra = await admin({ room: "BOTS", op: "advance" });
+    await sleep(150);
+    const g1 = last().game as { phase: string; round: number };
+    check("« Étape suivante » marche même figé", ra.status === 200 && g1.phase !== g0.phase, `${g0.phase} → ${g1.phase}`);
+    check("l'horloge envoyée aux clients ne bouge plus", last().serverTime === frozenTime, `${last().serverTime - frozenTime} ms`);
+    await admin({ room: "BOTS", op: "advance" }); // révélation → question suivante
+    await sleep(2500);
+    const g2 = last().game as { phase: string; votedIds: string[]; deadline: number | null };
+    check("bots à l'arrêt quand le temps est figé", g2.phase === "question" && g2.votedIds.length === 0, `${g2.phase} ${g2.votedIds.length}`);
+    const statesBefore = states.length;
+    await sleep(1000);
+    check("aucun chrono ne fait avancer le jeu", states.length === statesBefore);
+    await admin({ room: "BOTS", op: "time", paused: false });
+    await sleep(150);
+    check("reprise : l'horloge repart d'où elle s'était arrêtée", last().paused === false && last().serverTime - frozenTime < 1500, `${last().serverTime - frozenTime} ms`);
+    const t0 = Date.now();
+    while (Date.now() - t0 < 8000 && (last().game as { votedIds: string[] }).votedIds.length < 3) await sleep(200);
+    check("après la reprise, les bots rejouent", (last().game as { votedIds: string[] }).votedIds.length >= 3);
+    const rbad = await admin({ room: "BOTS", op: "launch", gameId: "nimporte" });
+    check("jeu inconnu refusé", rbad.status === 409);
+  }
 
   console.log("pause et retrait");
   const r4 = await admin({ room: "BOTS", op: "pause", paused: true });

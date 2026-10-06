@@ -7,7 +7,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { serverHttpUrl } from "@/lib/useRoom";
-import { gameInfo } from "@subtitles-party/shared";
+import { GAME_REGISTRY, gameInfo } from "@subtitles-party/shared";
+import { REPLAY_INTRO_EVENT, useCurrentRoom, useFrozen } from "@/lib/freeze";
 
 type Level = "facile" | "normal" | "fort";
 interface AdminPlayer { id: string; name: string; isBot: boolean; connected: boolean; isHost: boolean; ready: boolean }
@@ -19,6 +20,7 @@ interface AdminRoom {
   maxPlayers: number;
   botsPaused: boolean;
   botLevel: Level;
+  timePaused: boolean;
 }
 type Status = { kind: "ok" | "err" | "info"; text: string } | null;
 
@@ -41,6 +43,11 @@ async function api<T>(path: string, body?: unknown): Promise<{ ok: true; data: T
   }
 }
 
+/** Tous les jeux hébergés (y compris ceux masqués du salon), triés par nom. */
+const ALL_GAMES = [...Object.keys(GAME_REGISTRY), "subtitles"]
+  .map((id) => ({ id, name: gameInfo(id).name }))
+  .sort((a, b) => a.name.localeCompare(b.name, "fr"));
+
 function gameName(id: string | null): string {
   if (!id) return "";
   try { return gameInfo(id).name; } catch { return id; }
@@ -53,6 +60,7 @@ export function AdminBots() {
   const [picked, setPicked] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>(null);
   const [busy, setBusy] = useState(false);
+  const [launchId, setLaunchId] = useState<string>("bombe");
 
   const refresh = useCallback(async () => {
     const r = await api<{ rooms: AdminRoom[] }>("/admin/rooms");
@@ -85,8 +93,8 @@ export function AdminBots() {
   return (
     <div className="lbd-admin">
       <p className="lbd-hint" style={{ marginTop: 0 }}>
-        Ajoute des bots dans un salon pour tester les mini-jeux tout seul. Ils se mettent prêts, jouent, votent et devinent
-        tout seuls ; toi, tu lances la partie depuis le salon comme d&apos;habitude.
+        Pour tester les mini-jeux tout seul : fige le temps pour retoucher n&apos;importe quel écran, avance étape par étape,
+        lance un jeu directement, et ajoute des bots qui jouent, votent et devinent tout seuls.
       </p>
 
       <section className="lbd-group">
@@ -113,6 +121,38 @@ export function AdminBots() {
 
       {room && (
         <>
+          <section className="lbd-group">
+            <h3>Temps &amp; écrans</h3>
+            <button
+              type="button"
+              className={room.timePaused ? "lbd-btn lbd-freeze on" : "lbd-btn lbd-freeze"}
+              disabled={busy}
+              onClick={() => void act({ op: "time", paused: !room.timePaused }, room.timePaused ? "Le temps repart." : "Temps figé : rien ne bouge, tout reste cliquable.")}
+            >
+              {room.timePaused ? "▶  Reprendre le temps" : "⏸  Figer le temps"}
+            </button>
+            <p className="lbd-hint">
+              Figé : les chronos, les décomptes 3·2·1 et les bots s&apos;arrêtent, mais la page reste cliquable et
+              modifiable (onglet Contenu). Avance écran par écran avec « Étape suivante ».
+            </p>
+            <div className="lbd-row">
+              <button type="button" className="lbd-btn" disabled={busy || room.phase !== "in_game"} onClick={() => void act({ op: "advance" }, "Étape suivante.")} title="Passe à la phase suivante du jeu (même si le temps est figé)">
+                ⏭ Étape suivante
+              </button>
+              <button type="button" className="lbd-btn" disabled={room.phase !== "in_game" || here !== room.code} onClick={() => { window.dispatchEvent(new Event(REPLAY_INTRO_EVENT)); setStatus({ kind: "info", text: room.timePaused ? "Annonce affichée (elle reste tant que le temps est figé ; clique dessus pour la fermer)." : "Annonce rejouée." }); }} title="Réaffiche l'écran d'annonce du jeu (3·2·1)">
+                🎬 Revoir l&apos;annonce
+              </button>
+            </div>
+            <div className="lbd-row lbd-launch">
+              <select value={launchId} onChange={(e) => setLaunchId(e.target.value)} aria-label="Jeu à lancer">
+                {ALL_GAMES.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+              </select>
+              <button type="button" className="lbd-btn" disabled={busy} onClick={() => void act({ op: "launch", gameId: launchId }, `${gameName(launchId)} lancé.`)} title="Lance ce jeu tout de suite (arrête la partie en cours)">
+                Lancer
+              </button>
+            </div>
+          </section>
+
           <section className="lbd-group">
             <h3>Joueurs · {connected}/{room.maxPlayers}</h3>
             <ul className="lbd-players">
@@ -170,7 +210,38 @@ export function AdminBots() {
   );
 }
 
+/** Pastille toujours visible quand le temps est figé (même panneau réduit). */
+export function FreezePill() {
+  const frozen = useFrozen();
+  const code = useCurrentRoom();
+  const [busy, setBusy] = useState(false);
+  if (!frozen || !code) return null;
+  return (
+    <button
+      type="button"
+      className="lbd-pill"
+      disabled={busy}
+      onClick={async () => {
+        setBusy(true);
+        await api("/admin/bots", { room: code, op: "time", paused: false });
+        setBusy(false);
+      }}
+      title="Le temps du salon est figé — clique pour le relancer"
+    >
+      <span className="lbd-pill-dot" /> Temps figé · <b>Reprendre</b>
+    </button>
+  );
+}
+
 export const ADMIN_CSS = `
+.lbd-freeze{width:100%;padding:12px;font-size:14px}
+.lbd-freeze.on{background:var(--wa);border-color:var(--wa);color:#1A1405}
+.lbd-launch select{flex:1;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg2);color:var(--tx);font:inherit}
+.lbd-launch .lbd-btn{flex:0 0 auto}
+.lbd-pill{position:fixed;z-index:2147483001;left:16px;bottom:16px;display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border:1px solid rgba(245,194,107,.5);border-radius:999px;background:#1A1405;color:#F5C26B;font:600 13px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;cursor:pointer;box-shadow:0 12px 30px -10px rgba(0,0,0,.8)}
+.lbd-pill b{color:#FFE2A8}
+.lbd-pill-dot{width:8px;height:8px;border-radius:50%;background:#F5C26B;animation:lbd-blink 1.2s ease-in-out infinite}
+@keyframes lbd-blink{50%{opacity:.25}}
 .lbd-roomline{margin:0;display:flex;gap:8px;align-items:baseline}
 .lbd-roomline b{font:700 16px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.08em}
 .lbd-roomline span{color:var(--mu);font-size:12px}

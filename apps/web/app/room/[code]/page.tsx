@@ -26,6 +26,7 @@ import { YesNoView } from "@/components/YesNoView";
 import { GuessWhoView } from "@/components/GuessWhoView";
 import { RankingView } from "@/components/RankingView";
 import { GameIntro, type IntroSoiree } from "@/components/GameIntro";
+import { REPLAY_INTRO_EVENT, useFrozen } from "@/lib/freeze";
 import { VoiceLine } from "@/lib/voice";
 import { HostQuitButton } from "@/components/HostQuitButton";
 import { SupportButton } from "@/components/SupportButton";
@@ -363,11 +364,24 @@ export default function LobbyPage() {
     setIntroGame(gameKey && sawLobby.current ? gameKey.split("#")[0] : null); // nouveau jeu → intro ; retour au lobby → on la cache
   }
   // Auto-disparition après 4,2 s (le clic sur l'overlay la ferme aussi).
+  // Temps figé (éditeur, en local) : l'annonce reste affichée.
+  const frozen = useFrozen();
+  const [introReplay, setIntroReplay] = useState(0);
   useEffect(() => {
-    if (!introGame) return;
+    if (!introGame || frozen) return;
     const t = window.setTimeout(() => setIntroGame(null), 4200);
     return () => window.clearTimeout(t);
-  }, [introGame]);
+  }, [introGame, frozen, introReplay]);
+  // Éditeur : « Revoir l'annonce du jeu » (3·2·1) à tout moment.
+  useEffect(() => {
+    const replay = () => {
+      if (room.state?.phase !== "in_game" || !room.gameId) return;
+      setIntroGame(room.gameId);
+      setIntroReplay((n) => n + 1);
+    };
+    window.addEventListener(REPLAY_INTRO_EVENT, replay);
+    return () => window.removeEventListener(REPLAY_INTRO_EVENT, replay);
+  }, [room.state?.phase, room.gameId]);
 
   // --- name gate (direct link without a stored pseudo) ----------------------
   if (!name) {
@@ -600,7 +614,7 @@ export default function LobbyPage() {
           <SoireeHud soiree={room.soiree} you={room.you} isHost={isHost} gameOver={gameOver} onNext={() => room.soireeNext()} />
         )}
         {introGame && (
-          <GameIntro gameId={introGame} players={players} onDone={() => setIntroGame(null)} soiree={introSoiree(room.soiree)} />
+          <GameIntro key={introReplay} gameId={introGame} players={players} onDone={() => setIntroGame(null)} soiree={introSoiree(room.soiree)} />
         )}
       </>
     );

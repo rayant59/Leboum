@@ -9,6 +9,7 @@ import { Avatar } from "@/components/Avatar";
 import { GAME_CATEGORIES, gameInfo } from "@subtitles-party/shared";
 import { playSound } from "@/lib/sound";
 import { VoiceLine } from "@/lib/voice";
+import { useFrozen } from "@/lib/freeze";
 
 type IntroPlayer = {
   id: string;
@@ -44,13 +45,15 @@ export function GameIntro({
   const a = meta.accent;
 
   const [count, setCount] = useState(3);
+  const frozen = useFrozen();
   useEffect(() => {
     playSound("boum");
   }, []);
   useEffect(() => {
+    if (frozen) return; // temps figé (éditeur) : le décompte s'arrête
     const id = window.setInterval(() => setCount((c) => (c > 1 ? c - 1 : c)), 900);
     return () => window.clearInterval(id);
-  }, []);
+  }, [frozen]);
 
   const connected = players.filter((p) => p.isConnected);
   const shown = connected.slice(0, 8);

@@ -10,7 +10,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ContentEditor } from "@/components/ContentEditor";
-import { ADMIN_CSS, AdminBots } from "@/components/AdminBots";
+import { ADMIN_CSS, AdminBots, FreezePill } from "@/components/AdminBots";
 import {
   EMPTY_THEME,
   THEME_COLORS,
@@ -217,7 +217,8 @@ export function DesignPanel() {
   if (!open) {
     return (
       <>
-        <style>{CSS}</style>
+        <style>{CSS + ADMIN_CSS}</style>
+        <FreezePill />
         <button type="button" className="lbd-fab" onClick={() => setOpen(true)} aria-label="Ouvrir l'éditeur de design">
           <PaletteIcon /> Design {dirty && <span className="lbd-dot" aria-label="modifications non publiées" />}
         </button>
@@ -228,6 +229,7 @@ export function DesignPanel() {
   return (
     <aside className="lbd" aria-label="Éditeur de design">
       <style>{CSS + ADMIN_CSS}</style>
+      <FreezePill />
       <header className="lbd-head">
         <div>
           <strong>Éditeur de design</strong>
@@ -248,7 +250,7 @@ export function DesignPanel() {
       <p className="lbd-sub">Tout s'applique en direct. Toi seul vois le brouillon ; publie quand ça te plaît.</p>
 
       <nav className="lbd-tabs" role="tablist">
-        {([["content", "Contenu"], ["colors", "Couleurs"], ["fonts", "Polices"], ["css", "Avancé"], ["admin", "Bots"]] as const).map(([id, label]) => (
+        {([["content", "Contenu"], ["colors", "Couleurs"], ["fonts", "Polices"], ["css", "Avancé"], ["admin", "Admin"]] as const).map(([id, label]) => (
           <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? "on" : ""} onClick={() => setTab(id)}>{label}</button>
         ))}
       </nav>

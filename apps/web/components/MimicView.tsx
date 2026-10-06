@@ -1,5 +1,6 @@
 "use client";
 
+import { isFrozen, useFrozen } from "@/lib/freeze";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type MouseEvent as ReactMouseEvent } from "react";
 import type { MimicPublic } from "@subtitles-party/shared";
 import { mimicCategoryLabel, extractSoundFeatures, soundSimilarity, type SoundFeatures } from "@subtitles-party/shared";
@@ -793,18 +794,19 @@ function Playback({ room, game, you, name, color, avatarOf, isHost }: { room: Us
     advancedRef.current = -1;
     return () => { if (timerRef.current) { window.clearTimeout(timerRef.current); timerRef.current = null; } };
   }, [idx]);
+  const frozen = useFrozen(); // temps figé (éditeur) : on reste sur cette prise
   const advanceNext = useCallback(() => {
-    if (!isHost || advancedRef.current === idx) return;
+    if (!isHost || advancedRef.current === idx || isFrozen()) return;
     advancedRef.current = idx;
     timerRef.current = window.setTimeout(() => room.skipPhase(), 450);
   }, [isHost, idx, room]);
   // Prise vide / audio indisponible : pas d'événement « ended » → on avance
   // après un court instant pour ne pas rester bloqué sur un écran vide.
   useEffect(() => {
-    if (!isHost || !pid || take) return;
+    if (!isHost || !pid || take || frozen) return;
     const t = window.setTimeout(advanceNext, 1500);
     return () => window.clearTimeout(t);
-  }, [isHost, pid, take, advanceNext]);
+  }, [isHost, pid, take, advanceNext, frozen]);
 
   return (
     <>

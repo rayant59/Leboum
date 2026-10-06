@@ -429,11 +429,21 @@ interface Room {
   botsPaused: boolean;
   /** Niveau des bots : probabilité de bien jouer (0..1). */
   botSkill: number;
+  /** Temps figé (panneau Admin, en local) : instant réel du gel, sinon null. */
+  pausedAt: number | null;
+  /** Temps total passé figé : l'horloge du salon a autant de retard. */
+  timeShift: number;
 }
 
 /** Registre des jeux hébergés génériquement : source unique dans
  *  packages/shared/src/platform/registry.ts (Sous-titres garde son chemin dédié). */
-const gameCtx = (): GameContext => ({ now: Date.now(), rng: Math.random });
+/** Horloge du salon : l'heure réelle, sauf quand le temps est figé depuis le
+ *  panneau Admin (elle s'arrête, puis repart d'où elle en était). Tous les
+ *  chronos des jeux sont calculés sur elle. */
+function roomNow(room: Room): number {
+  return (room.pausedAt ?? Date.now()) - room.timeShift;
+}
+const gameCtx = (room: Room): GameContext => ({ now: roomNow(room), rng: Math.random });
 /** Durée de l'écran d'annonce « prochain jeu » côté client (GameIntro, 4,2 s).
  *  Le premier chrono de chaque jeu démarre APRÈS cette annonce : sinon la
  *  1re question / le 1er tour perdait ~4 s caché sous l'overlay. */
@@ -489,6 +499,8 @@ function getRoom(code: string, allowCreate = false): Room | null {
       botTimer: null,
       botsPaused: false,
       botSkill: BOT_LEVELS.normal,
+      pausedAt: null,
+      timeShift: 0,
     };
     rooms.set(code, room);
     stats.roomCreated();
@@ -606,7 +618,7 @@ function gameDeadline(room: Room): number | null {
 function applyMod(room: Room, action: GameAction<DrawClientAction>, sender?: WebSocket) {
   if (!room.mod) return;
   const before = (room.mod.state as DrawState).phase;
-  const { state, error } = room.mod.module.reduce(room.mod.state, action, gameCtx());
+  const { state, error } = room.mod.module.reduce(room.mod.state, action, gameCtx(room));
   room.mod.state = state;
   if (error && sender) sendError(sender, error.code, error.message);
   const after = (room.mod.state as DrawState).phase;
@@ -638,6 +650,7 @@ function clearSwaps(room: Room) {
 }
 function scheduleSwaps(room: Room) {
   clearSwaps(room);
+  if (room.pausedAt != null) return;
   if (!room.mod || room.mod.module.id !== "relay") return;
   const s = room.mod.state as RelayState;
   if (s.phase !== "drawing") return;
@@ -647,7 +660,7 @@ function applySwapTick(room: Room) {
   if (!room.mod || room.mod.module.id !== "relay") return;
   const s = room.mod.state as RelayState;
   if (s.phase !== "drawing") return;
-  room.mod.state = swapActiveDrawer(s, gameCtx());
+  room.mod.state = swapActiveDrawer(s, gameCtx(room));
   broadcast(room);
   scheduleSwaps(room); // arm the next rotation
 }
@@ -702,7 +715,7 @@ function maybeAdvanceDrawForPresence(room: Room) {
   const pending = s.players.filter(
     (p) => p.id !== s.drawerId && connected.has(p.id) && s.guessedAt[p.id] == null,
   );
-  if (pending.length === 0) advanceGame(room, Date.now());
+  if (pending.length === 0) advanceGame(room, roomNow(room));
 }
 
 /** Mauvaise proposition au dessin : diffusée en chat… sauf si elle est presque
@@ -877,7 +890,8 @@ function stateMessageFor(room: Room, pid: string): ServerMessage {
     gameOver: gameIsOver(room),
     gameRun: room.gameRun,
     soiree: publicSoiree(room),
-    serverTime: Date.now(),
+    serverTime: roomNow(room),
+    paused: room.pausedAt != null,
     you: pid,
   };
 }
@@ -936,7 +950,7 @@ function startGame(room: Room) {
     if (!passActive(room.state, Date.now()) && settings && typeof settings === "object") {
       delete (settings as { roomQuestions?: string }).roomQuestions;
     }
-    room.mod = { module: mod, state: mod.createState(players, settings, { now: Date.now() + introOffsetFor(mod.id), rng: Math.random }) };
+    room.mod = { module: mod, state: mod.createState(players, settings, { now: roomNow(room) + introOffsetFor(mod.id), rng: Math.random }) };
     scheduleGameTick(room);
     return;
   }
@@ -946,7 +960,7 @@ function startGame(room: Room) {
   const config = resolveConfig(room.settings);
   const clips = staticClipProvider().pick(config.totalRounds);
   room.twists = pickTwists(config.totalRounds);
-  room.game = createSubtitlesGame(players, clips, Date.now(), config);
+  room.game = createSubtitlesGame(players, clips, roomNow(room), config);
   syncTokens(room);
   scheduleGameTick(room);
 }
@@ -973,12 +987,12 @@ function maybeAdvanceForPresence(room: Room) {
 
   if (g.phase === "writing") {
     const allWrote = connected.every((p) => Array.isArray(g.submissions[p.id]));
-    if (allWrote) advanceGame(room, Date.now());
+    if (allWrote) advanceGame(room, roomNow(room));
   } else if (g.phase === "voting") {
     // Only players who submitted a caption are expected to vote.
     const voters = connected.filter((p) => Array.isArray(g.submissions[p.id]));
     if (voters.length > 0 && voters.every((p) => typeof g.votes[p.id] === "string")) {
-      applyGame(room, { type: "advance", now: Date.now() });
+      applyGame(room, { type: "advance", now: roomNow(room) });
     }
   }
 }
@@ -1029,13 +1043,14 @@ function scheduleGameTick(room: Room) {
     clearTimeout(room.gameTimer);
     room.gameTimer = null;
   }
+  if (room.pausedAt != null) return; // temps figé : aucun chrono ne tourne
   const deadline = gameDeadline(room);
   if (deadline == null) return;
-  const delay = Math.max(0, deadline - Date.now());
+  const delay = Math.max(0, deadline - roomNow(room));
   room.gameTimer = setTimeout(() => {
     room.gameTimer = null;
     try {
-      advanceGame(room, Date.now());
+      advanceGame(room, roomNow(room));
     } catch (err) {
       console.error(`[room ${room.state.code}] minuteur :`, (err as Error)?.message ?? err);
     }
@@ -1129,11 +1144,11 @@ function botView(room: Room, id: string, now: number) {
 }
 
 function botTick(room: Room) {
-  if (room.botsPaused || room.bots.size === 0) return;
+  if (room.botsPaused || room.pausedAt != null || room.bots.size === 0) return;
   for (const [id, mem] of room.bots) {
     try {
       // La vue est recalculée pour chaque bot : le précédent a pu faire avancer le jeu.
-      const out = botDecide(botView(room, id, Date.now()), mem);
+      const out = botDecide(botView(room, id, roomNow(room)), mem);
       for (const m of out) handleClientMessage(room, id, m, null);
     } catch (err) {
       console.error(`[bots ${room.state.code}] ${id} :`, (err as Error)?.message ?? err);
@@ -1207,6 +1222,52 @@ function removeAllBots(room: Room, quiet = false) {
   syncBotTimer(room);
 }
 
+/** Fige / relance le temps du salon (chronos, bots, rotation du Relais). */
+function setTimePaused(room: Room, paused: boolean) {
+  if (paused === (room.pausedAt != null)) return;
+  if (paused) {
+    room.pausedAt = Date.now();
+    if (room.gameTimer) {
+      clearTimeout(room.gameTimer);
+      room.gameTimer = null;
+    }
+    clearSwaps(room);
+  } else {
+    room.timeShift += Date.now() - (room.pausedAt ?? Date.now());
+    room.pausedAt = null;
+    scheduleGameTick(room);
+    if (room.mod?.module.id === "relay" && (room.mod.state as RelayState).phase === "drawing") scheduleSwaps(room);
+  }
+  broadcast(room);
+}
+
+/** Lance directement un jeu (depuis n'importe où) : pratique pour tester. */
+function adminLaunch(room: Room, gameId: string): string | null {
+  if (gameId !== "subtitles" && !GAME_REGISTRY[gameId]) return "Jeu inconnu.";
+  const hostId = room.state.hostId;
+  if (!hostId) return "Pas d'hôte dans ce salon.";
+  room.soiree = null;
+  room.soireeRun = -1;
+  if (room.state.phase !== "lobby") stopGameToLobby(room);
+  // Tout le monde est prêt d'office (comme entre deux jeux d'une soirée).
+  const players = Object.fromEntries(
+    Object.entries(room.state.players).map(([id, p]) => [id, p.isConnected ? { ...p, isReady: true } : p]),
+  );
+  room.state = { ...room.state, players };
+  room.pendingSettings = null;
+  room.pendingGame = gameId;
+  const before = room.state.phase;
+  const { state, error } = reduce(room.state, { type: "start_game", playerId: hostId, gameId, now: Date.now() });
+  if (error) {
+    broadcast(room);
+    return error.message;
+  }
+  room.state = state;
+  if (before === "lobby" && room.state.phase === "in_game") startGame(room);
+  broadcast(room);
+  return null;
+}
+
 function adminRoomInfo(room: Room) {
   return {
     code: room.state.code,
@@ -1221,6 +1282,7 @@ function adminRoomInfo(room: Room) {
     maxPlayers: effectiveMaxPlayers(room.state, Date.now()),
     botsPaused: room.botsPaused,
     botLevel: (Object.entries(BOT_LEVELS).find(([, v]) => v === room.botSkill)?.[0] ?? "normal"),
+    timePaused: room.pausedAt != null,
   };
 }
 
@@ -1235,7 +1297,7 @@ async function handleAdmin(req: IncomingMessage, res: import("node:http").Server
   }
   if (path !== "/admin/bots" || req.method !== "POST") return send(404, { error: "Inconnu." });
   try {
-    const body = JSON.parse(await readBody(req)) as { room?: string; op?: string; count?: number; id?: string; paused?: boolean; level?: string };
+    const body = JSON.parse(await readBody(req)) as { room?: string; op?: string; count?: number; id?: string; paused?: boolean; level?: string; gameId?: string };
     const room = rooms.get(String(body.room ?? "").toUpperCase());
     if (!room) return send(404, { error: "Salon introuvable (ouvre d'abord un salon dans le site)." });
     switch (body.op) {
@@ -1253,6 +1315,18 @@ async function handleAdmin(req: IncomingMessage, res: import("node:http").Server
       case "pause":
         room.botsPaused = !!body.paused;
         break;
+      case "time":
+        setTimePaused(room, !!body.paused);
+        break;
+      case "advance":
+        if (!room.game && !room.mod) return send(409, { error: "Aucune partie en cours.", room: adminRoomInfo(room) });
+        advanceGame(room, roomNow(room));
+        break;
+      case "launch": {
+        const err = adminLaunch(room, String(body.gameId ?? ""));
+        if (err) return send(409, { error: err, room: adminRoomInfo(room) });
+        break;
+      }
       case "level": {
         const lvl = BOT_LEVELS[body.level as keyof typeof BOT_LEVELS];
         if (lvl == null) return send(400, { error: "Niveau inconnu." });
@@ -1400,7 +1474,7 @@ function handleClientMessage(room: Room, playerId: string, msg: ClientMessage, w
       if (!room.game) return;
       const sub = msg.action as GameClientAction;
       if (sub.kind === "submit") {
-        applyGame(room, { type: "submit", playerId, lines: sub.lines, now: t }, sender);
+        applyGame(room, { type: "submit", playerId, lines: sub.lines, now: roomNow(room) }, sender);
         maybeAdvanceForPresence(room);
         return;
       }
@@ -1408,7 +1482,7 @@ function handleClientMessage(room: Room, playerId: string, msg: ClientMessage, w
         // Map the opaque token back to the real author, server-side only.
         const authorId = room.tokens?.byToken.get(sub.token);
         if (!authorId) return;
-        applyGame(room, { type: "vote", playerId, authorId, now: t }, sender);
+        applyGame(room, { type: "vote", playerId, authorId, now: roomNow(room) }, sender);
         maybeAdvanceForPresence(room);
         return;
       }
@@ -1416,7 +1490,7 @@ function handleClientMessage(room: Room, playerId: string, msg: ClientMessage, w
     }
     case "skip": {
       if (playerId !== room.state.hostId || (!room.game && !room.mod)) return;
-      return advanceGame(room, t);
+      return advanceGame(room, roomNow(room));
     }
 
     case "debug_fill": {
@@ -1427,7 +1501,7 @@ function handleClientMessage(room: Room, playerId: string, msg: ClientMessage, w
       for (const p of room.game.players) {
         if (!Array.isArray(room.game.submissions[p.id])) {
           const lines = slots.map((_, i) => `${p.name} — réplique ${i + 1}`);
-          applyGame(room, { type: "submit", playerId: p.id, lines, now: Date.now() });
+          applyGame(room, { type: "submit", playerId: p.id, lines, now: roomNow(room) });
         }
       }
       return;

@@ -2,7 +2,11 @@
   "theme": {
     "v": 1,
     "colors": {},
-    "fonts": {},
+    "fonts": {
+      "display": "Bricolage Grotesque",
+      "body": "Bricolage Grotesque",
+      "mono": "Bricolage Grotesque"
+    },
     "css": "",
     "edits": [
       {
@@ -14,8 +18,18 @@
         "style": {
           "hidden": true
         }
+      },
+      {
+        "id": "s6ijt9p6",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(5) > svg:nth-child(2)",
+        "tag": "svg",
+        "fp": "#",
+        "style": {
+          "hidden": true
+        }
       }
     ]
   },
-  "updatedAt": 1791281253108
+  "updatedAt": 1791304708856
 }

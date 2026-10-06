@@ -18,6 +18,7 @@ import {
   type SoireeState,
 } from "@subtitles-party/shared";
 import { getPlayerId } from "./identity";
+import { setFrozen } from "./freeze";
 import {
   createWebSocketTransport,
   type ConnectionStatus,
@@ -168,6 +169,8 @@ export function useRoom(code: string, create = false): UseRoom {
   const reactionId = useRef(0);
   const transportRef = useRef<RoomTransport | null>(null);
   const clockOffset = useRef(0);
+  // Temps figé (panneau Admin) : l'horloge serveur reste arrêtée sur `frozenAt`.
+  const frozenAt = useRef<number | null>(null);
 
   useEffect(() => {
     if (!code || !playerId) return;
@@ -177,6 +180,8 @@ export function useRoom(code: string, create = false): UseRoom {
     const offMsg = transport.onMessage((msg) => {
       if (msg.type === "state") {
         clockOffset.current = msg.serverTime - Date.now();
+        frozenAt.current = msg.paused ? msg.serverTime : null;
+        setFrozen(!!msg.paused, code);
         setState(msg.state);
         setGameId(msg.gameId);
         setGame(msg.game);
@@ -244,6 +249,7 @@ export function useRoom(code: string, create = false): UseRoom {
       offStatus();
       transport.close();
       transportRef.current = null;
+      setFrozen(false, null);
     };
   }, [code, playerId]);
 
@@ -350,7 +356,7 @@ export function useRoom(code: string, create = false): UseRoom {
   const playAgain = useCallback(() => send.current?.send({ type: "play_again" }), [send]);
   const react = useCallback((emoji: string) => send.current?.send({ type: "react", emoji }), [send]);
   const clearError = useCallback(() => setError(null), []);
-  const serverNow = useCallback(() => Date.now() + clockOffset.current, []);
+  const serverNow = useCallback(() => frozenAt.current ?? Date.now() + clockOffset.current, []);
 
   const api = {
     state, gameId, game, settings, you, status, error, clearError,

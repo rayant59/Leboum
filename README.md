@@ -76,7 +76,14 @@ la synchro en direct.
   `apps/web/app/globals.css` (classes Tailwind `bg-gold`, `text-text-muted`…
   ou `rgb(var(--c-gold))` en style inline) — n'écris plus de couleur du thème
   en dur, sinon l'éditeur ne pourra pas la changer.
-- **Bots de test (onglet « Bots » de l'éditeur, en local uniquement)** : crée un
+- **Onglet « Admin » de l'éditeur (en local uniquement)** — pour tester et retoucher
+  chaque écran de jeu :
+  - **Figer le temps** : chronos, décomptes 3·2·1, annonce du jeu et bots
+    s'arrêtent ; la page reste cliquable et modifiable (onglet Contenu). Une
+    pastille « Temps figé · Reprendre » reste affichée en bas à gauche.
+  - **Étape suivante** (même figé), **Revoir l'annonce** du jeu, et **Lancer**
+    n'importe quel jeu directement.
+- **Bots de test (même onglet)** : crée un
   salon, puis ajoute 1, 3 ou autant de bots que de places. Ils se mettent prêts,
   jouent, votent et devinent tout seuls dans tous les mini-jeux (niveau Facile /
   Normal / Fort, pause possible). Ils dessinent des gribouillis, envoient des bips

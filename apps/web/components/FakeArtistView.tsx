@@ -1,5 +1,6 @@
 "use client";
 
+import { useFrozen } from "@/lib/freeze";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { FakeArtistPublic } from "@subtitles-party/shared";
 import type { UseRoom } from "@/lib/useRoom";
@@ -84,12 +85,13 @@ export function FakeArtistView({ room }: { room: UseRoom }) {
   // de phase brief — le mot est fourni dès "drawing"). Identique pour l'imposteur.
   const [briefRound, setBriefRound] = useState<number>(() => ((game as unknown as { __skipBrief?: boolean }).__skipBrief ? game.round : -1));
   const showBrief = game.phase === "drawing" && briefRound !== game.round;
+  const frozen = useFrozen(); // temps figé (éditeur) : la consigne reste affichée
   useEffect(() => {
-    if (game.phase === "drawing" && briefRound !== game.round) {
+    if (game.phase === "drawing" && briefRound !== game.round && !frozen) {
       const t = setTimeout(() => setBriefRound(game.round), 4000);
       return () => clearTimeout(t);
     }
-  }, [game.phase, game.round, briefRound]);
+  }, [game.phase, game.round, briefRound, frozen]);
 
   const ranking = [...game.players].sort((a, b) => (game.scores[b.id] ?? 0) - (game.scores[a.id] ?? 0));
 
