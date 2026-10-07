@@ -115,5 +115,13 @@ test("modifications à la souris : CSS et pages", () => {
   assert(t.edits.length === 1 && themeToCss(t) === "", "un simple texte ne génère pas de CSS");
 });
 
+test("modifications à la souris : taille (poignées)", () => {
+  const [e] = sanitizeEdits([{ id: "abcd1234", route: "/", path: "div:nth-child(1)", tag: "div", fp: "%div,button", style: { width: 320.4, height: 99999, x: 5 } }]);
+  assert(e.style?.width === 320 && e.style?.height === 4000, JSON.stringify(e.style));
+  const css = editsToCss([e]);
+  assert(css.includes("width:320px !important") && css.includes("height:4000px !important") && css.includes("max-width:none !important"), css);
+  assert(!css.includes("display:"), "la taille ne change jamais le display");
+});
+
 console.log(`\n${passed} réussis, ${failed} échoués\n`);
 if (failed > 0) process.exit(1);

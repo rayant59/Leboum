@@ -6,7 +6,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { editIsEmpty, newEditId, routeKey, type AddedKind, type EditStyle, type SiteEdit, type SiteTheme } from "@subtitles-party/shared";
-import { applyNow, findTarget, fingerprint, isTooling, originalText, pathOf, textNodesOf } from "@/lib/edits";
+import { applyNow, findTarget, fingerprint, isTooling, originalText, pathOf, setPreview, textNodesOf } from "@/lib/edits";
 
 type Change = (fn: (d: SiteTheme) => SiteTheme, key?: string) => void;
 
@@ -48,6 +48,10 @@ export function ContentEditor({ draft, change }: { draft: SiteTheme; change: Cha
   const keys = useRef(new WeakMap<Element, number>());
   const movingRef = useRef(false);
   movingRef.current = moving;
+  const selectedRef = useRef<Element | null>(null);
+  selectedRef.current = selected;
+  /** Un glisser vient de se terminer : on avale le clic qui suit. */
+  const swallowClick = useRef(false);
   const keyOf = (el: Element) => {
     let k = keys.current.get(el);
     if (!k) { k = Math.random(); keys.current.set(el, k); }
@@ -141,73 +145,142 @@ export function ContentEditor({ draft, change }: { draft: SiteTheme; change: Cha
       if (isUi(ev.target as Element)) return;
       ev.preventDefault();
       ev.stopPropagation();
+      if (swallowClick.current) { swallowClick.current = false; return; }
       if (movingRef.current) return;
       const el = pickable(ev.target);
       if (el) { setSelected(el); setMoving(false); }
     };
+    // Glisser directement l'élément sélectionné (au-delà de 4 px = déplacement ;
+    // sinon c'est un simple clic qui sélectionne).
+    const down = (ev: PointerEvent) => {
+      block(ev);
+      const sel = selectedRef.current;
+      if (movingRef.current || ev.button !== 0 || !sel || isUi(ev.target as Element)) return;
+      const t = ev.target as Element;
+      if (t !== sel && !sel.contains(t)) return;
+      beginMove(sel, ev, 4);
+    };
+    // Double-clic sur l'élément sélectionné : mode « déplacer » (et retour).
+    const dbl = (ev: MouseEvent) => {
+      block(ev);
+      const sel = selectedRef.current;
+      const t = ev.target as Element;
+      if (sel && (t === sel || sel.contains(t))) setMoving((m) => !m);
+    };
     document.addEventListener("pointerover", over, true);
-    document.addEventListener("pointerdown", block, true);
+    document.addEventListener("pointerdown", down, true);
     document.addEventListener("mousedown", block, true);
     document.addEventListener("click", click, true);
-    document.addEventListener("dblclick", block, true);
+    document.addEventListener("dblclick", dbl, true);
     document.addEventListener("submit", block, true);
     return () => {
       document.documentElement.removeAttribute("data-lbe-picking");
       document.removeEventListener("pointerover", over, true);
-      document.removeEventListener("pointerdown", block, true);
+      document.removeEventListener("pointerdown", down, true);
       document.removeEventListener("mousedown", block, true);
       document.removeEventListener("click", click, true);
-      document.removeEventListener("dblclick", block, true);
+      document.removeEventListener("dblclick", dbl, true);
       document.removeEventListener("submit", block, true);
       hoverRef.current = null;
     };
   }, [picking]);
 
   // ---- Déplacement à la souris ---------------------------------------------
+  // Aperçu par une règle CSS temporaire (setPreview) : le style propre de
+  // l'élément n'est jamais modifié, donc rien ne peut « casser » la page.
+  function beginMove(el: Element, ev: PointerEvent, threshold: number) {
+    const s0 = editOf(el)?.style;
+    const inline = !!s0?.inline || getComputedStyle(el).display === "inline";
+    const sx = ev.clientX, sy = ev.clientY, ox = s0?.x ?? 0, oy = s0?.y ?? 0;
+    let active = threshold === 0;
+    const pos = (e: PointerEvent) => ({ x: Math.round(ox + e.clientX - sx), y: Math.round(oy + e.clientY - sy) });
+    const show = (e: PointerEvent) => {
+      const { x, y } = pos(e);
+      setPreview(el, `translate:${x}px ${y}px !important;${inline ? "display:inline-block !important;" : ""}`);
+    };
+    const move = (e: PointerEvent) => {
+      if (!active) {
+        if (Math.hypot(e.clientX - sx, e.clientY - sy) < threshold) return;
+        active = true;
+        document.documentElement.style.cursor = "move";
+      }
+      e.preventDefault();
+      show(e);
+    };
+    const up = (e: PointerEvent) => {
+      window.removeEventListener("pointermove", move, true);
+      window.removeEventListener("pointerup", up, true);
+      document.documentElement.style.cursor = movingRef.current ? "move" : "";
+      setPreview(null, null);
+      if (!active) return;
+      swallowClick.current = true;
+      window.setTimeout(() => { swallowClick.current = false; }, 300);
+      const { x, y } = pos(e);
+      setStyle(el, { x: x || undefined, y: y || undefined, inline: inline && !!(x || y) ? true : undefined });
+    };
+    window.addEventListener("pointermove", move, true);
+    window.addEventListener("pointerup", up, true);
+    if (active) show(ev);
+  }
+
+  // Mode « Déplacer » (bouton ou double-clic) : glisser n'importe où déplace l'élément.
   useEffect(() => {
     if (!moving || !selected) return;
-    const el = selected as HTMLElement;
-    let start: { x: number; y: number; ox: number; oy: number; inline: boolean } | null = null;
+    const el = selected;
     const down = (ev: PointerEvent) => {
-      if (isUi(ev.target as Element)) return;
+      if (isUi(ev.target as Element) || ev.button !== 0) return;
       ev.preventDefault();
       ev.stopPropagation();
-      const s = editOf(el)?.style;
-      const inline = !!s?.inline || getComputedStyle(el).display === "inline";
-      start = { x: ev.clientX, y: ev.clientY, ox: s?.x ?? 0, oy: s?.y ?? 0, inline };
-      if (inline) el.style.setProperty("display", "inline-block", "important");
-      el.setPointerCapture?.(ev.pointerId);
-    };
-    const move = (ev: PointerEvent) => {
-      if (!start) return;
-      ev.preventDefault();
-      const x = Math.round(start.ox + ev.clientX - start.x);
-      const y = Math.round(start.oy + ev.clientY - start.y);
-      el.style.setProperty("translate", `${x}px ${y}px`, "important");
-    };
-    const up = (ev: PointerEvent) => {
-      if (!start) return;
-      const x = Math.round(start.ox + ev.clientX - start.x);
-      const y = Math.round(start.oy + ev.clientY - start.y);
-      const inline = start.inline;
-      start = null;
-      el.style.removeProperty("translate");
-      el.style.removeProperty("display");
-      setStyle(el, { x: x || undefined, y: y || undefined, inline: inline || undefined });
+      beginMove(el, ev, 0);
     };
     document.addEventListener("pointerdown", down, true);
-    document.addEventListener("pointermove", move, true);
-    document.addEventListener("pointerup", up, true);
     document.documentElement.style.cursor = "move";
     return () => {
       document.removeEventListener("pointerdown", down, true);
-      document.removeEventListener("pointermove", move, true);
-      document.removeEventListener("pointerup", up, true);
       document.documentElement.style.cursor = "";
-      el.style.removeProperty("translate");
-      el.style.removeProperty("display");
+      setPreview(null, null);
     };
-  }, [moving, selected, editOf, setStyle]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moving, selected]);
+
+  // ---- Redimensionner avec les poignées du cadre ---------------------------
+  function beginResize(ev: React.PointerEvent, dir: "e" | "s" | "se") {
+    const el = selectedRef.current;
+    if (!el) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    const r = el.getBoundingClientRect();
+    const sx = ev.clientX, sy = ev.clientY;
+    const w0 = r.width, h0 = r.height;
+    const inline = getComputedStyle(el).display === "inline";
+    const size = (e: PointerEvent) => {
+      let w = dir === "s" ? null : Math.max(8, Math.round(w0 + e.clientX - sx));
+      let h = dir === "e" ? null : Math.max(8, Math.round(h0 + e.clientY - sy));
+      // Maj (ou une image) : on garde les proportions.
+      if (dir === "se" && (e.shiftKey || el.tagName === "IMG") && w0 > 0 && h0 > 0) h = Math.round((w ?? w0) * (h0 / w0));
+      return { w, h };
+    };
+    const css = ({ w, h }: { w: number | null; h: number | null }) =>
+      (w != null ? `width:${w}px !important;max-width:none !important;min-width:0 !important;box-sizing:border-box !important;` : "") +
+      (h != null ? `height:${h}px !important;max-height:none !important;min-height:0 !important;box-sizing:border-box !important;` : "") +
+      (inline ? "display:inline-block !important;" : "");
+    const move = (e: PointerEvent) => { e.preventDefault(); setPreview(el, css(size(e))); };
+    const up = (e: PointerEvent) => {
+      window.removeEventListener("pointermove", move, true);
+      window.removeEventListener("pointerup", up, true);
+      setPreview(null, null);
+      swallowClick.current = true;
+      window.setTimeout(() => { swallowClick.current = false; }, 300);
+      const { w, h } = size(e);
+      const patch: Partial<EditStyle> = {};
+      if (w != null) patch.width = w;
+      if (h != null) patch.height = h;
+      if (inline) patch.inline = true;
+      setStyle(el, patch);
+    };
+    window.addEventListener("pointermove", move, true);
+    window.addEventListener("pointerup", up, true);
+  }
 
   // ---- Clavier : flèches = déplacer, Suppr = cacher, Échap = désélectionner --
   useEffect(() => {
@@ -278,14 +351,19 @@ export function ContentEditor({ draft, change }: { draft: SiteTheme; change: Cha
     <div className="lbe">
       <style>{CSS}</style>
       <div className="lbe-ui lbe-hover" ref={hoverBox} />
-      <div className="lbe-ui lbe-sel" ref={selBox}><span ref={selLabel} /></div>
+      <div className="lbe-ui lbe-sel" ref={selBox}>
+        <span ref={selLabel} />
+        <i className="lbe-ui lbe-h lbe-h-e" title="Largeur" onPointerDown={(e) => beginResize(e, "e")} />
+        <i className="lbe-ui lbe-h lbe-h-s" title="Hauteur" onPointerDown={(e) => beginResize(e, "s")} />
+        <i className="lbe-ui lbe-h lbe-h-se" title="Taille (Maj = garder les proportions)" onPointerDown={(e) => beginResize(e, "se")} />
+      </div>
 
       <button type="button" className={picking ? "lbd-btn lbe-pick on" : "lbd-btn lbe-pick"} onClick={() => { setPicking((p) => !p); setMoving(false); }}>
         {picking ? "Sélection active : clique sur un élément du site" : "Navigation libre : clique ici pour sélectionner"}
       </button>
       <p className="lbd-hint">
         {picking
-          ? "Les clics servent à choisir un élément. Désactive la sélection pour utiliser le site normalement (changer de page, entrer dans un salon…)."
+          ? "Clique pour choisir un élément, puis glisse-le pour le déplacer (ou double-clic). Tire les poignées du cadre pour le redimensionner. Désactive la sélection pour utiliser le site normalement."
           : "Le site fonctionne normalement : va sur la page à modifier, puis réactive la sélection."}
       </p>
 
@@ -465,11 +543,21 @@ function Inspector({ el, edit, label, moving, setMoving, update, setStyle, addNe
       <h3>Position</h3>
       <div className="lbd-row">
         <button type="button" className={moving ? "lbd-btn lbd-primary" : "lbd-btn"} onClick={() => setMoving(!moving)}>
-          {moving ? "Glisse l'élément sur la page…" : "Déplacer à la souris"}
+          {moving ? "Terminer le déplacement" : "Mode déplacer"}
         </button>
         <button type="button" className="lbd-btn" disabled={!s.x && !s.y} onClick={() => setStyle(el, { x: undefined, y: undefined, inline: undefined })}>Position d&apos;origine</button>
       </div>
-      <p className="lbd-hint">Ou flèches du clavier (Maj + flèche = 10 px). Décalage : {s.x ?? 0}, {s.y ?? 0} px.</p>
+      <p className="lbd-hint">Ou glisse l&apos;élément directement, ou flèches du clavier (Maj = 10 px). Décalage : {s.x ?? 0}, {s.y ?? 0} px.</p>
+
+      <h3>Taille</h3>
+      <div className="lbe-grid">
+        <NumField label="Largeur" unit="px" value={s.width} placeholder={Math.round(el.getBoundingClientRect().width)} min={1} max={4000} onChange={(v) => setStyle(el, { width: v }, "w")} />
+        <NumField label="Hauteur" unit="px" value={s.height} placeholder={Math.round(el.getBoundingClientRect().height)} min={1} max={4000} onChange={(v) => setStyle(el, { height: v }, "h")} />
+      </div>
+      <div className="lbd-row">
+        <button type="button" className="lbd-btn" disabled={s.width == null && s.height == null} onClick={() => setStyle(el, { width: undefined, height: undefined })}>Taille d&apos;origine</button>
+      </div>
+      <p className="lbd-hint">Ou tire les poignées du cadre bleu (coin : Maj pour garder les proportions).</p>
 
       {/* Ajouter */}
       <h3>Ajouter juste après</h3>
@@ -552,8 +640,15 @@ const CSS = `
 .lbe-hover,.lbe-sel{position:fixed;left:0;top:0;z-index:2147482999;pointer-events:none;display:none;border-radius:6px}
 .lbe-hover{outline:2px dashed #8FA8FF;background:rgba(143,168,255,.08)}
 .lbe-sel{outline:2px solid #8FA8FF;box-shadow:0 0 0 4px rgba(143,168,255,.25)}
+.lbe-h{position:absolute;pointer-events:auto;background:#8FA8FF;border:2px solid #0B0D18;border-radius:3px;z-index:1}
+.lbe-h-e{right:-6px;top:50%;width:9px;height:22px;margin-top:-11px;cursor:ew-resize}
+.lbe-h-s{bottom:-6px;left:50%;width:22px;height:9px;margin-left:-11px;cursor:ns-resize}
+.lbe-h-se{right:-7px;bottom:-7px;width:13px;height:13px;cursor:nwse-resize}
+html[data-lbe-picking] .lbe-h-e{cursor:ew-resize !important}
+html[data-lbe-picking] .lbe-h-s{cursor:ns-resize !important}
+html[data-lbe-picking] .lbe-h-se{cursor:nwse-resize !important}
 .lbe-sel span{position:absolute;left:-2px;top:-24px;padding:3px 8px;border-radius:6px 6px 6px 0;background:#8FA8FF;color:#0B0D18;font:700 11px/1.3 system-ui,sans-serif;white-space:nowrap}
-html[data-lbe-picking] body *:not(.lbd):not(.lbd *){cursor:pointer !important}
+html[data-lbe-picking] body *:not(.lbd):not(.lbd *):not(.lbe-ui){cursor:pointer !important}
 .lbe-pick{width:100%;white-space:normal;text-align:left}
 .lbe-pick.on{border-color:#8FA8FF;background:rgba(143,168,255,.14);color:#EEECF4}
 .lbe h3,.lbe-insp h3{margin:16px 0 6px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#A19EB0}

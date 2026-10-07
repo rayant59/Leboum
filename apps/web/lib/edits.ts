@@ -65,7 +65,10 @@ export function originalText(n: Text): string {
  * Empreinte d'un élément, pour être sûr de retrouver le bon :
  * - son propre texte d'origine (« Joueurs » pour « Joueurs <span>3/8</span> ») ;
  * - sinon ses classes (« @flex items-center… ») ;
- * - sinon tout son texte (« #… »).
+ * - sinon tout son texte (« #… ») ;
+ * - sinon sa structure (« %button,img:brush.png,… ») : un bloc sans texte ni
+ *   classe (barre d'outils, icône…) n'est plus confondu avec un autre bloc
+ *   vide d'un autre écran.
  */
 export function fingerprint(el: Element): string {
   if (el.tagName === "IMG") return "img:" + (el.getAttribute("data-lbe-src0") ?? el.getAttribute("src") ?? "").slice(0, 110);
@@ -82,7 +85,60 @@ export function fingerprint(el: Element): string {
     else if (n.nodeType === Node.ELEMENT_NODE && !isTooling(n as Element)) n.childNodes.forEach(walk);
   };
   el.childNodes.forEach(walk);
-  return ("#" + s.replace(/\s+/g, " ").trim()).slice(0, 120);
+  const text = s.replace(/\s+/g, " ").trim();
+  if (text) return ("#" + text).slice(0, 120);
+  return ("%" + structureOf(el)).slice(0, 120);
+}
+
+/** Résumé de la structure d'un bloc sans texte (balises, images, tracés). */
+function structureOf(el: Element): string {
+  const parts: string[] = [el.tagName.toLowerCase()];
+  const walk = (n: Element, depth: number) => {
+    for (const c of Array.from(n.children)) {
+      if (parts.length >= 14 || isTooling(c)) continue;
+      let p = c.tagName.toLowerCase();
+      if (c.tagName === "IMG") p += ":" + (c.getAttribute("data-lbe-src0") ?? c.getAttribute("src") ?? "").split("/").pop()?.split("?")[0];
+      else if (c.tagName.toLowerCase() === "path") p += ":" + (c.getAttribute("d") ?? "").slice(0, 8);
+      parts.push(p);
+      if (depth < 3) walk(c, depth + 1);
+    }
+  };
+  walk(el, 0);
+  return parts.join(",");
+}
+
+/** Texte complet (pour les anciennes empreintes « # » vides). */
+function deepText(el: Element): string {
+  return (el.textContent ?? "").replace(/\s+/g, " ").trim();
+}
+
+/** L'élément correspond-il à l'empreinte enregistrée ? */
+function fpMatches(el: Element, fp: string): boolean {
+  if (!fp) return true;
+  // Anciennes modifications : « # » seul = bloc sans aucun texte.
+  if (fp === "#") return !deepText(el) && !(el.getAttribute("class") ?? "").trim() && !Array.from(el.childNodes).some((n) => n.nodeType === Node.TEXT_NODE && (n.nodeValue ?? "").trim());
+  return fingerprint(el) === fp;
+}
+
+// --- Aperçu pendant un glisser (déplacer / redimensionner) -------------------
+// On ne touche JAMAIS au style propre de l'élément (style="…" posé par React) :
+// le retirer à la fin cassait la mise en page (ex. une barre d'outils en
+// « display:flex » qui se retrouvait empilée). L'aperçu passe par une règle CSS
+// temporaire, retirée à la fin du geste.
+let previewEl: HTMLStyleElement | null = null;
+export function setPreview(el: Element | null, css: string | null) {
+  document.querySelectorAll("[data-lbe-preview]").forEach((x) => { if (x !== el || !css) x.removeAttribute("data-lbe-preview"); });
+  if (!el || !css) {
+    if (previewEl) previewEl.textContent = "";
+    return;
+  }
+  if (!previewEl) {
+    previewEl = document.createElement("style");
+    previewEl.id = "lbe-preview";
+  }
+  if (previewEl.parentNode !== document.head || document.head.lastElementChild !== previewEl) document.head.appendChild(previewEl);
+  el.setAttribute("data-lbe-preview", "");
+  previewEl.textContent = `html body [data-lbe-preview]{${css}}`;
 }
 
 function tag(el: Element, id: string) {
@@ -100,7 +156,7 @@ export function findTarget(e: SiteEdit): Element | null {
   const tagged = document.querySelector(`[data-lbe~="${e.id}"]:not(.lbe-added)`);
   if (tagged && pathOf(tagged) === e.path) return tagged;
   const el = resolvePath(e.path);
-  if (el && el.tagName.toLowerCase() === e.tag && (!e.fp || fingerprint(el) === e.fp)) return el;
+  if (el && el.tagName.toLowerCase() === e.tag && fpMatches(el, e.fp)) return el;
   // La page a bougé : on cherche le même élément (même balise, même empreinte) ailleurs.
   if (e.fp.length >= 3) {
     const probe = e.fp.startsWith("@") || e.fp.startsWith("img:") ? "" : e.fp.replace(/^#/, "").slice(0, 24);

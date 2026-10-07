@@ -27,6 +27,9 @@ export interface EditStyle {
   hidden?: boolean;
   /** Élément « en ligne » déplacé : passé en inline-block pour pouvoir bouger. */
   inline?: boolean;
+  /** Taille imposée (px), réglée avec les poignées. */
+  width?: number;
+  height?: number;
 }
 
 export type AddedKind = "text" | "title" | "button" | "image";
@@ -78,6 +81,8 @@ function sanitizeStyle(raw: unknown): EditStyle | undefined {
   s.opacity = num(r.opacity, 0, 100);
   s.x = num(r.x, -3000, 3000);
   s.y = num(r.y, -3000, 3000);
+  s.width = num(r.width, 1, 4000);
+  s.height = num(r.height, 1, 4000);
   if (r.hidden === true) s.hidden = true;
   if (r.inline === true && (s.x || s.y)) s.inline = true;
   for (const k of Object.keys(s) as (keyof EditStyle)[]) if (s[k] === undefined) delete s[k];
@@ -153,6 +158,8 @@ export function editsToCss(edits: readonly SiteEdit[]): string {
     if (s.radius != null) d.push(`border-radius:${s.radius}px`);
     if (s.opacity != null) d.push(`opacity:${s.opacity / 100}`);
     if (s.x || s.y) d.push(`translate:${s.x ?? 0}px ${s.y ?? 0}px`);
+    if (s.width != null) d.push(`width:${s.width}px`, "max-width:none", "min-width:0", "box-sizing:border-box");
+    if (s.height != null) d.push(`height:${s.height}px`, "max-height:none", "min-height:0", "box-sizing:border-box");
     if (d.length) rules.push(`[data-lbe~="${e.id}"]{${d.map((x) => x + " !important").join(";")}}`);
   }
   return rules.join("\n");

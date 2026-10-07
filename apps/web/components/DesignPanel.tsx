@@ -26,7 +26,7 @@ import {
   type ThemeColorGroup,
   type ThemeFontRole,
 } from "@subtitles-party/shared";
-import { applyTheme, cachedPublished, designLogout, fetchPublished, fetchServerDraft, hasDraft, loadDraft, publishTheme, pushServerDraft, saveDraft } from "@/lib/theme";
+import { applyTheme, cachedPublished, designLogout, fetchPublished, fetchServerDraft, publishTheme, pushServerDraft, saveDraft } from "@/lib/theme";
 
 type Tab = "content" | "colors" | "fonts" | "css" | "admin";
 type Status = { kind: "ok" | "err" | "info"; text: string } | null;
@@ -35,7 +35,6 @@ const GROUPS: ThemeColorGroup[] = ["Fonds", "Textes", "Accents", "Reliefs des bo
 const OPEN_KEY = "lb:designOpen";
 const BOX_KEY = "lb:designBox";
 type Box = { x: number; y: number; w: number; h: number };
-type SaveState = "idle" | "saving" | "saved" | "error";
 
 /** Position / taille par défaut : en haut à droite, moitié de la hauteur. */
 function defaultBox(): Box {
@@ -126,17 +125,17 @@ export function DesignPanel() {
       if (!r) { setStatus({ kind: "err", text: "Serveur de jeu injoignable : lance aussi « npm run dev:server »." }); return; }
       setPublished(r.theme);
       setUpdatedAt(r.updatedAt);
-      // 1) Le brouillon sauvegardé sur le PC, s'il est plus récent que le design publié.
-      const fromServer = sd && (sd.base === (r.updatedAt ?? null) || sd.savedAt >= (r.updatedAt ?? 0)) ? sd.theme : null;
-      // 2) Sinon la copie gardée par le navigateur.
-      const d = fromServer ?? loadDraft(r.updatedAt);
+      // Ta dernière sauvegarde (bouton « Sauvegarder »), si elle est plus récente
+      // que le design publié.
+      const d = sd && (sd.base === (r.updatedAt ?? null) || sd.savedAt >= (r.updatedAt ?? 0)) ? sd.theme : null;
+      saveDraft(null, null); // ancienne sauvegarde automatique du navigateur : plus utilisée
       if (d && !same(d, r.theme)) {
         setDraft(d);
-        setSaveState("saved");
-        setStatus({ kind: "info", text: "Tes modifications sont revenues (sauvegardées automatiquement)." });
+        setSaved(d);
+        setStatus({ kind: "info", text: "Ta dernière sauvegarde est rechargée (pas encore publiée)." });
       } else {
-        if (!d && hasDraft()) setStatus({ kind: "info", text: "Le design publié a changé depuis ton dernier brouillon : on repart du design publié." });
         setDraft(r.theme);
+        setSaved(r.theme);
       }
       setLoaded(true);
     });
@@ -146,24 +145,41 @@ export function DesignPanel() {
   // Chaque changement s'applique tout de suite à la page.
   useEffect(() => {
     applyTheme(draft);
-    if (loaded) saveDraft(same(draft, published) ? null : draft, updatedAt);
-  }, [draft, published, loaded, updatedAt]);
+  }, [draft]);
 
-  // Sauvegarde automatique sur le PC, un instant après chaque modification.
-  const [saveState, setSaveState] = useState<SaveState>("idle");
-  const skipSave = useRef(true);
+  // Sauvegarde MANUELLE (bouton « Sauvegarder » ou Ctrl+S) : rien n'est
+  // enregistré tant que tu ne l'as pas décidé.
+  const [saved, setSaved] = useState<SiteTheme>(() => cachedPublished());
+  const [saving, setSaving] = useState(false);
+  const unsaved = loaded && !same(draft, saved);
+  const save = useCallback(async () => {
+    const d = draftRef.current;
+    setSaving(true);
+    const ok = await pushServerDraft(same(d, published) ? null : d, updatedAt);
+    setSaving(false);
+    if (ok) {
+      setSaved(d);
+      setStatus({ kind: "ok", text: same(d, published) ? "Sauvegardé (identique au design publié)." : "Sauvegardé sur ton PC. Publie quand tu veux créer le fichier GitHub." });
+    } else {
+      setStatus({ kind: "err", text: "Sauvegarde impossible : le serveur de jeu (npm run dev:server) est-il lancé ?" });
+    }
+  }, [published, updatedAt]);
+  const saveRef = useRef(save);
+  saveRef.current = save;
   useEffect(() => {
-    if (!loaded) return;
-    if (skipSave.current) { skipSave.current = false; return; } // brouillon tout juste chargé
-    setSaveState("saving");
-    let alive = true;
-    const t = window.setTimeout(() => {
-      void pushServerDraft(same(draft, published) ? null : draft, updatedAt).then((ok) => {
-        if (alive) setSaveState(ok ? "saved" : "error");
-      });
-    }, 450);
-    return () => { alive = false; window.clearTimeout(t); };
-  }, [draft, published, loaded, updatedAt]);
+    const onKey = (ev: KeyboardEvent) => {
+      if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "s") { ev.preventDefault(); void saveRef.current(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  // Quitter la page avec des modifications non sauvegardées : le navigateur prévient.
+  useEffect(() => {
+    if (!unsaved) return;
+    const warn = (ev: BeforeUnloadEvent) => { ev.preventDefault(); ev.returnValue = ""; };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [unsaved]);
 
   // Panneau déplaçable (barre de titre) et redimensionnable (coin bas-droit).
   const [box, setBox] = useState<Box | null>(null);
@@ -260,8 +276,8 @@ export function DesignPanel() {
     setBusy(false);
     if (r.ok) {
       setPublished(draft);
+      setSaved(draft);
       setUpdatedAt(r.updatedAt ?? Date.now());
-      setSaveState("saved");
       setStatus({ kind: "ok", text: "site-theme.json est prêt ! Fais un commit + push pour le mettre en ligne." });
     } else {
       setStatus({ kind: "err", text: r.error });
@@ -269,6 +285,7 @@ export function DesignPanel() {
   }
 
   function quit() {
+    if (unsaved && !window.confirm("Tu as des modifications non sauvegardées. Quitter quand même ? (elles seront perdues)")) return;
     designLogout();
     applyTheme(published);
     window.dispatchEvent(new Event("lb:design-change"));
@@ -318,8 +335,8 @@ export function DesignPanel() {
         <div className="lbd-title">
           <svg className="lbd-grip" width="10" height="16" viewBox="0 0 10 16" aria-hidden><g fill="currentColor"><circle cx="2" cy="3" r="1.4"/><circle cx="8" cy="3" r="1.4"/><circle cx="2" cy="8" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="2" cy="13" r="1.4"/><circle cx="8" cy="13" r="1.4"/></g></svg>
           <strong>Éditeur</strong>
-          <span className={!dirty ? "lbd-chip" : saveState === "error" ? "lbd-chip lbd-chip-err" : "lbd-chip lbd-chip-warn"} title={dirty ? "Tes modifications sont sauvegardées sur ton PC. « Publier » crée le fichier à envoyer sur GitHub." : undefined}>
-            {!dirty ? "Publié" : saveState === "saving" ? "Sauvegarde…" : saveState === "error" ? "⚠ Non sauvegardé" : "Sauvegardé ✓"}
+          <span className={unsaved ? "lbd-chip lbd-chip-err" : dirty ? "lbd-chip lbd-chip-warn" : "lbd-chip"} title={unsaved ? "Clique sur Sauvegarder (ou Ctrl+S)." : dirty ? "Sauvegardé sur ton PC, pas encore publié." : undefined}>
+            {unsaved ? "Non sauvegardé" : dirty ? "Sauvegardé · non publié" : "Publié"}
           </span>
         </div>
         <div className="lbd-head-actions">
@@ -420,11 +437,14 @@ export function DesignPanel() {
               <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void importTheme(f); e.target.value = ""; }} />
             </div>
             <div className="lbd-row">
+              <button type="button" className="lbd-btn" disabled={same(draft, published)} onClick={() => { change(() => published); setStatus({ kind: "info", text: "Retour au dernier design publié (pense à sauvegarder)." }); }}>Revenir au design publié</button>
+            </div>
+            <div className="lbd-row">
               <button type="button" className={confirmReset ? "lbd-btn lbd-danger" : "lbd-btn"} onClick={() => {
                 if (!confirmReset) { setConfirmReset(true); setTimeout(() => setConfirmReset(false), 4000); return; }
                 setConfirmReset(false);
                 change(() => EMPTY_THEME);
-                setStatus({ kind: "info", text: "Design d'origine remis en brouillon. Publie pour l'appliquer à tous." });
+                setStatus({ kind: "info", text: "Design d'origine remis. Sauvegarde, puis publie pour l'appliquer à tous." });
               }}>{confirmReset ? "Clique encore pour confirmer" : "Revenir au design d'origine"}</button>
             </div>
           </>
@@ -435,12 +455,13 @@ export function DesignPanel() {
         {status ? (
           <p className={`lbd-status lbd-${status.kind}`} role="status" title={status.text}>{status.text}</p>
         ) : (
-          <p className="lbd-status" title="Chaque modification est sauvegardée automatiquement sur ton PC. « Publier » crée site-theme.json, le fichier à envoyer sur GitHub (commit + push).">
-            {dirty ? "Sauvegardé automatiquement. Publie pour créer le fichier GitHub." : updatedAt ? `Publié le ${new Date(updatedAt).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" })}` : "Tout est sauvegardé automatiquement."}
+          <p className="lbd-status" title="« Sauvegarder » garde ton travail sur ton PC. « Publier » crée site-theme.json, le fichier à envoyer sur GitHub (commit + push).">
+            {unsaved ? "Modifications non sauvegardées (Ctrl+S)." : dirty ? "Sauvegardé. Publie pour créer le fichier GitHub." : updatedAt ? `Publié le ${new Date(updatedAt).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" })}` : "Rien à sauvegarder."}
           </p>
         )}
         <div className="lbd-row lbd-row-tight">
-          <button type="button" className="lbd-btn" disabled={!dirty || busy} onClick={() => { change(() => published); setStatus(null); }} title="Revenir au dernier design publié">Tout annuler</button>
+          <button type="button" className="lbd-btn" disabled={!unsaved || busy} onClick={() => { change(() => saved); setStatus({ kind: "info", text: "Retour à ta dernière sauvegarde." }); }} title="Annule ce qui n'est pas sauvegardé">Annuler</button>
+          <button type="button" className={unsaved ? "lbd-btn lbd-save on" : "lbd-btn lbd-save"} disabled={!unsaved || saving || busy} onClick={() => void save()} title="Sauvegarder sur ton PC (Ctrl+S)">{saving ? "…" : "Sauvegarder"}</button>
           <button type="button" className="lbd-btn lbd-primary" disabled={!dirty || busy} onClick={() => void publish()} title="Écrit site-theme.json : fais ensuite commit + push">{busy ? "Publication…" : "Publier"}</button>
         </div>
       </footer>
@@ -541,7 +562,9 @@ const CSS = `
 .lbd-foot{padding:6px 10px 8px;border-top:1px solid var(--line);background:var(--bg)}
 .lbd-status{margin:0 0 2px;color:var(--mu);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lbd-row-tight{margin-top:4px}
-.lbd-row-tight .lbd-btn{padding:7px 10px}
+.lbd-row-tight{flex-wrap:nowrap;gap:6px}
+.lbd-row-tight .lbd-btn{padding:7px 8px}
+.lbd-save.on{border-color:var(--ok);color:var(--ok)}
 .lbd-ok{color:var(--ok)}.lbd-err{color:var(--er)}.lbd-info{color:var(--ac)}
 .lbd-link{display:block;margin:10px auto 0;border:0;background:none;color:var(--mu);font:inherit;font-size:12px;text-decoration:underline;cursor:pointer}
 .lbd-link:hover{color:var(--tx)}
