@@ -26,13 +26,33 @@ import {
   type ThemeColorGroup,
   type ThemeFontRole,
 } from "@subtitles-party/shared";
-import { applyTheme, cachedPublished, designLogout, fetchPublished, hasDraft, loadDraft, publishTheme, saveDraft } from "@/lib/theme";
+import { applyTheme, cachedPublished, designLogout, fetchPublished, fetchServerDraft, hasDraft, loadDraft, publishTheme, pushServerDraft, saveDraft } from "@/lib/theme";
 
 type Tab = "content" | "colors" | "fonts" | "css" | "admin";
 type Status = { kind: "ok" | "err" | "info"; text: string } | null;
 
 const GROUPS: ThemeColorGroup[] = ["Fonds", "Textes", "Accents", "Reliefs des boutons"];
 const OPEN_KEY = "lb:designOpen";
+const BOX_KEY = "lb:designBox";
+type Box = { x: number; y: number; w: number; h: number };
+type SaveState = "idle" | "saving" | "saved" | "error";
+
+/** Position / taille par défaut : en haut à droite, moitié de la hauteur. */
+function defaultBox(): Box {
+  const vw = typeof window === "undefined" ? 1280 : window.innerWidth;
+  const vh = typeof window === "undefined" ? 800 : window.innerHeight;
+  const w = 360;
+  const h = Math.max(300, Math.round((vh - 24) / 2));
+  return { x: Math.max(8, vw - w - 12), y: 12, w, h };
+}
+/** Garde au moins la barre de titre à l'écran. */
+function clampBox(b: Box): Box {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const w = Math.min(Math.max(300, b.w), vw - 16);
+  const h = Math.min(Math.max(240, b.h), vh - 16);
+  return { w, h, x: Math.min(Math.max(-w + 120, b.x), vw - 120), y: Math.min(Math.max(0, b.y), vh - 48) };
+}
 
 const CHECKS: { fg: string; bg: string; min: number; label: string }[] = [
   { fg: "text", bg: "ink-surface", min: 4.5, label: "Texte sur les cartes" },
@@ -101,17 +121,21 @@ export function DesignPanel() {
   useEffect(() => {
     try { setOpen(localStorage.getItem(OPEN_KEY) !== "0"); } catch { /* ignore */ }
     let alive = true;
-    void fetchPublished().then((r) => {
+    void Promise.all([fetchPublished(), fetchServerDraft()]).then(([r, sd]) => {
       if (!alive) return;
-      if (!r) { setStatus({ kind: "err", text: "Serveur de jeu injoignable : lance aussi « npm run dev:server » pour pouvoir publier." }); return; }
+      if (!r) { setStatus({ kind: "err", text: "Serveur de jeu injoignable : lance aussi « npm run dev:server »." }); return; }
       setPublished(r.theme);
       setUpdatedAt(r.updatedAt);
-      const d = loadDraft(r.updatedAt);
-      if (d) {
+      // 1) Le brouillon sauvegardé sur le PC, s'il est plus récent que le design publié.
+      const fromServer = sd && (sd.base === (r.updatedAt ?? null) || sd.savedAt >= (r.updatedAt ?? 0)) ? sd.theme : null;
+      // 2) Sinon la copie gardée par le navigateur.
+      const d = fromServer ?? loadDraft(r.updatedAt);
+      if (d && !same(d, r.theme)) {
         setDraft(d);
-        setStatus({ kind: "info", text: "Brouillon repris là où tu l'avais laissé." });
+        setSaveState("saved");
+        setStatus({ kind: "info", text: "Tes modifications sont revenues (sauvegardées automatiquement)." });
       } else {
-        if (hasDraft()) setStatus({ kind: "info", text: "Le design publié a changé depuis ton dernier brouillon : on repart du design publié." });
+        if (!d && hasDraft()) setStatus({ kind: "info", text: "Le design publié a changé depuis ton dernier brouillon : on repart du design publié." });
         setDraft(r.theme);
       }
       setLoaded(true);
@@ -124,6 +148,60 @@ export function DesignPanel() {
     applyTheme(draft);
     if (loaded) saveDraft(same(draft, published) ? null : draft, updatedAt);
   }, [draft, published, loaded, updatedAt]);
+
+  // Sauvegarde automatique sur le PC, un instant après chaque modification.
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+  const skipSave = useRef(true);
+  useEffect(() => {
+    if (!loaded) return;
+    if (skipSave.current) { skipSave.current = false; return; } // brouillon tout juste chargé
+    setSaveState("saving");
+    let alive = true;
+    const t = window.setTimeout(() => {
+      void pushServerDraft(same(draft, published) ? null : draft, updatedAt).then((ok) => {
+        if (alive) setSaveState(ok ? "saved" : "error");
+      });
+    }, 450);
+    return () => { alive = false; window.clearTimeout(t); };
+  }, [draft, published, loaded, updatedAt]);
+
+  // Panneau déplaçable (barre de titre) et redimensionnable (coin bas-droit).
+  const [box, setBox] = useState<Box | null>(null);
+  const boxRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    let b = defaultBox();
+    try { const raw = JSON.parse(localStorage.getItem(BOX_KEY) ?? "null") as Box | null; if (raw && [raw.x, raw.y, raw.w, raw.h].every(Number.isFinite)) b = raw; } catch { /* ignore */ }
+    setBox(clampBox(b));
+    const onResize = () => setBox((cur) => (cur ? clampBox(cur) : cur));
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  useEffect(() => {
+    if (box) try { localStorage.setItem(BOX_KEY, JSON.stringify(box)); } catch { /* ignore */ }
+  }, [box]);
+  // Taille changée à la souris (poignée native, coin bas-droit) → on la retient
+  // au relâchement (le navigateur ne prévient pas l'élément lui-même).
+  useEffect(() => {
+    const remember = () => {
+      const el = boxRef.current;
+      if (!el) return;
+      const w = el.offsetWidth, h = el.offsetHeight;
+      setBox((cur) => (cur && (Math.abs(cur.w - w) > 1 || Math.abs(cur.h - h) > 1) ? clampBox({ ...cur, w, h }) : cur));
+    };
+    window.addEventListener("mouseup", remember);
+    window.addEventListener("pointerup", remember);
+    return () => { window.removeEventListener("mouseup", remember); window.removeEventListener("pointerup", remember); };
+  }, []);
+  function startDrag(ev: React.PointerEvent) {
+    if (!box || (ev.target as HTMLElement).closest("button") || ev.button !== 0) return;
+    ev.preventDefault();
+    const sx = ev.clientX, sy = ev.clientY, ox = box.x, oy = box.y;
+    const move = (e: PointerEvent) => setBox((cur) => (cur ? clampBox({ ...cur, x: ox + e.clientX - sx, y: oy + e.clientY - sy }) : cur));
+    const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); document.body.style.userSelect = ""; };
+    document.body.style.userSelect = "none";
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  }
 
   useEffect(() => {
     const onKey = (ev: KeyboardEvent) => {
@@ -183,7 +261,8 @@ export function DesignPanel() {
     if (r.ok) {
       setPublished(draft);
       setUpdatedAt(r.updatedAt ?? Date.now());
-      setStatus({ kind: "ok", text: "Enregistré dans site-theme.json ! Fais un commit + push pour l'envoyer en ligne." });
+      setSaveState("saved");
+      setStatus({ kind: "ok", text: "site-theme.json est prêt ! Fais un commit + push pour le mettre en ligne." });
     } else {
       setStatus({ kind: "err", text: r.error });
     }
@@ -227,13 +306,21 @@ export function DesignPanel() {
   }
 
   return (
-    <aside className="lbd" aria-label="Éditeur de design">
+    <aside
+      ref={boxRef}
+      className="lbd"
+      aria-label="Éditeur de design"
+      style={box ? { left: box.x, top: box.y, width: box.w, height: box.h } : { visibility: "hidden" }}
+    >
       <style>{CSS + ADMIN_CSS}</style>
       <FreezePill />
-      <header className="lbd-head">
-        <div>
-          <strong>Éditeur de design</strong>
-          <span className={dirty ? "lbd-chip lbd-chip-warn" : "lbd-chip"}>{dirty ? "Brouillon non publié" : "À jour"}</span>
+      <header className="lbd-head" onPointerDown={startDrag} onDoubleClick={(e) => { if (!(e.target as HTMLElement).closest("button")) setBox(clampBox(defaultBox())); }} title="Glisse pour déplacer · double-clic pour remettre en place">
+        <div className="lbd-title">
+          <svg className="lbd-grip" width="10" height="16" viewBox="0 0 10 16" aria-hidden><g fill="currentColor"><circle cx="2" cy="3" r="1.4"/><circle cx="8" cy="3" r="1.4"/><circle cx="2" cy="8" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="2" cy="13" r="1.4"/><circle cx="8" cy="13" r="1.4"/></g></svg>
+          <strong>Éditeur</strong>
+          <span className={!dirty ? "lbd-chip" : saveState === "error" ? "lbd-chip lbd-chip-err" : "lbd-chip lbd-chip-warn"} title={dirty ? "Tes modifications sont sauvegardées sur ton PC. « Publier » crée le fichier à envoyer sur GitHub." : undefined}>
+            {!dirty ? "Publié" : saveState === "saving" ? "Sauvegarde…" : saveState === "error" ? "⚠ Non sauvegardé" : "Sauvegardé ✓"}
+          </span>
         </div>
         <div className="lbd-head-actions">
         <button type="button" className="lbd-icon" disabled={!hist.current.past.length} onClick={undo} aria-label="Annuler la dernière modification" title="Annuler (Ctrl+Z)">
@@ -245,9 +332,11 @@ export function DesignPanel() {
         <button type="button" className="lbd-icon" onClick={() => setOpen(false)} aria-label="Réduire" title="Réduire pour voir la page">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 12h12" /></svg>
         </button>
+        <button type="button" className="lbd-icon" onClick={quit} aria-label="Quitter l'éditeur" title="Quitter l'éditeur (tes modifications restent sauvegardées)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+        </button>
         </div>
       </header>
-      <p className="lbd-sub">Tout s'applique en direct. Toi seul vois le brouillon ; publie quand ça te plaît.</p>
 
       <nav className="lbd-tabs" role="tablist">
         {([["content", "Contenu"], ["colors", "Couleurs"], ["fonts", "Polices"], ["css", "Avancé"], ["admin", "Admin"]] as const).map(([id, label]) => (
@@ -343,13 +432,17 @@ export function DesignPanel() {
       </div>
 
       <footer className="lbd-foot">
-        {status && <p className={`lbd-status lbd-${status.kind}`} role="status">{status.text}</p>}
-        {!status && updatedAt && !dirty && <p className="lbd-status">Dernière publication : {new Date(updatedAt).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" })}</p>}
-        <div className="lbd-row">
-          <button type="button" className="lbd-btn" disabled={!dirty || busy} onClick={() => { change(() => published); setStatus(null); }}>Tout annuler</button>
-          <button type="button" className="lbd-btn lbd-primary" disabled={!dirty || busy} onClick={() => void publish()}>{busy ? "Publication…" : "Publier"}</button>
+        {status ? (
+          <p className={`lbd-status lbd-${status.kind}`} role="status" title={status.text}>{status.text}</p>
+        ) : (
+          <p className="lbd-status" title="Chaque modification est sauvegardée automatiquement sur ton PC. « Publier » crée site-theme.json, le fichier à envoyer sur GitHub (commit + push).">
+            {dirty ? "Sauvegardé automatiquement. Publie pour créer le fichier GitHub." : updatedAt ? `Publié le ${new Date(updatedAt).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" })}` : "Tout est sauvegardé automatiquement."}
+          </p>
+        )}
+        <div className="lbd-row lbd-row-tight">
+          <button type="button" className="lbd-btn" disabled={!dirty || busy} onClick={() => { change(() => published); setStatus(null); }} title="Revenir au dernier design publié">Tout annuler</button>
+          <button type="button" className="lbd-btn lbd-primary" disabled={!dirty || busy} onClick={() => void publish()} title="Écrit site-theme.json : fais ensuite commit + push">{busy ? "Publication…" : "Publier"}</button>
         </div>
-        <button type="button" className="lbd-link" onClick={quit}>Quitter l'éditeur</button>
       </footer>
     </aside>
   );
@@ -396,18 +489,22 @@ function PaletteIcon() {
 const CSS = `
 .lbd,.lbd-fab{--bg:#121119;--bg2:#1B1A24;--line:#2E2C3A;--tx:#EEECF4;--mu:#A19EB0;--ac:#8FA8FF;--ok:#5BD69A;--er:#FF7A7A;--wa:#F5C26B;
   font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:13px;line-height:1.4;color:var(--tx);letter-spacing:0;text-transform:none}
-.lbd{position:fixed;z-index:2147483000;top:12px;right:12px;bottom:12px;width:360px;display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--line);border-radius:16px;box-shadow:0 24px 60px -20px rgba(0,0,0,.8);overflow:hidden}
+.lbd{position:fixed;z-index:2147483000;display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--line);border-radius:16px;box-shadow:0 24px 60px -20px rgba(0,0,0,.8);overflow:hidden;resize:both;min-width:300px;min-height:240px}
 .lbd *{box-sizing:border-box}
-.lbd-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 12px 4px 16px}
+.lbd-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 8px 6px 10px;cursor:grab;user-select:none;touch-action:none}
+.lbd-head:active{cursor:grabbing}
+.lbd-title{display:flex;align-items:center;gap:8px;min-width:0}
+.lbd-grip{color:var(--mu);flex:none}
+.lbd-chip-err{background:rgba(255,122,122,.15);color:var(--er)}
 .lbd-head-actions{display:flex;gap:2px}
-.lbd-head strong{font-size:15px;margin-right:8px}
+.lbd-head strong{font-size:14px}
 .lbd-chip{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--bg2);color:var(--mu);font-size:11px;font-weight:600;vertical-align:1px}
 .lbd-chip-warn{background:rgba(245,194,107,.15);color:var(--wa)}
 .lbd-sub{margin:0;padding:0 16px 10px;color:var(--mu);font-size:12px}
-.lbd-tabs{display:flex;gap:4px;padding:0 12px 8px;border-bottom:1px solid var(--line)}
-.lbd-tabs button{flex:1;padding:8px 4px;border:0;border-radius:9px;background:transparent;color:var(--mu);font:inherit;font-weight:600;cursor:pointer}
+.lbd-tabs{display:flex;gap:2px;padding:0 8px 6px;border-bottom:1px solid var(--line)}
+.lbd-tabs button{flex:1;padding:6px 2px;font-size:12px;border:0;border-radius:9px;background:transparent;color:var(--mu);font:inherit;font-weight:600;cursor:pointer}
 .lbd-tabs button.on{background:var(--bg2);color:var(--tx)}
-.lbd-body{flex:1;overflow-y:auto;padding:12px 16px 16px;overscroll-behavior:contain}
+.lbd-body{flex:1;min-height:0;overflow-y:auto;padding:10px 14px 14px;overscroll-behavior:contain}
 .lbd-group h3{margin:16px 0 6px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu)}
 .lbd-color{display:grid;grid-template-columns:34px 1fr 78px 28px;align-items:center;gap:8px;padding:5px 0}
 .lbd-color input[type=color]{width:34px;height:34px;padding:0;border:1px solid var(--line);border-radius:9px;background:none;cursor:pointer}
@@ -441,8 +538,10 @@ const CSS = `
 .lbd-primary{background:var(--ac);border-color:var(--ac);color:#0B0D18}
 .lbd-primary:hover:not(:disabled){filter:brightness(1.08);border-color:var(--ac)}
 .lbd-danger{border-color:var(--er);color:var(--er)}
-.lbd-foot{padding:10px 16px 12px;border-top:1px solid var(--line);background:var(--bg)}
-.lbd-status{margin:0 0 4px;color:var(--mu);font-size:12px}
+.lbd-foot{padding:6px 10px 8px;border-top:1px solid var(--line);background:var(--bg)}
+.lbd-status{margin:0 0 2px;color:var(--mu);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbd-row-tight{margin-top:4px}
+.lbd-row-tight .lbd-btn{padding:7px 10px}
 .lbd-ok{color:var(--ok)}.lbd-err{color:var(--er)}.lbd-info{color:var(--ac)}
 .lbd-link{display:block;margin:10px auto 0;border:0;background:none;color:var(--mu);font:inherit;font-size:12px;text-decoration:underline;cursor:pointer}
 .lbd-link:hover{color:var(--tx)}
@@ -450,7 +549,6 @@ const CSS = `
 .lbd-fab{position:fixed;z-index:2147483000;right:16px;bottom:16px;display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border:1px solid var(--line);border-radius:999px;background:var(--bg);font-weight:700;cursor:pointer;box-shadow:0 12px 30px -10px rgba(0,0,0,.8)}
 .lbd-dot{width:8px;height:8px;border-radius:50%;background:var(--wa)}
 @media (max-width:640px){
-  .lbd{top:auto;left:8px;right:8px;bottom:8px;width:auto;height:64dvh}
-  .lbd-sub{display:none}
+  .lbd{top:auto!important;left:8px!important;right:8px;bottom:8px;width:auto!important;height:46dvh!important;resize:none}
 }
 `;

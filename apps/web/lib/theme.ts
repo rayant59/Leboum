@@ -145,3 +145,39 @@ export function hasDraft(): boolean {
 export function saveDraft(theme: SiteTheme | null, base: number | null) {
   put(K.draft, theme ? JSON.stringify({ base: base ?? 0, theme }) : null);
 }
+
+// --- Brouillon sauvegardé sur le PC (serveur local) ----------------------------
+// Chaque modification est enregistrée dans data/site-theme.draft.json : rien
+// ne se perd (rechargement, autre navigateur, redémarrage). « Publier » le
+// recopie dans site-theme.json, le fichier à envoyer sur GitHub.
+
+export interface ServerDraft { theme: SiteTheme; base: number | null; savedAt: number }
+
+/** Brouillon enregistré sur le PC (`null` = aucun, `undefined` = serveur injoignable). */
+export async function fetchServerDraft(): Promise<ServerDraft | null | undefined> {
+  try {
+    const res = await fetch(serverHttpUrl("/theme/draft"), { cache: "no-store" });
+    if (!res.ok) return undefined;
+    const data = (await res.json()) as { draft?: { theme?: unknown; base?: unknown; savedAt?: unknown } | null };
+    if (!data.draft) return null;
+    const theme = sanitizeTheme(data.draft.theme);
+    if (!theme) return null;
+    return { theme, base: typeof data.draft.base === "number" ? data.draft.base : null, savedAt: typeof data.draft.savedAt === "number" ? data.draft.savedAt : 0 };
+  } catch {
+    return undefined;
+  }
+}
+
+/** Enregistre le brouillon sur le PC (`null` l'efface). Vrai si c'est fait. */
+export async function pushServerDraft(theme: SiteTheme | null, base: number | null): Promise<boolean> {
+  try {
+    const res = await fetch(serverHttpUrl("/theme/draft"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ theme, base }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}

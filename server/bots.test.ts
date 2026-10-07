@@ -5,6 +5,7 @@ process.env.PORT = "3998";
 process.env.STATS_FILE = "";
 process.env.PASS_FILE = "";
 process.env.THEME_FILE = "";
+process.env.THEME_DRAFT_FILE = "";
 
 import { WebSocket } from "ws";
 import { addCustomQuestions, parseCustomQuestions, type ServerMessage } from "@subtitles-party/shared";
@@ -38,6 +39,20 @@ async function main() {
     check("dessin PNG valide (accepté par Téléphone cassé)", /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(png) && png.length < 200_000, `${png.length} o`);
     const wav = botVoiceWav(Math.random);
     check("prise de voix WAV assez légère pour Mimic", wav.startsWith("data:audio/wav;base64,UklGR") && wav.length < 260_000, `${wav.length} o`);
+  }
+
+  console.log("brouillon du design sauvegardé automatiquement");
+  {
+    const get = async () => ((await (await fetch(`${base}/theme/draft`)).json()) as { draft: { theme: { colors: Record<string, string> }; base: number | null; savedAt: number } | null }).draft;
+    check("pas de brouillon au départ", (await get()) === null);
+    const r = await fetch(`${base}/theme/draft`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ theme: { colors: { gold: "#123456" }, edits: [] }, base: 42 }) });
+    check("brouillon enregistré", r.status === 200);
+    const d = await get();
+    check("brouillon relu (couleurs + base)", d?.theme.colors.gold === "#123456" && d.base === 42 && d.savedAt > 0, JSON.stringify(d));
+    const bad = await fetch(`${base}/theme/draft`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ theme: "n'importe quoi" }) });
+    check("brouillon invalide refusé", bad.status === 400 && (await get())?.theme.colors.gold === "#123456");
+    await fetch(`${base}/theme/draft`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ theme: null }) });
+    check("brouillon effacé", (await get()) === null);
   }
 
   console.log("API Admin");

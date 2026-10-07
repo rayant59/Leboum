@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { THEME_COLORS, hexToTriplet } from "@subtitles-party/shared";
-import { ThemeStore, designAllowed } from "./theme";
+import { DraftStore, ThemeStore, designAllowed } from "./theme";
 
 let passed = 0, failed = 0;
 function test(name: string, fn: () => void) {
@@ -25,6 +25,21 @@ test("le thème publié survit à un redémarrage", () => {
     assert(b.get().theme.colors.gold === "#112233" && b.get().theme.css === "p{}" && b.get().updatedAt === 1234, "relu depuis le disque");
     assert(a.set("n'importe quoi", 5) === null, "entrée invalide refusée");
     assert(new ThemeStore(file).get().updatedAt === 1234, "fichier inchangé après un refus");
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("le brouillon (sauvegarde auto) survit à un redémarrage, puis s'efface", () => {
+  const dir = mkdtempSync(join(tmpdir(), "lb-draft-"));
+  const file = join(dir, "data", "draft.json");
+  try {
+    const a = new DraftStore(file);
+    assert(a.get() === null, "vide au départ");
+    assert(a.set({ colors: { gold: "#ABCDEF" }, edits: [] }, 77, 1000), "accepté");
+    const b = new DraftStore(file);
+    assert(b.get()?.theme.colors.gold === "#ABCDEF" && b.get()?.base === 77 && b.get()?.savedAt === 1000, "relu");
+    assert(b.set(42, null, 5) === false && new DraftStore(file).get()?.base === 77, "entrée invalide refusée");
+    b.set(null, null, 6);
+    assert(new DraftStore(file).get() === null, "effacé");
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 

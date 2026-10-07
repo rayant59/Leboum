@@ -68,6 +68,60 @@ export class ThemeStore {
 }
 
 /**
+ * Brouillon de l'éditeur, SAUVEGARDÉ AUTOMATIQUEMENT à chaque modification
+ * (data/site-theme.draft.json, ignoré par git). Il survit à un rechargement,
+ * à un redémarrage et à un changement de navigateur. « Publier » le recopie
+ * dans site-theme.json, le fichier qui part sur GitHub.
+ */
+export interface StoredDraft {
+  theme: SiteTheme;
+  /** `updatedAt` du design publié sur lequel ce brouillon a été commencé. */
+  base: number | null;
+  savedAt: number;
+}
+
+export class DraftStore {
+  private current: StoredDraft | null = null;
+
+  constructor(private file: string | null) {
+    if (!file || !existsSync(file)) return;
+    try {
+      const raw = JSON.parse(readFileSync(file, "utf8")) as { theme?: unknown; base?: unknown; savedAt?: unknown };
+      const theme = sanitizeTheme(raw.theme);
+      if (theme) this.current = { theme, base: typeof raw.base === "number" ? raw.base : null, savedAt: typeof raw.savedAt === "number" ? raw.savedAt : 0 };
+    } catch (e) {
+      console.warn(`[theme] brouillon ${file} illisible, ignoré :`, (e as Error).message);
+    }
+  }
+
+  get(): StoredDraft | null {
+    return this.current;
+  }
+
+  /** Enregistre le brouillon (`null` = plus de brouillon). */
+  set(input: unknown, base: number | null, now: number): StoredDraft | null | false {
+    if (input === null) {
+      this.current = null;
+      this.write();
+      return null;
+    }
+    const theme = sanitizeTheme(input);
+    if (!theme) return false;
+    this.current = { theme, base, savedAt: now };
+    this.write();
+    return this.current;
+  }
+
+  private write() {
+    if (!this.file) return;
+    mkdirSync(dirname(this.file), { recursive: true });
+    const tmp = `${this.file}.tmp`;
+    writeFileSync(tmp, JSON.stringify(this.current, null, 2));
+    renameSync(tmp, this.file);
+  }
+}
+
+/**
  * L'éditeur est-il permis pour cette requête ? Seulement si elle vient de la
  * machine elle-même (localhost) ET ne passe par aucun proxy : un serveur en
  * ligne reçoit toujours ses visiteurs via un proxy (en-têtes X-Forwarded-*),

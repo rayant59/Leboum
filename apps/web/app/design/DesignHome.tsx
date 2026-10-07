@@ -33,9 +33,10 @@ export function DesignHome() {
   return (
     <InfoPage kicker="En local uniquement" title="Éditeur de design">
       <p>
-        Modifie le site <b>en direct</b>, directement sur les vraies pages. Tes changements restent un brouillon
-        jusqu&apos;à ce que tu cliques sur <b>Publier</b> : ils sont alors enregistrés dans <code>site-theme.json</code>.
-        Fais ensuite un <b>commit + push</b> pour les mettre en ligne.
+        Modifie le site <b>en direct</b>, directement sur les vraies pages. Chaque modification est
+        <b>sauvegardée automatiquement</b> sur ton PC : enchaîne autant de changements que tu veux, rien ne se perd.
+        Quand tu as fini, <b>Publier</b> crée le fichier <code>site-theme.json</code> ; fais ensuite un
+        <b>commit + push</b> pour le mettre en ligne.
       </p>
       {!here ? (
         <p style={{ color: "rgb(var(--c-danger))" }}>
@@ -59,7 +60,7 @@ export function DesignHome() {
       {error && <p style={{ color: "rgb(var(--c-danger))" }}>{error}</p>}
       <h2>Comment ça marche</h2>
       <ul>
-        <li>Le panneau s&apos;ouvre par-dessus le site : navigue (accueil, salon, jeux) pour voir chaque écran.</li>
+        <li>Le panneau s&apos;ouvre par-dessus le site : déplace-le en le tirant par sa barre de titre, agrandis-le par son coin en bas à droite (double-clic sur la barre = position d&apos;origine). Navigue (accueil, salon, jeux) pour voir chaque écran.</li>
         <li><b>Contenu</b> : clique sur un élément du site pour changer son texte, son lien, son image ou son style, le cacher, le déplacer à la souris, ou ajouter un texte, un titre, un bouton ou une image à côté.</li>
         <li><b>Couleurs</b> : chaque couleur du site, des thèmes tout prêts et une alerte si un texte devient peu lisible.</li>
         <li><b>Polices</b> : titres, texte et étiquettes, parmi une trentaine de polices.</li>

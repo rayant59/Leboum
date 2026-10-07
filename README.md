@@ -68,8 +68,11 @@ la synchro en direct.
   style, le cacher, le déplacer à la souris, ou ajouter un texte / titre /
   bouton / image à côté (Ctrl+Z pour annuler). Couleurs, thèmes tout prêts,
   polices (Google Fonts) et CSS libre s'appliquent **instantanément**.
-  **« Publier » enregistre dans `site-theme.json`** (à la racine, suivi par git) :
-  un commit + push envoie ton design en ligne avec le code.
+  Chaque modification est **sauvegardée automatiquement** sur ton PC
+  (`data/site-theme.draft.json`, ignoré par git). **« Publier » crée
+  `site-theme.json`** (à la racine, suivi par git) : un commit + push envoie ton
+  design en ligne avec le code. Le panneau se déplace par sa barre de titre et
+  s'agrandit par son coin en bas à droite.
   Sur le site en ligne, `/design` n'existe pas et le serveur refuse toute
   modification : personne ne peut toucher au design depuis Internet.
   Côté code : toutes les couleurs passent par les variables `--c-*` de

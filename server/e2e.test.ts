@@ -6,6 +6,7 @@ process.env.STATS_FILE = ""; // pas d'écriture disque pendant les tests
 process.env.STATS_TOKEN = "test-token";
 process.env.PASS_DEV_FAKE = "1"; // paiement simulé pour tester le Pass Soirée
 process.env.PASS_FILE = "";
+process.env.THEME_DRAFT_FILE = ""; // brouillon du design en mémoire seulement
 
 import { WebSocket } from "ws";
 import {
@@ -537,22 +538,26 @@ async function main() {
   await sleep(60);
   check("l'auteur reçoit son propre trait (étiqueté)", fb.strokes.some((s) => s.from === "fb") && fa.strokes.some((s) => s.from === "fa"));
   check("pendant le dessin, personne ne voit la toile des autres", !fa.strokes.some((s) => s.from === "fb") && !fc.strokes.some((s) => s.from === "fa" || s.from === "fb") && !fb.strokes.some((s) => s.from === "fa"));
-  // Reconnexion pendant le dessin : on ne récupère que SA toile.
-  fc.ws.close();
+  // Reconnexion pendant le dessin : on ne récupère que SA toile. (On prend un
+  // vrai artiste qui n'est pas l'hôte : si le faux-artiste part, la manche
+  // s'arrête — c'est voulu, mais ce n'est pas ce qu'on teste ici.)
+  const leaver = reals.find((c) => c !== fa)!;
+  const leaverId = leaver.last()!.you;
+  leaver.ws.close();
   await sleep(60);
-  const fc2 = new Client("FAKE", "fc");
-  await fc2.open();
-  fc2.send({ type: "join", name: "FC" });
+  const back = new Client("FAKE", leaverId);
+  await back.open();
+  back.send({ type: "join", name: leaverId.toUpperCase() });
   await sleep(90);
-  check("reconnexion pendant le dessin : aucune toile des autres", fc2.strokes.length === 0);
-  faClients[2] = fc2;
-  if (impostor === fc) impostor = fc2;
-  reals = reals.map((c) => (c === fc ? fc2 : c));
+  check("reconnexion pendant le dessin : aucune toile des autres", !back.strokes.some((st) => st.from !== leaverId), JSON.stringify(back.strokes.map((st) => st.from)));
+  faClients[faClients.indexOf(leaver)] = back;
+  reals = reals.map((c) => (c === leaver ? back : c));
+  const [fa2, fb2, fc2] = faClients;
 
   fa.send({ type: "skip" }); // -> voting (host)
   await sleep(120);
   check("passage à la phase de vote", pub(fa)?.phase === "voting");
-  check("au vote, tout le monde voit toutes les toiles", [fa, fb, fc2].every((c) => c.strokes.some((s) => s.from === "fa") && c.strokes.some((s) => s.from === "fb")));
+  check("au vote, tout le monde voit toutes les toiles", [fa2, fb2, fc2].every((c) => c.strokes.some((s) => s.from === "fa") && c.strokes.some((s) => s.from === "fb")));
   const impId = faClients.find((c) => pub(c)?.youAreImpostor) ? impostor!.last()!.you : "";
   reals.forEach((c) => c.send({ type: "game", action: { kind: "vote", targetId: impId } }));
   impostor!.send({ type: "game", action: { kind: "vote", targetId: reals[0].last()!.you } });

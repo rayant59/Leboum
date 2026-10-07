@@ -15,7 +15,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { createServer, type IncomingMessage } from "node:http";
 import { Stats } from "./stats";
 import { passConfigFromEnv, isAllowedOrigin, PassRegistry } from "./pass";
-import { ThemeStore, designAllowed } from "./theme";
+import { DraftStore, ThemeStore, designAllowed } from "./theme";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import {
@@ -466,6 +466,8 @@ setInterval(() => stats.flush(), 60_000).unref();
 const SITE_THEME_FILE = resolve(__dirname, "..", "site-theme.json");
 // (THEME_FILE : seulement pour les tests automatiques, à ne pas utiliser.)
 const themeStore = new ThemeStore(process.env.THEME_FILE || SITE_THEME_FILE);
+// Brouillon sauvegardé en continu (data/ est ignoré par git).
+const themeDraft = new DraftStore(process.env.THEME_DRAFT_FILE ?? resolve(__dirname, "..", "data", "site-theme.draft.json"));
 
 // Pass Soirée (voir server/pass.ts). Désactivé tant que Stripe n'est pas configuré.
 const pass = passConfigFromEnv(process.env);
@@ -1117,18 +1119,26 @@ async function redeemPass(room: Room, playerId: string, sessionId: string, ws: W
 }
 
 /** Éditeur de design : connexion et publication du thème. */
-async function handleTheme(req: IncomingMessage, res: import("node:http").ServerResponse, login: boolean) {
+async function handleTheme(req: IncomingMessage, res: import("node:http").ServerResponse, login: boolean, draft = false) {
   const send = (status: number, body: unknown) => res.writeHead(status, { "Content-Type": "application/json", "Cache-Control": "no-store" }).end(JSON.stringify(body));
+  // Vérifié AVANT de lire quoi que ce soit : en ligne, tout est refusé.
+  if (!designAllowed(req.socket.remoteAddress, req.headers)) {
+    return send(403, { error: "L'éditeur de design ne marche qu'en local, sur ton PC (npm run dev)." });
+  }
+  if (draft && req.method === "GET") return send(200, { draft: themeDraft.get() });
   if (req.method !== "POST") return send(405, { error: "POST attendu" });
   try {
-    // Vérifié AVANT de lire quoi que ce soit : en ligne, tout est refusé.
-    if (!designAllowed(req.socket.remoteAddress, req.headers)) {
-      return send(403, { error: "L'éditeur de design ne marche qu'en local, sur ton PC (npm run dev)." });
-    }
-    const body = JSON.parse(await readBody(req, 600_000)) as { theme?: unknown };
+    const body = JSON.parse(await readBody(req, 600_000)) as { theme?: unknown; base?: unknown };
     if (login) return send(200, { ok: true });
+    if (draft) {
+      const saved = themeDraft.set(body.theme ?? null, typeof body.base === "number" ? body.base : null, Date.now());
+      if (saved === false) return send(400, { error: "Brouillon invalide." });
+      return send(200, { ok: true, savedAt: saved?.savedAt ?? null });
+    }
     const saved = themeStore.set(body.theme, Date.now());
     if (!saved) return send(400, { error: "Thème invalide." });
+    // Publié = le brouillon est désormais le design officiel.
+    themeDraft.set(null, null, Date.now());
     console.log("[theme] nouveau thème publié");
     return send(200, saved);
   } catch {
@@ -1375,7 +1385,7 @@ const httpServer = createServer((req, res) => {
     void handleCheckout(req, res);
     return;
   }
-  if (url.pathname === "/theme" || url.pathname === "/theme/login") {
+  if (url.pathname === "/theme" || url.pathname === "/theme/login" || url.pathname === "/theme/draft") {
     if (req.method === "OPTIONS") {
       res.writeHead(204, { "Access-Control-Allow-Methods": "GET, POST", "Access-Control-Allow-Headers": "Content-Type", "Access-Control-Max-Age": "86400" }).end();
       return;
@@ -1384,7 +1394,7 @@ const httpServer = createServer((req, res) => {
       res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-cache" }).end(JSON.stringify(themeStore.get()));
       return;
     }
-    void handleTheme(req, res, url.pathname === "/theme/login");
+    void handleTheme(req, res, url.pathname === "/theme/login", url.pathname === "/theme/draft");
     return;
   }
   if (url.pathname === "/admin/rooms" || url.pathname === "/admin/bots") {
