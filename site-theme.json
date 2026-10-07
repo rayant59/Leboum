@@ -178,8 +178,7 @@
         "fp": "#Retour au salonRejouer",
         "style": {
           "textAlign": "center",
-          "x": -3,
-          "y": -10
+          "y": 1
         }
       },
       {
@@ -556,8 +555,105 @@
         "style": {
           "hidden": true
         }
+      },
+      {
+        "id": "jkwr3sjh",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(4) > ol:nth-child(3) > li:nth-child(2)",
+        "tag": "li",
+        "fp": "Le premier à trouver marque le plus.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "bivsoem2",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(4) > ol:nth-child(3) > li:nth-child(1)",
+        "tag": "li",
+        "fp": "Une image se révèle petit à petit.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "gqrt2zn1",
+        "route": "/room/*",
+        "path": "div:nth-child(1) > div:nth-child(2) > span:nth-child(5)",
+        "tag": "span",
+        "fp": "4 joueurs",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "zg01hsa9",
+        "route": "/room/*",
+        "path": "div:nth-child(1) > div:nth-child(2) > p:nth-child(4)",
+        "tag": "p",
+        "fp": "remporte la partie",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "naahqt0u",
+        "route": "/room/*",
+        "path": "div:nth-child(1) > div:nth-child(5) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "Plus rapide :",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "z74fov6z",
+        "route": "/room/*",
+        "path": "div:nth-child(1) > div:nth-child(5) > span:nth-child(2)",
+        "tag": "span",
+        "fp": "Le cerveau :",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "aewpgmry",
+        "route": "/room/*",
+        "path": "div:nth-child(1) > div:nth-child(5) > span:nth-child(3)",
+        "tag": "span",
+        "fp": "Meilleure série :",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "amtcrvic",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(3) > div:nth-child(2) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1)",
+        "tag": "div",
+        "fp": "@dc-tools order-2 flex shrink-0 flex-wrap gap-1.5 sm:order-1 sm:flex-col sm:flex-nowrap",
+        "style": {
+          "fontSize": 20,
+          "fontWeight": 800,
+          "padding": 10,
+          "margin": 0,
+          "radius": 44,
+          "x": -15,
+          "y": 1
+        }
+      },
+      {
+        "id": "u4erqiaj",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(3) > div:nth-child(2) > div:nth-child(4)",
+        "tag": "div",
+        "fp": "#Au tour deKIKiki 🤖ensuite",
+        "style": {
+          "x": 662,
+          "y": -908
+        }
       }
     ]
   },
-  "updatedAt": 1791319427757
+  "updatedAt": 1791354432710
 }
