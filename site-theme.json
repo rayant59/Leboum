@@ -178,7 +178,7 @@
         "fp": "#Retour au salonRejouer",
         "style": {
           "textAlign": "center",
-          "y": 1
+          "y": -8
         }
       },
       {
@@ -188,8 +188,8 @@
         "tag": "button",
         "fp": "Retour au salon",
         "style": {
-          "x": -35,
-          "y": -5
+          "x": -34,
+          "y": -1
         }
       },
       {
@@ -649,11 +649,861 @@
         "tag": "div",
         "fp": "#Au tour deKIKiki 🤖ensuite",
         "style": {
-          "x": 662,
+          "x": 661,
           "y": -908
+        }
+      },
+      {
+        "id": "i6554ybo",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > button:nth-child(1) > span:nth-child(3)",
+        "tag": "span",
+        "fp": "Réduire",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "ixjmi05s",
+        "route": "*",
+        "path": "div:nth-child(2) > button:nth-child(1) > svg:nth-child(4)",
+        "tag": "svg",
+        "fp": "#",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "ljpsq18e",
+        "route": "/room/*",
+        "path": "div:nth-child(1) > div:nth-child(2) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "Classement final",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "uz6co4tr",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(3) > div:nth-child(1) > p:nth-child(2)",
+        "tag": "p",
+        "fp": "Une situation, une scène absurde… le joueur suivant devra la dessiner.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "uolm466l",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(4)",
+        "tag": "div",
+        "fp": "#1/4 ont renduLUZARAMOÉtape suivante →",
+        "style": {
+          "x": 29,
+          "y": 303
+        }
+      },
+      {
+        "id": "qktv286o",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(3)",
+        "tag": "div",
+        "fp": "#Écris une phrase à dessinerUne situation, une scène absurde… le joueur suivant devra la dessiner.100Inspire-moiEnvoyer",
+        "style": {
+          "x": 13,
+          "y": 474
+        }
+      },
+      {
+        "id": "8h9cvo6b",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > header:nth-child(1)",
+        "tag": "header",
+        "fp": "#Téléphone casséÉtape 1/4 · Phrase de départ44",
+        "style": {
+          "x": 10,
+          "y": 3
+        }
+      },
+      {
+        "id": "uxedh8h9",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(2)",
+        "tag": "div",
+        "fp": "#phrasedessintextedessin",
+        "style": {
+          "fontWeight": 800,
+          "margin": -4
+        }
+      },
+      {
+        "id": "8643fcog",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "phrase",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "uoplytcq",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > span:nth-child(2)",
+        "tag": "span",
+        "fp": "dessin",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "khlo5vwi",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > span:nth-child(3)",
+        "tag": "span",
+        "fp": "texte",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "9of4pdyw",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > span:nth-child(4)",
+        "tag": "span",
+        "fp": "dessin",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "j9b78je0",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(4) > span:nth-child(1) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "/4 ont rendu",
+        "texts": [
+          null,
+          null,
+          " "
+        ],
+        "style": {
+          "x": 371,
+          "y": -1121
+        }
+      },
+      {
+        "id": "dw336hzy",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(3) > div:nth-child(1) > div:nth-child(1)",
+        "tag": "div",
+        "fp": "Écris une phrase à dessiner",
+        "style": {
+          "x": 2,
+          "y": -397
+        }
+      },
+      {
+        "id": "b8j97iaz",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(3) > form:nth-child(2) > div:nth-child(1) > input:nth-child(1)",
+        "tag": "input",
+        "fp": "#",
+        "style": {
+          "x": 6,
+          "y": -223
+        }
+      },
+      {
+        "id": "n0rp269s",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(3) > form:nth-child(2) > div:nth-child(2)",
+        "tag": "div",
+        "fp": "#Inspire-moiEnvoyer",
+        "style": {
+          "x": 6,
+          "y": -255
+        }
+      },
+      {
+        "id": "81ieesko",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(3) > form:nth-child(2) > div:nth-child(1) > span:nth-child(2)",
+        "tag": "span",
+        "fp": "100",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "298cludm",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(3) > form:nth-child(2) > div:nth-child(2) > button:nth-child(1)",
+        "tag": "button",
+        "fp": "Inspire-moi",
+        "style": {
+          "textAlign": "center",
+          "x": 245,
+          "y": 99
+        }
+      },
+      {
+        "id": "0yvtm6cc",
+        "route": "*",
+        "path": "main:nth-child(1) > div:nth-child(1) > header:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2)",
+        "tag": "div",
+        "fp": "Étape 1/4 · Phrase de départ",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "kqftoa76",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(4) > button:nth-child(2)",
+        "tag": "button",
+        "fp": "Étape suivante →",
+        "style": {
+          "x": -27,
+          "y": -2
+        }
+      },
+      {
+        "id": "w7oms11c",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(4) > span:nth-child(1) > span:nth-child(2) > span:nth-child(4) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "MO",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "75mi1x0o",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(4) > span:nth-child(1) > span:nth-child(2) > span:nth-child(3) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "RA",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "dzwmstov",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(4) > span:nth-child(1) > span:nth-child(2) > span:nth-child(2) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "ZA",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "wonuys9j",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(4) > span:nth-child(1) > span:nth-child(2) > span:nth-child(1) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "LU",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "m52jktmr",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(3) > section:nth-child(1)",
+        "tag": "section",
+        "fp": "#Dessine…Un dinosaure qui fait les courses",
+        "style": {
+          "y": 8
+        }
+      },
+      {
+        "id": "vubjmg7i",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(3)",
+        "tag": "div",
+        "fp": "#Dessine…Un dinosaure qui fait les coursesJ'ai fini !",
+        "style": {
+          "y": 10
+        }
+      },
+      {
+        "id": "rjh8lvsn",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(3) > div:nth-child(2) > canvas:nth-child(1)",
+        "tag": "canvas",
+        "fp": "#",
+        "style": {
+          "fontSize": 16,
+          "fontWeight": 800,
+          "textAlign": "center",
+          "padding": 0,
+          "margin": 0,
+          "radius": 18
+        }
+      },
+      {
+        "id": "p3pwvygj",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(3) > div:nth-child(2) > div:nth-child(3)",
+        "tag": "div",
+        "fp": "#",
+        "style": {
+          "textAlign": "center",
+          "padding": 3,
+          "margin": 3,
+          "radius": 3,
+          "x": -1,
+          "y": -7
+        }
+      },
+      {
+        "id": "6leppf6v",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(4) > ol:nth-child(3) > li:nth-child(1)",
+        "tag": "li",
+        "fp": "Chacun son tour, un joueur est la cible.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "5n6q9rzk",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(4) > ol:nth-child(3) > li:nth-child(2)",
+        "tag": "li",
+        "fp": "Les autres l'interrogent pour lui faire dire OUI ou NON.",
+        "style": {
+          "hidden": true
+        }
+      },
+      {
+        "id": "okufco92",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(2) > div:nth-child(1)",
+        "tag": "div",
+        "fp": "L'imposteur était…",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "x11tqost",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(2) > div:nth-child(4)",
+        "tag": "div",
+        "fp": "Égalité au vote : le doute profite à l'imposteur.",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "l4yhww0p",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(4) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "Bon vote : · imposteur qui s'échappe :",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "g6opecak",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > header:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2)",
+        "tag": "div",
+        "fp": "Manche 1/3 · Animaux · Révélation",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "721pg7pk",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(2) > div:nth-child(5) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "Le mot :",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "45uvglap",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(2) > div:nth-child(3)",
+        "tag": "div",
+        "fp": "L'imposteur s'en sort !",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "3pdgagt3",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > p:nth-child(1)",
+        "tag": "p",
+        "fp": "Cache ton écran, puis retourne ta carte.",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "tb4l1e9f",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(4) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "/4 prêts",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "vct9at2l",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(4) > button:nth-child(2)",
+        "tag": "button",
+        "fp": "Commencer les indices →",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "6ymcsrtp",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > button:nth-child(2) > div:nth-child(1) > span:nth-child(4)",
+        "tag": "span",
+        "fp": "Tu n'as pas le mot. Écoute les autres, fonds-toi dans la masse… et ne te fais pas griller.",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "t63jlmbv",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > button:nth-child(2) > div:nth-child(1) > span:nth-child(3)",
+        "tag": "span",
+        "fp": "Catégorie :",
+        "style": {
+          "fontWeight": 600
+        }
+      },
+      {
+        "id": "3jfhxytm",
+        "route": "*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(3) > div:nth-child(2)",
+        "tag": "div",
+        "fp": "Tour d'indices 1/2",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "gz0i6xql",
+        "route": "*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(5) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "Un indice court, sans dire le mot. L'imposteur écoute…",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "w0vp1qya",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(6) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "/4 ont voté · égalité = l'imposteur s'échappe",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "39x8cysz",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(6) > button:nth-child(2)",
+        "tag": "button",
+        "fp": "Clore le vote →",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "ilbkeygv",
+        "route": "*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(2) > div:nth-child(4)",
+        "tag": "div",
+        "fp": "Personne n'a voté… il file en douce.",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "qum4nsqm",
+        "route": "*",
+        "path": "main:nth-child(1) > div:nth-child(1) > p:nth-child(4)",
+        "tag": "p",
+        "fp": "Relis les indices et désigne le suspect.",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "zr4tlxdb",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(5) > span:nth-child(1) > span:nth-child(2) > span:nth-child(2)",
+        "tag": "span",
+        "fp": "(2 manches gagnées)",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "gkrxjo1n",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div:nth-child(5) > span:nth-child(2) > span:nth-child(2) > span:nth-child(2)",
+        "tag": "span",
+        "fp": "(1 imposteur démasqué)",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "xrwjkclg",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(2) > h3:nth-child(1)",
+        "tag": "h3",
+        "fp": "Les manches",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "hx0p6crw",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(2) > ol:nth-child(2) > li:nth-child(1)",
+        "tag": "li",
+        "fp": "— s'en est sorti",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "06x8hdga",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(2) > ol:nth-child(2) > li:nth-child(2)",
+        "tag": "li",
+        "fp": "— s'en est sorti",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "va6r73es",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(2) > ol:nth-child(2) > li:nth-child(3)",
+        "tag": "li",
+        "fp": "— s'en est sorti",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "wlx5n5w3",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div:nth-child(3) > div:nth-child(2) > span:nth-child(1) > span:nth-child(2)",
+        "tag": "span",
+        "fp": "Indice à mi-temps…",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "cf06y76l",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div:nth-child(4) > div:nth-child(2) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "Personne n'a trouvé cette image.",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "abnr5xzq",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div:nth-child(4) > span:nth-child(3) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "Pas de réponse · +0",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "aib10ipc",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div:nth-child(4) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "Trouvé par",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "k5jvwgeh",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(2) > aside:nth-child(1) > div:nth-child(1) > span:nth-child(3)",
+        "tag": "span",
+        "fp": "points de l'image",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "sst6btq3",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(2) > aside:nth-child(1) > div:nth-child(1) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "Pixel Panic",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "8orm7yh1",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(2) > aside:nth-child(1) > div:nth-child(1) > span:nth-child(2)",
+        "tag": "span",
+        "fp": "Image 1 / 10",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "1069tw2j",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div:nth-child(2)",
+        "tag": "div",
+        "fp": "@rc-pad",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "zbnydoey",
+        "route": "/room/*",
+        "path": "div:nth-child(1) > div:nth-child(2) > p:nth-child(4)",
+        "tag": "p",
+        "fp": "Zéro partout… la revanche s'impose.",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "29damzv5",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(3) > div:nth-child(2) > div:nth-child(2) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "Question suivante…",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "m7w0oa4p",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(3) > div:nth-child(2) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "Bonne réponse",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "6p8chcdv",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(3) > div:nth-child(4) > div:nth-child(1) > span:nth-child(2)",
+        "tag": "span",
+        "fp": "Pas de réponse",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "bm1jfmri",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1)",
+        "tag": "div",
+        "fp": "Classe",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "txi22alt",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(3) > p:nth-child(5)",
+        "tag": "p",
+        "fp": "Astuce : touche deux éléments pour les échanger.",
+        "style": {
+          "fontWeight": 800,
+          "x": 1,
+          "y": 8
+        }
+      },
+      {
+        "id": "ax01tx65",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(3) > div:nth-child(6) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "/4 ont validé",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "f90oalif",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(3) > div:nth-child(6) > button:nth-child(2)",
+        "tag": "button",
+        "fp": "Révéler →",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "7s6tkk53",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > header:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2)",
+        "tag": "div",
+        "fp": "Manche 1/5 · Le bon ordre",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "uc3wpah3",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(3) > div:nth-child(3)",
+        "tag": "div",
+        "fp": "▼ Le moins peuplé",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "2nt1oyw3",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(3) > div:nth-child(1)",
+        "tag": "div",
+        "fp": "▲ Le plus peuplé",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "oi5yc2fq",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(3) > div:nth-child(5) > span:nth-child(1)",
+        "tag": "span",
+        "fp": "Bonne place · à une place · sans faute",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "87t0x3b1",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(3) > div:nth-child(5) > button:nth-child(2)",
+        "tag": "button",
+        "fp": "Suivant →",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "dltga6we",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(3) > div:nth-child(3)",
+        "tag": "div",
+        "fp": "▼ Le moins calorique",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "qigc3bwt",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(3) > div:nth-child(1)",
+        "tag": "div",
+        "fp": "▲ Le plus calorique",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "q32cn4ti",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(3) > div:nth-child(3)",
+        "tag": "div",
+        "fp": "▼ La plus petite",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "z4kgt92q",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(3) > div:nth-child(1)",
+        "tag": "div",
+        "fp": "▲ La plus grosse",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "34s5ul0y",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(3) > div:nth-child(3)",
+        "tag": "div",
+        "fp": "▼ Le plus léger",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "1qba0v19",
+        "route": "/room/*",
+        "path": "main:nth-child(1) > div:nth-child(1) > section:nth-child(3) > div:nth-child(1)",
+        "tag": "div",
+        "fp": "▲ Le plus lourd",
+        "style": {
+          "fontWeight": 800
+        }
+      },
+      {
+        "id": "0wboncwc",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > p:nth-child(6)",
+        "tag": "p",
+        "fp": "En tête : · 50 pts.",
+        "style": {
+          "x": 2,
+          "y": 12
+        }
+      },
+      {
+        "id": "4o45msiu",
+        "route": "/room/*",
+        "path": "div:nth-child(2) > div:nth-child(1) > div:nth-child(5)",
+        "tag": "div",
+        "fp": "#3",
+        "style": {
+          "x": -1,
+          "y": -21
         }
       }
     ]
   },
-  "updatedAt": 1791354432710
+  "updatedAt": 1791402671281
 }
