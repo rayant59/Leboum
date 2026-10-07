@@ -1,7 +1,7 @@
 // Run: npx tsx src/soiree/generator.test.ts
 import { GAME_CATALOG } from "../platform/catalog";
 import { GAME_REGISTRY } from "../platform/registry";
-import { SOIREE_FORMATS, estimateMinutes, generateSoiree, soireeSettings } from "./generator";
+import { SOIREE_FORMATS, SURPRISE_GAME_ID, estimateMinutes, generateSoiree, pickSurpriseGame, soireeSettings, surpriseProgramme } from "./generator";
 import { assert, done, test } from "../testing";
 
 let seed = 3;
@@ -63,6 +63,28 @@ test("durée estimée cohérente avec le format", () => {
   const m = estimateMinutes(items);
   assert(m >= 30 && m <= 60, `${m} min`);
   assert(estimateMinutes(generateSoiree("rapide", 5, rng)) <= 20, "rapide");
+});
+
+test("soirée surprise : N emplacements, bornés", () => {
+  assert(surpriseProgramme(5).length === 5 && surpriseProgramme(5).every((i) => i.gameId === SURPRISE_GAME_ID && i.surprise), "5 surprises");
+  assert(surpriseProgramme(1).length === 2 && surpriseProgramme(99).length === 10, "bornes 2–10");
+});
+
+test("jeu surprise : jouable, pas déjà joué, varié", () => {
+  const played: string[] = [];
+  for (let i = 0; i < 8; i++) {
+    const id = pickSurpriseGame(4, played, rng)!;
+    const g = GAME_CATALOG[id];
+    assert(!!g && g.listed && 4 >= g.minPlayers && 4 <= g.maxPlayers, `${id} jouable à 4`);
+    assert(!played.includes(id), `${id} déjà joué`);
+    played.push(id);
+  }
+  // Tous joués : on accepte une redite, mais jamais deux fois de suite.
+  const all = Object.values(GAME_CATALOG).filter((g) => g.listed && 3 >= g.minPlayers && 3 <= g.maxPlayers).map((g) => g.id);
+  for (let i = 0; i < 20; i++) assert(pickSurpriseGame(3, all, rng) !== all[all.length - 1], "pas deux fois de suite");
+  assert(pickSurpriseGame(0, [], rng) === null, "aucun jeu à 0 joueur");
+  const many = new Set(Array.from({ length: 60 }, () => pickSurpriseGame(4, [], rng)));
+  assert(many.size >= 6, `tirage varié (${many.size} jeux)`);
 });
 
 done();

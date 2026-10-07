@@ -104,6 +104,9 @@ import {
   BOT_LEVELS,
   BOT_NAMES,
   type BotMemory,
+  SURPRISE_GAME_ID,
+  pickSurpriseGame,
+  soireeSettings,
 } from "@subtitles-party/shared";
 import { botMedia } from "./botMedia";
 
@@ -781,7 +784,7 @@ function handleRelayGuess(room: Room, playerId: string, text: string, ws?: WebSo
 /** Vue publique de la soirée : sans les réglages de lancement (inutiles aux clients). */
 function publicSoiree(room: Room): SoireeState | null {
   const s = room.soiree;
-  return s ? { ...s, items: s.items.map((i) => ({ gameId: i.gameId })) } : null;
+  return s ? { ...s, items: s.items.map((i) => (i.surprise ? { gameId: i.gameId, surprise: true } : { gameId: i.gameId })) } : null;
 }
 
 /** Tient la soirée à jour : nouveaux joueurs, et résultat du jeu dès qu'il se termine. */
@@ -826,6 +829,16 @@ function launchSoireeItem(room: Room, sender?: WebSocket, skipReady = false) {
   if (!s) return;
   const count = connectedPlayers(room.state).length;
   while (!s.finished) {
+    // Jeu surprise : tiré au sort maintenant, parmi les jeux jouables à ce
+    // nombre (en évitant ceux déjà joués dans la soirée).
+    if (s.items[s.current]?.gameId === SURPRISE_GAME_ID) {
+      const played = s.items.slice(0, s.current).map((i) => i.gameId).filter((id) => id !== SURPRISE_GAME_ID);
+      const pick = pickSurpriseGame(count, played);
+      if (pick) {
+        const at = s.current;
+        s = { ...s, items: s.items.map((it, i) => (i === at ? { gameId: pick, settings: soireeSettings(pick), surprise: true } : it)) };
+      }
+    }
     const item = s.items[s.current];
     const mod = item ? GAME_REGISTRY[item.gameId] : undefined;
     if (mod && count >= mod.meta.minPlayers && count <= mod.meta.maxPlayers) break;
@@ -872,9 +885,9 @@ function launchSoireeItem(room: Room, sender?: WebSocket, skipReady = false) {
 function sanitizeSoireeItems(input: unknown): SoireeItem[] {
   if (!Array.isArray(input)) return [];
   return input
-    .filter((i): i is SoireeItem => !!i && typeof (i as SoireeItem).gameId === "string" && !!GAME_REGISTRY[(i as SoireeItem).gameId])
+    .filter((i): i is SoireeItem => !!i && typeof (i as SoireeItem).gameId === "string" && (!!GAME_REGISTRY[(i as SoireeItem).gameId] || (i as SoireeItem).gameId === SURPRISE_GAME_ID))
     .slice(0, 12)
-    .map((i) => ({ gameId: i.gameId, settings: i.settings ?? null }));
+    .map((i) => (i.gameId === SURPRISE_GAME_ID ? { gameId: SURPRISE_GAME_ID, surprise: true } : { gameId: i.gameId, settings: i.settings ?? null }));
 }
 
 function stateMessageFor(room: Room, pid: string): ServerMessage {
@@ -1443,7 +1456,7 @@ function handleClientMessage(room: Room, playerId: string, msg: ClientMessage, w
     case "set_pending_game": {
       if (playerId !== room.state.hostId || room.state.phase !== "lobby") return;
       room.pendingGame = typeof msg.gameId === "string" ? msg.gameId : null;
-      room.pendingSoiree = Array.isArray(msg.soiree) ? msg.soiree.filter((g): g is string => typeof g === "string" && !!GAME_REGISTRY[g]).slice(0, 12) : [];
+      room.pendingSoiree = Array.isArray(msg.soiree) ? msg.soiree.filter((g): g is string => typeof g === "string" && (!!GAME_REGISTRY[g] || g === SURPRISE_GAME_ID)).slice(0, 12) : [];
       return broadcast(room);
     }
     case "start_game": {
@@ -1539,7 +1552,9 @@ function handleClientMessage(room: Room, playerId: string, msg: ClientMessage, w
     case "soiree_rematch": {
       // Hôte : revanche — même programme, scores remis à zéro.
       if (playerId !== room.state.hostId || !room.soiree || room.state.phase !== "lobby") return;
-      room.soiree = withPlayers(createSoiree(room.soiree.items, t), gameRoster(room));
+      // Les jeux surprises sont retirés au sort pour la revanche.
+      const items = room.soiree.items.map((i) => (i.surprise ? { gameId: SURPRISE_GAME_ID, surprise: true } : i));
+      room.soiree = withPlayers(createSoiree(items, t), gameRoster(room));
       return launchSoireeItem(room, sender, true);
     }
 

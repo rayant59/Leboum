@@ -135,5 +135,26 @@ test("pas deux fois le même mot dans une partie", () => {
   }
 });
 
+test("le faux-artiste est tiré au hasard à chaque manche : il peut l'être deux fois de suite", () => {
+  let repeats = 0;
+  const seen = new Set<string>();
+  for (let seed = 1; seed <= 12; seed++) {
+    const r = rngFrom(seed);
+    let now = 1000;
+    let s = createFakeArtist(players, { totalRounds: 8 }, { now, rng: r });
+    const order: string[] = [];
+    let guard = 0;
+    while (s.phase !== "scoreboard" && guard++ < 200) {
+      if (s.phase === "drawing" && order.length < s.round) order.push(s.impostorId!);
+      now += 100_000;
+      s = reduceFakeArtist(s, { type: "advance" }, { now, rng: r }).state;
+    }
+    for (let i = 1; i < order.length; i++) if (order[i] === order[i - 1]) repeats++;
+    order.forEach((id) => seen.add(id));
+  }
+  assert(repeats > 0, "jamais deux fois de suite");
+  eq(seen.size, players.length, "tout le monde peut être faux-artiste");
+});
+
 console.log(`\n${passed} réussis, ${failed} échoués\n`);
 if (failed > 0) process.exit(1);

@@ -4,7 +4,7 @@
 // suivi pendant les jeux, et grand classement de fin de soirée.
 
 import { useEffect, useState } from "react";
-import { SOIREE_FORMATS, estimateMinutes, gameInfo, playerSummary, soireeHighlights, soireeRecap, soireeStandings, type SoireePlayerSummary, type SoireeState } from "@subtitles-party/shared";
+import { SOIREE_FORMATS, SURPRISE_MAX, SURPRISE_MIN, estimateMinutes, gameInfo, playerSummary, soireeHighlights, soireeRecap, soireeStandings, type SoireePlayerSummary, type SoireeState } from "@subtitles-party/shared";
 import { playSound } from "@/lib/sound";
 import { Avatar } from "@/components/Avatar";
 import { NeonIcon, type NeonIconName } from "@/components/NeonIcon";
@@ -20,6 +20,8 @@ export interface BuilderItem {
   settings: unknown;
   /** Libellé du mode / réglage (« Vitesse · 10 questions »). */
   detail: string;
+  /** Jeu surprise : tiré au sort au lancement. */
+  surprise?: boolean;
 }
 
 function Thumb({ gameId, size = 40 }: { gameId: string; size?: number }) {
@@ -39,6 +41,7 @@ export function SoireeBuilder({
   onMoveUp,
   onClear,
   onGenerate,
+  onSurprise,
   launchDisabled,
   launchHint,
   playerCount,
@@ -52,6 +55,8 @@ export function SoireeBuilder({
   onClear: () => void;
   /** Générateur (phase 14) : remplace le programme par une proposition. */
   onGenerate?: (formatId: string) => void;
+  /** Soirée surprise : `count` jeux tirés au sort au fur et à mesure. */
+  onSurprise?: (count: number) => void;
   launchDisabled: boolean;
   launchHint: string | null;
   /** Joueurs connectés : un jeu hors de ses bornes sera sauté au lancement. */
@@ -63,6 +68,7 @@ export function SoireeBuilder({
   const fits = (gameId: string) => { const g = gameInfo(gameId); return playerCount >= g.minPlayers && playerCount <= g.maxPlayers; };
   const unfit = items.filter((it) => !fits(it.gameId)).length;
   const [lastFormat, setLastFormat] = useState<string | null>(null);
+  const [surpriseCount, setSurpriseCount] = useState(5);
   return (
     <section className="mb-8 rounded-2xl border p-5" style={{ borderColor: "rgb(var(--c-gold) / .35)", background: "linear-gradient(165deg, rgb(var(--c-gold) / .09), rgb(var(--c-ink-surface) / .65) 55%)" }}>
       <div className="mb-4 flex items-start gap-3">
@@ -102,6 +108,24 @@ export function SoireeBuilder({
               );
             })}
           </div>
+        </div>
+      )}
+
+      {onSurprise && (
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border px-3 py-3" style={{ borderColor: "rgb(var(--c-violet) / .45)", background: "rgb(var(--c-violet) / .08)" }}>
+          <Thumb gameId="surprise" size={40} />
+          <div className="min-w-0 flex-1" style={{ minWidth: 150 }}>
+            <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 15, color: C.text }}>Soirée surprise</div>
+            <div style={{ fontSize: 12, color: C.muted }}>Chaque jeu est tiré au sort au moment de le lancer.</div>
+          </div>
+          <div className="flex items-center gap-1" role="group" aria-label="Nombre de jeux">
+            <button onClick={() => setSurpriseCount((n) => Math.max(SURPRISE_MIN, n - 1))} disabled={surpriseCount <= SURPRISE_MIN} aria-label="Un jeu de moins" className="rounded-lg disabled:opacity-30" style={{ width: 30, height: 30, border: `1px solid ${C.line}`, background: "rgb(var(--c-ink-deep) / .5)", color: C.text, cursor: "pointer", fontWeight: 800 }}>−</button>
+            <span style={{ minWidth: 58, textAlign: "center", fontFamily: DISPLAY, fontWeight: 800, fontSize: 15, color: C.text }}>{surpriseCount} jeux</span>
+            <button onClick={() => setSurpriseCount((n) => Math.min(SURPRISE_MAX, n + 1))} disabled={surpriseCount >= SURPRISE_MAX} aria-label="Un jeu de plus" className="rounded-lg disabled:opacity-30" style={{ width: 30, height: 30, border: `1px solid ${C.line}`, background: "rgb(var(--c-ink-deep) / .5)", color: C.text, cursor: "pointer", fontWeight: 800 }}>+</button>
+          </div>
+          <button onClick={() => { setLastFormat(null); onSurprise(surpriseCount); }} className="rounded-full border px-3 py-1.5" style={{ borderColor: "rgb(var(--c-violet) / .7)", background: "rgb(var(--c-violet) / .18)", cursor: "pointer", fontFamily: DISPLAY, fontWeight: 700, fontSize: 13, color: C.text }}>
+            🎲 Préparer
+          </button>
         </div>
       )}
 
@@ -192,7 +216,7 @@ function Programme({ soiree }: { soiree: SoireeState }) {
         return (
           <span key={i} title={skipped ? "Passé : pas le bon nombre de joueurs" : undefined} className="inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs" style={{ borderColor: now ? g.accent : C.line, background: now ? `color-mix(in srgb, ${g.accent} 10.2%, transparent)` : "transparent", color: done || skipped ? C.faint : C.text, textDecoration: done || skipped ? "line-through" : "none", opacity: skipped ? 0.7 : 1 }}>
             <b style={{ fontFamily: MONO, color: now ? g.accent : C.faint }}>{i + 1}</b>
-            {g.name}
+            {it.surprise && it.gameId !== "surprise" ? `🎲 ${g.name}` : g.name}
             {skipped && <span style={{ color: "#FFB27A", textDecoration: "none" }}>passé</span>}
           </span>
         );

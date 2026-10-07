@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { effectiveMaxPlayers, passActive, canStart, isEffectivelyReady, minReadyFor, sanitizeName, DRAW_THEMES, GAME_CATALOG, gameInfo, gamesByCategory, generateSoiree, listedGames, soireeStandings, type GameCategory, type SoireeState } from "@subtitles-party/shared";
+import { effectiveMaxPlayers, passActive, canStart, isEffectivelyReady, minReadyFor, sanitizeName, DRAW_THEMES, GAME_CATALOG, gameInfo, gamesByCategory, generateSoiree, surpriseProgramme, listedGames, soireeStandings, type GameCategory, type SoireeState } from "@subtitles-party/shared";
 import { getPlayerName, setPlayerName } from "@/lib/identity";
 import { useRoom } from "@/lib/useRoom";
 import { BoumBackdrop } from "@/components/BoumBackdrop";
@@ -1022,6 +1022,7 @@ export default function LobbyPage() {
           onMoveUp={(i) => setSoireeItems((p) => { if (i <= 0) return p; const n = p.slice(); [n[i - 1], n[i]] = [n[i], n[i - 1]]; return n; })}
           onClear={() => setSoireeItems(() => [])}
           onGenerate={(id) => setSoireeItems(() => generateSoiree(id, Math.max(2, connectedCount)).map((i) => ({ gameId: i.gameId, settings: i.settings, detail: i.detail })))}
+          onSurprise={(n) => setSoireeItems(() => surpriseProgramme(n).map((i) => ({ gameId: i.gameId, settings: null, detail: "Tiré au sort au moment de jouer", surprise: true })))}
           launchDisabled={!soireeStartable}
           playerCount={connectedCount}
           onPrune={() => setSoireeItems((p) => p.filter((i) => { const g = gameInfo(i.gameId); return connectedCount >= g.minPlayers && connectedCount <= g.maxPlayers; }))}
@@ -1247,6 +1248,7 @@ function introSoiree(soiree: SoireeState | null): IntroSoiree | null {
     skipped,
     index: soiree.current,
     total: soiree.items.length,
+    surprise: !!soiree.items[soiree.current]?.surprise,
     leader: top && leaderPlayer && top.total > 0 ? { name: leaderPlayer.name, total: top.total, tied: st.filter((r) => r.place === 1).length > 1 } : null,
   };
 }

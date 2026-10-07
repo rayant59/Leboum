@@ -28,6 +28,8 @@ export interface IntroSoiree {
   leader: { name: string; total: number; tied: boolean } | null;
   /** Jeux sautés juste avant (pas le bon nombre de joueurs). */
   skipped?: string[];
+  /** Jeu tiré au sort (Soirée surprise). */
+  surprise?: boolean;
 }
 
 export function GameIntro({
@@ -103,7 +105,7 @@ export function GameIntro({
           </span>
         )}
         <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: ".28em", textTransform: "uppercase", color: "rgb(var(--c-text-muted))" }}>
-          Prochain jeu · <span style={{ color: GAME_CATEGORIES[meta.category].tint }}>{GAME_CATEGORIES[meta.category].label}</span>
+          {soiree?.surprise ? "🎲 Jeu surprise" : "Prochain jeu"} · <span style={{ color: GAME_CATEGORIES[meta.category].tint }}>{GAME_CATEGORIES[meta.category].label}</span>
         </span>
 
         <div style={{ position: "relative", width: 200, height: 200, display: "grid", placeItems: "center", animation: "gi-float 4.2s ease-in-out infinite" }}>

@@ -128,3 +128,31 @@ export function estimateMinutes(items: { gameId: string; detail?: string }[]): n
     return m + (it.detail === "Partie express" ? Math.max(3, Math.round(d * 0.6)) : d);
   }, 0);
 }
+
+// --- Soirée surprise ------------------------------------------------------------
+
+/** Emplacement « jeu surprise » : le vrai jeu est tiré au sort au lancement. */
+export const SURPRISE_GAME_ID = "surprise";
+export const SURPRISE_MIN = 2;
+export const SURPRISE_MAX = 10;
+
+/** Un programme de `count` jeux surprises. */
+export function surpriseProgramme(count: number): SoireeItem[] {
+  const n = Math.max(SURPRISE_MIN, Math.min(SURPRISE_MAX, Math.floor(count) || SURPRISE_MIN));
+  return Array.from({ length: n }, () => ({ gameId: SURPRISE_GAME_ID, surprise: true }));
+}
+
+/**
+ * Tire le jeu d'un emplacement surprise, jouable à `players` joueurs : d'abord
+ * un jeu pas encore joué dans la soirée, sinon n'importe lequel sauf le
+ * précédent. `null` si aucun jeu ne se joue à ce nombre.
+ */
+export function pickSurpriseGame(players: number, played: readonly string[], rng: () => number = Math.random): string | null {
+  const pool = listedGames().filter((g) => playableWith(g, players)).map((g) => g.id);
+  if (!pool.length) return null;
+  const fresh = pool.filter((id) => !played.includes(id));
+  const last = played[played.length - 1];
+  const notLast = pool.filter((id) => id !== last);
+  const from = fresh.length ? fresh : notLast.length ? notLast : pool;
+  return from[Math.floor(rng() * from.length)] ?? from[0];
+}

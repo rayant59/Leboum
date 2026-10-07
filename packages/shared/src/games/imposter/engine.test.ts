@@ -266,6 +266,24 @@ test("module : résultat standard + distinctions", () => {
   assert(!!r.awards?.some((a) => a.id === "best_liar" && a.playerId === imp), "meilleur menteur");
 });
 
+test("l'imposteur est tiré au hasard à chaque manche : il peut l'être deux fois de suite", () => {
+  let repeats = 0;
+  for (let game = 0; game < 6; game++) {
+    let s = imposterModule.createState(P, imposterModule.sanitizeSettings({ totalRounds: 8 }), ctx());
+    const order: string[] = [];
+    let guard = 0;
+    while (s.phase !== "final" && guard++ < 400) {
+      if (s.phase === "secret" && order.length <= s.index) order.push(s.imposterId);
+      if (s.phase === "secret") s = toClues(s);
+      else if (s.phase === "clues") s = giveAllClues(s);
+      else if (s.phase === "vote") s = voteAll(s, s.roster.find((id) => id !== s.imposterId)!);
+      else s = adv(s);
+    }
+    for (let i = 1; i < order.length; i++) if (order[i] === order[i - 1]) repeats++;
+  }
+  assert(repeats > 0, "jamais deux fois de suite");
+});
+
 test("réglages bornés", () => {
   const v = imposterModule.sanitizeSettings({ totalRounds: 99, seconds: 1, mode: "nimp" });
   assert(v.totalRounds === 10 && v.seconds === 10 && v.mode === "classique", JSON.stringify(v));

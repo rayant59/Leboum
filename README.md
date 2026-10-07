@@ -90,6 +90,9 @@ la synchro en direct.
   au Mimic et « trichent » un peu pour trouver le mot selon leur niveau. Le serveur
   refuse l'API `/admin/*` depuis Internet. Code : `packages/shared/src/bots/brain.ts`
   (décisions) et `server/index.ts` (gestion des bots).
+- **Soirée surprise** : dans le salon, choisis le nombre de jeux (2 à 10) puis
+  « Préparer » : chaque jeu est tiré au sort au moment de le lancer, parmi les
+  jeux jouables au nombre de joueurs (sans redite tant que possible).
 - **Avatars** : chaque joueur peut importer une image (recadrée en carré) depuis
   le salon. Sinon, initiales colorées par défaut.
 - **Icônes d'outils** : dépose tes PNG dans `apps/web/public/tools/`

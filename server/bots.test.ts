@@ -128,6 +128,26 @@ async function main() {
     check("jeu inconnu refusé", rbad.status === 409);
   }
 
+  console.log("soirée surprise");
+  {
+    ws.send(JSON.stringify({ type: "return_lobby" }));
+    await sleep(300);
+    const surprise = [1, 2, 3].map(() => ({ gameId: "surprise" }));
+    ws.send(JSON.stringify({ type: "soiree_start", items: surprise }));
+    await sleep(500);
+    const so = () => last().soiree!;
+    const first = so().items[0];
+    check("1er jeu tiré au sort et lancé", last().state.phase === "in_game" && first.surprise === true && first.gameId !== "surprise" && last().gameId === first.gameId, JSON.stringify(so().items));
+    check("les jeux suivants restent secrets", so().items[1].gameId === "surprise" && so().items[2].gameId === "surprise");
+    ws.send(JSON.stringify({ type: "soiree_next" }));
+    await sleep(500);
+    const second = so().items[1];
+    check("jeu suivant tiré au sort à son tour, différent du 1er", second.gameId !== "surprise" && second.gameId !== first.gameId && last().gameId === second.gameId, `${first.gameId} → ${second.gameId}`);
+    ws.send(JSON.stringify({ type: "soiree_end" }));
+    await sleep(300);
+    check("fin de la soirée surprise", !last().soiree && last().state.phase === "lobby");
+  }
+
   console.log("pause et retrait");
   const r4 = await admin({ room: "BOTS", op: "pause", paused: true });
   check("pause des bots", r4.status === 200 && r4.data.room?.botsPaused === true);

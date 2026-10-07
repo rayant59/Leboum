@@ -10,6 +10,8 @@ import type { GameAward, RankedPlayer } from "../platform/result";
 export interface SoireeItem {
   gameId: string;
   settings?: unknown;
+  /** Jeu tiré au sort (« Jeu surprise ») : `gameId` est révélé au lancement. */
+  surprise?: boolean;
 }
 
 /** Ce qu'un jeu terminé a rapporté à la soirée. */

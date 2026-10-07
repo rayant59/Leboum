@@ -7,7 +7,7 @@ import { SOIREE_MAX_ITEMS, type SoireeItem, type SoireePlayer, type SoireeStandi
 
 export function createSoiree(items: SoireeItem[], now: number): SoireeState {
   return {
-    items: items.slice(0, SOIREE_MAX_ITEMS).map((i) => ({ gameId: i.gameId, settings: i.settings })),
+    items: items.slice(0, SOIREE_MAX_ITEMS).map((i) => ({ gameId: i.gameId, settings: i.settings, ...(i.surprise ? { surprise: true } : {}) })),
     current: 0,
     records: [],
     totals: {},

@@ -91,11 +91,9 @@ export function createImposter(players: GamePlayer[], settings: ImposterSettings
 function startRound(s: ImposterState, index: number, ctx: GameContext): ImposterState {
   const connected = s.players.map((p) => p.id).filter((id) => s.connectedIds.includes(id));
   const roster = connected.length >= 2 ? connected : s.players.map((p) => p.id);
-  // Faire tourner le rôle : on évite ceux qui ont déjà été imposteurs.
-  const fresh = roster.filter((id) => !s.pastImposters.includes(id));
-  const pool = fresh.length ? fresh : roster.filter((id) => id !== s.pastImposters[s.pastImposters.length - 1]);
-  const candidates = pool.length ? pool : roster;
-  const imposterId = candidates[Math.floor(ctx.rng() * candidates.length)] ?? roster[0];
+  // Tirage vraiment au hasard à chaque manche : on peut être imposteur deux
+  // fois de suite (sinon les anciens imposteurs seraient « innocentés » d'office).
+  const imposterId = roster[Math.floor(ctx.rng() * roster.length)] ?? roster[0];
   let order = shuffle(roster, ctx.rng);
   // En classique, l'imposteur ne parle jamais en premier (il n'a aucun indice).
   if (s.config.mode === "classique" && order[0] === imposterId && order.length > 1) {

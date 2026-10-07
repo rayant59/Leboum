@@ -143,6 +143,12 @@ export const GAME_CATALOG: Record<string, GameModeInfo> = {
     rules: ["Chacun reçoit un personnage.", "Doublez la scène en direct."],
     listed: false,
   }),
+  surprise: G({
+    id: "surprise", name: "Jeu surprise", tagline: "Tiré au sort au moment de jouer.",
+    img: "/games/surprise.svg", accent: "#B98CFF", category: "chaos", minPlayers: 1, maxPlayers: 12, durationMin: 6,
+    rules: ["Le jeu est tiré au sort juste avant de le lancer.", "Personne ne sait ce qui arrive, pas même l'hôte."],
+    listed: false,
+  }),
   subtitles: G({
     id: "subtitles", name: "Sous-titres", tagline: "Invente les meilleures répliques.",
     img: "/games/subtitles.png", accent: "#FFC24B", category: "culture", minPlayers: 3, maxPlayers: 12, durationMin: 10,
